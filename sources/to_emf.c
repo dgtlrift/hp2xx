@@ -38,12 +38,18 @@ copies.
 #error Compiling to_emf.c without having defined EMF. this is meaningless.
 #endif
 
+
+#ifdef UNIX
+#include <emf.h>
+#else
 #include <windows.h>
 #undef ERROR
 #undef NUMPENS
 #ifdef NOERROR
 #undef NOERROR
 #endif
+#endif
+
 
 #include <stdio.h>
 //#include <string.h>
@@ -51,6 +57,7 @@ copies.
 #include "bresnham.h"
 #include "hp2xx.h"
 #include "pendef.h"
+#include "lindef.h"
 
 extern void reset_tmpfile(void); // in hpgl.c
 
@@ -78,12 +85,16 @@ emf_move_to(HPGL_Pt *ppt, HANDLE outDC)
 //*******************************************************************
 // new_pen
 static void
-emf_new_pen(int pensize,double red, double green, double blue,
+emf_new_pen(PEN_W pensize,double red, double green, double blue,
 				 HPGL_Pt *ppt, HANDLE outDC)
 {
 	HANDLE pen;
 	emf_move_to (ppt, outDC);
-	pen=CreatePen( (pensize)?PS_SOLID:PS_NULL,pensize*5,RGB(red,green,blue));
+#ifdef UNIX
+	pen=CreatePen( PS_SOLID,pensize*5.,RGB((int)red,(int)green,(int)blue));
+#else
+	pen=CreatePen( pensize?PS_SOLID:PS_NULL,pensize*50,RGB((int)red,(int)green,(int)blue));
+#endif
 	DeleteObject(SelectObject(outDC,pen));
 }
 
@@ -110,17 +121,20 @@ static void
 emf_init(const OUT_PAR *po, HANDLE outDC)
 {
 	long left, right, low, high;
-
-	low=(int)(po->ymin-MARGIN);
+	low=(int)(po->ymin/40-MARGIN);
 	high=(int)(po->ymax+MARGIN);
-	left=(int)po->xmin-MARGIN;
+	high=(long)((po->ymin/40+po->height));
+	left=(int)((po->xmin/40-MARGIN));
 	right=(int)po->xmax+MARGIN;
+	right=(long)((po->xmin/40+po->width));
 	MoveToEx(outDC,left,low,NULL);
 	LineTo(outDC,right,low);
 	LineTo(outDC,right,high);
 	LineTo(outDC,left,high);
 	LineTo(outDC,left,low);
 }
+
+
 
 //*******************************************************************
 // command loop over tmp_file
@@ -129,8 +143,8 @@ plotit(HANDLE outDC,const GEN_PAR *pg, const OUT_PAR *po)
 {
 	PlotCmd	cmd;
 	HPGL_Pt	pt1 = {0};
-	int	pen_no=0, pensize=0, pencolor=0, err=0;
-
+	int	pen_no=0, pencolor=0, err=0;
+        PEN_W pensize;
 	pensize = pt.width[DEFAULT_PEN_NO]; /* Default pen	*/
 	pencolor = pt.color[DEFAULT_PEN_NO];
 	emf_new_pen(0,pt.clut[pencolor][0],  // no draw pen
@@ -257,6 +271,7 @@ SetScale(HDC dc,int uthei,int utwi,const OUT_PAR *po)
 	SetViewportOrgEx(dc,0,0,NULL); // where do i want origo
 }
 
+#ifndef UNIX
 //*******************************************************************
 // Mesage handler for Preview Dialog.
 static INT_PTR CALLBACK
@@ -447,6 +462,7 @@ to_emw (const GEN_PAR *pg, const OUT_PAR *po)
 
 	return 0;
 }
+#endif /*notdef UNIX*/
 
 /**
 ** Higher-level interface: Output Enhanced META File format (-m emf)
@@ -456,7 +472,10 @@ to_emf (const GEN_PAR *pg, const OUT_PAR *po)
 {
 	HANDLE outDC;
 	int err=0;
-
+#ifdef UNIX
+	HWND desktop= GetDesktopWindow();
+	HDC dc=GetDC(desktop);
+#endif
 	if (!pg->quiet)
 		Eprintf ("\n\n- Writing emf code to \"%s\"\n",
 		*po->outfile == '-' ? "stdout" : po->outfile);
@@ -465,19 +484,31 @@ to_emf (const GEN_PAR *pg, const OUT_PAR *po)
 
 	if (*po->outfile != '-')
 	{
+#ifdef UNIX
+		if ((outDC=CreateEnhMetaFile(dc,po->outfile,NULL,"hp2xx"))==0){
+			PError("hp2xx (emf)");
+			return ERROR;
+		}
+#else
 		if ((outDC=CreateEnhMetaFile(NULL,po->outfile,NULL,"hej\0hopp\0"))==0)
 		{
 			PError("hp2xx (emf)");
 			return ERROR;
 		}
+#endif
 	}
 	else
 	{
 		PError("hp2xx (Cant send metafile to stdout emf)");
 		return ERROR;
 	}
+#ifdef UNIX
+	SetMapMode(dc,MM_ANISOTROPIC);
+	SetViewportExtEx(dc,10,-10,NULL);
+#else	
 	SetMapMode(outDC,MM_ANISOTROPIC);
 	SetViewportExtEx(outDC,10,-10,NULL); // size mult
+#endif
 	err=plotit(outDC,pg,po);
 	CloseEnhMetaFile(outDC);
 
@@ -488,4 +519,5 @@ to_emf (const GEN_PAR *pg, const OUT_PAR *po)
 	}
 	return err;
 }
+
 

@@ -115,28 +115,37 @@ void	ps_set_linewidth (PEN_W width, HPGL_Pt *ppt, FILE *fd)
  **/
 void ps_set_linecap(LineEnds type,PEN_W pensize, HPGL_Pt *ppt, FILE *fd) {
 
-   static int lasttype = -1;
+   static int lastcap = -1;
+   int newcap;
 
-   if(type != lasttype) {
-      ps_stroke_and_move_to (ppt, fd);	                                 /* MUST start a new path!	*/
-      if ( pensize > 0.35 ) {
-         switch (type) {
-            case LAE_butt:
-               fprintf(fd," %d setlinecap\n", 0);
-               break;
-            case LAE_round:
-            case LAE_triangular:                                /* triangular not implemented in PS/PDF */
-               fprintf(fd," %d setlinecap\n", 1);
-               break;
-            case LAE_square:
-               fprintf(fd," %d setlinecap\n", 2);
-               break;
-         }
-      } else {
-         fprintf  (fd," %d setlinecap\n", 1);
+   if ( pensize > 0.35 ) {
+      switch (type) {
+         case LAE_butt:
+            newcap=0;
+            break;
+         case LAE_triangular:                                /* triangular not implemented in PS/PDF */
+            newcap=1;
+            break;
+         case LAE_round:
+            newcap=1;
+            break;
+         case LAE_square:
+            newcap=2;
+            break;
+         default:
+            newcap=0;
+            break;
       }
-      lasttype=type;
+   } else {
+      newcap=1;
    }
+
+   if(newcap != lastcap) {
+      ps_stroke_and_move_to (ppt, fd);	                                   /* MUST start a new path! */
+      fprintf(fd," %d setlinecap\n", newcap);
+      lastcap=newcap;
+   }
+
    return;
 }
 
@@ -284,9 +293,8 @@ double	hmxpenw;
   fprintf(fd,"    SaveImage restore\n");
   fprintf(fd,"   } def\n");
 
-  fprintf(fd,"/@line\n{");     /* set line parameters */
-/*   fprintf(fd,"   1 setlinecap  %%%% Replace 1 by 0 for cut-off lines\n"); */
-  fprintf(fd,"    1 setlinejoin %%%% Replace 1 by 0 for cut-off lines\n");
+  fprintf(fd,"/@line\n   {");     /* set line parameters */
+  fprintf(fd,"  1 setlinejoin %%%% Replace 1 by 0 for cut-off lines\n");
   fprintf(fd,"%%%%    1 setmiterlimit    %%%%  Uncomment this for cut-off lines\n");
   fprintf(fd,"   } def\n");
 

@@ -103,6 +103,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
@@ -180,6 +181,7 @@ static float saved_hatchangle[2]={0.,0.};
 static float thickness = 0.;
 static short polygon_penup = FALSE;
 static HPGL_Pt anchor = {0.0 , 0.0};
+static HPGL_Pt polystart = {0.0 , 0.0};
 static float rot_cos, rot_sin;
 
 static short rotate_flag = FALSE;	/* Flags tec external to HP-GL  */
@@ -196,7 +198,7 @@ static int n_unexpected = 0;
 static int n_unknown = 0;
 static int page_number = 1;
 static long vec_cntr_r = 0L;
-static short pen = 1;
+static short pen = -1;
 static short pens_in_use[NUMPENS];
 static short pen_down = FALSE;	/* Internal HP-GL book-keeping: */
 static short plot_rel = FALSE;
@@ -279,6 +281,7 @@ static char symbol_char = '\0';	/* Char in Symbol Mode (0=off)  */
 #define TL	0x544C
 #define UC	0x5543
 #define UL	0x554C /*AJB*/
+#define VS	0x5653
 #define WD	0x5744
 #define WG      0x5747
 #define WU      0x5755
@@ -327,7 +330,7 @@ reset_HPGL (void)
   p_last.x = p_last.y = M_PI;
   pen_down = FALSE;
   plot_rel = FALSE;
-  pen = 1;
+  pen = -1;
 /*  n_unexpected = 0;
   n_unknown = 0;*/
   mv_flag = FALSE;
@@ -1655,13 +1658,13 @@ line (int relative, HPGL_Pt p)
 	  Pen_action_to_tmpfile (MOVE_TO, &p, scale_flag);
 	}
     }
-
+#if 0
   if (polygon_mode && !polygon_penup)
     {
       polygons[++vertices] = p_last;
       polygons[++vertices] = p;
     }
-
+#endif
   if (polygon_mode && polygon_penup)
     {
       polygon_penup = FALSE;
@@ -2509,10 +2512,11 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       bezier (FALSE, hd);
       break;
     case AC:			/* anchor corner of fill patterns */
-    	if (read_float(&ftmp, hd)){ /* just AC - default 0,0 */
-    	  anchor.x=0.;
-    	  anchor.y=0.;
-    	  break;
+    	if (read_float(&ftmp, hd)){ /* just AC - default hard-clip limit*/
+    	  anchor.x=P1.x;
+    	  anchor.y=P1.y;
+    	  if (scale_flag)User_to_Plotter_coord(&anchor,&anchor);
+       	  break;
     	  }else{
     	anchor.x=ftmp;
     	}
@@ -2520,6 +2524,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
     	  anchor.y=0.;
     	  else
     	  anchor.y=ftmp;
+    	  if(scale_flag)User_to_Plotter_coord(&anchor,&anchor);
     	break;  
     case AD:
 	if (read_float(&ftmp, hd)) /* just AD - defaults */
@@ -2607,10 +2612,20 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       break;
 
     case FP:			/* fill polygon */
-      if (pg->nofill)
+      if (pg->nofill) /* treat like EP */
 	{
 	  if (!silent_mode)
 	    fprintf (stderr, "FP : suppressed\n");
+      for (i = 0; i < vertices; i = i + 2)
+	{			/*for all polygon edges */
+	  p1.x = polygons[i].x;
+	  p1.y = polygons[i].y;
+	  Pen_action_to_tmpfile (MOVE_TO, &p1, scale_flag);
+	  p1.x = polygons[i + 1].x;
+	  p1.y = polygons[i + 1].y;
+	  Pen_action_to_tmpfile (DRAW_TO, &p1, scale_flag);
+	}
+      Pen_action_to_tmpfile (MOVE_TO, &p_last, scale_flag);
 	  break;
 	}
       if (hatchspace == 0.)
@@ -2725,6 +2740,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	  polygon_penup = FALSE;
 	  saved_penstate = pen_down;
 	  vertices = -1;
+	  polystart=p_last;
 	  break;
 	}
       if (ftmp == 1)
@@ -2736,7 +2752,11 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       if (ftmp == 2)
 	{
 	  polygon_mode = FALSE;
-	  pen_down = saved_penstate;	  
+	  pen_down = saved_penstate;
+	  if (p_last.x != polystart.x || p_last.y != polystart.y){
+	  polygons[++vertices]=p_last; 
+	  polygons[++vertices]=polystart; /* force closing of open polygon */	  
+	  }
 	}
       break;
     case PR:			/* Plot Relative                */
@@ -3537,7 +3557,13 @@ if (rotate_flag){
       if (!silent_mode)
 	Eprintf ("\nLABEL: %s\n", strbuf);
       break;
-
+    case VS:
+    	if (read_float(&ftmp,hd)) /* Just VS*/
+    	break;
+    	if (read_float(&ftmp,hd)) /* uniform speed*/
+    	break;
+    	if (read_float(&ftmp,hd)) /* speed for given pen*/
+    	break;
     default:			/* Skip unknown HPGL command: */
       n_unknown++;
       if (!silent_mode)
@@ -3723,7 +3749,7 @@ adjust_input_transform (const GEN_PAR * pg, const IN_PAR * pi, OUT_PAR * po)
 #ifdef EMF
 void reset_tmpfile(void)
 {
-   long r=lseek(fileno(td),0L,SEEK_SET);
+   (void)lseek(fileno(td),0L,SEEK_SET);
    if(vec_cntr_r)
    again=TRUE;
    vec_cntr_r=0;

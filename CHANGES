@@ -2,11 +2,15 @@ Changes from 3.4.2 to 3.4.3
 
 New features:
 
-- Raster graphics modes now use correctly scaled penwidths instead of 
-  crude approximations (Andrew J. Bird, using a 'wide line Bresenham' 
-  algorithm by Alan Murphy of IBM that was released into the public 
-  domain through an IBM Technical Bulletin)
+- Raster graphics modes now use correctly scaled penwidths (implemented by
+  Andrew J. Bird). Instead of crude approximations we are using a 'wide line 
+  Bresenham' algorithm by Alan Murphy of IBM that was released into the public 
+  domain through an IBM Technical Bulletin
 - Added support for (most of) the LA command (Andrew J. Bird)
+- hp2xx now recognizes (and ignores) the VS command to reduce number of
+  runtime warnings
+- EMF export is now also available as an option on non-Windows builds if
+  Allen Barnetts libEMF (http://libemf.sourceforge.net) is installed
 
 Bug fixes:
 
@@ -30,6 +34,7 @@ Bug fixes:
   with 'Esc-12345X') are now handled gracefully
 - Removed memory leak in the X11 previewers' zoom function
 - PDF output could omit lines in some cases
+- PM2 did not close the current polygon if necessary
 
 Changes from 3.4.1 to 3.4.2
 

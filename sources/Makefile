@@ -200,6 +200,11 @@ EX_OBJ  += to_jpg.o
 EX_DEFS += -DJPG
 EX_LIBS += -ljpeg
 #
+EX_SRC += to_emf.c
+EX_OBJ += to_emf.o
+EX_DEFS += -DEMF
+EX_LIBS += -lEMF -lstdc++
+#
 # Include ATARI extras:
 # EX_SRC	+= to_pic.c to_pac.c
 # EX_OBJ	+= to_pic.o to_pac.o

@@ -6,7 +6,7 @@
 #include "bresnham.h"
 #include "hp2xx.h"
 
-void fill(HPGL_Pt polygon[MAXPOLY], int numpoints,HPGL_Pt P1, HPGL_Pt P2,
+void fill(HPGL_Pt polygon[MAXPOLY], int numpoints,HPGL_Pt point1, HPGL_Pt point2,
 int scale_flag,int filltype,float spacing,float hatchangle)
 {
 double pxmin,pxmax,pymin,pymax;
@@ -31,7 +31,10 @@ polyxmin=100000.;
 polyymin=100000.;
 polyxmax=-100000.;
 polyymax=-100000.;
+
+/*fprintf(stderr,"AC %f %f\n",point1.x,point1.y);*/
 for (i = 0 ; i <= numpoints; i++ ) {
+/*fprintf(stderr,"%d: %f %f \n",i,polygon[i].x,polygon[i].y);*/
 polyxmin=MIN(polyxmin,polygon[i].x);
 polyymin=MIN(polyymin,polygon[i].y);
 polyxmax=MAX(polyxmax,polygon[i].x);
@@ -44,8 +47,8 @@ if (hatchangle >89.9 && hatchangle < 180.) {
         goto FILL_VERT;
         }
 
-pxmin=P1.x;
-pymin=P1.y;
+pxmin=point1.x;
+pymin=point1.y;
 pxmax=polyxmax;
 pymax=polyymax;
 if (polyxmin == polyxmax && polyymin == polyymax){
@@ -237,8 +240,8 @@ if (filltype !=4) return;
 FILL_VERT:
 
 
-pxmin=P1.x;
-pymin=P1.y;
+pxmin=point1.x;
+pymin=point1.y;
 pxmax=polyxmax;
 pymax=polyymax;
 

@@ -44,7 +44,6 @@ typedef unsigned short int PEN_N;
 typedef unsigned short int PEN_C;
 typedef float PEN_W;
 typedef unsigned char BYTE;
-
 typedef struct {
    PEN_W width[NUMPENS+1];      /* -p xxxxxxxx / PW             */
    PEN_C color[NUMPENS+1];      /* -c xxxxxxxx / PC             */

@@ -54,18 +54,18 @@ void print_line_style(void);
 
 /* line attributes */
 
-typedef enum { LAE_butt,
-               LAE_square,
-               LAE_triangular,
-               LAE_round 
+typedef enum { LAE_butt          = 1,
+               LAE_square        = 2,
+               LAE_triangular    = 3,
+               LAE_round         = 4 
 } LineEnds;
 
-typedef enum { LAJ_plain_miter,
-               LAJ_bevel_miter,
-               LAJ_triangular,
-               LAJ_round,
-               LAJ_bevelled,
-               LAJ_nojoin
+typedef enum { LAJ_plain_miter   = 1,
+               LAJ_bevel_miter   = 2,
+               LAJ_triangular    = 3,
+               LAJ_round         = 4,
+               LAJ_bevelled      = 5,
+               LAJ_nojoin        = 6
 } LineJoins;
 
 typedef int LineLimit;

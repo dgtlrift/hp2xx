@@ -617,10 +617,10 @@ static void
 
    if ( pensize > 0.35 ) {
       switch (CurrentLineAttr.End) {
+         case LAE_square:        /* square not implemented yet */
          case LAE_butt:
             break;
-         case LAE_square:   /* square + triangular not implemented yet */
-         case LAE_triangular:
+         case LAE_triangular:    /* triangular not implemented yet */
          case LAE_round:
             dot_PicBuf(p0,pensize,pencolor,pb);
             dot_PicBuf(p1,pensize,pencolor,pb);
@@ -679,6 +679,7 @@ int		pen_no = 1;
                     PError("Unexpected end of temp. file");
 		    exit(ERROR);
                 }
+		break;
           case DEF_LA:
                 if(load_line_attr(pg->td) <0) {
                     PError("Unexpected end of temp. file");

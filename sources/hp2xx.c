@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a4";
-char	*VERS_DATE = "02/05/28";
+char	*VERS_NO = "3.4.3a6";
+char	*VERS_DATE = "02/06/23";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -186,7 +186,9 @@ mode_list  ModeList[] =
 	{XX_EM,		"em"},	/* LaTeX using \special{em:...}		*/
 #ifdef EMF
 	{XX_EMF,	"emf"}, /* Microsoft Enhanced Metafile		*/
+#ifndef UNIX
 	{XX_EMP,	"emp"}, /* Microsoft EMF printing		*/
+#endif
 #endif
 	{XX_EPIC,	"epic"},/* LaTeX using epic.sty macros		*/
 	{XX_EPS,	"eps"},	/* Encapulated PostScript		*/
@@ -723,12 +725,14 @@ int	TMP_to_VEC (const GEN_PAR *pg, const OUT_PAR *po)
     case XX_EMF:
         to_emf  (pg, po);
         return 0;
+#ifndef UNIX
     case XX_EMP:
         to_emp  (pg, po);
          return 0;
     case XX_PRE:
         to_emw  (pg, po);
          return 0;
+#endif
 #endif           /*end BAF*/
 
     case XX_GPT:

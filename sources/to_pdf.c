@@ -79,21 +79,35 @@ void	pdf_set_linewidth (double width, HPGL_Pt *ppt, PDF *fd)
  ** Set line Ends
  **/
 void pdf_set_linecap( LineEnds type,double pensize, PDF *fd) {
+
+   static int lastcap = -1;
+   int newcap;
+
    if ( pensize > 0.35 ) {
       switch (type) {
          case LAE_butt:
-            PDF_setlinecap(fd,0);
+            newcap=0;
+            break;
+         case LAE_triangular:                                /* triangular not implemented in PS/PDF */
+            newcap=1;
             break;
          case LAE_round:
-         case LAE_triangular:               /* triangular not implemented in PS/PDF */
-            PDF_setlinecap(fd,1);
+            newcap=1;
             break;
          case LAE_square:
-            PDF_setlinecap(fd,2);
+            newcap=2;
+            break;
+         default:
+            newcap=0;
             break;
       }
    } else {
-       PDF_setlinecap(fd,1);
+      newcap=1;
+   }
+
+   if(newcap != lastcap) {
+      PDF_setlinecap(fd,newcap);
+      lastcap=newcap;
    }
 }
 

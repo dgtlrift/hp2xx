@@ -197,66 +197,44 @@ void set_line_attr(FILE *hd){
    float ftmp1;
    float ftmp2;
 
+   LineEnds itmp;
+
+   if (read_float (&ftmp1, hd)) {    /* No kind found        */
+      set_line_attr_defaults();
+      return;
+   }
+
    for (;;) {
-      if (read_float (&ftmp1, hd)) { /* No kind found        */
-         set_line_attr_defaults();
-         return;
-      }
+
       if (read_float (&ftmp2, hd)) { /* No value found       */
          /* do_error */
-         break;
+         return;
       }
+      itmp = (int)ftmp2;
 
       PlotCmd_to_tmpfile (DEF_LA);
 
       switch ((int)ftmp1) {
          case 1: 
-            switch ((int)ftmp2) {
-               case 1:
-                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
-                  break;
-               case 2:
-                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_square);
-                  break;
-               case 3:
-                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_triangular);
-                  break;
-               case 4:
-                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_round);
-                  break;
-               default:
-                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
-                  break;
+            if((itmp >= LAE_butt) && (itmp <= LAE_round)) {
+               Line_Attr_to_tmpfile(LineAttrEnd,itmp);
+            } else {
+               Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
             }
             break;
          case 2:
-            switch ((int)ftmp2) {
-               case 1:
-                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_plain_miter);
-                  break;
-               case 2:
-                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_bevel_miter);
-                  break;
-               case 3:
-                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_triangular);
-                  break;
-               case 4:
-                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_round);
-                  break;
-               case 5:
-                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_bevelled);
-                  break;
-               case 6:
-                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_nojoin);
-                  break;
-               default:
-                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_plain_miter);
-                  break;
+            if((itmp >= LAJ_plain_miter) && (itmp <= LAJ_nojoin)) {
+               Line_Attr_to_tmpfile(LineAttrJoin,itmp);
+            } else {
+               Line_Attr_to_tmpfile(LineAttrJoin,LAJ_plain_miter);
             }
             break;
          case 3:
-            Line_Attr_to_tmpfile(LineAttrLimit,(int)ftmp2);
+            Line_Attr_to_tmpfile(LineAttrLimit,itmp);
             break;
+      }
+      if (read_float (&ftmp1, hd)) {    /* No kind found        */
+         return;
       }
    }
    return;
@@ -264,7 +242,7 @@ void set_line_attr(FILE *hd){
 
 void Line_Attr_to_tmpfile ( LineAttrKind kind, int value) {
    LineAttrKind tk=kind;
-   int tv=value;
+   LineEnds tv=value;
 
    if (record_off)             /* return if current plot is not the selected one */
       return;                  /* (of a multi-image file) */
@@ -288,8 +266,8 @@ void Line_Attr_to_tmpfile ( LineAttrKind kind, int value) {
 }
 
 int load_line_attr(FILE *td){
-  
    LineAttrKind kind;
+   int value;
    static int FoundJoin = 0;
    static int FoundLimit = 0;
 
@@ -297,29 +275,26 @@ int load_line_attr(FILE *td){
       return(-1);
    }
 
+   if (fread( (void *) &value,sizeof(value),1,td) != 1) {
+      return(-1);
+   }
+
    switch(kind) {
       case LineAttrEnd:
-         if (fread( (void *) &CurrentLineAttr.End,sizeof(CurrentLineAttr.End),1,td) != 1) {
-            return(-1);
-         }
+         CurrentLineAttr.End = value;
          break;
       case LineAttrJoin:
          if(!FoundJoin) {
             if(!silent_mode) fprintf(stderr,"\nLA - Joins not supported\n");
             FoundJoin=1;
          }
-         if (fread( (void *) &CurrentLineAttr.Join,sizeof(CurrentLineAttr.Join),1,td) != 1) {
-            return(-1);
-         }
-         break;
+         CurrentLineAttr.Join = value;
       case LineAttrLimit:
          if(!FoundLimit) {
             if(!silent_mode) fprintf(stderr,"\nLA - Limit not supported\n");
             FoundLimit=1;
          }
-         if (fread( (void *) &CurrentLineAttr.Limit,sizeof(CurrentLineAttr.Limit),1,td) != 1) {
-            return(-1);
-         }
+         CurrentLineAttr.Limit = value;
          break;
    }
 
