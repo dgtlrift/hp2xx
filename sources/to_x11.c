@@ -102,170 +102,171 @@ static int zoomed = 0;
  **/
 
 static int
-win_open (const GEN_PAR * pg, char *title, int x, int y, int w, int h)
+win_open(const GEN_PAR * pg, char *title, int x, int y, int w, int h)
 {
-  char *DisplayName = NULL;
-  char **argv;
-  XSizeHints Hints;
-  unsigned long ValueMask;
-  XSetWindowAttributes WinAttr;
-  XEvent Event;
-  char colorname[13];
-  int i;
+	char *DisplayName = NULL;
+	char **argv;
+	XSizeHints Hints;
+	unsigned long ValueMask;
+	XSetWindowAttributes WinAttr;
+	XEvent Event;
+	char colorname[13];
+	int i;
 
 	/**
 	 ** Simulate command line arguments
 	 **/
 
-  argv = (char **) malloc (3 * sizeof (char *));
-  argv[0] = PROG_NAME;
-  argv[1] = title;
-  argv[2] = NULL;
+	argv = (char **) malloc(3 * sizeof(char *));
+	argv[0] = PROG_NAME;
+	argv[1] = title;
+	argv[2] = NULL;
 
 	/**
 	 ** X11 server reachable ?
 	 **/
 
-  if ((XDisplay = (Display *) XOpenDisplay (DisplayName)) == NULL)
-    {
-      Eprintf ("No X11 server found !\n");
-      return NO_SERVER;
-    }
+	if ((XDisplay = (Display *) XOpenDisplay(DisplayName)) == NULL) {
+		Eprintf("No X11 server found !\n");
+		return NO_SERVER;
+	}
 
 
 
-  XScreen = DefaultScreen (XDisplay);
-  XRoot = RootWindow (XDisplay, XScreen);
-  XVisual = DefaultVisual (XDisplay, XScreen);
-  XGcWin = DefaultGC (XDisplay, XScreen);
+	XScreen = DefaultScreen(XDisplay);
+	XRoot = RootWindow(XDisplay, XScreen);
+	XVisual = DefaultVisual(XDisplay, XScreen);
+	XGcWin = DefaultGC(XDisplay, XScreen);
 
-  scr_width = WidthOfScreen (ScreenOfDisplay (XDisplay, XScreen));
-  scr_height = HeightOfScreen (ScreenOfDisplay (XDisplay, XScreen));
-  if (x + w > scr_width || y + h > scr_height)
-    {
-  if (!pg->quiet)
-      Eprintf ("Window exceeds screen limits, use mouse button 1 to pan\n");
-      w = MIN (w, scr_width);
-      h = MIN (h, scr_height);
-      oversized = 1;
+	scr_width = WidthOfScreen(ScreenOfDisplay(XDisplay, XScreen));
+	scr_height = HeightOfScreen(ScreenOfDisplay(XDisplay, XScreen));
+	if (x + w > scr_width || y + h > scr_height) {
+		if (!pg->quiet)
+			Eprintf
+			    ("Window exceeds screen limits, use mouse button 1 to pan\n");
+		w = MIN(w, scr_width);
+		h = MIN(h, scr_height);
+		oversized = 1;
 /*		return SIZE;*/
-    }
+	}
 
 	/**
 	 ** Set window attributes
 	 **/
 
-  WinAttr.background_pixel = WhitePixel (XDisplay, XScreen);
-  WinAttr.border_pixel = WhitePixel (XDisplay, XScreen);
-  WinAttr.backing_store = Always;
-  ValueMask = CWBackPixel | CWBorderPixel | CWBackingStore;
+	WinAttr.background_pixel = WhitePixel(XDisplay, XScreen);
+	WinAttr.border_pixel = WhitePixel(XDisplay, XScreen);
+	WinAttr.backing_store = Always;
+	ValueMask = CWBackPixel | CWBorderPixel | CWBackingStore;
 
 	/**
 	 ** Create Window
 	 **/
 
-  XWin = XCreateWindow (XDisplay, XRoot,
-			x, y, w, h,
-			1, 0,
-			CopyFromParent, CopyFromParent, ValueMask, &WinAttr);
+	XWin = XCreateWindow(XDisplay, XRoot,
+			     x, y, w, h,
+			     1, 0,
+			     CopyFromParent, CopyFromParent, ValueMask,
+			     &WinAttr);
 
 	/**
 	 ** Define window properties
 	 **/
 
-  Hints.flags = PSize | PMinSize | PMaxSize | USPosition;
-  Hints.x = x;
-  Hints.y = y;
-  Hints.width = Hints.min_width = Hints.max_width = w;
-  Hints.height = Hints.min_height = Hints.max_height = h;
+	Hints.flags = PSize | PMinSize | PMaxSize | USPosition;
+	Hints.x = x;
+	Hints.y = y;
+	Hints.width = Hints.min_width = Hints.max_width = w;
+	Hints.height = Hints.min_height = Hints.max_height = h;
 
-  XSetStandardProperties (XDisplay, XWin,
-			  title, title, 0, argv, 2, &Hints);
+	XSetStandardProperties(XDisplay, XWin,
+			       title, title, 0, argv, 2, &Hints);
 
 /**
  ** Define color table (compatible to SunView and Turbo-C usage)
  **/
 
-  def_clut = DefaultColormap (XDisplay, XScreen);
-  if (DefaultDepth (XDisplay, XScreen) < 4)
-    {
-      col_table[BLACK] = WhitePixel (XDisplay, XScreen);
-      col_table[WHITE] = BlackPixel (XDisplay, XScreen);
-      col_table[GRAY] = col_table[WHITE];
-      col_table[RED] = col_table[WHITE];
-      col_table[GREEN] = col_table[WHITE];
-      col_table[BLUE] = col_table[WHITE];
-      col_table[CYAN] = col_table[WHITE];
-      col_table[MAGENTA] = col_table[WHITE];
-      col_table[YELLOW] = col_table[WHITE];
-      col_table[LIGHTGRAY] = col_table[WHITE];
-      col_table[LIGHTRED] = col_table[WHITE];
-      col_table[LIGHTGREEN] = col_table[WHITE];
-      col_table[LIGHTBLUE] = col_table[WHITE];
-      col_table[LIGHTCYAN] = col_table[WHITE];
-      col_table[LIGHTMAGENTA] = col_table[WHITE];
-    }
-  else
-    {
-      XParseColor (XDisplay, def_clut, "gray10", &Xcol);
-      XAllocColor (XDisplay, def_clut, &Xcol);
-      col_table[GRAY] = Xcol.pixel;
+	def_clut = DefaultColormap(XDisplay, XScreen);
+	if (DefaultDepth(XDisplay, XScreen) < 4) {
+		col_table[BLACK] = WhitePixel(XDisplay, XScreen);
+		col_table[WHITE] = BlackPixel(XDisplay, XScreen);
+		col_table[GRAY] = col_table[WHITE];
+		col_table[RED] = col_table[WHITE];
+		col_table[GREEN] = col_table[WHITE];
+		col_table[BLUE] = col_table[WHITE];
+		col_table[CYAN] = col_table[WHITE];
+		col_table[MAGENTA] = col_table[WHITE];
+		col_table[YELLOW] = col_table[WHITE];
+		col_table[LIGHTGRAY] = col_table[WHITE];
+		col_table[LIGHTRED] = col_table[WHITE];
+		col_table[LIGHTGREEN] = col_table[WHITE];
+		col_table[LIGHTBLUE] = col_table[WHITE];
+		col_table[LIGHTCYAN] = col_table[WHITE];
+		col_table[LIGHTMAGENTA] = col_table[WHITE];
+	} else {
+		XParseColor(XDisplay, def_clut, "gray10", &Xcol);
+		XAllocColor(XDisplay, def_clut, &Xcol);
+		col_table[GRAY] = Xcol.pixel;
 
-      for (i = 1; i <= pg->maxpens; i++)
-	{
-	  sprintf (colorname, "#%2.2X%2.2X%2.2X",
-		   pt.clut[i][0], pt.clut[i][1], pt.clut[i][2]);
-	  if (XParseColor (XDisplay, def_clut, colorname, &Xcol)==0) fprintf(stderr,"failed tp map color for pen %d\n",i);
-	if (XAllocColor (XDisplay, def_clut, &Xcol)==0) {
-	fprintf(stderr,"failed to alloc X color for pen %d\n",i);
-	col_table[i] = col_table[GRAY];
-	}else
-	  col_table[i] = Xcol.pixel;
+		for (i = 1; i <= pg->maxpens; i++) {
+			sprintf(colorname, "#%2.2X%2.2X%2.2X",
+				pt.clut[i][0], pt.clut[i][1],
+				pt.clut[i][2]);
+			if (XParseColor
+			    (XDisplay, def_clut, colorname, &Xcol) == 0)
+				fprintf(stderr,
+					"failed tp map color for pen %d\n",
+					i);
+			if (XAllocColor(XDisplay, def_clut, &Xcol) == 0) {
+				fprintf(stderr,
+					"failed to alloc X color for pen %d\n",
+					i);
+				col_table[i] = col_table[GRAY];
+			} else
+				col_table[i] = Xcol.pixel;
+		}
 	}
-    }
 
 
 	/**
 	 **  Set foreground and background colors
 	 **/
 
-  XSetState (XDisplay, XGcWin,
-	     col_table[BLACK], col_table[WHITE], GXcopy, AllPlanes);
+	XSetState(XDisplay, XGcWin,
+		  col_table[BLACK], col_table[WHITE], GXcopy, AllPlanes);
 
 	/**
 	 ** Define permitted events for this window
 	 **/
 
-  XSelectInput (XDisplay, XWin,
-		ExposureMask  | KeyPressMask | VisibilityChangeMask |
-		ButtonPressMask | ButtonReleaseMask);
+	XSelectInput(XDisplay, XWin,
+		     ExposureMask | KeyPressMask | VisibilityChangeMask |
+		     ButtonPressMask | ButtonReleaseMask);
 
 	/**
 	 ** Display window
 	 **/
-  XMapWindow (XDisplay, XWin);
-  do
-    {
-      XNextEvent (XDisplay, &Event);
-    }
-  while (Event.type != Expose && Event.type != VisibilityNotify );
+	XMapWindow(XDisplay, XWin);
+	do {
+		XNextEvent(XDisplay, &Event);
+	}
+	while (Event.type != Expose && Event.type != VisibilityNotify);
 
-  width = w;
-  height = h;
-  bytes = (w + 7) / 8;
+	width = w;
+	height = h;
+	bytes = (w + 7) / 8;
 
 
-  free ((char *) argv);
-  return (0);
+	free((char *) argv);
+	return (0);
 }
 
 
 
-void
-win_close ()
+void win_close()
 {
-  XDestroyWindow (XDisplay, XWin);
-  XCloseDisplay (XDisplay);
+	XDestroyWindow(XDisplay, XWin);
+	XCloseDisplay(XDisplay);
 }
 
 
@@ -276,134 +277,142 @@ win_close ()
 
 
 
-int
-PicBuf_to_X11 ( const GEN_PAR * pg,  OUT_PAR * po)
+int PicBuf_to_X11(const GEN_PAR * pg, OUT_PAR * po)
 /**
  ** Interface to higher-level routines,
  **   similar in structure to other previewers
  **/
 {
-  int row_c, x, y;
-  int saved_col=0,saved_row=0;
-  int xref = 0, yref = 0;
-  const RowBuf *row;
-  const PicBuf *pb;
-  struct timeval tv;
-  tv.tv_usec = 10;
+	int row_c, x, y;
+	int saved_col = 0, saved_row = 0;
+	int xref = 0, yref = 0;
+	const RowBuf *row;
+	const PicBuf *pb;
+	struct timeval tv;
+	tv.tv_usec = 10;
 
-  if (pg == NULL || po == NULL)
-    return ERROR;
-  pb = po->picbuf;
-  if (pb == NULL)
-    return ERROR;
+	if (pg == NULL || po == NULL)
+		return ERROR;
+	pb = po->picbuf;
+	if (pb == NULL)
+		return ERROR;
 
-  if (!pg->quiet)
-    {
-      Eprintf ("\nX11 preview follows.\n");
-      Eprintf ("Press any key to end graphics mode\n");
-    }
+	if (!pg->quiet) {
+		Eprintf("\nX11 preview follows.\n");
+		Eprintf("Press any key to end graphics mode\n");
+	}
 
-  if (win_open (pg, po->outfile, (int) (po->xoff * po->dpi_x / 25.4),
-		(int) (po->yoff * po->dpi_y / 25.4), pb->nb << 3, pb->nr))
-    return ERROR;
-REDRAW:
-  /* Backward since highest index is lowest line on screen! */
-  for (row_c = row_start, y = MIN (height-row_start, pb->nr - 1);
-       row_c < pb->nr; row_c++, y--)
-    {
-   row =NULL;
-   if (row_c>=0) row = get_RowBuf (pb, row_c);
-      /*if (row == NULL)
-	return 0;*/
-      for (x = col_start; x < pb->nc; x++)
-	{
-        if (row_c <0 || x < 0) setXcolor(GRAY);
-         else
-	  switch (index_from_RowBuf (row, x, pb))
-	    {
+	if (win_open(pg, po->outfile, (int) (po->xoff * po->dpi_x / 25.4),
+		     (int) (po->yoff * po->dpi_y / 25.4), pb->nb << 3,
+		     pb->nr))
+		return ERROR;
+      REDRAW:
+	/* Backward since highest index is lowest line on screen! */
+	for (row_c = row_start, y = MIN(height - row_start, pb->nr - 1);
+	     row_c < pb->nr; row_c++, y--) {
+		row = NULL;
+		if (row_c >= 0)
+			row = get_RowBuf(pb, row_c);
+		/*if (row == NULL)
+		   return 0; */
+		for (x = col_start; x < pb->nc; x++) {
+			if (row_c < 0 || x < 0)
+				setXcolor(GRAY);
+			else
+				switch (index_from_RowBuf(row, x, pb)) {
 
-	    case xxBackground:
-	      continue;
+				case xxBackground:
+					continue;
 /*	    case xxForeground:
 	      setXcolor (WHITE);
 	      break;*/
-	    default:
-	      setXcolor (index_from_RowBuf (row, x, pb));
-	      break;
-	    }
-	  XDrawPoint (XDisplay, XWin, XGcWin, x - col_start, y + row_start);
+				default:
+					setXcolor(index_from_RowBuf
+						  (row, x, pb));
+					break;
+				}
+			XDrawPoint(XDisplay, XWin, XGcWin, x - col_start,
+				   y + row_start);
+		}
 	}
-    }
 
 /* Wait for KeyPress or mouse Button  - exit on keypress or button 3 */
-  do
-    {
-      XNextEvent (XDisplay, &WaitEvent);
-      if (WaitEvent.type == ButtonPress)
-	{
-	  if (WaitEvent.xbutton.button == Button1)
-	    {
-	      xref = WaitEvent.xbutton.x;
-	      yref = WaitEvent.xbutton.y;
-	    }
-	  if (WaitEvent.xbutton.button == Button2)
-	    {
-	    if (!zoomed){
-	      zoomed=1;
-	       po->HP_to_xdots *=2;
-	       po->HP_to_ydots *=2;
-	       po->dpi_x *=2;
-	       po->dpi_y *=2;
-		saved_row=row_start;
-		saved_col=col_start;
-		  row_start = height-WaitEvent.xbutton.y+2*saved_row;
-		  if (height < scr_height) row_start = height-WaitEvent.xbutton.y;
-		  col_start =  WaitEvent.xbutton.x+col_start;
-	    } else {
-	      zoomed=0;
-	      po->dpi_x = po->dpi_x/2;
-	      po->dpi_y = po->dpi_y/2;
-	       po->HP_to_xdots = po->HP_to_xdots/2;
-	       po->HP_to_ydots = po->HP_to_ydots/2;
-		row_start=saved_row;
-		col_start=saved_col;
+	do {
+		XNextEvent(XDisplay, &WaitEvent);
+		if (WaitEvent.type == ButtonPress) {
+			if (WaitEvent.xbutton.button == Button1) {
+				xref = WaitEvent.xbutton.x;
+				yref = WaitEvent.xbutton.y;
+			}
+			if (WaitEvent.xbutton.button == Button2) {
+				if (!zoomed) {
+					zoomed = 1;
+					po->HP_to_xdots *= 2;
+					po->HP_to_ydots *= 2;
+					po->dpi_x *= 2;
+					po->dpi_y *= 2;
+					saved_row = row_start;
+					saved_col = col_start;
+					row_start =
+					    height - WaitEvent.xbutton.y +
+					    2 * saved_row;
+					if (height < scr_height)
+						row_start =
+						    height -
+						    WaitEvent.xbutton.y;
+					col_start =
+					    WaitEvent.xbutton.x +
+					    col_start;
+				} else {
+					zoomed = 0;
+					po->dpi_x = po->dpi_x / 2;
+					po->dpi_y = po->dpi_y / 2;
+					po->HP_to_xdots =
+					    po->HP_to_xdots / 2;
+					po->HP_to_ydots =
+					    po->HP_to_ydots / 2;
+					row_start = saved_row;
+					col_start = saved_col;
 
-		}	
-		free_PicBuf(po->picbuf);
-		po->picbuf=NULL;    
-	      TMP_to_BUF(pg, po);
-	      pb=po->picbuf;
-	    }
-	  if (WaitEvent.xbutton.button == Button3) {win_close();return(0);}
-	}
-      else if (WaitEvent.type == ButtonRelease)
-	{
-	  if (WaitEvent.xbutton.button == Button1)
-	    {
-	      if (oversized)
-		{
-		  row_start += WaitEvent.xbutton.y - yref;
-		  col_start += xref - WaitEvent.xbutton.x;
-		}
-	      XSetForeground (XDisplay, XGcWin,
-			      WhitePixel (XDisplay, XScreen));
-	      XFillRectangle (XDisplay, XWin, XGcWin, 0, 0, scr_width,
-			      scr_height);
-	      goto REDRAW;	/* yes, goto in C is ugly */
-	    }
-	  if (WaitEvent.xbutton.button == Button2){
-	      XSetForeground (XDisplay, XGcWin,
-			      WhitePixel (XDisplay, XScreen));
-	      XFillRectangle (XDisplay, XWin, XGcWin, 0, 0, scr_width,
-			      scr_height);
-	      goto REDRAW;	/* yes, goto in C is ugly */
-		} 	
-	  break;
+				}
+				free_PicBuf(po->picbuf);
+				po->picbuf = NULL;
+				TMP_to_BUF(pg, po);
+				pb = po->picbuf;
+			}
+			if (WaitEvent.xbutton.button == Button3) {
+				win_close();
+				return (0);
+			}
+		} else if (WaitEvent.type == ButtonRelease) {
+			if (WaitEvent.xbutton.button == Button1) {
+				if (oversized) {
+					row_start +=
+					    WaitEvent.xbutton.y - yref;
+					col_start +=
+					    xref - WaitEvent.xbutton.x;
+				}
+				XSetForeground(XDisplay, XGcWin,
+					       WhitePixel(XDisplay,
+							  XScreen));
+				XFillRectangle(XDisplay, XWin, XGcWin, 0,
+					       0, scr_width, scr_height);
+				goto REDRAW;	/* yes, goto in C is ugly */
+			}
+			if (WaitEvent.xbutton.button == Button2) {
+				XSetForeground(XDisplay, XGcWin,
+					       WhitePixel(XDisplay,
+							  XScreen));
+				XFillRectangle(XDisplay, XWin, XGcWin, 0,
+					       0, scr_width, scr_height);
+				goto REDRAW;	/* yes, goto in C is ugly */
+			}
+			break;
 /*	  select (0, NULL, NULL, NULL, &tv);*/
+		}
 	}
-    }
-  while (WaitEvent.type != KeyPress );
+	while (WaitEvent.type != KeyPress);
 
-  win_close ();
-  return 0;
+	win_close();
+	return 0;
 }

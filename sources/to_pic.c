@@ -40,14 +40,14 @@ copies.
 #include <stdlib.h>
 #include <string.h>
 #ifdef	TURBO_C
-  #include <io.h>
+#include <io.h>
 #endif
 #include "bresnham.h"
 #include "hp2xx.h"
 
 
 
-#define ATARI_XRES	640	/* MUST be multiple of 8	*/
+#define ATARI_XRES	640	/* MUST be multiple of 8        */
 #define ATARI_YRES	400
 #define BYTES_PER_LINE	(ATARI_XRES>>3)
 
@@ -55,155 +55,146 @@ copies.
 
 
 static int
-Init_PIC_files (const char *basename, FILE **fd, int nb, int nr, int yb)
+Init_PIC_files(const char *basename, FILE ** fd, int nb, int nr, int yb)
 {
 #define	FNAME_LEN	80
-char	fname[FNAME_LEN], ext[8];
-int	i, n, yb_tot;
+	char fname[FNAME_LEN], ext[8];
+	int i, n, yb_tot;
 #ifdef VAX
-int	hd;
+	int hd;
 #endif
 
 
-  yb_tot = 1 + (nr - 1) / ATARI_YRES;    /* Total # of y blocks */
+	yb_tot = 1 + (nr - 1) / ATARI_YRES;	/* Total # of y blocks */
 
 
-  for (i=0; nb > 0; i++, nb -= BYTES_PER_LINE)
-  {
-	if (fd[i])
-	{
-		fclose (fd[i]);
-		fd[i] = NULL;
-	}
+	for (i = 0; nb > 0; i++, nb -= BYTES_PER_LINE) {
+		if (fd[i]) {
+			fclose(fd[i]);
+			fd[i] = NULL;
+		}
 
-	n = yb + i * yb_tot;
-	if (n > 99)
-	{
-		Eprintf ("ERROR: Too many PIC files per column!\n");
-		for (; i > -1; i--)
-			if (fd[i])
-			{
-				fclose (fd[i]);
-				fd[i] = NULL;
-			}
-		return ERROR;
-	}
+		n = yb + i * yb_tot;
+		if (n > 99) {
+			Eprintf("ERROR: Too many PIC files per column!\n");
+			for (; i > -1; i--)
+				if (fd[i]) {
+					fclose(fd[i]);
+					fd[i] = NULL;
+				}
+			return ERROR;
+		}
 
-	sprintf(ext,"%02d.pic", n);
+		sprintf(ext, "%02d.pic", n);
 
-	strcpy (fname, basename);
-	strncat (fname, ext, FNAME_LEN - strlen(basename) - 1);
+		strcpy(fname, basename);
+		strncat(fname, ext, FNAME_LEN - strlen(basename) - 1);
 
 #ifdef VAX
-	if ((fd[i] = fopen(fname, WRITE_BIN, "rfm=var","mrs=512")) == NULL)
-	{
+		if ((fd[i] =
+		     fopen(fname, WRITE_BIN, "rfm=var",
+			   "mrs=512")) == NULL) {
 #else
-	if ((fd[i] = fopen(fname, WRITE_BIN)) == NULL)
-	{
+		if ((fd[i] = fopen(fname, WRITE_BIN)) == NULL) {
 #endif
-		PError ("hp2xx -- opening PIC file(s)");
-		return ERROR;
+			PError("hp2xx -- opening PIC file(s)");
+			return ERROR;
+		}
 	}
-  }
-  return 0;
+	return 0;
 }
 
 
 
 
-static void
-RowBuf_to_PIC (RowBuf *row, int nb, FILE **fd)
+static void RowBuf_to_PIC(RowBuf * row, int nb, FILE ** fd)
 {
-int	i,j, n_pad=0, n_wr=BYTES_PER_LINE;
+	int i, j, n_pad = 0, n_wr = BYTES_PER_LINE;
 
 /* VAX peculiarity: Writing one big object is faster than many smaller */
 
-  if (nb % BYTES_PER_LINE)	/* padding required	*/
-	n_pad = (nb/BYTES_PER_LINE + 1)*BYTES_PER_LINE - nb;
+	if (nb % BYTES_PER_LINE)	/* padding required */
+		n_pad = (nb / BYTES_PER_LINE + 1) * BYTES_PER_LINE - nb;
 
-  for (i=0; nb > 0; i++, nb -= n_wr)
-	fwrite ((char *) &row->buf[i*BYTES_PER_LINE],
-		 n_wr=MIN(nb,BYTES_PER_LINE), 1, fd[i]);
+	for (i = 0; nb > 0; i++, nb -= n_wr)
+		fwrite((char *) &row->buf[i * BYTES_PER_LINE],
+		       n_wr = MIN(nb, BYTES_PER_LINE), 1, fd[i]);
 
-  for (i--, j=0; j < n_pad; j++)/* Fill last block with zero	*/
-	fputc ('\0', fd[i]);
+	for (i--, j = 0; j < n_pad; j++)	/* Fill last block with zero        */
+		fputc('\0', fd[i]);
 }
 
 
 
 
 
-int
-PicBuf_to_PIC (const GEN_PAR *pg, const OUT_PAR *po)
+int PicBuf_to_PIC(const GEN_PAR * pg, const OUT_PAR * po)
 {
 #define	N_BLOCKS 10
 
-FILE		*fd[N_BLOCKS];
-int		row_c, i, nb, nr, yb;
-const PicBuf	*pb;
+	FILE *fd[N_BLOCKS];
+	int row_c, i, nb, nr, yb;
+	const PicBuf *pb;
 
-  if (pg == NULL || po == NULL)
-	return ERROR;
-  pb = po->picbuf;
-  if (pb == NULL)
-	return ERROR;
+	if (pg == NULL || po == NULL)
+		return ERROR;
+	pb = po->picbuf;
+	if (pb == NULL)
+		return ERROR;
 
-  if (pb->depth > 1)
-  {
-	Eprintf ("\nPIC mode does not support colors yet -- sorry\n");
-	return ERROR;
-  }
-
-  if (pb->nb > (ATARI_XRES * N_BLOCKS) / 8)
-  {
-	Eprintf ("hp2xx -- Too many PIC files per row");
-	return ERROR;
-  }
-
-  if (!pg->quiet)
-	Eprintf ("\nWriting PIC output: %d rows of %d bytes\n",
-		pb->nr, pb->nb);
-
-  for (i=0, nb = pb->nb; nb > 0; i++, nb -= BYTES_PER_LINE)
-	fd[i] = NULL;
-
-
-  /* Backward since highest index is lowest line on screen! */
-
-  for (yb=nr=0, row_c = pb->nr - 1; row_c >= 0; nr++, row_c--)
-  {
-	if (nr % ATARI_YRES == 0)
-	{
-		if (Init_PIC_files (		/* Default name	*/
-			(*po->outfile != '-') ? po->outfile : "bitmap",
-			fd, pb->nb, pb->nr, yb))
-				return ERROR;
-		yb++;
+	if (pb->depth > 1) {
+		Eprintf
+		    ("\nPIC mode does not support colors yet -- sorry\n");
+		return ERROR;
 	}
-	if ((!pg->quiet) && (row_c % 10 == 0))
-		  /* For the impatients among us ...	*/
-		Eprintf (".");
-	RowBuf_to_PIC (get_RowBuf(pb, row_c), pb->nb, fd);
-  }
 
-  get_RowBuf(pb, 0);		/* Use row 0 for padding */
-  for (i=0; i < pb->nb; i++)	/* Clear it		 */
-	pb->row[0].buf[i] = '\0';
+	if (pb->nb > (ATARI_XRES * N_BLOCKS) / 8) {
+		Eprintf("hp2xx -- Too many PIC files per row");
+		return ERROR;
+	}
 
-  while (nr % ATARI_YRES != 0)
-  {
-	RowBuf_to_PIC (&pb->row[0], pb->nb, fd);
-	nr++;
-  }
+	if (!pg->quiet)
+		Eprintf("\nWriting PIC output: %d rows of %d bytes\n",
+			pb->nr, pb->nb);
+
+	for (i = 0, nb = pb->nb; nb > 0; i++, nb -= BYTES_PER_LINE)
+		fd[i] = NULL;
 
 
-  if (!pg->quiet)
-	Eprintf ("\n");
+	/* Backward since highest index is lowest line on screen! */
 
-  for (i=0, nb = pb->nb; nb > 0; i++, nb -= BYTES_PER_LINE)
-  {
-	fclose (fd[i]);
-	fd[i] = NULL;
-  }
-  return 0;
+	for (yb = nr = 0, row_c = pb->nr - 1; row_c >= 0; nr++, row_c--) {
+		if (nr % ATARI_YRES == 0) {
+			if (Init_PIC_files(	/* Default name */
+						  (*po->outfile !=
+						   '-') ? po->
+						  outfile : "bitmap", fd,
+						  pb->nb, pb->nr, yb))
+				return ERROR;
+			yb++;
+		}
+		if ((!pg->quiet) && (row_c % 10 == 0))
+			/* For the impatients among us ...    */
+			Eprintf(".");
+		RowBuf_to_PIC(get_RowBuf(pb, row_c), pb->nb, fd);
+	}
+
+	get_RowBuf(pb, 0);	/* Use row 0 for padding */
+	for (i = 0; i < pb->nb; i++)	/* Clear it          */
+		pb->row[0].buf[i] = '\0';
+
+	while (nr % ATARI_YRES != 0) {
+		RowBuf_to_PIC(&pb->row[0], pb->nb, fd);
+		nr++;
+	}
+
+
+	if (!pg->quiet)
+		Eprintf("\n");
+
+	for (i = 0, nb = pb->nb; nb > 0; i++, nb -= BYTES_PER_LINE) {
+		fclose(fd[i]);
+		fd[i] = NULL;
+	}
+	return 0;
 }

@@ -37,11 +37,11 @@ copies.
 #include "bresnham.h"
 
 static struct {
-   DevPt p_act;
-   int dx, dy, s1, s2, swapdir, err, count;
+	DevPt p_act;
+	int dx, dy, s1, s2, swapdir, err, count;
 } bres;
 
-DevPt	*bresenham_init (DevPt *pp1, DevPt *pp2)
+DevPt *bresenham_init(DevPt * pp1, DevPt * pp2)
 /**
  ** Init. generation of a straight line between *pp1 & *pp2
  **
@@ -59,55 +59,45 @@ DevPt	*bresenham_init (DevPt *pp1, DevPt *pp2)
  **	} while (bresenham_next() != BRESENHAM_ERR);
  **/
 {
-  bres.p_act = *pp1;
+	bres.p_act = *pp1;
 
-  if ((bres.dx = pp2->x - pp1->x) != 0)
-  {
-	if (bres.dx < 0)
-	{
-		bres.dx = -bres.dx;
-		bres.s1 = -1;
-	}
-	else
-		bres.s1 = 1;
-  }
-  else
-	bres.s1 = 0;	/* dx = abs(x2-x1), s1 = sign(x2-x1)	*/
+	if ((bres.dx = pp2->x - pp1->x) != 0) {
+		if (bres.dx < 0) {
+			bres.dx = -bres.dx;
+			bres.s1 = -1;
+		} else
+			bres.s1 = 1;
+	} else
+		bres.s1 = 0;	/* dx = abs(x2-x1), s1 = sign(x2-x1)    */
 
-  if ((bres.dy = pp2->y - pp1->y) != 0)
-  {
-	if (bres.dy < 0)
-	{
-		bres.dy = -bres.dy;
-		bres.s2 = -1;
-	}
-	else
-		bres.s2 = 1;
-  }
-  else
-	bres.s2 = 0;	/* dy = abs(y2-y1), s2 = sign(y2-y1)	*/
+	if ((bres.dy = pp2->y - pp1->y) != 0) {
+		if (bres.dy < 0) {
+			bres.dy = -bres.dy;
+			bres.s2 = -1;
+		} else
+			bres.s2 = 1;
+	} else
+		bres.s2 = 0;	/* dy = abs(y2-y1), s2 = sign(y2-y1)    */
 
-  if (bres.dy > bres.dx)
-  {
-	bres.swapdir = bres.dx;	/* use swapdir as temp. var.	*/
-	bres.dx = bres.dy;
-	bres.dy = bres.swapdir;
-	bres.swapdir = 1;
-  }
-  else
-	bres.swapdir = 0;
+	if (bres.dy > bres.dx) {
+		bres.swapdir = bres.dx;	/* use swapdir as temp. var.    */
+		bres.dx = bres.dy;
+		bres.dy = bres.swapdir;
+		bres.swapdir = 1;
+	} else
+		bres.swapdir = 0;
 
-  bres.count = bres.dx;		/* Init. of loop cnt	*/
-  bres.dy <<=1;
-  bres.err = bres.dy - bres.dx;	/* Init. of error term	*/
-  bres.dx <<=1;
+	bres.count = bres.dx;	/* Init. of loop cnt    */
+	bres.dy <<= 1;
+	bres.err = bres.dy - bres.dx;	/* Init. of error term  */
+	bres.dx <<= 1;
 
-  return &bres.p_act;
+	return &bres.p_act;
 }
 
 
 
-int	bresenham_next (void)
+int bresenham_next(void)
 /**
  ** Move actual point to next position (if possible)
  **
@@ -116,25 +106,24 @@ int	bresenham_next (void)
  **	   BRESENHAM_ERR else (e.g. if moving past EOL attempted)
  **/
 {
-  if (bres.count<=0)
-	return (BRESENHAM_ERR);	/* Beyond last point! */
+	if (bres.count <= 0)
+		return (BRESENHAM_ERR);	/* Beyond last point! */
 
-  while (bres.err >= 0)
-  {
+	while (bres.err >= 0) {
+		if (bres.swapdir)
+			bres.p_act.x += bres.s1;
+		else
+			bres.p_act.y += bres.s2;
+		bres.err -= bres.dx;
+	}
 	if (bres.swapdir)
-		bres.p_act.x += bres.s1;
-	else
 		bres.p_act.y += bres.s2;
-	bres.err -=  bres.dx;
-  }
-  if (bres.swapdir)
-	bres.p_act.y += bres.s2;
-  else
-	bres.p_act.x += bres.s1;
-  bres.err +=  bres.dy;
+	else
+		bres.p_act.x += bres.s1;
+	bres.err += bres.dy;
 
-  bres.count--;	/* i==0 indicates "last point reached"	*/
-  return ((bres.count) ? 0 : BRESENHAM_EOL);
+	bres.count--;		/* i==0 indicates "last point reached"  */
+	return ((bres.count) ? 0 : BRESENHAM_EOL);
 }
 
 	/* Test module */
@@ -145,41 +134,41 @@ int	bresenham_next (void)
 #include <graphics.h>
 
 
-void	b_line (DevPt *pp1, DevPt *pp2, int col)
+void b_line(DevPt * pp1, DevPt * pp2, int col)
 {
-DevPt	*pp;
+	DevPt *pp;
 
- pp = bresenham_init (pp1, pp2);
- do {
-	putpixel (pp->x, pp->y, col);
- } while (bresenham_next() != BRESENHAM_ERR);
+	pp = bresenham_init(pp1, pp2);
+	do {
+		putpixel(pp->x, pp->y, col);
+	} while (bresenham_next() != BRESENHAM_ERR);
 }
 
 
-void	main(void)
+void main(void)
 {
-int	gdriver=DETECT, gmode, MaxX, MaxY;
-DevPt	pa, pc;
+	int gdriver = DETECT, gmode, MaxX, MaxY;
+	DevPt pa, pc;
 
-  initgraph (&gdriver, &gmode, "");
+	initgraph(&gdriver, &gmode, "");
 
-  MaxX = getmaxx();
-  MaxY = getmaxy();
+	MaxX = getmaxx();
+	MaxY = getmaxy();
 
-  pc.x = (MaxX + 1) >> 1;
-  pc.y = (MaxY + 1) >> 1;
+	pc.x = (MaxX + 1) >> 1;
+	pc.y = (MaxY + 1) >> 1;
 
-  for (pa.x=0, pa.y=0; pa.x < MaxX ; pa.x += 4)
-	b_line (&pc, &pa, RED);
-  for (pa.x=MaxX, pa.y=0; pa.y < MaxY ; pa.y += 3)
-	b_line (&pc, &pa, GREEN);
+	for (pa.x = 0, pa.y = 0; pa.x < MaxX; pa.x += 4)
+		b_line(&pc, &pa, RED);
+	for (pa.x = MaxX, pa.y = 0; pa.y < MaxY; pa.y += 3)
+		b_line(&pc, &pa, GREEN);
 
-  for (pa.x=MaxX, pa.y=MaxY; pa.x >= 0 ; pa.x -= 4)
-	b_line (&pc, &pa, LIGHTRED);
-  for (pa.x=0, pa.y=MaxY; pa.y >= 0 ; pa.y -= 3)
-	b_line (&pc, &pa, LIGHTGREEN);
+	for (pa.x = MaxX, pa.y = MaxY; pa.x >= 0; pa.x -= 4)
+		b_line(&pc, &pa, LIGHTRED);
+	for (pa.x = 0, pa.y = MaxY; pa.y >= 0; pa.y -= 3)
+		b_line(&pc, &pa, LIGHTGREEN);
 
-  getchar();
+	getchar();
 }
 
 #endif

@@ -79,6 +79,8 @@ Bug fixes:
 - Text penwidth was always the same as that in use for linedrawing. This is
   now fixed, and the SD option for forcing this behaviour is now honored.
 - Some warning messages were emitted even in quiet mode.
+- EMF export would abort with a spurious error message when pen 0 was 
+  selected (Pascal Haible)
 
 Changes from 3.4.1 to 3.4.2
 

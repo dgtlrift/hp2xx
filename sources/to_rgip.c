@@ -38,10 +38,10 @@ copies.
 #include "pendef.h"
 #include "hp2xx.h"
 
-static  float  ax, ay;
-static  int  startx, starty, endx, endy;
-static  int  lwid, lsty, lcol;
-static  int  firstmove;
+static float ax, ay;
+static int startx, starty, endx, endy;
+static int lwid, lsty, lcol;
+static int firstmove;
 
 #define RGIPXMAX 10000.0
 #define RGIPYMAX 10000.0
@@ -49,43 +49,38 @@ static  int  firstmove;
 /**
  ** Convert HP to RGIP coordinates
  **/
-static int
-rgipx(float x)
+static int rgipx(float x)
 {
-  return (int)(x*ax);
+	return (int) (x * ax);
 }
 
-static int
-rgipy(float y)
+static int rgipy(float y)
 {
-  return (int)(y*ay);
+	return (int) (y * ay);
 }
 
 /**
  ** Set line width
  **/
-static void
-rgip_set_linewidth (int width)
+static void rgip_set_linewidth(int width)
 {
-  lwid=width;
+	lwid = width;
 }
 
 /**
  ** Set line style
  **/
-static void
-rgip_set_linestyle (int style)
+static void rgip_set_linestyle(int style)
 {
-  lsty=style;
+	lsty = style;
 }
 
 /**
  ** Set RGB color
  **/
-static void
-rgip_set_color (double red, double green, double blue)
+static void rgip_set_color(double red, double green, double blue)
 {
-  float max,min,delta,r,g,b,h,s,v;
+	float max, min, delta, r, g, b, h, s, v;
   /**
    ** Of course, here, in HP format, colors go from:
    **   0<red<1
@@ -116,229 +111,224 @@ rgip_set_color (double red, double green, double blue)
    ** (bradley@cis.upenn.edu) XV version 3.0
    **/
 
-  if (red>=green)
-  {
-    if (red>=blue) max=(float)red;
-    else max=(float)blue;
-  }
-  else
-  {
-    if (green>=blue) max=(float)green;
-    else max=(float)blue;
-  }
-  if (red<=green)
-  {
-    if (red<=blue) min=(float)red;
-    else min=(float)blue;
-  }
-  else
-  {
-    if (green<=blue) min=(float)green;
-    else min=(float)blue;
-  }
-  delta=max-min;
-  v=max;
-  h=(-1);
-  s=0.0;
-  if (max!=0.0)
-  {
-    s=delta/max;
-    if (s!=0.0)
-    {
-      r=(max-red)/delta;
-      g=(max-green)/delta;
-      b=(max-blue)/delta;
-      if (red==max) h=b-g;
-      else if (green==max) h=2+r-b;
-      else h=4+g-r;
-      h=h*60;
-      if (h<0) h=h+360;
-    }
-  }
+	if (red >= green) {
+		if (red >= blue)
+			max = (float) red;
+		else
+			max = (float) blue;
+	} else {
+		if (green >= blue)
+			max = (float) green;
+		else
+			max = (float) blue;
+	}
+	if (red <= green) {
+		if (red <= blue)
+			min = (float) red;
+		else
+			min = (float) blue;
+	} else {
+		if (green <= blue)
+			min = (float) green;
+		else
+			min = (float) blue;
+	}
+	delta = max - min;
+	v = max;
+	h = (-1);
+	s = 0.0;
+	if (max != 0.0) {
+		s = delta / max;
+		if (s != 0.0) {
+			r = (max - red) / delta;
+			g = (max - green) / delta;
+			b = (max - blue) / delta;
+			if (red == max)
+				h = b - g;
+			else if (green == max)
+				h = 2 + r - b;
+			else
+				h = 4 + g - r;
+			h = h * 60;
+			if (h < 0)
+				h = h + 360;
+		}
+	}
   /**
    ** Assign correct RGIP color...
    ** First case: if saturation reasonably high, then try for one of the
    ** main colors... then check if it's light... or dark...
    ** In case, prepare a default color...
    **/
-  lcol=7;
-  if(s>=.2)
-  {
-    if(((h>=0)&&(h<30))||(h>=330)) lcol=1;
-    else if ((h>=30)&&(h<90)) lcol=2;
-    else if ((h>=90)&&(h<150)) lcol=3;
-    else if ((h>=150)&&(h<210)) lcol=4;
-    else if ((h>=210)&&(h<270)) lcol=5;
-    else lcol=6;
-  }
+	lcol = 7;
+	if (s >= .2) {
+		if (((h >= 0) && (h < 30)) || (h >= 330))
+			lcol = 1;
+		else if ((h >= 30) && (h < 90))
+			lcol = 2;
+		else if ((h >= 90) && (h < 150))
+			lcol = 3;
+		else if ((h >= 150) && (h < 210))
+			lcol = 4;
+		else if ((h >= 210) && (h < 270))
+			lcol = 5;
+		else
+			lcol = 6;
+	}
   /**
    ** If not enough saturated, try for black, greys or white
    **/
-  else
-  {
+	else {
     /**
      ** If only one color and this color is not saturated, then it
      ** is the default (black on white)...
      **/
-    if (delta==0) lcol=7;
-    else
-    {
-      if (v<0.15) lcol=8;
-      else if (v<0.5) lcol=16;
-      else if (v<0.75) lcol=15;
-      else lcol=7;
-    }
-  }
+		if (delta == 0)
+			lcol = 7;
+		else {
+			if (v < 0.15)
+				lcol = 8;
+			else if (v < 0.5)
+				lcol = 16;
+			else if (v < 0.75)
+				lcol = 15;
+			else
+				lcol = 7;
+		}
+	}
 }
 
 /**
  ** Higher-level interface: Output Uniplex RGIP format
  **/
 
-int
-to_rgip (const GEN_PAR* pg, const OUT_PAR* po)
+int to_rgip(const GEN_PAR * pg, const OUT_PAR * po)
 {
-PlotCmd  cmd;
-HPGL_Pt  pt1 = {0,0};
-FILE  *md;
-int  pensize, pencolor, pen_no=0, err = 0;
+	PlotCmd cmd;
+	HPGL_Pt pt1 = { 0, 0 };
+	FILE *md;
+	int pensize, pencolor, pen_no = 0, err = 0;
 
-  /* Give some news... */
-  if (!pg->quiet)
-  {
-    Eprintf ("\n\n- Writing RGIP code to \"%s\"\n",
-	    *po->outfile == '-' ? "stdout" : po->outfile);
-  }
+	/* Give some news... */
+	if (!pg->quiet) {
+		Eprintf("\n\n- Writing RGIP code to \"%s\"\n",
+			*po->outfile == '-' ? "stdout" : po->outfile);
+	}
 
-  /* Init. of RGIP file: */
-  if (*po->outfile != '-')
-  {
-    if ((md = fopen(po->outfile, "w")) == NULL)
-    {
-      PError("hp2xx (rgip)");
-      err = ERROR;
-      goto RGIP_exit;
-    }
-  }
-  else
-  {
-    md = stdout;
-  }
+	/* Init. of RGIP file: */
+	if (*po->outfile != '-') {
+		if ((md = fopen(po->outfile, "w")) == NULL) {
+			PError("hp2xx (rgip)");
+			err = ERROR;
+			goto RGIP_exit;
+		}
+	} else {
+		md = stdout;
+	}
 
-  /* A begining is a very delicate time */
-  firstmove=1;
+	/* A begining is a very delicate time */
+	firstmove = 1;
 
-  /* Factor for transformation of HP coordinates to RGIP */
-  ax=RGIPXMAX/(po->xmax - po->xmin);
-  ay=RGIPYMAX/(po->ymax - po->ymin);
+	/* Factor for transformation of HP coordinates to RGIP */
+	ax = RGIPXMAX / (po->xmax - po->xmin);
+	ay = RGIPYMAX / (po->ymax - po->ymin);
 
-  /* RGIP header */
-  fprintf(md,"%%RGIP_METAFILE  :1.0a\n");
-  pensize = pt.width[DEFAULT_PEN_NO];
-  if (pensize > 0.05)
-  {
-    rgip_set_linewidth (pensize);
-  }
-  rgip_set_linestyle(1);
-  rgip_set_color(1.0,1.0,1.0);
+	/* RGIP header */
+	fprintf(md, "%%RGIP_METAFILE  :1.0a\n");
+	pensize = pt.width[DEFAULT_PEN_NO];
+	if (pensize > 0.05) {
+		rgip_set_linewidth(pensize);
+	}
+	rgip_set_linestyle(1);
+	rgip_set_color(1.0, 1.0, 1.0);
 
 /**
  ** Command loop: While temporary file not empty process command.
  **/
 
-  while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
-  {
-    switch (cmd)
-    {
-      case NOP:
-	break;
+	while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF) {
+		switch (cmd) {
+		case NOP:
+			break;
 
-      case SET_PEN:
-	if ((pen_no = fgetc(pg->td)) == EOF)
-	{
-	  PError("Unexpected end of temp. file: ");
-	  exit (ERROR);
+		case SET_PEN:
+			if ((pen_no = fgetc(pg->td)) == EOF) {
+				PError("Unexpected end of temp. file: ");
+				exit(ERROR);
+			}
+			pensize = pt.width[pen_no];
+			if (pensize > 0.05) {
+				rgip_set_linewidth(pensize);
+			}
+			pencolor = pt.color[pen_no];
+			rgip_set_color(pt.clut[pencolor][0] / 255.0,
+				       pt.clut[pencolor][1] / 255.0,
+				       pt.clut[pencolor][2] / 255.0);
+			break;
+
+		case DEF_PW:
+			if (!load_pen_width_table(pg->td)) {
+				PError("Unexpected end of temp. file");
+				exit(ERROR);
+			}
+			pensize = pt.width[pen_no];
+			if (pensize > 0.05) {
+				rgip_set_linewidth(pensize);
+			}
+			break;
+
+		case MOVE_TO:
+			HPGL_Pt_from_tmpfile(&pt1);
+			if (firstmove == 1) {
+				firstmove = 0;
+			} else {
+				fprintf(md, "%%%%RI_GROUPEND\n");
+			}
+			startx = rgipx(((&pt1)->x) - po->xmin);
+			starty = rgipy(((&pt1)->y) - po->ymin);
+			fprintf(md, "%%%%RI_GROUPSTART\n");
+			break;
+
+		case DRAW_TO:
+			HPGL_Pt_from_tmpfile(&pt1);
+			if (pensize != 0) {
+				endx = rgipx(((&pt1)->x) - po->xmin);
+				endy = rgipy(((&pt1)->y) - po->ymin);
+				fprintf(md,
+					"%d %d %d %d %d %d %d LINE\n",
+					startx, starty, endx, endy, lwid,
+					lsty, lcol);
+				startx = endx;
+				starty = endy;
+			}
+			break;
+
+		case PLOT_AT:
+			HPGL_Pt_from_tmpfile(&pt1);
+			if (pensize != 0) {
+				startx = rgipx(((&pt1)->x) - po->xmin);
+				starty = rgipy(((&pt1)->y) - po->ymin);
+				fprintf(md,
+					"[ %d %d ] %d DOTS\n",
+					startx, starty, lcol);
+
+			}
+			break;
+
+		default:
+			Eprintf("Illegal cmd in temp. file!");
+			err = ERROR;
+			goto RGIP_exit;
+		}
 	}
-	pensize = pt.width[pen_no];
-	if (pensize > 0.05)
-	{
-	  rgip_set_linewidth (pensize);
-	}
-	pencolor = pt.color[pen_no];
-	rgip_set_color (pt.clut[pencolor][0]/255.0,
-			pt.clut[pencolor][1]/255.0,
-			pt.clut[pencolor][2]/255.0);
-	break;
 
-      case DEF_PW:
-         if(!load_pen_width_table(pg->td)) {
-             PError("Unexpected end of temp. file");
-	     exit (ERROR);
-         }
-	pensize = pt.width[pen_no];
-	if (pensize > 0.05)
-	{
-	  rgip_set_linewidth (pensize);
-	}
-	break;
+	/* Finish up */
+	fprintf(md, "%%%%RI_GROUPEND\n");
 
-      case MOVE_TO:
-	HPGL_Pt_from_tmpfile (&pt1);
-	if (firstmove==1)
-	{
-	  firstmove=0;
-	}
-	else
-	{
-	  fprintf(md,"%%%%RI_GROUPEND\n");
-	}
-	startx=rgipx(((&pt1)->x) - po->xmin);
-	starty=rgipy(((&pt1)->y) - po->ymin);
-	fprintf(md,"%%%%RI_GROUPSTART\n");
-	break;
-
-      case DRAW_TO:
-	HPGL_Pt_from_tmpfile (&pt1);
-	if (pensize != 0)
-	  {
-	    endx=rgipx(((&pt1)->x) - po->xmin);
-	    endy=rgipy(((&pt1)->y) - po->ymin);
-	    fprintf(md,
-		    "%d %d %d %d %d %d %d LINE\n",
-		    startx, starty, endx, endy, lwid, lsty, lcol);
-	    startx=endx;
-	    starty=endy;
-	  }
-	break;
-
-      case PLOT_AT:
-	HPGL_Pt_from_tmpfile (&pt1);
-	if (pensize != 0)
-	{
-	  startx=rgipx(((&pt1)->x) - po->xmin);
-	  starty=rgipy(((&pt1)->y) - po->ymin);
-	  fprintf(md,
-		  "[ %d %d ] %d DOTS\n",
-		  startx, starty, lcol);
-
-	}
-	break;
-
-      default:
-	Eprintf ("Illegal cmd in temp. file!");
-	err = ERROR;
-	goto RGIP_exit;
-    }
-  }
-
-    /* Finish up */
-  fprintf(md,"%%%%RI_GROUPEND\n");
-
-RGIP_exit:
-  if (md != NULL && md != stdout)
-	fclose (md);
-  if (!pg->quiet)
-	Eprintf ("\n");
-  return err;
+      RGIP_exit:
+	if (md != NULL && md != stdout)
+		fclose(md);
+	if (!pg->quiet)
+		Eprintf("\n");
+	return err;
 }
-

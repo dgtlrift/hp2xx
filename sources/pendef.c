@@ -22,134 +22,132 @@ copies.
 */
 
 
-#include <stdio.h> 
-#include <stdlib.h> 
+#include <stdio.h>
+#include <stdlib.h>
 #include "hpgl.h"
 #include "pendef.h"
 
-PEN             pt;
+PEN pt;
 
-void Pen_Width_to_tmpfile (int pen, PEN_W width) {
-  PEN_N tp;
-  PEN_W tw;
+void Pen_Width_to_tmpfile(int pen, PEN_W width)
+{
+	PEN_N tp;
+	PEN_W tw;
 
-  tp = pen;
-  tw = width;
-  
-  if (record_off)		/* Wrong page!  */
-    return;
+	tp = pen;
+	tw = width;
 
-  if (fwrite (&tp, sizeof (tp), 1, td) != 1)
-    {
-      PError ("Pen_Width_to_tmpfile - pen");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-  if (fwrite (&tw, sizeof (tw), 1, td) != 1)
-    {
-      PError ("Pen_Width_to_tmpfile - width");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
+	if (record_off)		/* Wrong page!  */
+		return;
+
+	if (fwrite(&tp, sizeof(tp), 1, td) != 1) {
+		PError("Pen_Width_to_tmpfile - pen");
+		Eprintf("Error @ Cmd %ld\n", vec_cntr_w);
+		exit(ERROR);
+	}
+	if (fwrite(&tw, sizeof(tw), 1, td) != 1) {
+		PError("Pen_Width_to_tmpfile - width");
+		Eprintf("Error @ Cmd %ld\n", vec_cntr_w);
+		exit(ERROR);
+	}
 }
 
-void Pen_Color_to_tmpfile (int pen, int red, int green, int blue) {
-  PEN_N tp;
-  PEN_C r, g, b;
+void Pen_Color_to_tmpfile(int pen, int red, int green, int blue)
+{
+	PEN_N tp;
+	PEN_C r, g, b;
 
-  tp = pen;
-  r = red;
-  g = green;
-  b = blue;
+	tp = pen;
+	r = red;
+	g = green;
+	b = blue;
 
-  if (record_off)		/* Wrong page!  */
-    return;
+	if (record_off)		/* Wrong page!  */
+		return;
 
-  if (fwrite (&tp, sizeof (tp), 1, td) != 1)
-    {
-      PError ("Pen_Color_to_tmpfile - pen");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-  if (fwrite (&r, sizeof (r), 1, td) != 1)
-    {
-      PError ("Pen_Color_to_tmpfile - red component");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-  if (fwrite (&g, sizeof (g), 1, td) != 1)
-    {
-      PError ("Pen_Color_to_tmpfile - green component");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-  if (fwrite (&b, sizeof (b), 1, td) != 1)
-    {
-      PError ("Pen_Color_to_tmpfile - blue component");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
+	if (fwrite(&tp, sizeof(tp), 1, td) != 1) {
+		PError("Pen_Color_to_tmpfile - pen");
+		Eprintf("Error @ Cmd %ld\n", vec_cntr_w);
+		exit(ERROR);
+	}
+	if (fwrite(&r, sizeof(r), 1, td) != 1) {
+		PError("Pen_Color_to_tmpfile - red component");
+		Eprintf("Error @ Cmd %ld\n", vec_cntr_w);
+		exit(ERROR);
+	}
+	if (fwrite(&g, sizeof(g), 1, td) != 1) {
+		PError("Pen_Color_to_tmpfile - green component");
+		Eprintf("Error @ Cmd %ld\n", vec_cntr_w);
+		exit(ERROR);
+	}
+	if (fwrite(&b, sizeof(b), 1, td) != 1) {
+		PError("Pen_Color_to_tmpfile - blue component");
+		Eprintf("Error @ Cmd %ld\n", vec_cntr_w);
+		exit(ERROR);
+	}
 }
 
-int load_pen_width_table(FILE *td){
-   PEN_N          tp;
-   PEN_W          tw;
-   int             i;
+int load_pen_width_table(FILE * td)
+{
+	PEN_N tp;
+	PEN_W tw;
+	int i;
 
-   if (fread( (void *) &tp,sizeof(tp),1,td) != 1) {
-      return(0);
-   }
+	if (fread((void *) &tp, sizeof(tp), 1, td) != 1) {
+		return (0);
+	}
 
-   if (fread( (void *) &tw,sizeof(tw),1,td) != 1) {
-      return(0);
-   }
+	if (fread((void *) &tw, sizeof(tw), 1, td) != 1) {
+		return (0);
+	}
 
-   if(tp >= NUMPENS) { /* don't check < 0 - unsigned */
-      return(1);
-   }
+	if (tp >= NUMPENS) {	/* don't check < 0 - unsigned */
+		return (1);
+	}
 
-   if(tp == 0) {                               /* set all pens */
-      for (i = 1; i < NUMPENS; ++i)
-         pt.width[i] = tw;
-   } else {
-      pt.width[tp] = tw;                 /* set just the specified one */
-   }
+	if (tp == 0) {		/* set all pens */
+		for (i = 1; i < NUMPENS; ++i)
+			pt.width[i] = tw;
+	} else {
+		pt.width[tp] = tw;	/* set just the specified one */
+	}
 
-   return(1);
+	return (1);
 }
 
-int load_pen_color_table(FILE *td){
-   PEN_N          tp;
-   PEN_C          r,g,b;
+int load_pen_color_table(FILE * td)
+{
+	PEN_N tp;
+	PEN_C r, g, b;
 
-   if (fread( (void *) &tp,sizeof(tp),1,td) != 1) {
-      return(-1);
-   }
+	if (fread((void *) &tp, sizeof(tp), 1, td) != 1) {
+		return (-1);
+	}
 
-   if (fread( (void *) &r,sizeof(r),1,td) != 1) {
-      return(-1);
-   }
+	if (fread((void *) &r, sizeof(r), 1, td) != 1) {
+		return (-1);
+	}
 
-   if (fread( (void *) &g,sizeof(g),1,td) != 1) {
-      return(-1);
-   }
-   
-   if (fread( (void *) &b,sizeof(b),1,td) != 1) {
-      return(-1);
-   }
+	if (fread((void *) &g, sizeof(g), 1, td) != 1) {
+		return (-1);
+	}
 
-   if(tp >= NUMPENS) { /* don't check < 0 - unsigned */
-      return(1);
-   }
+	if (fread((void *) &b, sizeof(b), 1, td) != 1) {
+		return (-1);
+	}
 
-   set_color_rgb(tp,r,g,b);
-   return(tp);
+	if (tp >= NUMPENS) {	/* don't check < 0 - unsigned */
+		return (1);
+	}
+
+	set_color_rgb(tp, r, g, b);
+	return (tp);
 }
 
-void set_color_rgb(PEN_N index,BYTE r,BYTE g, BYTE b) {
-    pt.clut[index][0] = r;
-    pt.clut[index][1] = g;
-    pt.clut[index][2] = b;
-    pt.color[index] = index;
+void set_color_rgb(PEN_N index, BYTE r, BYTE g, BYTE b)
+{
+	pt.clut[index][0] = r;
+	pt.clut[index][1] = g;
+	pt.clut[index][2] = b;
+	pt.color[index] = index;
 }
-

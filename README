@@ -1,4 +1,4 @@
-hp2xx-3.4.3 (to be released sometime by the end of december 2002)
+hp2xx-3.4.3 
 
 Besides fixing a number of bugs in 3.4.2 (related to polygon drawing, image
 rotation and some output modes), this version adds support for the HPGL
@@ -104,5 +104,5 @@ Bug fixes:
 - Text penwidth was always the same as that in use for linedrawing. This is
   now fixed, and the SD option for forcing this behaviour is now honored.
 - Some warning messages were emitted even in quiet mode.
-
+- EMF output would abort when pencolor 0 was selected (Pascal Haible).
 

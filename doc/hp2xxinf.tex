@@ -1,6 +1,6 @@
 \input texinfo      @c -*-texinfo-*-
 @c Copyright (c) 1992 - 1994  Heinz W. Werntges
-@c Copyright (c) 1998 - 2000  Martin Kroeker
+@c Copyright (c) 1998 - 2000,2001,2002  Martin Kroeker
 @c %**start of header
 @setfilename hp2xx.info
 @settitle HP2XX, A HP-GL Converter
@@ -14,7 +14,7 @@
 
 @tex
 % \def\$#1${{#1}}  % Kludge: collect RCS revision info without $...$
-\xdef\manvers{$Revision: 1.2 $}  % For use in headers, footers too
+\xdef\manvers{$Revision: 1.3 $}  % For use in headers, footers too
 @end tex
 
 @c HP2XX CHANGE LOG:
@@ -33,6 +33,7 @@
 @c 00/02/06  V 1.12  MK   Added notes on relation between -c/-s and PC/PW
 @c                        and on auto-generation of ppm files in pbm mode
 @c 00/09/20  V 1.2   MK   fixed INFO-DIR-ENTRY, updates for 3.4.0
+@c 02/12/28  V 1.3   MK   updates for 3.4.3
 @c THIS MANUAL REQUIRES TEXINFO-2 macros and info-makers to format properly.
 
 @ifinfo
@@ -48,7 +49,7 @@ END-INFO-DIR-ENTRY
 This file documents the HP-GL converter HP2XX
 
 @c !!set edition, date, version
-This is Edition 1.2, September 2000,
+This is Edition 1.3, December 2002,
 of @cite{Using HP2XX: A HP-GL Converter}.
 
 Copyright (C) 1998 - 2002 Martin Kroeker
@@ -86,7 +87,7 @@ by the Free Software Foundation instead of in the original English.
 @sp 1
 @c !!set edition, date, version
 @subtitle Edition 1.3, for HP2XX version 3.4.3
-@subtitle September  2002
+@subtitle December  2002
 @author by Martin Kroeker (previously by Heinz W. Werntges)
 @page
 @tex
@@ -129,7 +130,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 
 @c !!set edition, date, version
-This is Edition 1.3, September 2002, for HP2XX Version 3.4.3
+This is Edition 1.3, December 2002, for HP2XX Version 3.4.3
 @end ifinfo
 
 
@@ -386,7 +387,7 @@ option list. There are 8 colors including @var{background} (usually white).
 and color 7 means yellow. Permitted pen sizes are 0 ... 9 units in versions 
 before 3.4.3, or up to 3.5mm (using characters A to Z to denote the range from
 1.0 to 3.5) in later versions.
-WARNING: In versions of @code{hp2xx} before 3.4.3, all raster mode pen sizes 
+NOTE: In versions of @code{hp2xx} before 3.4.3, all raster mode pen sizes 
 were approximated by double, triple, etc. width, and lines wider than 4 would
 normally not give useful results. In 3.4.3, the line drawing algorithm has
 been substantially improved and should render accurately scaled pen widths. 
@@ -1252,7 +1253,7 @@ you should get a good approximation of what a plotter would produce).
 @code{=====|===|========================================================}
 @code{AA   |+  | Arc Absolute}
 @code{AC   |+  | Anchor corner}
-@code{AD   | - | Alternate font Definition}
+@code{AD   |*  | Alternate font Definition}
 @code{AF   |+  | Advance Full page [same as PG]}
 @code{AH   |+  | Advance Half page [same as PG]}
 @code{AP   |  .| Automatic pen operations}
@@ -1260,9 +1261,8 @@ you should get a good approximation of what a plotter would produce).
 @code{AS   |  .| Acceleration select}
 @code{AT   |+  | Arc through three points}
 @code{-----|---|--------------------------------------------------------}
-@code{BF   | - | Buffer Plot [maybe not a valid hpgl command]}
-@code{BL   |+  | Buffer Label}
 @code{BP   |+  | Begin Plot}
+@code{BL   |+  | Buffer Label}
 @code{BR   |+  | Bezier curve, Relative}
 @code{BZ   |+  | Bezier curve, Absolute}
 @code{-----|---|--------------------------------------------------------}
@@ -1316,12 +1316,13 @@ you should get a good approximation of what a plotter would produce).
 @code{-----|---|--------------------------------------------------------}
 @code{LA   |*  | Line Attributes}
 @code{LB   |+  | Label}
+@code{LM   | - | Label mode (for two-byte character sets)}
 @code{LO   |+  | Label origin}
 @code{LT   |+  | Line type}
 @code{-----|---|--------------------------------------------------------}
 @code{MC   | - | Merge Control}
 @code{MG   |+  | Message [same as WD]}
-@code{MT   | . | Media Type}
+@code{MT   |  .| Media Type}
 @code{-----|---|--------------------------------------------------------}
 @code{NP   |+  | Number of Pens}
 @code{NR   |  .| Not ready (unload page and go offline)}
@@ -1348,6 +1349,7 @@ you should get a good approximation of what a plotter would produce).
 @code{PD   |+  | Pen down}
 @code{PE   |+  | Polyline Encoded}
 @code{PG   |+  | Page feed}
+@code{PP   | - | Pixel placement}
 @code{PR   |+  | Plot relative}
 @code{PS   |+  | Plot Size}
 @code{PT   |+  | Pen thickness}
@@ -1366,7 +1368,7 @@ you should get a good approximation of what a plotter would produce).
 @code{SA   |+  | Select alternate character set}
 @code{SB   | - | Scalable or Bitmap font selection}
 @code{SC   |+  | Scale}
-@code{SD   | - | Standard font attribute Definition}
+@code{SD   |*  | Standard font attribute Definition}
 @code{SI   |+  | Absolute character size}
 @code{SL   |+  | Character slant}
 @code{SM   |+  | Symbol mode}

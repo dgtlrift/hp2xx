@@ -298,7 +298,7 @@ check:
 
 clean:
 	-make mostlyclean
-	-$(RMCMD) core a.out *~ ./hp2xx.texinfo ./hp2xx.info $(PROGRAM)
+	-$(RMCMD) core a.out *~ ./hp2xx.texinfo ./hp2xx.inf* $(PROGRAM)
 
 distclean:
 	@echo make distclean -- not supported yet.

@@ -1,5 +1,9 @@
 Changes to hp2xx:
 =================
+3.4.3: 03-01-06
+Indented sources (indent -kr -i8). Updated documentation. Fixed pencolor=0
+abort in emf output (Pascal Haible).
+
 3.4.3a26:
 Silenced the "unknown escape sequence" warnings in quiet mode. Added new
 output mode for CNC G-code (experimental, constant depth)(Michael Rooke).
