@@ -1,0 +1,87 @@
+(c) 1992, 1993 H. Werntges      HP2XX release 3.1.4                 93/11/15
+                                ===================
+
+Files in ./sources:
+-----------------------
+
+README       This file
+
+makefile     A symbolic link to ../makes/generic.mak
+
+bresnham.c   Implementation of Bresenham algorithm (for line rasterization)
+chardraw.c   Code for drawing ASCII characters
+getopt.c     from GNU getopt, slightly modified -- don't re-distribute!
+getopt1.c    from GNU getopt -- don't re-distribute, use original!
+hp2xx.c      High-level routines for hp2xx
+hpgl.c       HP-GL parser etc.
+no_prev.c    A dummy previewer
+picbuf.c     Code for raster ops (vector-to-internal-bitmap)
+to_amiga.c   AMIGA previewer
+to_atari.c   ATARI previewer
+to_dj_gr.c   DOS full-screen (S)VGA previewer, based on DJ Delorie's gr lib
+to_eps.c     Output converter for EPS (Encapsulated PostScript)
+to_ilbm.c    AMIGA only: IFF-InterLeave BitMap converter
+to_img.c     Output converter for IMF (DR's Image format)
+to_mf.c      Output converter for Metafont sources and related vector formats
+to_os2.c     OS/2 full-screen previewer (only b/w); uses to_vga.c in DOS mode
+to_pac.c     Output converter for ATARI PAC format (unsupported)
+to_pbm.c     Output converter for PBM (Portable BitMap) format
+to_pcl.c     Output converter for HP PLC Level 3 (and some Deskjet extras)
+to_pcx.c     Output converter for Paintbrush PCX format (color not working yet!)
+to_pic.c     Output converter for ATARI PIC format (unsupported)
+to_pm.c      OS/2 PM previewer (unsupported -- stderr output is lost yet)
+to_rgip.c    Output converter for Uniplex RGIP vector format
+to_sunvw.c   SunView previewer (unsupported -- outdated)
+to_uis.c     VAX-VMS UIS previewer
+to_vga.c     DOS full-screen VGA previewer
+to_x11.c     X11 previewer
+
+bresnham.h   Contains a basic struct -- needed by almost all C sources
+chardraw.h   Header for character drawing.
+charset0.h   Definition of built-in font / character set 0
+getopt.h     from GNU getopt -- don't re-distribute, use original!
+hp2xx.h      Central to almost all C sources
+iff.h        AMIGA only: for IFF-InterLeave BitMap converter
+ilbm.h       AMIGA only: for IFF-InterLeave BitMap converter
+x11.h        Some X11 extras
+
+
+NOTE about unsupported formats:
+------------------------------
+
+  o  to_dj_gr.c  works fine on 386 and 486 CPUs, but I'd rather replace it
+                 by code both applicable to DOS and OS/2, and that will be
+                 emx.
+
+  o  to_pm.c     is my first OS/2 PM project. It seems to work nicely, with
+                 the exception that I don't know how to re-direct hp2xx's
+                 diag output (to stderr or log file) into a second window
+                 WITHOUT significant changes in the sources.
+
+                 If you know a simple way -- please tell me
+                 (I'm aware of pmprtf -- this come close but won't do it).
+
+  o  to_pic.c    The PIC format was mainly used by ATARI programs like
+                 Signum. I consider it outdated. Try to work with IMG.
+
+  o  to_pac.c    Similar to PIC (compressed version of PIC), used e. g.
+                 by STaD.
+
+
+
+For installation, get a suitable makefile from ../makes and follow
+intructions in ../makes/README.
+
+For details of operation, see ../doc/hp2xxinf.tex (hp2xx.texinfo).
+
+Optionally test hp2xx with HP-GL files provided in ../hp-tests.
+E. g., run
+
+            % hp2xx -h100 -w100 ../hp-tests/ascii.hp
+
+(This should result in a graphical display of the available
+ character set 0.)
+
+
+Enjoy!
+

@@ -1,0 +1,184 @@
+Changes to hp2xx:
+=================
+
+NOTES:
+     o  Intermediate versions have not been made publicly available.
+     o  Letters at end of version number indicate small changes like
+        source restructuring or minor bug fixes.
+
+
+V 3.14a, 93/11/15:
+
+	-- to_eps.c:    Code now closer to Adobe EPSF structuring conventions
+	                (thanks to Nelson Beebe for his detailed report)
+	-- generic.mak: install-exe --> install-bin
+	-- hp2xxinf.tex:Typos fixes
+	Plus all changes later than 3.13a
+ 
+
+
+V 3.13c, 93/10/23 & 93/11/08:
+
+	-- to_vga.c:    Fix in getchar()-handling; bug reported by
+	                Uwe Girlich (girlich@aix520.informatik.uni-leipzig.de)
+	-- hp2xxinf.tex:Typo causing makeinfo error removed
+
+V 3.13b, 93/09/27:
+
+	-- hp2xx.c:     Fix in autoset_outfile_name() prevents crash in pipe mode
+	                Improved VAX/VMS "makefiles"
+
+V 3.13a, 93/09/03:
+
+	-- hp2xx.c:     Wait() --> NormalWait(); -m hpgl added; -Pn:m parser modified
+	-- hp2xx.h:     A few new #define's (VAX-VMS needs them); rect() prototype
+	-- hp2xx.c:     Wait() --> NormalWait(); -m hpgl added; -Pn:m parser modified
+	-- hpgl.c:      Support for EA (rect() added)
+	-- to_mf.c:     Mode 5 (Simple HP-GL) added
+	-- to_pm.c:     Minor changes to match emx 0.8g header
+	-- to_pcl.c:    Compression only in Deskjet modes
+	-- to_uis.c:    Minor fixes
+	Plus all changes later than 3.12a
+
+
+V 3.12f, 93/07/20: (see ./fixes)
+
+	-- hp2xx.c:     SilentWait() better adapted to UNIX pipes (A. Bagge)
+	-- hp2xx.h:     A few prototypes added
+	-- to_os2.c:    Updated (H. Szillat); working in combination with to_vga.c
+	-- to_pcl.c:    TIFF compression (mode 2) added
+	-- to_vga.c:    Minor adaptations
+	-- generic.mak: Fix for OS/2 full-screen version
+
+
+V 3.12e, 93/05/28: (see ./fixes)
+
+	-- hp2xx.h:     "Binary vs. text mode" finally added for OS/2, too
+	-- to_os2.c     (by H. Szillat) added to distribution
+	-- generic.mak: Minor improvements around OS/2, emx versions
+
+
+V 3.12d, 93/05/20: (see ./fixes)
+
+	-- hpgl.c:   Bug fix for LB/PR problem (by W. Eric Norum),
+	             LT1 pattern adjustment
+	-- to_eps.c: BoundingBox corrected for max pen width
+	-- to_pcl.c: Code for end-of-raster-graphics corrected
+	-- hp2xx.c:  Option --version added (GNU standard)
+
+
+V 3.12, 93/04/17:
+
+	-- New makefile for ATARI
+	-- ATARI only: Support for mode "cs" (Chr. Strunk's TeX specials)
+	-- New ATARI previewer
+	-- charset.h: `0' without slash now, according to HP-GL charset 0
+	-- chardraw.c:
+		Prepared for multiple fonts;
+		Bug fixed: 8-bit char codes won't crash hp2xx
+		plot_user_char() added (code by A. Treindl)
+	-- hpgl.c:
+		Arcs/circles now properly closed (occasional tiny gaps removed)
+		Bug fixed: SC followed by draw (without move) misplaced a point
+		Serious bug fixed in the line type (LT) pattern generator
+		Exception fixed in LT pattern generator
+		hypot() problem fixed (DOS)
+		UC supported
+	-- picbuf.c:
+		Always use 4 bits per pel in color mode (and 1 in b/w mode)
+		New encoding scheme for color codes:
+			nybbles instead of bit planes
+			--> more mem, but faster access in color mode
+		Obsolete type "DotBlock" finally replaced by "Byte"
+	-- to_pcl.c:
+		CMYK color support (for HP Deskjet 550C) added
+	-- to_mf.c:
+		Bug fix in "cad" mode (\emline statement lines now end with '%')
+	-- to_eps.c:
+		VM report lines are suppressed in 'quiet' mode
+		BoundingBox: improved rounding (using floor and ceil)
+
+	-- Much better generic makefile for many UNIX systems;
+		   improved special makefiles
+	-- Files re-organized (./extras removed):
+		"amigalib.zoo" now distributed as separate file
+			"hp2xx.amigalib.zoo"
+		HGC support now distributed in separate file
+			"hp2xx.hgc.showit.zoo"
+		Other sources moved from ./extras to ./sources
+
+V 3.11, 93/01/17:
+
+	-- New makefile for Amiga
+	-- Root directory renamed to hp2xx311 to make life easier
+	   for DOS-based people
+	-- File ownerships now rw-rw-rw
+	-- code_to_ucoord() in chardraw.c:
+		Reported bug (on RS6000 ONLY!) fixed
+
+V 3.10, 93/01/09
+	First release of sources as hp2xx.3.1.0.tar.Z under GNU conditions!!
+	CMY color for Deskjet (PLC), option -S now with parameter;
+	minor corrections
+
+V 3.03a, 92/12/14
+	Long options & "true size" mode (-t) added
+
+V 3.02c, 92/12/10
+	Range of pages (-P a:b) permitted now
+	New mode: "cad" for TeXcad code!
+
+V 3.02a, 92/10/20
+	HPGL command LT (line type) now fully supported; bug in eps mode removed.
+
+V 3.01d, 92/06/08
+	HPGL commands SM, TL, XT, YT supported
+
+V 3.00f, 92/05/25
+	Up to seven colors (some modes)! Multiple-input handling; log files;
+	auto-generation of output file names; output to stdout via "-f-"
+
+V 2.20d, 92/04/14
+	Symmetrical use of -h (height) and -w (width) options, new defaults:
+	200 [mm] for both -h & -w. Picture will always fit into a window
+	given by -h and -w
+
+V 2.20c, 92/03/03
+	Arcs, circles, fonts (Charset 0), pages, and many more commands supported
+	ATARI-ST binary file added (only old version of hp2xx - sorry)
+	DOS/386 binary file added (compiled with DJ Delorie's GNU-C version)
+		WARNING: hp2xx386.exe's previewer tries to activate 800x600 SVGA mode!
+	New modes: -m em (emTeX-specials), -m epic (epic macro \drawline)
+	Modes pic & pac only supported in (outdated) ATARI version
+	HPGL parser much easier portable and more tolerant to HPGL syntax variations
+	Bugs in character scaling fixed; LO now fully supported
+
+V 2.18e, 92/02/06
+	X11,Sunview,ATARI: preview; IMG format supported;
+	HPGL parser improved
+
+V 2.17, 92/01/12
+	Some debugging; more coherent sources, but no functional changes
+
+V 2.16a, 91/11/21
+	ATARI mode reduced again to simple "pic" format,
+	support of "LT;", "LT0;" (for point plotting),
+	support of different pens ("SP;", "SP0;"..."SP8;"),
+	internal changes (faster now), more flexible MF syntax
+
+V 2.14b, 91/10/10
+	ATARI mode: New file name convention, adapted to STAD
+	hp2xx.dvi:  Now part of distribution package
+
+V 2.14a, 91/09/08
+	ATARI ST support added.
+
+V 2.13a, 91/06/30
+	PostScript support added.
+	Warning: Due to lack of local resources, PostScript format could
+		 not be thoroughly tested. Please consider the PostScript
+		 part as in "beta" state and report all problems.
+
+V 2.12,  91/06/20
+	First external release!
+	Rotate option added, debug code removed

@@ -1,0 +1,166 @@
+List of supported HP-GL commands:         Date: 92/10/20
+=================================
+
+hp2xx emulates a subset of the Hewlett-Packard 7550A plotter.
+The following manual was used as reference for command definitions:
+
+     [1] "HP 7550A Interfacing and Programming Manual"
+
+
+
+Not all commands are supported. Among the non-supported commands
+are those which do not really apply to a software emulator, like:
+
+   o commands affecting the communication between plotter and host computer,
+
+   o commands for changing the behaviour of a real plotter, like
+     plotting speed etc.,
+
+   o commands for the control of plotter memory allocation,
+
+   o commands causing various plotter outputs.
+
+
+Other non-supported commands would be desirable, but were left out
+due to their inherent complexity (or just because nobody pushed me, :-) ).
+Among those are:
+
+   o commands for font (character set) management.
+       Since there is only one font built into hp2xx, there is
+       no point in providing font switching etc.
+
+   o windowing/clipping and rotation
+
+   o polygon and box filling commands
+
+
+The remainder of this file tabulates all HP-GL commands listed on
+pages 1-2 to 1-4 in [1] and marks them as either
+
+      not applicable       (.),
+      ignored              (-), or
+      supported            (+)
+
+  I use the label "supported" when I think the command is fully supported
+only in the context of the already implemented commands. In general,
+you should have absolutely no problem with this class of commands.
+
+  Though there still are unsupported commands, this does not mean that
+you might have trouble using hp2xx. Nowadays, most HP-GL files are
+machine-generated, e.g. by CAD or DTP programs. These tend to make use
+of just a simple subset of HP-GL. To my experience, chances are high
+that hp2xx will give you the picture you want!
+
+
+
+
+HP-GL|s n| Description & Remarks
+Cmd  | i |
+=====|===|========================================================
+ AA  |+  | Arc Absolute
+ AF  |+  | [same as PG]
+ AH  |+  | [same as PG]
+ AP  |  .| Automatic pen operations
+ AR  |+  | Arc Relative
+ AS  |  .| Acceleration select
+     |   |
+ BF  | - | Buffer Plot
+ BL  |+  | Buffer Label
+     |   |
+ CA  | - | Designate alternate character set
+ CC  | - | Character Chord angle
+ CI  |+  | Circle
+ CM  | - | Character selection mode
+ CP  |+  | Character plot
+ CS  | - | Designate standard character set
+ CT  | - | Chord tolerance
+ CV  | - | Curved line generator
+     |   |
+ DC  |  .| Digitize clear
+ DF  |+  | Default
+ DI  |+  | Absolute direction
+ DL  | - | Define downloadable character
+ DP  |  .| Digitize point
+ DR  |+  | Relative direction
+ DS  | - | Designate character into slot
+ DT  |+  | Define label terminator
+     |   |
+ EA  |+  | Edge rectangle absolute
+ EP  | - | Edge polygon
+ ER  | - | Edge rectangle relative
+ ES  |+  | Extra space
+ EW  | - | Edge wedge
+     |   |
+ FP  | - | Fill polygon
+ FS  |  .| Force select
+ FT  | - | Fill type
+     |   |
+ GC  |  .| Group count
+ GM  |  .| Graphics memory
+     |   |
+ IM  | - | Input mask
+ IN  |+  | Initialize
+ IP  |+  | Input P1 and P2
+ IV  | - | Invoke character slot
+ IW  | - | Input window
+     |   |
+ KY  |  .| Define key
+     |   |
+ LB  |+  | Label
+ LO  |+  | Label origin
+ LT  |+  | Line type
+     |   |
+ NR  |  .| Not ready (unload page)
+     |   |
+ OA  |  .| Output actual position and pen status
+ OC  |  .| Output commanded position and pen status
+ OD  |  .| Output digitized point and pen status
+ OE  | - | Output error
+ OF  | - | Output factors
+ OG  |  .| Output group count
+ OH  | - | Output hard-clip limits
+ OI  |  .| Output identification
+ OK  |  .| Output key
+ OL  | - | Output label length
+ OO  |  .| Output options
+ OP  |+  | Output P1 and P2
+ OS  | - | Output status
+ OT  |  .| Output carousel type
+ OW  | - | Output window
+     |   |
+ PA  |+  | Plot absolute
+ PB  |+  | Print buffered label
+ PD  |+  | Pen down
+ PG  |+  | Page feed
+ PR  |+  | Plot relative
+ PT  | - | Pen thickness
+ PU  |+  | Pen up
+     |   |
+ RA  | - | Fill rectangle absolute
+ RO  | - | Rotate coordinate system  [use option -r instead!]
+ RP  | - | Replot
+ RR  | - | Fill rectangle relative
+     |   |
+ SA  | - | Select alternate character set
+ SC  |+  | Scale
+ SI  |+  | Absolute character size
+ SL  |+  | Character slant
+ SM  |+  | Symbol mode
+ SP  |+  | Select pen
+ SR  |+  | Relative character size
+ SS  | - | Select standard character set
+     |   |
+ TL  |+  | Tick length
+     |   |
+ UC  |+  | User-defined character
+ UF  | - | User-defined fill type
+     |   |
+ VS  |  .| Velocity select
+     |   |
+ WD  |+  | Write to display
+ WG  | - | Fill wedge
+     |   |
+ XT  |+  | X-Tick
+     |   |
+ YT  |+  | Y-Tick
+

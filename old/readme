@@ -1,0 +1,13 @@
+(c) 1992, 1993 H. Werntges      HP2XX release 3.1.4
+                                ===================
+
+Files in ./old:
+---------------------
+
+README         This file
+
+to_atari.c     Replaced by newer release by A. Schwab
+to_mf.c        Replaced by newer release (additions by J. Eggers:
+               ``mode -m cs'' to TeX-related outputs on ATARI platforms)
+
+-----------------------------------------------------------------------------
