@@ -8,7 +8,7 @@
 #include "hpgl.h"
 #include "lindef.h"
 #include "pendef.h"
-
+#include <assert.h>
 void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	  HPGL_Pt point2, int scale_flag, int filltype, float spacing,
 	  float hatchangle,float curwidth)
@@ -17,6 +17,7 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 		double x, y;
 	} HPGL_Pt2;
 	double pxmin, pxmax, pymin, pymax;
+	double spxmin, spxmax, spymin, spymax;
 	double polyxmin, polyymin, polyxmax, polyymax;
 	double scanx1, scanx2, scany1, scany2;
 	HPGL_Pt2 segment[MAXPOLY], tmp;
@@ -40,8 +41,13 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 
 	PEN_W SafePenW = curwidth;
 	LineEnds SafeLineEnd = CurrentLineEnd;
-	CurrentLineEnd = LAE_butt;
 
+
+	if (numpoints <3) {
+	fprintf(stderr,"polygon with %d vertices ???\n",numpoints);
+	return;
+	}
+	CurrentLineEnd = LAE_butt;
 	penwidth = 0.1;
 	PlotCmd_to_tmpfile(DEF_PW);
 	Pen_Width_to_tmpfile(1, penwidth);
@@ -92,8 +98,25 @@ if (filltype == 11) penwidth=1.69;
 		pymin = pymin - rot_ang * pxdiff;
 		pymax = pymax + rot_ang * pxdiff;
 	}
+	spymax=pymax;
+	spymin=pymin;
+	if (scale_flag) {
+	p.x=0.;
+	p.y=spymax;
+	User_to_Plotter_coord(&p,&p);
+	spymax=p.y;
+	p.x=0.;
+	p.y=spymin;
+	User_to_Plotter_coord(&p,&p);
+	spymin=p.y;
+	penwidth *= (pymax-pymin)/(spymax-spymin); 
+#if 0
+	fprintf(stderr,"scaled penwidth: %f\n",penwidth);
+#endif
+	}
+//	fprintf(stderr,"pymax-pymin = %f\n",(pymax-pymin));
 	numlines = (int) fabs(1. + (pymax - pymin + penwidth) / penwidth);
-/*fprintf(stderr,"running %d scanlines across %d polygon\n",numlines,numpoints);*/
+//fprintf(stderr,"running %d scanlines across %d polygon\n",numlines,numpoints);
 #if 0
 /* debug code to show shade box */
 	p.x = pxmin;
@@ -124,9 +147,14 @@ if (filltype == 11) penwidth=1.69;
 		k = -1;
 		scany1 = pymin + (double) i *penwidth;
 		scany2 = scany1 + pydiff;
-		if (scany1 >= pymax || scany1 <= pymin) {
-/*fprintf(stderr,"zu weit\n");*/
-			continue;
+		if (scany1 <= pymin) {
+/*fprintf(stderr,"zu weit? i=%d\n",i);*/
+		continue;
+		}
+		if (scany1 >= pymax) {
+/*fprintf(stderr,"zu weit i=%d\n",i);*/
+continue;
+//			break;
 		}
 		if (scany2 < polyymin)
 			continue;
@@ -322,6 +350,22 @@ if (filltype == 11) penwidth=1.69;
 
 	PlotCmd_to_tmpfile(DEF_LA);
 	Line_Attr_to_tmpfile(LineAttrEnd, LAE_butt);
+	spxmax=pxmax;
+	spxmin=pxmin;
+	if (scale_flag) {
+	p.x=spxmax;
+	p.y=0;
+	User_to_Plotter_coord(&p,&p);
+	spxmax=p.x;
+	p.x=spxmin;
+	p.y=0.;
+	User_to_Plotter_coord(&p,&p);
+	spxmin=p.x;
+	penwidth *= (pxmax-pxmin)/(spxmax-spxmin); 
+#if 0	
+	fprintf(stderr,"scaled penwidth: %f\n",penwidth);
+#endif
+	}
 
 	numlines = (int) fabs(1. + (pxmax - pxmin + penwidth) / penwidth);
 

@@ -1,5 +1,11 @@
 Changes to hp2xx:
 =================
+3.5.0a11:
+The fixed penwidth of 0.1 used internally for solid fills needs to be
+scaled if the plot uses SC (Simon Clayton). Made another attempt to get
+pen-state handling in polygon mode right - polygons declared with the pen
+up should now render correctly with FP, and be invisible with EP.
+
 3.5.0a10:
 Need to force pen_down state when entering polygon mode, else polygons drawn
 with pen up will not render correctly or even not at all. Cannot suppress

@@ -1,10 +1,17 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a11
+
+Bug fixes:
+
+- Solid fills did not take scaling into account, creating stripe patterns
+  in some circumstances (Simon Clayton).
+- Polygons composed of 'pen up' moves only resulted in a huge amount of
+  fill lines being calculated, none of which was actually drawn. This could
+  cause serious slowdown of the program and excessive temporary diskspace
+  usage. (This problem may have been triggered by the corrections in alpha10)
+  Such polygons should now be correctly rendered by FP, and be ignored by EP. 
+
 3.5.0a10
-
-New features:
-
-- Added experimental support for variable-width fonts (in truetype mode only,
-  and requiring another compile-time fontfile definition in the Makefile)
 
 Bug fixes:
 

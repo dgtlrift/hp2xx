@@ -177,6 +177,7 @@ static double Diag_P1_P2, pat_pos;
 static HPGL_Pt p_last = { M_PI, M_PI };	/* Init. to "impossible" values */
 
 static HPGL_Pt polygons[MAXPOLY];
+static short polygon_penstate[MAXPOLY];
 static int vertices = -1;
 static short polygon_mode = FALSE;
 static int filltype = 1;
@@ -195,6 +196,7 @@ static float rot_cos, rot_sin;
 static short rotate_flag = FALSE;	/* Flags tec external to HP-GL  */
 static short ps_flag = FALSE;
 static short ac_flag = FALSE;
+static short pm1_flag = FALSE;
 static double rot_ang = 0.;
 static double rot_tmp = 0.;	/* saved RO value for resetting after drawing */
 static short mv_flag = FALSE;
@@ -512,7 +514,7 @@ static void init_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 
 
 
-static void User_to_Plotter_coord(const HPGL_Pt * p_usr, HPGL_Pt * p_plot)
+void User_to_Plotter_coord(const HPGL_Pt * p_usr, HPGL_Pt * p_plot)
 /**
  ** 	Utility: Transformation from (scaled) user coordinates
  **	to plotter coordinates
@@ -653,6 +655,7 @@ void HPGL_Pt_to_polygon(HPGL_Pt pf)
 		return;
 
 	polygons[++vertices] = pf;
+	polygon_penstate[vertices]=polygon_penup;
 	if (rotate_flag) {
 		double tmp = rot_cos * pf.x - rot_sin * pf.y;
 		pf.y = rot_sin * pf.x + rot_cos * pf.y;
@@ -1925,18 +1928,30 @@ void line(int relative, HPGL_Pt p)
 	} else
 		pl = p_last;
 
-	if (polygon_mode && polygon_penup)
-		pen_down = FALSE;
+//	if (polygon_mode && polygon_penup)
+//		pen_down = FALSE;
 
-	if (pen_down && !outside) {
-		if (polygon_mode) {
+//	if (polygon_mode && polygon_penup)
+//		pen_down = TRUE;
+
+	if (polygon_mode) {
+		if (!outside && !pm1_flag) {
 			HPGL_Pt_to_polygon(pl);
 			HPGL_Pt_to_polygon(p);
+		}
+	}	else {
+		
+	if (pen_down && !outside) {
+//		if (polygon_mode) {
+//			if (!pm1_flag) {
+//			HPGL_Pt_to_polygon(pl);
+//			HPGL_Pt_to_polygon(p);
 /*	      fprintf(stderr,"polygon line1: %f %f - %f %f\n",p_last.x,p_last.y,p.x,p.y);*/
-		} else {
+//			}
+//		} else {
 			Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
 /*	      fprintf(stderr,"std line1: %f %f - %f %f\n",p_last.x,p_last.y,p.x,p.y); */
-		}
+//		}
 	} else {
 		if (iwflag) {
 			Pen_action_to_tmpfile(MOVE_TO, &porig, scale_flag);
@@ -1944,14 +1959,18 @@ void line(int relative, HPGL_Pt p)
 			Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
 		}
 	}
-
-	if (polygon_mode && polygon_penup) {
-		polygon_penup = FALSE;
-		polystart = p;
-		pen_down = TRUE;
+       }
+//	if (polygon_mode && polygon_penup && vertices<0) {
+//		polygon_penup = FALSE;
+//		polystart = p;
+//		pen_down = TRUE;
+//	}
+	if (polygon_mode && pm1_flag) {
+//	polygon_penup=FALSE;
+	pm1_flag=FALSE;
+	polystart=p;
 	}
-
-
+	
 	if (symbol_char) {
 		plot_symbol_char(symbol_char,pen);
 		Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
@@ -1988,9 +2007,9 @@ static void arc_increment(HPGL_Pt * pcenter, double r, double phi)
 	}
 
 	if (polygon_mode) {
-		if (polygon_penup)
-			polygon_penup = FALSE;
-		else if (pen_down && !outside) {
+//		if (polygon_penup)
+//			polygon_penup = FALSE;
+		/*else*/ if (pen_down && !outside) {
 			HPGL_Pt_to_polygon(p_last);
 			HPGL_Pt_to_polygon(p);
 /*fprintf(stderr,"arcpoint %f %f\n",p.x,p.y);*/
@@ -2913,12 +2932,14 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				vertices -= 2;
 
 		for (i = 0; i < vertices; i = i + 2) {	/*for all polygon edges */
+		if (polygon_penstate[i]==FALSE){
 			p1.x = polygons[i].x;
 			p1.y = polygons[i].y;
 			Pen_action_to_tmpfile(MOVE_TO, &p1, scale_flag);
 			p1.x = polygons[i + 1].x;
 			p1.y = polygons[i + 1].y;
 			Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
+			}
 		}
 		Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 		break;
@@ -3084,7 +3105,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				break;
 			}
 			polygon_mode = TRUE;
-			polygon_penup = FALSE;
+			polygon_penup = TRUE;
 			saved_penstate = pen_down;
 			pen_down = TRUE;
 			vertices = -1;
@@ -3130,14 +3151,16 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 						    S1.y;
 					}
 				}
+
 				if (!outside) {
+					polygon_penup=TRUE;
 					HPGL_Pt_to_polygon(p_last);
 					HPGL_Pt_to_polygon(polystart);	/* force closing of open polygon */
 				}
 			}
 			if (vertices > 0)
-				polygon_penup = TRUE;
-			pen_down = FALSE;
+				pm1_flag = TRUE;
+//			pen_down = FALSE;
 			break;
 		}
 		if (ftmp == 2) {
@@ -3278,9 +3301,11 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				thickness = ftmp;
 		}
 	case PU:		/* Pen  Up                      */
-		pen_down = FALSE;
-		if (polygon_mode)
+		if (!polygon_mode)
+			pen_down = FALSE;
+		else
 			polygon_penup = TRUE;
+
 		lines(plot_rel, hd);
 		tp->CR_point = HP_pos;
 		break;

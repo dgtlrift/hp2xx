@@ -65,8 +65,8 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
-#define VERS_NO        "3.5.0a10"
-#define VERS_DATE      "04/03/29"
+#define VERS_NO        "3.5.0a11"
+#define VERS_DATE      "04/05/02"
 #define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
 #if defined(AMIGA)
 #define VERS_ADDITIONS "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"
@@ -385,6 +385,8 @@ int to_eps(const GEN_PAR *, const OUT_PAR *);
 int to_ps(const GEN_PAR *, const OUT_PAR *);
 int to_rgip(const GEN_PAR *, const OUT_PAR *);
 int to_fig(const GEN_PAR *, const OUT_PAR *);
+
+void User_to_Plotter_coord (const HPGL_Pt*,HPGL_Pt*);
 
 void size_PicBuf(const GEN_PAR *, const OUT_PAR *, int *, int *);
 PicBuf *allocate_PicBuf(const GEN_PAR *, int, int);

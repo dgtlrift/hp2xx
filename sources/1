@@ -1,0 +1,181 @@
+
+hp2xx is free software and you are welcome to distribute copies of it
+  under certain conditions. There is absolutely no warranty for hp2xx!
+For full details, read file COPYING (shipped along with this package),
+  or write to:		Free Software Foundation, Inc.
+			675 Mass Ave, Cambridge, MA 02139, USA
+
+HP2xx:	A HPGL converter (xx = mf, eps, pcl, pcx, img ...)
+	V 3.5.0a9  (04/03/06)   (c) 1991 - 1994 (V3.20) Heinz W. Werntges
+                                (c) 1999 - 2004 Martin Kroeker
+
+Reading HPGL file
+invalid escape ESC*t (Esc42116)
+Writing Cmd: 1 2 5 10 20 50 100 200 500   FI: ignored  1k 2k pitch/height/posture/typeface unsupported
+  FI: ignored    TR: ignored  Warning: Zero line segment length -- skipped
+zu weit i=5079
+zu weit i=5080
+5k zu weit i=3492
+zu weit i=3493
+zu weit i=7459
+zu weit i=7460
+zu weit i=9998
+zu weit i=9999
+zu weit i=5555
+zu weit i=5556
+10k zu weit i=2222
+zu weit i=2223
+zu weit i=4444
+zu weit i=4445
+zu weit i=7935
+zu weit i=7936
+zu weit i=12220
+zu weit i=12221
+zu weit i=7459
+zu weit i=7460
+zu weit i=9046
+zu weit i=9047
+zu weit i=12537
+zu weit i=12538
+zu weit i=16346
+zu weit i=16347
+polygon with -1 vertices ???
+20k zu weit i=13966
+zu weit i=13967
+zu weit i=16822
+zu weit i=16823
+zu weit i=20790
+zu weit i=20791
+polygon with -1 vertices ???
+zu weit i=21424
+zu weit i=21425
+zu weit i=25392
+zu weit i=25393
+Warning: Zero line segment length -- skipped
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+zu weit i=49196
+zu weit i=49197
+zu weit i=45229
+zu weit i=45230
+zu weit i=34755
+zu weit i=34756
+zu weit i=57639
+zu weit i=57640
+zu weit i=52687
+zu weit i=52688
+zu weit i=48720
+zu weit i=48721
+zu weit i=39357
+zu weit i=39358
+zu weit i=59829
+zu weit i=59830
+zu weit i=60146
+zu weit i=60147
+zu weit i=56020
+zu weit i=56021
+zu weit i=52211
+zu weit i=52212
+polygon with -1 vertices ???
+zu weit i=43800
+zu weit i=43801
+polygon with -1 vertices ???
+zu weit i=43007
+zu weit i=43008
+zu weit i=45387
+zu weit i=45388
+zu weit i=62527
+zu weit i=62528
+polygon with -1 vertices ???
+zu weit i=67605
+zu weit i=67606
+zu weit i=63003
+zu weit i=63004
+zu weit i=59353
+zu weit i=59354
+Warning: Zero line segment length -- skipped
+zu weit i=47927
+zu weit i=47928
+polygon with -1 vertices ???
+zu weit i=49196
+zu weit i=49197
+Warning: Zero line segment length -- skipped
+zu weit i=69827
+zu weit i=69828
+zu weit i=70144
+zu weit i=70145
+zu weit i=66177
+zu weit i=66178
+zu weit i=62685
+zu weit i=62686
+50k zu weit i=52211
+zu weit i=52212
+zu weit i=51894
+zu weit i=51895
+polygon with -1 vertices ???
+zu weit i=72524
+zu weit i=72525
+zu weit i=72842
+zu weit i=72843
+zu weit i=56179
+zu weit i=56180
+polygon with -1 vertices ???
+Warning: Zero line segment length -- skipped
+zu weit i=61416
+zu weit i=61417
+zu weit i=60146
+zu weit i=60147
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+zu weit i=69033
+zu weit i=69034
+zu weit i=67287
+zu weit i=67288
+zu weit i=65542
+zu weit i=65543
+zu weit i=63955
+zu weit i=63956
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+zu weit i=72842
+zu weit i=72843
+zu weit i=71096
+zu weit i=71097
+zu weit i=69509
+zu weit i=69510
+zu weit i=67764
+zu weit i=67765
+polygon with -1 vertices ???
+polygon with -1 vertices ???
+Warning: Zero line segment length -- skipped
+Warning: Zero line segment length -- skipped
+zu weit i=71572
+zu weit i=71573
+zu weit i=71096
+zu weit i=71097
+Page number 1 of range 0 - 0
+
+HPGL commands read: 7996
+HPGL command(s) ignored: 3
+Unexpected event(s):  0
+Internal command(s):  73451
+Pens used: 1 
+Max. number of pages: 1
+
+Width  x  height: 277.01 x 182.80 mm, true sizes
+Coordinate range: (-25.5358, 0) ... (11055, 7311.9)
+
+Plotting in buffer
+
+Processing Cmd: 1 2 5 10 20 50 100 200 500 1k 2k 5k 10k 20k 50k 
+X11 preview follows.
+Press any key to end graphics mode
+
+Reading HPGL file
