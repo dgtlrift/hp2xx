@@ -55,8 +55,9 @@ void pdImageDestroy(pdImagePtr);
 void pdImageSetPixel(pdImagePtr, int, int, int);
 int pdImageGetPixel(pdImagePtr, int, int);
 int pdImageBoundsSafe(pdImagePtr, int, int);
-int gdImageColorAllocate(pdImagePtr, int, int, int);
+int pdImageColorAllocate(pdImagePtr, int, int, int);
 void pdImageColorTransparent(pdImagePtr, int);
 void pdImagePNG(pdImagePtr, FILE *);
+
 
 

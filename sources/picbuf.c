@@ -57,12 +57,13 @@ copies.
 #include "lindef.h"
 #include "picbuf.h"
 #include "hp2xx.h"
+#include "hpgl.h"
 
 
-static	RowBuf	*first_buf = NULL, *last_buf = NULL;
+static RowBuf *first_buf = NULL, *last_buf = NULL;
 
-static int X_Offset=0;
-static int Y_Offset=0;
+static int X_Offset = 0;
+static int Y_Offset = 0;
 
 #ifndef SEEK_SET
 #define SEEK_SET 0
@@ -70,149 +71,131 @@ static int Y_Offset=0;
 
 
 
-static void
-swapout_RowBuf (RowBuf *row, const PicBuf *picbuf)
+static void swapout_RowBuf(RowBuf * row, const PicBuf * picbuf)
 {
-  if (fseek (picbuf->sd, (long) row->index*picbuf->nb*picbuf->depth, SEEK_SET))
-  {
-	PError	("swapout_RowBuf (on seek)");
-	exit	(ERROR);
-  }
+   if (fseek(picbuf->sd, (long) row->index * picbuf->nb * picbuf->depth, SEEK_SET)) {
+      PError("swapout_RowBuf (on seek)");
+      exit(ERROR);
+   }
 
-  if ((int)fwrite((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
-	!= picbuf->depth)
-  {
-	PError	("swapout_RowBuf (on write)");
-	exit	(ERROR);
-  }
+   if ((int) fwrite((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
+       != picbuf->depth) {
+      PError("swapout_RowBuf (on write)");
+      exit(ERROR);
+   }
 }
 
 
 
-static void
-swapin_RowBuf (RowBuf *row, const PicBuf *picbuf)
+static void swapin_RowBuf(RowBuf * row, const PicBuf * picbuf)
 {
-  if (fseek (picbuf->sd, (long) row->index*picbuf->nb*picbuf->depth, SEEK_SET))
-  {
-	PError	("swapin_RowBuf (on seek)");
-	exit	(ERROR);
-  }
+   if (fseek(picbuf->sd, (long) row->index * picbuf->nb * picbuf->depth, SEEK_SET)) {
+      PError("swapin_RowBuf (on seek)");
+      exit(ERROR);
+   }
 
-  if ((int)fread ((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
-	!= picbuf->depth)
-  {
-	PError	("swapin_RowBuf (on read)");
-	exit	(ERROR);
-  }
+   if ((int) fread((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
+       != picbuf->depth) {
+      PError("swapin_RowBuf (on read)");
+      exit(ERROR);
+   }
 }
 
 
 
 
 
-static void
-link_RowBuf (RowBuf *act, RowBuf *prev)
+static void link_RowBuf(RowBuf * act, RowBuf * prev)
 {
-  if (prev == NULL)			/* Make act the new "first_buf"	*/
-  {
-	if (first_buf == NULL)
-	{
-		first_buf = act;
-		act->next = act->prev = NULL;
-		return;
-	}
-	act->next = first_buf;
-	act->prev = NULL;
-	first_buf->prev = act;
-	first_buf = act;
-  }
-  else				/* Squeeze act between prev & prev->next */
-  {
-	if ((act->next = prev->next) != NULL)
-		act->next->prev = act;
-	act->prev = prev;
-	prev->next = act;
-  }
+   if (prev == NULL) {          /* Make act the new "first_buf"   */
+      if (first_buf == NULL) {
+         first_buf = act;
+         act->next = act->prev = NULL;
+         return;
+      }
+      act->next = first_buf;
+      act->prev = NULL;
+      first_buf->prev = act;
+      first_buf = act;
+   } else {                     /* Squeeze act between prev & prev->next */
+
+      if ((act->next = prev->next) != NULL)
+         act->next->prev = act;
+      act->prev = prev;
+      prev->next = act;
+   }
 }
 
 
 
 
 
-static void
-unlink_RowBuf (RowBuf *act)
+static void unlink_RowBuf(RowBuf * act)
 {
-  if ((act->prev==NULL) && (act->next==NULL))
-	return;
+   if ((act->prev == NULL) && (act->next == NULL))
+      return;
 
-  if (act->prev)
-	act->prev->next = act->next;
-  else
-	first_buf = act->next;
+   if (act->prev)
+      act->prev->next = act->next;
+   else
+      first_buf = act->next;
 
-  if (act->next)
-	act->next->prev = act->prev;
-  else
-	last_buf = act->prev;
+   if (act->next)
+      act->next->prev = act->prev;
+   else
+      last_buf = act->prev;
 
-  act->next = act->prev = NULL;
+   act->next = act->prev = NULL;
 }
 
 
 
 
-RowBuf
-*get_RowBuf (const PicBuf *pb, int index)
+RowBuf * get_RowBuf(const PicBuf * pb, int index)
 {
-RowBuf	*row;
+   RowBuf *row;
 
-  if (pb == NULL)
-	return NULL;
-  if (index < 0 || index >= pb->nr)
-  {
-	Eprintf("get_RowBuf: Illegal y (%d not in [0, %d])\n", index, pb->nr-1);
-	return NULL;
-  }
+   if (pb == NULL)
+      return NULL;
+   if (index < 0 || index >= pb->nr) {
+      Eprintf("get_RowBuf: Illegal y (%d not in [0, %d])\n", index, pb->nr - 1);
+      return NULL;
+   }
 
-  row = pb->row + index;
+   row = pb->row + index;
 
 /**
  ** If swapped, load first. Put into first position, if not already there:
  **/
-  if ((row->prev == NULL) && (row->next == NULL))
-  {
-	swapout_RowBuf	(last_buf, pb);
-	row->buf = last_buf->buf;
-	unlink_RowBuf	(last_buf);		/* Mark as swapped	 */
-	swapin_RowBuf	(row, pb);
-	link_RowBuf	(row, NULL);		/* Put in first position */
-  }
-  else
-	if (row->prev != NULL)
-	{
-		unlink_RowBuf (row);
-		link_RowBuf (row, NULL);	/* Put in first position */
-	}
-	/* else: Leave it in first position */
+   if ((row->prev == NULL) && (row->next == NULL)) {
+      swapout_RowBuf(last_buf, pb);
+      row->buf = last_buf->buf;
+      unlink_RowBuf(last_buf);  /* Mark as swapped       */
+      swapin_RowBuf(row, pb);
+      link_RowBuf(row, NULL);   /* Put in first position */
+   } else if (row->prev != NULL) {
+      unlink_RowBuf(row);
+      link_RowBuf(row, NULL);   /* Put in first position */
+   }
+   /* else: Leave it in first position */
 
-  return row;
+   return row;
 }
 
 
 
 
 
-static void
-plot_RowBuf (RowBuf *rowbuf, int x, int depth, int color_index)
+static void plot_RowBuf(RowBuf * rowbuf, int x, int depth, int color_index)
 /**
  ** Write color index into pixel x of given row buffer
  **/
 {
-int	i, Mask;
-Byte	*addr;
+   int i, Mask;
+   Byte *addr;
 
-  if (rowbuf == NULL)
-	return;
+   if (rowbuf == NULL)
+      return;
 /**
  ** Color_index is either the low bit (b/w) or the low nybble (color)
  ** rowbuf->buf is either a sequence of such bits or nybbles.
@@ -222,79 +205,67 @@ Byte	*addr;
  ** but not easily readable...
  **/
 
-  if (depth == 1)
-  {
-  	if (color_index > 1) color_index=1;
-	Mask = 0x80;
-	if ((i = x & 0x07) != 0)
-	{
-		Mask >>= i;
-		if (i!=7)
-			color_index <<= (7-i);
-	}
-	else
-		color_index <<= 7;
-	addr = rowbuf->buf + (x >> 3);
-  }
-  else if (depth==4)
-  {
-	Mask = 0xF0;
-	if ((x & 0x01) != 0)
-		Mask >>= 4;
-	else
-		color_index <<= 4;
-	addr = rowbuf->buf + (x >> 1);
-  }
-  else 
-	{
-	addr = rowbuf->buf +x;
-	Mask= 0x00;
-	}
-	if (depth<8){
-  *addr &= ~Mask;
-  *addr |=  color_index;
-  }else
-  *addr = color_index;
+   if (depth == 1) {
+      if (color_index > 1)
+         color_index = 1;
+      Mask = 0x80;
+      if ((i = x & 0x07) != 0) {
+         Mask >>= i;
+         if (i != 7)
+            color_index <<= (7 - i);
+      } else
+         color_index <<= 7;
+      addr = rowbuf->buf + (x >> 3);
+   } else if (depth == 4) {
+      Mask = 0xF0;
+      if ((x & 0x01) != 0)
+         Mask >>= 4;
+      else
+         color_index <<= 4;
+      addr = rowbuf->buf + (x >> 1);
+   } else {
+      addr = rowbuf->buf + x;
+      Mask = 0x00;
+   }
+   if (depth < 8) {
+      *addr &= ~Mask;
+      *addr |= color_index;
+   } else
+      *addr = color_index;
 }
 
 
 
 
 
-int
-index_from_RowBuf (const RowBuf *rowbuf, int x, const PicBuf *pb)
+int index_from_RowBuf(const RowBuf * rowbuf, int x, const PicBuf * pb)
 /**
  ** Return color index of pixel x in given row
  **/
 {
-int	i, Mask, color_index;
-Byte	*addr;
+   int i, Mask, color_index;
+   Byte *addr;
 
-  if (pb->depth == 1)
-  {
-	Mask = 0x80;
-	if ((i = x & 0x07) != 0)
-		Mask >>= i;
-	addr = rowbuf->buf + (x >> 3);
-	return (*addr & Mask) ? xxForeground : xxBackground;
-  }
-  else if (pb->depth ==4)
-  {
-	Mask = 0xF0;
-	if ((x & 0x01) != 0)
-		Mask >>= 4;
-	addr = rowbuf->buf + (x >> 1);
-	color_index = *addr & Mask;
-	if ((x & 0x01) == 0)
-		color_index >>= 4;
-	return color_index;
-  }
-  else
-  {
-	addr = rowbuf->buf+x;
-	color_index= *addr;
-	return color_index;
-  }	
+   if (pb->depth == 1) {
+      Mask = 0x80;
+      if ((i = x & 0x07) != 0)
+         Mask >>= i;
+      addr = rowbuf->buf + (x >> 3);
+      return (*addr & Mask) ? xxForeground : xxBackground;
+   } else if (pb->depth == 4) {
+      Mask = 0xF0;
+      if ((x & 0x01) != 0)
+         Mask >>= 4;
+      addr = rowbuf->buf + (x >> 1);
+      color_index = *addr & Mask;
+      if ((x & 0x01) == 0)
+         color_index >>= 4;
+      return color_index;
+   } else {
+      addr = rowbuf->buf + x;
+      color_index = *addr;
+      return color_index;
+   }
 }
 
 
@@ -302,38 +273,36 @@ Byte	*addr;
 
 
 static void
-HPcoord_to_dotcoord (const HPGL_Pt *HP_P, DevPt *DevP, const OUT_PAR* po)
+HPcoord_to_dotcoord(const HPGL_Pt * HP_P, DevPt * DevP, const OUT_PAR * po)
 {
-  DevP->x = (int) ((HP_P->x - po->xmin) * po->HP_to_xdots);
-  DevP->y = (int) ((HP_P->y - po->ymin) * po->HP_to_ydots);
+   DevP->x = (int) ((HP_P->x - po->xmin) * po->HP_to_xdots);
+   DevP->y = (int) ((HP_P->y - po->ymin) * po->HP_to_ydots);
 }
 
 
 
-void
-size_PicBuf (const GEN_PAR* pg, const OUT_PAR* po, int *p_rows, int *p_cols)
+void size_PicBuf(const GEN_PAR * pg, const OUT_PAR * po, int *p_rows, int *p_cols)
 {
-HPGL_Pt	HP_Pt;
-DevPt	D_Pt;
-int maxps;
+   HPGL_Pt HP_Pt;
+   DevPt D_Pt;
+   int maxps;
 
-  HP_Pt.x  = po->xmax;
-  HP_Pt.y  = po->ymax;
-  HPcoord_to_dotcoord (&HP_Pt, &D_Pt, po);
-  /* Pensize correction	*/
+   HP_Pt.x = po->xmax;
+   HP_Pt.y = po->ymax;
+   HPcoord_to_dotcoord(&HP_Pt, &D_Pt, po);
+   /* Pensize correction */
 /*  maxps= (int)(1. + pg->maxpensize *po->HP_to_xdots/0.025); */
-   maxps = 1+ceil(pg->maxpensize *po->HP_to_xdots/0.025); 
+   maxps = 1 + ceil(pg->maxpensize * po->HP_to_xdots / 0.025);
    X_Offset = maxps / 2;
    Y_Offset = maxps / 2;
 
 /*   printf("maxps = %d\n",maxps);*/
-  *p_cols  = D_Pt.x + maxps + 1;	
-  *p_rows  = D_Pt.y + maxps + 1;
+   *p_cols = D_Pt.x + maxps + 1;
+   *p_rows = D_Pt.y + maxps + 1;
 }
 
 
-PicBuf
-*allocate_PicBuf (const GEN_PAR* pg, int n_rows, int n_cols)
+PicBuf * allocate_PicBuf(const GEN_PAR * pg, int n_rows, int n_cols)
 /**
  ** Here we allocate the picture buffer. This memory is used by all raster
  ** modes. It is organized in rows (scan lines). Rows which do not
@@ -350,24 +319,23 @@ PicBuf
  ** and then initiate swapping to a file.
  **/
 {
-PicBuf	*pb;
-RowBuf	*prev, *act;
-int	nr, not_allocated;
+   PicBuf *pb;
+   RowBuf *prev, *act;
+   int nr, not_allocated;
 #define	GIVE_BACK 8
 
-  if ((pb = (PicBuf *) malloc(sizeof(*pb))) == NULL)
-  {
-	Eprintf ("Cannot malloc() PicBuf structure\n");
-	return NULL;
-  }
+   if ((pb = (PicBuf *) malloc(sizeof(*pb))) == NULL) {
+      Eprintf("Cannot malloc() PicBuf structure\n");
+      return NULL;
+   }
 
-  pb->nr	= n_rows;
-  pb->nc	= n_cols;
-  pb->sd	= NULL;
-  pb->sf_name	= NULL;
-  pb->row	= NULL;
-  first_buf	= NULL;		/* Re-init for multiple-file	*/
-  last_buf	= NULL;		/* applications			*/
+   pb->nr = n_rows;
+   pb->nc = n_cols;
+   pb->sd = NULL;
+   pb->sf_name = NULL;
+   pb->row = NULL;
+   first_buf = NULL;            /* Re-init for multiple-file    */
+   last_buf = NULL;             /* applications                 */
 
 /**
  ** Number of buffer bytes per row:
@@ -379,9 +347,9 @@ int	nr, not_allocated;
  ** ==> 324 DotBlocks + 4 bits which require another whole byte (!)
  **/
 
-  pb->nb = (pb->nc >> 3);
-  if (pb->nc & 7)
-	pb->nb++;
+   pb->nb = (pb->nc >> 3);
+   if (pb->nc & 7)
+      pb->nb++;
 
 /**
  ** Auto-detection of depth (# bits per pel):
@@ -390,23 +358,23 @@ int	nr, not_allocated;
  ** or color mode (4 bits per pel)
  **/
 
-  pb->depth = (pg->is_color) ? 4 : 1;
-  if (pg->is_color && pg->maxcolor > 15) {
-                        pb->depth = 8;
-                        if (!pg->quiet) fprintf(stderr,"using 8bpp picbuf for NP>15\n");
-			 }
+   pb->depth = (pg->is_color) ? 4 : 1;
+   if (pg->is_color && pg->maxcolor > 15) {
+      pb->depth = 8;
+      if (!pg->quiet)
+         fprintf(stderr, "using 8bpp picbuf for NP>15\n");
+   }
 /**
  ** Allocate a (large) array of RowBuf structures: One for each scan line.
  ** !!! The NULL initialization done implicitly by calloc() is crucial !!!
  **/
 
-  if ((pb->row = (RowBuf *) calloc((unsigned) pb->nr, sizeof(RowBuf)))
-		== NULL)
-  {
-	Eprintf ("Cannot calloc() %d RowBuf structures\n", pb->nr);
-	free_PicBuf (pb);
-	return NULL;
-  }
+   if ((pb->row = (RowBuf *) calloc((unsigned) pb->nr, sizeof(RowBuf)))
+       == NULL) {
+      Eprintf("Cannot calloc() %d RowBuf structures\n", pb->nr);
+      free_PicBuf(pb);
+      return NULL;
+   }
 
 /**
  ** Now try to allocate as many buffers as possible. Double-link all RowBuf's
@@ -414,54 +382,47 @@ int	nr, not_allocated;
  ** candidates!)
  **/
 
-  not_allocated = 0;
-  prev = (RowBuf *) NULL;
-  for (nr=0, act = pb->row; nr < pb->nr; nr++, act++)
-  {
-	act->prev = act->next = NULL;
-	act->index= nr;
-	if ((act->buf=
-	    (Byte *) calloc((unsigned) (pb->nb * pb->depth),1)) == NULL)
-		not_allocated++;
-	else
-	{
-		link_RowBuf (act, prev);
-		prev = act;
-		last_buf = act;
-	}
-  }
+   not_allocated = 0;
+   prev = (RowBuf *) NULL;
+   for (nr = 0, act = pb->row; nr < pb->nr; nr++, act++) {
+      act->prev = act->next = NULL;
+      act->index = nr;
+      if ((act->buf = (Byte *) calloc((unsigned) (pb->nb * pb->depth), 1)) == NULL)
+         not_allocated++;
+      else {
+         link_RowBuf(act, prev);
+         prev = act;
+         last_buf = act;
+      }
+   }
 
 /**
  ** Prepare swapping
  **/
 
-  if (not_allocated)
-  {
-	if (last_buf->index > GIVE_BACK) for (nr = 0; nr < GIVE_BACK; nr++)
-	{
-		/* Return some memory for internal use */
-		free ((char *) last_buf->buf);
-		unlink_RowBuf (last_buf);
-		not_allocated++;
-	}
-	else
-	{
-		Eprintf ("\nNot enough memory for swapping -- sorry!\n");
-		free_PicBuf (pb);
-		return NULL;
-	}
+   if (not_allocated) {
+      if (last_buf->index > GIVE_BACK)
+         for (nr = 0; nr < GIVE_BACK; nr++) {
+            /* Return some memory for internal use */
+            free((char *) last_buf->buf);
+            unlink_RowBuf(last_buf);
+            not_allocated++;
+      } else {
+         Eprintf("\nNot enough memory for swapping -- sorry!\n");
+         free_PicBuf(pb);
+         return NULL;
+      }
 
-	Eprintf ("\nCouldn't allocate %d out of %d row buffers.\n",
-		not_allocated, pb->nr);
-	Eprintf ("Swapping to disk...\n");
-	pb->sf_name = pg->swapfile;
-	if ((pb->sd = fopen (pb->sf_name, WRITE_BIN)) == NULL)
-	{
-		Eprintf ("Couldn't open swap file '%s'\n", pb->sf_name);
-		PError ("hp2xx");
-		free_PicBuf (pb);
-		return NULL;
-	}
+      Eprintf("\nCouldn't allocate %d out of %d row buffers.\n",
+              not_allocated, pb->nr);
+      Eprintf("Swapping to disk...\n");
+      pb->sf_name = pg->swapfile;
+      if ((pb->sd = fopen(pb->sf_name, WRITE_BIN)) == NULL) {
+         Eprintf("Couldn't open swap file '%s'\n", pb->sf_name);
+         PError("hp2xx");
+         free_PicBuf(pb);
+         return NULL;
+      }
 
 /**
  ** Init. swap file data to background color (0), using a shortcut by
@@ -470,111 +431,105 @@ int	nr, not_allocated;
  ** into the swap file sequentially.
  **/
 
-	for (nr=0; nr < pb->nr; nr++)
-	    if ((int)fwrite((char *) pb->row[0].buf, pb->nb, pb->depth, pb->sd)
-		!= pb->depth)
-	    {
-			Eprintf ("Couldn't clear swap file!\n");
-			PError ("hp2xx");
-			free_PicBuf (pb);
-			return NULL;
-	    }
-  }
-  return pb;
+      for (nr = 0; nr < pb->nr; nr++)
+         if ((int) fwrite((char *) pb->row[0].buf, pb->nb, pb->depth, pb->sd)
+             != pb->depth) {
+            Eprintf("Couldn't clear swap file!\n");
+            PError("hp2xx");
+            free_PicBuf(pb);
+            return NULL;
+         }
+   }
+   return pb;
 }
 
 
 
 
-void
-free_PicBuf (PicBuf* pb)
+void free_PicBuf(PicBuf * pb)
 /**
  ** De-allocate all row buffers and the picture puffer struct,
  ** remove the swap file (if any).
  **/
 {
-RowBuf	*row;
-int	i;
+   RowBuf *row;
+   int i;
 
-  if (pb == NULL)
-	return;
+   if (pb == NULL)
+      return;
 
-  if (pb->sd)
-  {
-	fclose (pb->sd);
-	pb->sd = NULL;
+   if (pb->sd) {
+      fclose(pb->sd);
+      pb->sd = NULL;
 #ifdef VAX
-	delete (pb->sf_name);
+      delete(pb->sf_name);
 #else
-	unlink (pb->sf_name);
+      unlink(pb->sf_name);
 #endif
-  }
-  for (i=0; i< pb->nr; i++)
-  {
-	row = &(pb->row[i]);
-	if (row != NULL && (row->prev != NULL || row->next != NULL))
-		free ((char *) row->buf);
-  }
-  free((char *) pb->row);
-  free((char *) pb);
+   }
+   for (i = 0; i < pb->nr; i++) {
+      row = &(pb->row[i]);
+      if (row != NULL && (row->prev != NULL || row->next != NULL))
+         free((char *) row->buf);
+   }
+   free((char *) pb->row);
+   free((char *) pb);
 }
 
 
 
 
 
-void plot_PicBuf(PicBuf *pb, DevPt *pt, int color_index)
+void plot_PicBuf(PicBuf * pb, DevPt * pt, int color_index)
 {
-  if ((pt->x + X_Offset) < 0 || pt->x > (pb->nc - X_Offset))
-  {
-	Eprintf("plot_PicBuf: Illegal x (%d not in [0, %d])\n",
-		pt->x+X_Offset, pb->nc);
-	return;
-  }
-  plot_RowBuf(get_RowBuf(pb, pt->y+Y_Offset), pt->x+X_Offset, pb->depth, color_index);
+   if ((pt->x + X_Offset) < 0 || pt->x > (pb->nc - X_Offset)) {
+      Eprintf("plot_PicBuf: Illegal x (%d not in [0, %d])\n",
+              pt->x + X_Offset, pb->nc);
+      return;
+   }
+   plot_RowBuf(get_RowBuf(pb, pt->y + Y_Offset), pt->x + X_Offset, pb->depth,
+               color_index);
 }
 
 
 
 
-int
-index_from_PicBuf (const PicBuf *pb, const DevPt *pt)
+int index_from_PicBuf(const PicBuf * pb, const DevPt * pt)
 {
-  if (pt->x < 0 || pt->x > pb->nc)
-  {
-	Eprintf("index_from_PicBuf: Illegal x (%d not in [0, %d])\n",
-		pt->x, pb->nc);
-	return 0;
-  }
-  return index_from_RowBuf(get_RowBuf(pb, pt->y), pt->x, pb);
+   if (pt->x < 0 || pt->x > pb->nc) {
+      Eprintf("index_from_PicBuf: Illegal x (%d not in [0, %d])\n", pt->x, pb->nc);
+      return 0;
+   }
+   return index_from_RowBuf(get_RowBuf(pb, pt->y), pt->x, pb);
 }
 
 
-static void dot_PicBuf (DevPt *p0, int pensize, int pencolor, PicBuf* pb) {
+static void dot_PicBuf(DevPt * p0, int pensize, int pencolor, PicBuf * pb)
+{
 
-   DevPt	pt;
+   DevPt pt;
 
-   int dd=3-(pensize);
-   int dx=0;
-   int dy=pensize/2;
+   int dd = 3 - (pensize);
+   int dx = 0;
+   int dy = pensize / 2;
 
-   for( ; dx <= dy ; dx++) {
-      for(pt.x=p0->x-dx, pt.y=p0->y+dy ;  pt.x <= p0->x+dx ; pt.x++)
-         plot_PicBuf(pb,&pt,pencolor);
+   for (; dx <= dy; dx++) {
+      for (pt.x = p0->x - dx, pt.y = p0->y + dy; pt.x <= p0->x + dx; pt.x++)
+         plot_PicBuf(pb, &pt, pencolor);
 
-      for(pt.x=p0->x-dx, pt.y=p0->y-dy ;  pt.x <= p0->x+dx ; pt.x++)
-         plot_PicBuf(pb,&pt,pencolor);
+      for (pt.x = p0->x - dx, pt.y = p0->y - dy; pt.x <= p0->x + dx; pt.x++)
+         plot_PicBuf(pb, &pt, pencolor);
 
-      for(pt.x=p0->x-dy, pt.y=p0->y+dx ;  pt.x <= p0->x+dy ; pt.x++)
-         plot_PicBuf(pb,&pt,pencolor);
+      for (pt.x = p0->x - dy, pt.y = p0->y + dx; pt.x <= p0->x + dy; pt.x++)
+         plot_PicBuf(pb, &pt, pencolor);
 
-      for(pt.x=p0->x-dy, pt.y=p0->y-dx ;  pt.x <= p0->x+dy ; pt.x++)
-         plot_PicBuf(pb,&pt,pencolor);
+      for (pt.x = p0->x - dy, pt.y = p0->y - dx; pt.x <= p0->x + dy; pt.x++)
+         plot_PicBuf(pb, &pt, pencolor);
 
-      if(dd < 0) {
+      if (dd < 0) {
          dd += (4 * dx) + 6;
       } else {
-         dd +=  4 * (dx-dy) + 10;
+         dd += 4 * (dx - dy) + 10;
          dy--;
       }
    }
@@ -582,7 +537,7 @@ static void dot_PicBuf (DevPt *p0, int pensize, int pencolor, PicBuf* pb) {
 
 
 static void
-  line_PicBuf (DevPt *p0, DevPt *p1, PEN_W pensize, int pencolor, const OUT_PAR* po)
+line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, int pencolor, int consecutive, const OUT_PAR * po)
     /**
      ** Rasterize a vector (draw a line in the picture buffer), using the
      ** Bresenham algorithm.
@@ -590,102 +545,219 @@ static void
 {
    PicBuf *pb = po->picbuf;
    DevPt *p_act;
-   DevPt t0,t1,t2,t3;
-   double len,xoff,yoff;
-   int linewidth = ceil(pensize*po->HP_to_xdots/0.025);                                  /* convert to pixel space */
-
+   DevPt t0, t1, t2, t3;
+   double len, xoff, yoff;
+   int dx, dy;
+   int linewidth = ceil(pensize * po->HP_to_xdots / 0.025);     /* convert to pixel space */
+   
 /*   printf("pensize = %0.3f mm, linewidth = %d pixels\n",pensize,linewidth);*/
-   
-   if (linewidth == 0)		/* No pen selected!	*/
-     return;
-   
-   if (pencolor == xxBackground)	/* No drawable color!	*/
-     return;
-   
-   if (linewidth == 1) {                                                             /* Thin lines of any attitude */
-      p_act = bresenham_init (p0, p1);
-      do {                
-	 plot_PicBuf (pb, p_act, pencolor);
-      } while (bresenham_next() != BRESENHAM_ERR);
-      return;
-   } 
 
-   if( (p1->x == p0->x)  && (p1->y == p0->y) ) {                                           /* No Movement Dot Only */
-      dot_PicBuf(p0,linewidth,pencolor,pb);
+   if (linewidth == 0)          /* No pen selected! */
+      return;
+
+   if (pencolor == xxBackground)        /* No drawable color!       */
+      return;
+
+   if (linewidth == 1) {        /* Thin lines of any attitude */
+      p_act = bresenham_init(p0, p1);
+      do {
+         plot_PicBuf(pb, p_act, pencolor);
+      } while (bresenham_next() != BRESENHAM_ERR);
       return;
    }
 
-   murphy_init(pb,pencolor);                                                                         /* Wide Lines */
-   murphy_wideline(*p0,*p1, linewidth);
+   if ((p1->x == p0->x) && (p1->y == p0->y)) {  /* No Movement Dot Only */
+      dot_PicBuf(p0, linewidth, pencolor, pb);
+      return;
+   }
 
-   if ( pensize > 0.35 ) {
+   murphy_init(pb, pencolor);   /* Wide Lines */
+   murphy_wideline(*p0, *p1, linewidth, consecutive);
+
+   if (pensize > 0.35) {
       switch (CurrentLineAttr.End) {
-         case LAE_square:        
-         len=sqrt( (p0->x-p1->x)*(p0->x-p1->x)+(p0->y-p1->y)*(p0->y-p1->y));
-         xoff=0.5*(fabs(p0->x-p1->x)/len);
-         yoff=0.5*(fabs(p0->y-p1->y)/len);
-         t0.x=p0->x-(linewidth-1)*yoff;
-         t0.y=p0->y+(linewidth-1)*xoff;
-         t1.x=t0.x-(linewidth-1)*xoff;
-         t1.y=t0.y+(linewidth-1)*yoff;
-         t3.x=p0->x-(linewidth-1)*yoff;
-         t3.y=p0->y-(linewidth-1)*xoff;
-         t2.x=t3.x-(linewidth-1)*xoff;
-         t2.y=t3.y+(linewidth-1)*yoff;
-         polygon_PicBuf(t0,t1,t3,t2);
-         t0.x=p1->x+(linewidth-1)*yoff;
-         t0.y=p1->y+(linewidth-1)*xoff;
-         t1.x=t0.x+(linewidth-1)*xoff;
-         t1.y=t0.y+(linewidth-1)*yoff;
-         t3.x=p1->x+(linewidth-1)*yoff;
-         t3.y=p1->y-(linewidth-1)*xoff;
-         t2.x=t3.x+(linewidth-1)*xoff;
-         t2.y=t3.y+(linewidth-1)*yoff;
-         polygon_PicBuf(t0,t1,t3,t2);
-         break;
-         case LAE_butt:
-         default:
-            break;
-         case LAE_triangular:    
-         len=sqrt( (p0->x-p1->x)*(p0->x-p1->x)+(p0->y-p1->y)*(p0->y-p1->y));
-         xoff=0.5*(fabs(p0->x-p1->x)/len);
-         yoff=0.5*(fabs(p0->y-p1->y)/len);
-         t0.x=p0->x-(linewidth-1)*xoff;
-         t0.y=p0->y-(linewidth-1)*yoff;
-         t1.x=p0->x+(linewidth-1)*yoff;
-         t1.y=p0->y-(linewidth-1)*xoff;
-         t2.x=p0->x+(linewidth-1)*xoff;
-         t2.y=p0->y+(linewidth-1)*yoff;
-         t3.x=p0->x-(linewidth-1)*yoff;
-         t3.y=p0->y+(linewidth-1)*xoff;
-         polygon_PicBuf(t0,t1,t3,t2);
-         t0.x=p1->x-(linewidth-1)*xoff;
-         t0.y=p1->y-(linewidth-1)*yoff;
-         t1.x=p1->x+(linewidth-1)*yoff;
-         t1.y=p1->y-(linewidth-1)*xoff;
-         t2.x=p1->x+(linewidth-1)*xoff;
-         t2.y=p1->y+(linewidth-1)*yoff;
-         t3.x=p1->x-(linewidth-1)*yoff;
-         t3.y=p1->y+(linewidth-1)*xoff;
-         polygon_PicBuf(t0,t1,t3,t2);
-         break;
-         case LAE_round:
-            dot_PicBuf(p0,linewidth,pencolor,pb);
-            dot_PicBuf(p1,linewidth,pencolor,pb);
-            break;
+        case LAE_square:
+           dx = p0->x - p1->x;
+           dy = p0->y - p1->y;
+           len = HYPOT(dx, dy);
+           xoff = 0.5 * fabs(dx / len);
+           yoff = 0.5 * fabs(dy / len);
+           t0.x = p0->x - (linewidth - 1) * yoff;
+           t0.y = p0->y + (linewidth - 1) * xoff;
+           t1.x = t0.x - (linewidth - 1) * xoff;
+           t1.y = t0.y + (linewidth - 1) * yoff;
+           t3.x = p0->x - (linewidth - 1) * yoff;
+           t3.y = p0->y - (linewidth - 1) * xoff;
+           t2.x = t3.x - (linewidth - 1) * xoff;
+           t2.y = t3.y + (linewidth - 1) * yoff;
+           polygon_PicBuf(t0, t1, t3, t2,pencolor,pb);
+           t0.x = p1->x + (linewidth - 1) * yoff;
+           t0.y = p1->y + (linewidth - 1) * xoff;
+           t1.x = t0.x + (linewidth - 1) * xoff;
+           t1.y = t0.y + (linewidth - 1) * yoff;
+           t3.x = p1->x + (linewidth - 1) * yoff;
+           t3.y = p1->y - (linewidth - 1) * xoff;
+           t2.x = t3.x + (linewidth - 1) * xoff;
+           t2.y = t3.y + (linewidth - 1) * yoff;
+           polygon_PicBuf(t0, t1, t3, t2,pencolor,pb);
+           break;
+        case LAE_butt:
+        default:
+           break;
+        case LAE_triangular:
+           dx = p0->x - p1->x;
+           dy = p0->y - p1->y;
+           len = HYPOT(dx, dy);
+           xoff = 0.5 * fabs(dx / len);
+           yoff = 0.5 * fabs(dy / len);
+           t0.x = p0->x - (linewidth - 1) * xoff;
+           t0.y = p0->y - (linewidth - 1) * yoff;
+           t1.x = p0->x + (linewidth - 1) * yoff;
+           t1.y = p0->y - (linewidth - 1) * xoff;
+           t2.x = p0->x + (linewidth - 1) * xoff;
+           t2.y = p0->y + (linewidth - 1) * yoff;
+           t3.x = p0->x - (linewidth - 1) * yoff;
+           t3.y = p0->y + (linewidth - 1) * xoff;
+           polygon_PicBuf(t0, t1, t3, t2,pencolor,pb);
+           t0.x = p1->x - (linewidth - 1) * xoff;
+           t0.y = p1->y - (linewidth - 1) * yoff;
+           t1.x = p1->x + (linewidth - 1) * yoff;
+           t1.y = p1->y - (linewidth - 1) * xoff;
+           t2.x = p1->x + (linewidth - 1) * xoff;
+           t2.y = p1->y + (linewidth - 1) * yoff;
+           t3.x = p1->x - (linewidth - 1) * yoff;
+           t3.y = p1->y + (linewidth - 1) * xoff;
+           polygon_PicBuf(t0, t1, t3, t2,pencolor,pb);
+           break;
+        case LAE_round:
+           dot_PicBuf(p0, linewidth, pencolor, pb);
+           dot_PicBuf(p1, linewidth, pencolor, pb);
+           break;
       }
    } else {
-      dot_PicBuf(p0,linewidth,pencolor,pb);                               /* lines upto 0.35 always have round ends */
-      dot_PicBuf(p1,linewidth,pencolor,pb);
+      dot_PicBuf(p0, linewidth, pencolor, pb);  /* lines upto 0.35 always have round ends */
+      dot_PicBuf(p1, linewidth, pencolor, pb);
    }
 
 }
 
+void polygon_PicBuf(DevPt p1, DevPt p4, DevPt p2, DevPt p3, int pencolor, PicBuf * pb) {
 
+   DevPt polygon[8];
+   int xmin, ymin, xmax, ymax;
+   DevPt start, end, *p_act;
+   double denominator;
+   double A1, B1, C1, A2, B2, C2;
+   int scany;
+   int segx, segy, numlines;
+   int i, j, k;
+/*
+fprintf (stderr,"in polydraw: (%d,%d) (%d,%d) (%d,%d) (%d,%d)\n",p1.x,p1.y,p2.x,p2.y,p3.x,p3.y,
+p4.x,p4.y);
+*/
+   polygon[0] = p1;
+   polygon[1] = p2;
+   polygon[2] = p2;
+   polygon[3] = p3;
+   polygon[4] = p3;
+   polygon[5] = p4;
+   polygon[6] = p4;
+   polygon[7] = p1;
+/*
+fprintf(stderr,"pline0 %d %d - %d %d\n",polygon[0].x,polygon[0].y,polygon[1].x,polygon[1].y);
+fprintf(stderr,"pline1 %d %d - %d %d\n",polygon[2].x,polygon[2].y,polygon[3].x,polygon[3].y);
+fprintf(stderr,"pline2 %d %d - %d %d\n",polygon[4].x,polygon[4].y,polygon[5].x,polygon[5].y);
+fprintf(stderr,"pline3 %d %d - %d %d\n",polygon[6].x,polygon[6].y,polygon[7].x,polygon[7].y);
+*/
 
+   xmin = MIN(p1.x, p2.x);
+   xmin = MIN(xmin, p3.x);
+   xmin = MIN(xmin, p4.x);
+   xmax = MAX(p1.x, p2.x);
+   xmax = MAX(xmax, p3.x);
+   xmax = MAX(xmax, p4.x);
+   ymin = MIN(p1.y, p2.y);
+   ymin = MIN(ymin, p3.y);
+   ymin = MIN(ymin, p4.y);
+   ymax = MAX(p1.y, p2.y);
+   ymax = MAX(ymax, p3.y);
+   ymax = MAX(ymax, p4.y);
 
-void
-tmpfile_to_PicBuf (const GEN_PAR* pg, const OUT_PAR* po)
+/*
+xmin=xmin-2;
+xmax=xmax+2;
+*/
+
+   numlines = 1 + ymax - ymin;
+
+/* start at lowest y , run scanlines parallel x across polygon */
+/* looking for intersections with edges */
+
+   for (i = 0; i <= numlines; i++) {    /* for all scanlines ... */
+      k = -1;
+      start.x = start.y = end.x = end.y = 0;
+      scany = ymin + i;
+/*
+if(scany >= ymax || scany<=ymin) {
+continue;
+}
+*/
+/* coefficients for current scan line */
+      A1 = 0.;
+      B1 = xmin - xmax;
+      C1 = scany * (xmax - xmin);
+
+      for (j = 0; j <= 6; j = j + 2) {  /*for all polygon edges */
+
+/* coefficients for this edge */
+         A2 = polygon[j + 1].y - polygon[j].y;
+         B2 = polygon[j].x - polygon[j + 1].x;
+         C2 = polygon[j].x * (polygon[j].y - polygon[j + 1].y) +
+             polygon[j].y * (polygon[j + 1].x - polygon[j].x);
+
+/*determine coordinates of intersection */
+         denominator = A1 * B2 - A2 * B1;
+         if (fabs(denominator) > 1.e-5) {       /* zero means parallel lines */
+
+            segx = lrint((B1 * C2 - B2 * C1) / denominator);    /*x coordinate of intersection */
+            segy = (C1 * A2 - C2 * A1) / denominator;   /*y coordinate of intersection */
+
+/*fprintf(stderr,"seg x,y= %d %d\n",segx,segy);*/
+            if ((segx > xmax) || (segx < xmin) ||
+                (segx < MIN(polygon[j].x, polygon[j + 1].x)) ||
+                (segx > MAX(polygon[j].x, polygon[j + 1].x))) {
+/*fprintf(stderr,"intersection  at %d %d is not within (%d,%d)-(%d,%d)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y )
+; */
+            } else {
+
+               k++;
+               if (k == 0) {
+                  start.x = segx;
+                  start.y = scany;
+               } else if (fabs(segx - start.x) > 1) {
+                  end.x = segx;
+                  end.y = scany;
+               } else if (k >= 0)
+                  k--;
+            }                   /* if crossing withing range */
+         }
+         /*if not parallel */
+      }                         /*next edge */
+/*fprintf(stderr,"k=%d\n",k);*/
+      if (k >= 1) {
+/*fprintf(stderr,"fillline %d %d - %d %d\n",start.x,start.y,end.x,end.y);*/
+         p_act = bresenham_init(&start, &end);
+         do {
+            plot_PicBuf(pb, p_act, pencolor);
+         } while (bresenham_next() != BRESENHAM_ERR);
+
+      }
+
+   }                            /* next scanline */
+
+}
+
+void tmpfile_to_PicBuf(const GEN_PAR * pg, const OUT_PAR * po)
 /**
  ** Interface to higher-level routines:
  **   Assuming a valid picture buffer, read the drawing commands from
@@ -693,65 +765,67 @@ tmpfile_to_PicBuf (const GEN_PAR* pg, const OUT_PAR* po)
  **   and draw (rasterize) vectors.
  **/
 {
-HPGL_Pt		pt1;
-static	DevPt	ref = {0};
-DevPt		next;
-PlotCmd		cmd;
-int		pen_no = 1;
+   HPGL_Pt pt1;
+   static DevPt ref = { 0 };
+   DevPt next;
+   PlotCmd cmd;
+   static int consecutive = 0;
+   int pen_no = 1;
 
-  if (!pg->quiet)
-	Eprintf ( "\nPlotting in buffer\n");
+   if (!pg->quiet)
+      Eprintf("\nPlotting in buffer\n");
 
-  rewind (pg->td);
+   rewind(pg->td);
 
-  while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
-	switch (cmd)
-	{
-	  case NOP:
-		break;
-	  case SET_PEN:
-		if ((pen_no = fgetc(pg->td)) == EOF)
-		{
-			PError("Unexpected end of temp. file");
-			exit (ERROR);
-		}
-		break;
-	  case DEF_PW:
-                if(!load_pen_width_table(pg->td)) {
-                    PError("Unexpected end of temp. file");
-		    exit(ERROR);
-                }
-		break;
-	  case DEF_PC:
-                if(load_pen_color_table(pg->td) <0) {
-                    PError("Unexpected end of temp. file");
-		    exit(ERROR);
-                }
-		break;
-          case DEF_LA:
-                if(load_line_attr(pg->td) <0) {
-                    PError("Unexpected end of temp. file");
-                    exit(ERROR);
-                }
-		break;
-	  case MOVE_TO:
-		HPGL_Pt_from_tmpfile(&pt1);
-		HPcoord_to_dotcoord (&pt1, &ref, po);
-		break;
-	  case DRAW_TO:
-		HPGL_Pt_from_tmpfile(&pt1);
-		HPcoord_to_dotcoord (&pt1, &next, po);
-		line_PicBuf (&ref, &next,pt.width[pen_no],pt.color[pen_no],po);
-		memcpy (&ref, &next, sizeof(ref));
-		break;
-	  case PLOT_AT:
-		HPGL_Pt_from_tmpfile(&pt1);
-		HPcoord_to_dotcoord (&pt1, &ref, po);
-		line_PicBuf (&ref, &ref,pt.width[pen_no],pt.color[pen_no],po); 
-		break;
+   while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
+      switch (cmd) {
+        case NOP:
+           break;
+        case SET_PEN:
+           if ((pen_no = fgetc(pg->td)) == EOF) {
+              PError("Unexpected end of temp. file");
+              exit(ERROR);
+           }
+           break;
+        case DEF_PW:
+           if (!load_pen_width_table(pg->td)) {
+              PError("Unexpected end of temp. file");
+              exit(ERROR);
+           }
+           break;
+        case DEF_PC:
+           if (load_pen_color_table(pg->td) < 0) {
+              PError("Unexpected end of temp. file");
+              exit(ERROR);
+           }
+           break;
+        case DEF_LA:
+           if (load_line_attr(pg->td) < 0) {
+              PError("Unexpected end of temp. file");
+              exit(ERROR);
+           }
+           break;
+        case MOVE_TO:
+           HPGL_Pt_from_tmpfile(&pt1);
+           HPcoord_to_dotcoord(&pt1, &ref, po);
+           consecutive=0;
+           break;
+        case DRAW_TO:
+           HPGL_Pt_from_tmpfile(&pt1);
+           HPcoord_to_dotcoord(&pt1, &next, po);
+           line_PicBuf(&ref, &next, pt.width[pen_no], pt.color[pen_no], consecutive, po);
+           memcpy(&ref, &next, sizeof(ref));
+	   consecutive=1;
+           break;
+        case PLOT_AT:
+           HPGL_Pt_from_tmpfile(&pt1);
+           HPcoord_to_dotcoord(&pt1, &ref, po);
+           line_PicBuf(&ref, &ref, pt.width[pen_no], pt.color[pen_no], consecutive, po);
+	   consecutive=0;
+           break;
 
-	  default:
-		Eprintf ("Illegal cmd in temp. file!\n");
-		exit (ERROR);
-	}
+        default:
+           Eprintf("Illegal cmd in temp. file!\n");
+           exit(ERROR);
+      }
 }

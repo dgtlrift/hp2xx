@@ -28,5 +28,5 @@ void murphy_init(PicBuf *pb,int color);
 
 void murphy_paraline(DevPt p1,int d1);
 
-void murphy_wideline(DevPt p0, DevPt p1, int width);
+void murphy_wideline(DevPt p0, DevPt p1, int width, int miter);
 

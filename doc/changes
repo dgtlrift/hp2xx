@@ -1,5 +1,10 @@
 Changes to hp2xx:
 =================
+3.4.3a21: 
+Some code cleanup (Andrew Bird). Modified criteria for drawing miter sections
+to fix some cases where non-consecutive lines were erroneosly joined. Improved
+sorting of miter region corners. Still have some pathological cases to study.
+
 3.4.3a20:
 Reduced the default raster mode miter limit. Added preliminary code for 
 triangular and square line ends.
