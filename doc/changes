@@ -1,5 +1,11 @@
 Changes to hp2xx:
 =================
+3.4.3a18:
+Small changes to improve numerical stability - the LPattern_Generator 
+could enter an endless loop on Sun/Solaris due to comparisons of small 
+floating-point numbers with exact zero (special thanks for Michael Geary
+for access to his Sun).
+
 3.4.3a17:
 Fixed incompletely applied patch for endcap selection in a16. Added 
 experimental code for filling the miter section on wide lines to correct

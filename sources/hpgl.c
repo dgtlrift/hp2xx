@@ -658,9 +658,9 @@ LPattern_Generator (HPGL_Pt * pa,
     for (;;)
       {
 	length_of_ele = (double) *p_cur_pat++ / 100;	/* Line or point        */
-	if (length_of_ele < 0)
+	if (length_of_ele < 0.)
 	  return;
-	if (length_of_ele == 0.0)
+	if (length_of_ele < 1.e-5)
 	  PlotCmd_to_tmpfile (PLOT_AT);
 	else
 	  PlotCmd_to_tmpfile (DRAW_TO);
@@ -670,7 +670,7 @@ LPattern_Generator (HPGL_Pt * pa,
 	HPGL_Pt_to_tmpfile (pa);
 
 	length_of_ele = (double) *p_cur_pat++ / 100;	/* Gap        */
-	if (length_of_ele < 0)
+	if (length_of_ele < 0.)
 	  return;
 	pa->x += dx * length_of_ele;
 	pa->y += dy * length_of_ele;
@@ -685,10 +685,10 @@ LPattern_Generator (HPGL_Pt * pa,
 	     **/
 	start_of_action = end_of_action;
 	length_of_ele = (double) *p_cur_pat++ / 100;
-	if (length_of_ele < 0)
+	if (length_of_ele < 0.)
 	  return;
 
-         if (length_of_ele == 0.0) {             /* Dot Only */
+         if (length_of_ele < 1.e-5 ) {             /* Dot Only */
             PlotCmd_to_tmpfile (PLOT_AT);
           HPGL_Pt_to_tmpfile (pa);
          } else {                                /* Line Segment */

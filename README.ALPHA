@@ -1,5 +1,8 @@
 Recent changes :
 =================
+3.4.3a18:
+Small changes to improve numerical stability - the LPattern_Generator
+could enter an endless loop on Sun/Solaris.
 
 3.4.3a17:
 Fixed incompletely applied patch for endcap selection in a16. Added 
