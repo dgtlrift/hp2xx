@@ -150,8 +150,8 @@ copies.
  ** 03/02/26	      GV   Add -S option for DXF mode (pen attribute mapping)
  **/
 
-char *VERS_NO = "3.4.4a3";
-char *VERS_DATE = "03/02/26";
+char *VERS_NO = "3.4.4a4";
+char *VERS_DATE = "03/03/03";
 char *VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char *VERS_ADDITIONS =
@@ -161,7 +161,7 @@ char *VERS_ADDITIONS =
     "\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n";
 #else
 char *VERS_ADDITIONS =
-    "                                 (c) 1999 - 2002 Martin Kroeker\n";
+    "                                 (c) 1999 - 2003 Martin Kroeker\n";
 #endif
 
 

@@ -143,7 +143,7 @@ void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize, PDF * fd)
       switch (type) {
         case LAJ_plain_miter:
            newjoin = 0;
-           newlimit = 100;      /* arbitrary value */
+           newlimit = 5;      /* arbitrary value */
            break;
         case LAJ_bevel_miter:  /* not available */
            newjoin = 0;
@@ -163,7 +163,7 @@ void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize, PDF * fd)
            break;
         default:
            newjoin = 0;
-           newlimit = 100;      /* arbitrary value */
+           newlimit = 5;      /* arbitrary value */
            break;
       }
    } else {

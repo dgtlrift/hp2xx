@@ -172,7 +172,7 @@ void ps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize, HPGL_Pt * p
       switch (type) {
         case LAJ_plain_miter:
            newjoin = 0;
-           newlimit = 100;      /* arbitrary value */
+           newlimit = 5;      /* arbitrary value */
            break;
         case LAJ_bevel_miter:  /* not available */
            newjoin = 0;
@@ -192,7 +192,7 @@ void ps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize, HPGL_Pt * p
            break;
         default:
            newjoin = 0;
-           newlimit = 100;      /* arbitrary value */
+           newlimit = 5;      /* arbitrary value */
            break;
       }
    } else {

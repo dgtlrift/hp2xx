@@ -619,7 +619,6 @@ void HPGL_Pt_to_polygon(HPGL_Pt pf)
 		return;
 
 	polygons[++vertices] = pf;
-#if 1
 	if (rotate_flag) {
 		double tmp = rot_cos * pf.x - rot_sin * pf.y;
 		pf.y = rot_sin * pf.x + rot_cos * pf.y;
@@ -629,7 +628,6 @@ void HPGL_Pt_to_polygon(HPGL_Pt pf)
 	ymin = MIN(pf.y, ymin);
 	xmax = MAX(pf.x, xmax);
 	ymax = MAX(pf.y, ymax);
-#endif
 }
 
 
@@ -1811,13 +1809,7 @@ void line(int relative, HPGL_Pt p)
 			Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
 		}
 	}
-#if 0
-	if (polygon_mode && !polygon_penup) {
-		HPGL_Pt_to_polygon(p_last);
-		HPGL_Pt_to_polygon(p);
-	}
-/*???????*/
-#endif
+
 	if (polygon_mode && polygon_penup) {
 		polygon_penup = FALSE;
 		polystart = p;
@@ -2373,7 +2365,7 @@ static void circles(FILE * hd)
 	} else
 		Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
 
-
+if (!polygon_mode) {
 	/* draw one overlapping segment to avoid leaving gap with wide pens */
 	p.x = center.x + r * cos(eps);
 	p.y = center.y + r * sin(eps);
@@ -2400,7 +2392,7 @@ static void circles(FILE * hd)
 			Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
 		}
 	}
-
+}
 	Pen_action_to_tmpfile(MOVE_TO, &center, scale_flag);
 
 	CurrentLinePatLen = SafeLinePatLen;	/* Restore */

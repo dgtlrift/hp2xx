@@ -1,5 +1,19 @@
 Changes to hp2xx:
 =================
+3.4.4a4:
+Reduced the default miter limit in the eps and pdf modes from the arbitrary 
+"100" value to 5 to remove strange artefacts particularly visible in text 
+rendering. Changed the circle renderer to generate overlapping circle segments 
+(needed to render complete circles at huge linewidths) only when not in 
+polygon mode. Polygon fillcode was propagating its internal linewidth/spacing 
+settings to the general linedrawing code (which could then overflow the raster 
+buffer, without adding actual content to the image). Fixed several 
+inaccuracies and inconsistencies in the polygon fill code (particularly for 
+vertical fills) uncovered by Eugene Doudines new fill.plt test case. 
+Special flag S=4 in esc/p2 output now invokes the new color selection commands
+for six-color Stylus Photo printers (untested - but a Photo1290 only advances
+paper with the old driver).
+
 3.4.4a3:
 
 Documentation fixes and updates. Polygon lines were not clipped in some 

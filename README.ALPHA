@@ -1,3 +1,20 @@
+3.4.4a4
+
+New features:
+
+- Added support for the color selection command of six-color Stylus Photo
+  printers to the Epson ESC/P2 driver (via -S 4) in the hope of making it
+  work for current models such as the 1290.
+
+Bug fixes:
+
+- Reduced the default miter limits in the eps and pdf output modes.
+- Fixed a linewidth bug in the polygon fill code that could cause the
+  raster output modes to fail
+- Fixed several bugs in the polygon fill code, mostly important for vertical 
+  fills.
+
+
 3.4.4a3
 
 New features:

@@ -245,7 +245,8 @@ Byte	*p;	/* Buffer pointer		*/
 
 
 static void
-KCMY_Buf_to_ESCP2 (int nb, int is_KCMY, int width, FILE *fd)
+KCMY_Buf_to_ESCP2 (int nb, int is_photo, int width, FILE *fd)
+/*KCMY_Buf_to_ESCP2 (int nb, int is_KCMY, int width, FILE *fd)*/
 {
 
 /*  if (is_KCMY)
@@ -254,7 +255,10 @@ if (p_K[0] == 0 && memcmp(p_K, p_K+1,nb)==0) {
 /*fprintf(stderr,"skipping empty line of black\n");*/
 }else{
         putc('\r',fd); /* move print head to start of line*/
-	fwrite("\033r\000",3,1,fd); /* set color black*/
+	if (is_photo)
+		fwrite("\033(r2\000\000",6,1,fd);
+	else
+		fwrite("\033r\000",3,1,fd); /* set color black*/
 	fwrite("\033.\001\005\005\001",6,1,fd);    /* announce RLE data */
 	putc(width & 255, fd); /*width of raster line in pixels*/
 	putc(width >> 8,fd);
@@ -266,6 +270,9 @@ if (p_M[0] == 0 && memcmp(p_M, p_M+1,nb)==0) {
 /*fprintf(stderr,"skipping empty line of magenta\n");*/
 }else{
         putc('\r',fd); /* move print head to start of line*/
+	if (is_photo)
+		fwrite("\033(r2\000\001",6,1,fd);
+	else
 	fprintf(fd,"\033r\001");   /* set color magenta */
 	fwrite("\033.\001\005\005\001",6,1,fd);   /* announce RLE data */
 	putc(width & 255, fd); /*width of raster line in pixels*/
@@ -278,6 +285,9 @@ if (p_C[0] == 0 && memcmp(p_C, p_C+1,3*nb-1)==0) {
 
         putc('\r',fd);
   
+	if (is_photo)
+		fwrite("\033(r2\000\002",6,1,fd);
+	else
 	fprintf(fd,"\033r\002");   /* set color cyan */
 	fwrite("\033.\001\005\005\001",6,1,fd);
 	putc(width & 255, fd); /*width of raster line in pixels*/
@@ -290,6 +300,9 @@ if (p_Y[0] == 0 && memcmp(p_Y, p_Y+1,3*nb-1)==0) {
 
         putc('\r',fd);
   
+	if (is_photo)
+		fwrite("\033(r2\000\004",6,1,fd);
+	else
 	fprintf(fd,"\033r\004");   /* set color yellow */
 	fwrite("\033.\001\005\005\001",6,1,fd);
 	putc(width & 255, fd); /*width of raster line in pixels*/
