@@ -150,8 +150,8 @@ copies.
  ** 03/02/26	      GV   Add -S option for DXF mode (pen attribute mapping)
  **/
 
-char *VERS_NO = "3.4.4a6";
-char *VERS_DATE = "03/05/02";
+char *VERS_NO = "3.4.4a7";
+char *VERS_DATE = "03/05/27";
 char *VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char *VERS_ADDITIONS =

@@ -48,14 +48,14 @@ static PEN_W lastwidth;
 static int lastcap;
 static int lastjoin;
 static int lastlimit;
-static int lastred, lastgreen,lastblue;
+static Byte lastred, lastgreen,lastblue;
 
 int to_pdf(const GEN_PAR *, const OUT_PAR *);
 void pdf_init(const GEN_PAR *, const OUT_PAR *, PDF *, PEN_W);
 void pdf_set_linewidth(double, PDF *);
 void pdf_set_linecap(LineEnds type, double pensize, PDF * fd);
 void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize, PDF * fd);
-void pdf_set_color(int pencolor, PDF * fd);
+void pdf_set_color(PEN_C pencolor, PDF * fd);
 void pdf_end(PDF *);
 
 #define PAGEMODE if (openpath==1) { PDF_stroke(md); openpath=0; }
@@ -185,7 +185,7 @@ void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize, PDF * fd)
 /**
  ** Set RGB color
  **/
-void pdf_set_color(int pencolor, PDF * fd)
+void pdf_set_color(PEN_C pencolor, PDF * fd)
 {
    if ((pt.clut[pencolor][0] != lastred) ||
        (pt.clut[pencolor][1] != lastgreen) || (pt.clut[pencolor][2] != lastblue)) {
@@ -219,12 +219,12 @@ void pdf_init(const GEN_PAR * pg, const OUT_PAR * po, PDF * fd, PEN_W pensize)
 
    hmxpenw = pg->maxpensize / 20.0;     /* Half max. pen width, in mm   */
 
-   left = (long) floor(abs(po->xoff - hmxpenw) * MM_TO_PS_POINT);
-   low = (long) floor(abs(po->yoff - hmxpenw) * MM_TO_PS_POINT);
+   left = (long) floor(fabs(po->xoff - hmxpenw) * MM_TO_PS_POINT);
+   low = (long) floor(fabs(po->yoff - hmxpenw) * MM_TO_PS_POINT);
    right = (long) ceil((po->xoff + po->width + hmxpenw) * MM_TO_PS_POINT);
    high = (long) ceil((po->yoff + po->height + hmxpenw) * MM_TO_PS_POINT);
 
-   PDF_begin_page(fd, right, high);
+   PDF_begin_page(fd, (float)right, (float)high);
    pdf_set_linewidth(pensize, fd);
    pdf_set_linecap(CurrentLineAttr.End, pensize, fd);
    pdf_set_linejoin(CurrentLineAttr.Join, CurrentLineAttr.Limit, pensize, fd);
@@ -240,7 +240,7 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 {
    PlotCmd cmd;
    PDF *md;
-   HPGL_Pt pt1 = { 0 };
+   HPGL_Pt pt1 = { 0, 0 };
    int pen_no = 0, err;
    int openpath;
    PEN_W pensize;

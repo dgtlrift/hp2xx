@@ -134,7 +134,7 @@ int	i, l, count=0;
   }
   if (l > 0)
   {
-	*dst++ = 1 - l	;	/* l repetitions	*/
+	*dst++ = (Byte)(1 - l)	;	/* l repetitions	*/
 	*dst++ = *src;
 	count += 2;
 	src += l;
@@ -171,7 +171,7 @@ int	i, l, count=0;
 	if (n_B < 0)
 		return -1;	/* Buffer overflow!	*/
 
-	*dst++ = l - 1	;	/* l repetitions	*/
+	*dst++ = (Byte)(l - 1)	;	/* l repetitions	*/
 	for (i=0; i < l; i++)
 		*dst++ = *src++;
 	count += (l+1);
@@ -238,7 +238,7 @@ Byte	*p;	/* Buffer pointer		*/
 	p = p_B;		/* Use compression buffer	*/
 /*fprintf(stderr,"sending compressed data (%d bytes from %d bytes)\n",ncb,nb);*/
   }
-  fwrite (p, ncb, 1, fd);
+  (void)fwrite (p, (size_t)ncb, 1, fd);
 }
 
 
@@ -251,60 +251,60 @@ KCMY_Buf_to_ESCP2 (int nb, int is_photo, int width, FILE *fd)
 
 /*  if (is_KCMY)
   {*/
-if (p_K[0] == 0 && memcmp(p_K, p_K+1,nb)==0) {
+if (p_K[0] == 0 && memcmp(p_K, p_K+1,(size_t)nb)==0) {
 /*fprintf(stderr,"skipping empty line of black\n");*/
 }else{
         putc('\r',fd); /* move print head to start of line*/
 	if (is_photo)
-		fwrite("\033(r2\000\000",6,1,fd);
+		(void)fwrite("\033(r2\000\000",6,1,fd);
 	else
-		fwrite("\033r\000",3,1,fd); /* set color black*/
-	fwrite("\033.\001\005\005\001",6,1,fd);    /* announce RLE data */
+		(void)fwrite("\033r\000",3,1,fd); /* set color black*/
+	(void)fwrite("\033.\001\005\005\001",6,1,fd);    /* announce RLE data */
 	putc(width & 255, fd); /*width of raster line in pixels*/
 	putc(width >> 8,fd);
    Buf_to_ESCP2 (p_K,nb,0,fd); /* compress and send black pixels */
 }
 /*}*/
 
-if (p_M[0] == 0 && memcmp(p_M, p_M+1,nb)==0) {
+if (p_M[0] == 0 && memcmp(p_M, p_M+1,(size_t)nb)==0) {
 /*fprintf(stderr,"skipping empty line of magenta\n");*/
 }else{
         putc('\r',fd); /* move print head to start of line*/
 	if (is_photo)
-		fwrite("\033(r2\000\001",6,1,fd);
+		(void)fwrite("\033(r2\000\001",6,1,fd);
 	else
 	fprintf(fd,"\033r\001");   /* set color magenta */
-	fwrite("\033.\001\005\005\001",6,1,fd);   /* announce RLE data */
+	(void)fwrite("\033.\001\005\005\001",6,1,fd);   /* announce RLE data */
 	putc(width & 255, fd); /*width of raster line in pixels*/
 	putc(width >> 8,fd);
    Buf_to_ESCP2 (p_M,nb,0,fd);
 }
-if (p_C[0] == 0 && memcmp(p_C, p_C+1,3*nb-1)==0) {
+if (p_C[0] == 0 && memcmp(p_C, p_C+1,(size_t)(3*nb-1))==0) {
 /*fprintf(stderr,"skipping empty line of cyan\n");*/
 }else{
 
         putc('\r',fd);
   
 	if (is_photo)
-		fwrite("\033(r2\000\002",6,1,fd);
+		(void)fwrite("\033(r2\000\002",6,1,fd);
 	else
 	fprintf(fd,"\033r\002");   /* set color cyan */
-	fwrite("\033.\001\005\005\001",6,1,fd);
+	(void)fwrite("\033.\001\005\005\001",6,1,fd);
 	putc(width & 255, fd); /*width of raster line in pixels*/
 	putc(width >> 8,fd);
    Buf_to_ESCP2 (p_C,nb,0,fd);
 }
-if (p_Y[0] == 0 && memcmp(p_Y, p_Y+1,3*nb-1)==0) {
+if (p_Y[0] == 0 && memcmp(p_Y, p_Y+1,(size_t)(3*nb-1))==0) {
 /*fprintf(stderr,"skipping empty line of yellow\n");*/
 }else{
 
         putc('\r',fd);
   
 	if (is_photo)
-		fwrite("\033(r2\000\004",6,1,fd);
+		(void)fwrite("\033(r2\000\004",6,1,fd);
 	else
 	fprintf(fd,"\033r\004");   /* set color yellow */
-	fwrite("\033.\001\005\005\001",6,1,fd);
+	(void)fwrite("\033.\001\005\005\001",6,1,fd);
 	putc(width & 255, fd); /*width of raster line in pixels*/
 	putc(width >> 8,fd);
    Buf_to_ESCP2 (p_Y,nb,0,fd);
@@ -383,18 +383,18 @@ int size;
 /* \033(i00011n set microweave on/off (off) */
 /* \033(U10 set unidirectional off          */   
 fputs("\033@", fd);
-fwrite("\033(G\001\000\001", 6, 1, fd);      /* Enter graphics mode */
-/*        fwrite("\033(U\001\000\005", 5, 1, fd);*/ /*set unidirectional off*/
-        fwrite("\033(U\001\000", 5, 1, fd); /* set resolution, unidirectional off*/
+(void)fwrite("\033(G\001\000\001", 6, 1, fd);      /* Enter graphics mode */
+/*        (void)fwrite("\033(U\001\000\005", 5, 1, fd);*/ /*set unidirectional off*/
+        (void)fwrite("\033(U\001\000", 5, 1, fd); /* set resolution, unidirectional off*/
 	size=3600/po->dpi_y;
 	putc(size,fd);
-         fwrite("\033(i\001\000\001", 6, 1, fd);      /* Microweave mode on */
-           fwrite("\033(C\002\000", 5, 1, fd);          /* Page length */
+         (void)fwrite("\033(i\001\000\001", 6, 1, fd);      /* Microweave mode on */
+           (void)fwrite("\033(C\002\000", 5, 1, fd);          /* Page length */
              size = po->dpi_y * po->height ;
                putc(size & 255, fd);
                  putc(size >> 8, fd);
                  
-  fwrite("\033(c\004\000", 5, 1, fd);          /* Top/bottom margins */
+  (void)fwrite("\033(c\004\000", 5, 1, fd);          /* Top/bottom margins */
     size = po->dpi_y * (po->height- 10) *.003937;
       putc(size & 255, fd);
         putc(size >> 8, fd);
@@ -402,7 +402,7 @@ fwrite("\033(G\001\000\001", 6, 1, fd);      /* Enter graphics mode */
       putc(size & 255, fd);
         putc(size >> 8, fd);
 
-      fwrite("\033(V\002\000", 5, 1, fd);      /* Absolute vertical position */
+      (void)fwrite("\033(V\002\000", 5, 1, fd);      /* Absolute vertical position */
             size = po->dpi_y * (po->height - 10) *.003937;
 	size=10;
                   putc(size & 255, fd);
@@ -456,10 +456,10 @@ int width;
    **/
   if (po->picbuf->depth > 1)
   {
-	p_K = calloc (po->picbuf->nb, sizeof(Byte));
-	p_C = calloc (po->picbuf->nb, sizeof(Byte));
-	p_M = calloc (po->picbuf->nb, sizeof(Byte));
-	p_Y = calloc (po->picbuf->nb, sizeof(Byte));
+	p_K = calloc ((size_t)po->picbuf->nb, sizeof(Byte));
+	p_C = calloc ((size_t)po->picbuf->nb, sizeof(Byte));
+	p_M = calloc ((size_t)po->picbuf->nb, sizeof(Byte));
+	p_Y = calloc ((size_t)po->picbuf->nb, sizeof(Byte));
 	if (p_K == NULL || p_C == NULL || p_M == NULL || p_Y == NULL)
 	{
 		Eprintf ("\nCannot 'calloc' CMYK memory -- sorry, use B/W!\n");
@@ -470,7 +470,7 @@ int width;
    ** Optional memory; for compression
    **/
   n_B = B_EXTRASPACE;
-  p_B = calloc (po->picbuf->nb + n_B, sizeof(Byte));
+  p_B = calloc ((size_t)(po->picbuf->nb + n_B), sizeof(Byte));
 
 
   if (*po->outfile != '-')
@@ -506,12 +506,12 @@ int width;
 
 	if (po->picbuf->depth == 1){
         putc('\r',fd); /* move print head to start of line*/
-	fwrite("\033r\000",3,1,fd); /* set color black*/
-	fwrite("\033.\001\005\005\001",6,1,fd);    /* announce RLE data */
+	(void)fwrite("\033r\000",3,1,fd); /* set color black*/
+	(void)fwrite("\033.\001\005\005\001",6,1,fd);    /* announce RLE data */
 	putc(width & 255, fd); /*width of raster line in pixels*/
 	putc(width >> 8,fd);
 		Buf_to_ESCP2 (row->buf, po->picbuf->nb, ESCP2_FIRST | ESCP2_LAST, fd);
-          fwrite("\033(v\002\000\001\000", 7, 1, fd);  
+          (void)fwrite("\033(v\002\000\001\000", 7, 1, fd);  
 	}
 	else
 	{
@@ -583,7 +583,7 @@ if (pt.clut[color_index][0]+pt.clut[color_index][1]+pt.clut[color_index][2] == 0
 */
 			KCMY_Buf_to_ESCP2 (po->picbuf->nb, (po->specials == 4),width, fd);
 /*			fprintf(stderr,"sent line %d from buffer\n",row_c);*/
-          fwrite("\033(v\002\000\001\000", 7, 1, fd);  
+          (void)fwrite("\033(v\002\000\001\000", 7, 1, fd);  
  /*         
 			break;
 		  default:

@@ -1,5 +1,11 @@
 Changes to hp2xx:
 =================
+3.4.4a7:
+adapted the optional ttf character plot functions to Bitstream Vera Mono,
+added commented-out section for ttf support to makes/generic.mak.
+Arcs with 'deviation distance' tolerance were seriously broken due to an
+embarrassing typo (badly placed braces).
+
 3.4.4a6:
 hp2xx incorrectly assumed that any user-defined label terminator should
 automatically be printed, mishandled DT without parameters (Rich Pasco), 

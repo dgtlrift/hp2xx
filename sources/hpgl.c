@@ -2153,7 +2153,7 @@ static void arcs(int relative, FILE * hd)
 		return;		/* Zero radius or zero arc angle given  */
 
 	if (ct_dist == TRUE)
-		eps = 2. * acos((r - eps / r));
+		eps = 2. * acos((r - eps) / r);
 
 	phi0 = atan2(-d.y, -d.x);
 

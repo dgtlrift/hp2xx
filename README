@@ -55,4 +55,5 @@ Bug fixes:
 - pdf and eps modes were using much too large miter limits
 - exporting too raster modes could fail in some circumstances due to 
   wrong linewidth corrections being applied in the raster buffer.
-
+- arcs drawn with 'deviation distance' chord tolerance parameter were
+  drawn as acute angles or even crashed hp2xx

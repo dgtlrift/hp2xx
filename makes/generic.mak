@@ -70,6 +70,12 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 # PREVIEWER = no_prev
 # ALL_LIBS  = -lm
 #
+# use something like this for experimental truetype font support
+#
+#DEFINES   = -DUNIX -DHAS_UNIX_X11 \
+# -DSTROKED_FONTS=\"/usr/X11R6/lib/X11/fonts/truetype/VeraMono.ttf\" `freetype-config --cflags`
+#ALL_LIBS  = `freetype-config --libs` -L/usr/lib/X11R6 -lX11 -lm
+#
 # HP-UX, CC compiler
 #
 # CC = cc

@@ -1376,7 +1376,7 @@ void ASCII_to_font(int c)
 	default:
 		break;
 	 }												
-	error = FT_Load_Char(face, c, FT_LOAD_NO_SCALE);
+	error = FT_Load_Char(face, (FT_ULong)c, FT_LOAD_NO_SCALE);
 	if (error) {
 		fprintf(stderr, " ! FT_Load_Char %c\n", c);
 		return;
@@ -1507,7 +1507,7 @@ p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
 	outside = 0;
 
 	for (i = 0; i < 51; i++) {
-		t = (float) i / 50.;
+		t = (float) i / 50.0;
 		p.x =
 		    t * t * t * p3->x + 3 * t * t * (1. - t) * p2.x
 		    + 3 * t * (1. - t) * (1. - t) * p1->x

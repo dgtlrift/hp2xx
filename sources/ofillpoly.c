@@ -167,13 +167,13 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 				continue;
 
 				if ((segy <
-				     MIN((double)polygon[j].y, (double)polygon[j + 1].y)-0.0000001)
+				     MIN((double)polygon[j].y, (double)polygon[j + 1].y)-0.01)
 				    || (segy >
 					MAX((double)polygon[j].y,
-					    (double)polygon[j + 1].y)+0.000000001)
+					    (double)polygon[j + 1].y)+0.01)
 				    || (segx <
 					MIN((double)polygon[j].x,
-					    (double)polygon[j + 1].x)-0.000000001)
+					    (double)polygon[j + 1].x)-0.0000001)
 				    || (segx >
 					MAX((double)polygon[j].x,
 					    (double)polygon[j + 1].x))) {
