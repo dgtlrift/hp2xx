@@ -840,6 +840,75 @@ LPattern_Generator(HPGL_Pt * pa,
 		}
 }
 
+/**
+ ** Rectangles --  by Th. Hiller (hiller@tu-harburg.d400.de)
+ **/
+
+static void rect(int relative, int filled, float cur_pensize, HPGL_Pt p)
+{
+	HPGL_Pt p1;
+
+	if (relative) {	/* Process coordinates */
+		p.x += p_last.x;
+		p.y += p_last.y;
+	}
+	if (!filled) {
+		p1.x = p_last.x;
+		p1.y = p.y;
+		Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
+		p1.x = p.x;
+		p1.y = p.y;
+		Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
+		p1.x = p.x;
+		p1.y = p_last.y;
+		Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
+		p1.x = p_last.x;
+		p1.y = p_last.y;
+		Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
+	} else {
+		vertices = -1;
+		HPGL_Pt_to_polygon(p_last);
+		p1.x = p_last.x;
+		p1.y = p.y;
+		HPGL_Pt_to_polygon(p1);
+		HPGL_Pt_to_polygon(p1);
+		HPGL_Pt_to_polygon(p);
+		HPGL_Pt_to_polygon(p);
+		p1.x = p.x;
+		p1.y = p_last.y;
+		HPGL_Pt_to_polygon(p1);
+		HPGL_Pt_to_polygon(p1);
+		HPGL_Pt_to_polygon(p_last);
+		if (hatchspace == 0.)
+			hatchspace = cur_pensize;
+		if (filltype < 3 && thickness > 0.)
+			hatchspace = thickness;
+		if (ac_flag == 0) {	/* not yet initialized */
+			anchor.x = P1.x;
+			anchor.y = P1.y;
+/*	fprintf(stderr,"anchor init to P1\n");*/
+
+			/*      anchor.y=MIN(P1.y,ymin); */
+		}
+		fill(polygons, vertices, anchor, P2, scale_flag,
+		     filltype, hatchspace, hatchangle);
+	}
+	Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
+}
+
+static void rects(int relative, int filled, float cur_pensize, FILE * hd) {
+	HPGL_Pt p;
+  	for (;;) {
+      		if (read_float (&p.x, hd))        /* No number found */
+        		return;
+
+      		if (read_float (&p.y, hd))        /* x without y invalid! */
+	        	par_err_exit (2, EA);
+      		rect (relative, filled, cur_pensize,p);
+    	}
+}
+
+
 /*
    struct PE_flags{
    int abs;
@@ -860,6 +929,13 @@ int read_PE_flags(const GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 		/* seven bit mode */
 		fl->sbmode = 1;
 		break;
+
+	case 185:
+    	case '9':
+      		/* rectangle mode */ 
+      		fl->rect = 1;
+      		fl->up = 1;
+      		break;
 
 	case 186:
 	case ':':
@@ -908,6 +984,7 @@ int read_PE_flags(const GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 	case '<':
 		/* pen up */
 		fl->up = 1;
+		fl->rect = 0;
 		break;
 
 	case 189:
@@ -1004,11 +1081,28 @@ void read_PE(const GEN_PAR * pg, FILE * hd)
 		if (!read_PE_flags(pg, c, hd, &fl)) {
 			if (!read_PE_pair(c, hd, &fl, &p))
 				continue;
-			pen_down = (fl.up) ? FALSE : TRUE;
-			line(!fl.abs, p);
-			tp->CR_point = HP_pos;
+			switch(fl.rect) {
+				case 1:
+					pen_down=0;
+            				line(!fl.abs, p);
+            				fl.rect=2;
+					break;
+				case 2:
+					pen_down=1;
+					rect(1,pg->nofill?0:1,pt.width[pen],p);
+					fl.rect=1;      
+					/* should be up when PE ends while*/
+					/* in PE mode*/
+            				pen_down=0;
+					break;
+				default:
+					pen_down = (fl.up) ? FALSE : TRUE;
+					line(!fl.abs, p);
+					fl.up = 0;
+					break;
+			}
 			fl.abs = 0;
-			fl.up = 0;
+			tp->CR_point = HP_pos;
 		}
 	}
 }
@@ -1344,7 +1438,7 @@ static int read_PJL(FILE * hd)
  * @PJL EOJ [NAME = "something"]
  */
 {
-#define PJLBS 80
+#define PJLBS 257
 
 	char strbuf[PJLBS];
 	int i, j, ov, ctmp, qt, el = 0, nw = 0, rc = -2, nl = 0;
@@ -1495,7 +1589,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				case 'A':
 
 					if (hp && !silent_mode) {
-#ifdef ESC_DEBUG
+#ifdef DEBUG_ESC
 						Eprintf
 						    ("leaving HPGL context\n");
 #endif
@@ -1503,7 +1597,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					}
 					continue;
 				case 'B':
-#ifdef ESC_DEBUG
+#ifdef DEBUG_ESC
 					if (!silent_mode && !hp)
 						Eprintf
 						    ("entering HPGL context\n");
@@ -1516,7 +1610,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					    '4' == (c2 = getc(hd)) &&
 					    '5' == (c2 = getc(hd))
 					    && 'X' == (c2 = getc(hd))) {
-#ifdef ESC_DEBUG
+#ifdef DEBUG_ESC
 						if (!silent_mode)
 							Eprintf
 							    ("UEL found\n");
@@ -2395,74 +2489,6 @@ static void wedges(FILE * hd)
 }
 
 
-/**
- ** Rectangles --  by Th. Hiller (hiller@tu-harburg.d400.de)
- **/
-
-static void rect(int relative, int filled, float cur_pensize, FILE * hd)
-{
-	HPGL_Pt p;
-	HPGL_Pt p1;
-
-	for (;;) {
-		if (read_float(&p.x, hd))	/* No number found */
-			return;
-
-		if (read_float(&p.y, hd))	/* x without y invalid! */
-			par_err_exit(2, EA);
-
-
-		if (relative) {	/* Process coordinates */
-			p.x += p_last.x;
-			p.y += p_last.y;
-		}
-		if (!filled) {
-			p1.x = p_last.x;
-			p1.y = p.y;
-			Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
-			p1.x = p.x;
-			p1.y = p.y;
-			Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
-			p1.x = p.x;
-			p1.y = p_last.y;
-			Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
-			p1.x = p_last.x;
-			p1.y = p_last.y;
-			Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
-		} else {
-			vertices = -1;
-			HPGL_Pt_to_polygon(p_last);
-			p1.x = p_last.x;
-			p1.y = p.y;
-			HPGL_Pt_to_polygon(p1);
-			HPGL_Pt_to_polygon(p1);
-			HPGL_Pt_to_polygon(p);
-			HPGL_Pt_to_polygon(p);
-			p1.x = p.x;
-			p1.y = p_last.y;
-			HPGL_Pt_to_polygon(p1);
-			HPGL_Pt_to_polygon(p1);
-			HPGL_Pt_to_polygon(p_last);
-			if (hatchspace == 0.)
-				hatchspace = cur_pensize;
-			if (filltype < 3 && thickness > 0.)
-				hatchspace = thickness;
-			if (ac_flag == 0) {	/* not yet initialized */
-				anchor.x = P1.x;
-				anchor.y = P1.y;
-/*	fprintf(stderr,"anchor init to P1\n");*/
-
-				/*      anchor.y=MIN(P1.y,ymin); */
-			}
-			fill(polygons, vertices, anchor, P2, scale_flag,
-			     filltype, hatchspace, hatchangle);
-		}
-		Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
-	}
-}
-
-
-
 
 static void ax_ticks(int mode)
 {
@@ -3207,22 +3233,22 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		break;
 
 	case EA:		/* Edge Rectangle absolute */
-		rect(plot_rel = FALSE, 0, pt.width[pen], hd);
+		rects(plot_rel = FALSE, 0, pt.width[pen], hd);
 		tp->CR_point = HP_pos;
 		break;
 
 	case ER:		/* Edge Rectangle relative */
-		rect(TRUE, 0, 0., hd);
+		rects(TRUE, 0, 0., hd);
 		tp->CR_point = HP_pos;
 		break;
 
 	case RA:		/* Fill Rectangle absolute */
-		rect(plot_rel = FALSE, 1, pt.width[pen], hd);
+		rects(plot_rel = FALSE, 1, pt.width[pen], hd);
 		tp->CR_point = HP_pos;
 		break;
 
 	case RR:		/* Fill Rectangle relative */
-		rect(plot_rel = TRUE, 1, pt.width[pen], hd);
+		rects(plot_rel = TRUE, 1, pt.width[pen], hd);
 		tp->CR_point = HP_pos;
 		break;
 
@@ -3763,6 +3789,17 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 			if (c == 'P') {
 				if ((cmd = getc(pi->hd)) == 'G') {
 /*	  fprintf(stderr,"***PG***\n");'*/
+					page_number++;
+					goto END;
+				} else {
+					if (cmd == EOF)
+						return;
+					ungetc(cmd, pi->hd);
+				}
+			}
+			if (c == 'N') {
+				if ((cmd = getc(pi->hd)) == 'R') {
+/*	  fprintf(stderr,"***NR***\n");'*/
 					page_number++;
 					goto END;
 				} else {

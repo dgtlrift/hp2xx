@@ -1,6 +1,8 @@
 hp2xx-3.4.4 (to be released sometime in early 2003)
 
-
+This is mainly a bugfix release to correct some problems found in 3.4.3.
+In addition, it provides a tentative framework for truetype font support
+and a few other minor enhancements.
 I would greatly appreciate receiving bug reports, patches or even sample 
 HPGL files. (In the latter case, please make sure that no copyright or 
 confidentiality agreements are violated before sending any materials.)
@@ -24,6 +26,8 @@ New features:
 - Experimental support for truetype fonts (needs a fixed-width truetype
   font and '-DSTROKED_FONTS=\"/path/to/this/truetype/font.ttf\"' in the
   DEFINES section of the Makefile) 
+- Support for the rectangle mode of the PE statement (Eugene Doudine)
+- NR is now recognized as an image terminator in multi-plot files.
 
 Bug fixes:
 
@@ -34,3 +38,5 @@ Bug fixes:
   scanlines
 - forcing penwidth via the -p commandline option no longer worked for 
   the conventional values between 1 and 9 
+- PJL parser now handles input lines of up to 256 characters 
+

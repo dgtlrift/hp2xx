@@ -149,8 +149,8 @@ copies.
  **			   constant, user-defined Z depths (Michael Rooke)
  **/
 
-char *VERS_NO = "3.4.4a1";
-char *VERS_DATE = "03/02/11";
+char *VERS_NO = "3.4.4a2";
+char *VERS_DATE = "03/02/22";
 char *VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char *VERS_ADDITIONS =

@@ -1,5 +1,14 @@
 Changes to hp2xx:
 =================
+3.4.4a2:
+
+Removed a few debug printf statements introduced in a1. 
+Changed PJL header parsing to support linelengths up to the 256 characters 
+required by the PJL standard (Eugene Doudine). Added support for the rectangle
+mode of the PE statement (Eugene Doudine). Treat NR as a frame terminator
+(like PG,AF,AH) instead of just ignoring it.
+
+
 3.4.4a1: 11.2.03
 
 Revived the 'STROKED_FONTS' stubs in chardraw.c by attaching a truetype

@@ -66,9 +66,14 @@ BINDCMD  =                # only needed for EMX and DJGPP DOS extenders
 # Generic UNIX + X11 previewer (default)
 #
 DEFINES   = -DUNIX -DHAS_UNIX_X11 
-# -DSTROKED_FONTS=\"/usr/X11R6/lib/X11/fonts/truetype/LucidaTypewriterRegular.ttf\" `freetype-config --cflags`
 PREVIEWER = to_x11
-ALL_LIBS  = `freetype-config --libs` -L/usr/lib/X11R6 -lX11 -lm     
+ALL_LIBS  =  -L/usr/lib/X11R6 -lX11 -lm     
+#
+# for experimental truetype font support
+#
+#DEFINES   = -DUNIX -DHAS_UNIX_X11 \
+# -DSTROKED_FONTS=\"/usr/X11R6/lib/X11/fonts/truetype/LucidaTypewriterRegular.ttf\" `freetype-config --cflags`
+#ALL_LIBS  = `freetype-config --libs` -L/usr/lib/X11R6 -lX11 -lm     
 #
 # Generic UNIX, no previewer
 #

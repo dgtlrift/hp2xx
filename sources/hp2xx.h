@@ -295,6 +295,7 @@ typedef struct {
 	int sbmode;
 	int fract;
 	int pen;
+	int rect;
 } PE_flags;
 
 
