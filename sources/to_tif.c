@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include "bresnham.h"
 #include "pendef.h"
 #include "hp2xx.h"
@@ -12,6 +13,7 @@ int PicBuf_to_TIF (const GEN_PAR *pg, const OUT_PAR *po)
   TIFF		*w=NULL;
   RowBuf	*row=NULL;
   int		x,y, W, H, D, B, S;
+  float XDPI,YDPI;
   Byte		*tifbuf;
   unsigned short r[256], g[256], b[256];
   char		tmp[16];
@@ -40,6 +42,12 @@ int PicBuf_to_TIF (const GEN_PAR *pg, const OUT_PAR *po)
 
   TIFFSetField(w, TIFFTAG_IMAGEWIDTH, H);
   TIFFSetField(w, TIFFTAG_IMAGELENGTH,W);
+
+  TIFFSetField(w, TIFFTAG_RESOLUTIONUNIT, 2);
+  XDPI=po->dpi_x;
+  YDPI=po->dpi_y;
+  TIFFSetField(w, TIFFTAG_YRESOLUTION, YDPI);
+  TIFFSetField(w, TIFFTAG_XRESOLUTION, XDPI);
 
   switch(po->specials) {
      case 0: /* no compression */
@@ -97,7 +105,7 @@ int PicBuf_to_TIF (const GEN_PAR *pg, const OUT_PAR *po)
 
   S=TIFFScanlineSize(w);
   if (!pg->quiet){
-    Eprintf("W=%d, H=%d, D=%d, scanlinesize=%d\n", W, H, D, S);
+    Eprintf("XDPI=%f,YDPI=%f,W=%d, H=%d, D=%d, scanlinesize=%d\n", XDPI, YDPI, W, H, D, S);
     /*
     for (x=0; x<=pg->maxpens; ++x)
       Eprintf("%d. %d,%d,%d\n",x, pt.clut[x][0],pt.clut[x][1],pt.clut[x][2]);

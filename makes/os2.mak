@@ -1,5 +1,6 @@
 ###########################################################################
 #    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
+#   Parts Copyright (c) 1999  Martin Kroeker  All rights reserved.
 #    Distributed by Free Software Foundation, Inc.
 #
 # This file is part of HP2xx.
@@ -45,9 +46,10 @@ infodir  = $(prefix)/info
 # For non-gcc compilers, simply set CFLAGS = -O (to start with)
 #
 CC       = gcc
-CFLAGS   = -O2 -Wall -ansi -fstrength-reduce -finline-functions
+CFLAGS	= -O2 -I/usr/X11R6/include $(DEFINES) $(EX_DEFS) -Wall -pedantic -Wuninitialized -Wreturn-type -Wmissing-prototypes -Wstrict-prototypes
+#CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES)
 
-LFLAGS   =                # only sometimes needed; see below for examples
+LFLAGS   = -L/usr/X11R6/lib            # only sometimes needed; see below for examples
 CPPFLAGS = -I.            # only sometimes needed; see below for examples
 BINDCMD  =                # only needed for EMX and DJGPP DOS extenders
 
@@ -59,23 +61,18 @@ BINDCMD  =                # only needed for EMX and DJGPP DOS extenders
 # Remember to comment-out the defaults (a) if they do not apply!
 #
 # Generic UNIX + X11 previewer (default)
+# add -lpng -lz for PNG support
+# and/or -ltiff for TIFF
 #
 DEFINES   = -DUNIX -DHAS_UNIX_X11
 PREVIEWER = to_x11
-ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
+ALL_LIBS  = -L/usr/lib/X11R6 -lX11 -lm #-lpng -lz -ltiff    
 #
 # Generic UNIX, no previewer
 #
 # DEFINES   = -DUNIX
 # PREVIEWER = no_prev
 # ALL_LIBS  = -lm
-#
-# HP-UX, CC compiler
-#
-# CC = cc
-# CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES)
-# DEFINES = -DUNIX -DHAS_UNIX_X11
-# PREVIEWER = to_x11
 #
 # Convex-OS
 #
@@ -85,29 +82,13 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 # CC        = cc
 # CFLAGS    = -O
 #
-# SGI IRIX 6.5 with tiff and png support (declare EX_SRC.. below)
-# CC=cc
-# CFLAGS = -O -I/usr/freeware/include $(DEFINES) $(EX_DEFS)
-# LFLAGS = -L/usr/freeware/lib32
-# CPPFLAGS = -I/usr/freeware/include
-# DEFINES = -DUNIX -DHAS_UNIX_X11
-# PREVIEWER = to_x11
-# ALL_LIBS = -L/usr/lib/X11R6 -lX11 -lm -lpng -lz -ltiff
-#
-# Solaris /SunOS >5.x
-# LFLAGS    = -L$(OPENWINHOME)/lib -R$(OPENWINHOME)/lib
-# CPPFLAGS  = -I$(OPENWINHOME)/include
-# DEFINES   = -DUNIX -DHAS_UNIX_X11
-# PREVIEWER = to_x11
-# ALL_LIBS  = -lX11 -lm -lnsl -lsocket
-#
-# older SunOS + X11 previewer
+# SunOS + X11 previewer
 #
 # LFLAGS    = -L$(OPENWINHOME)/lib
 # CPPFLAGS  = -I$(OPENWINHOME)/include
 # DEFINES   = -DUNIX -DHAS_UNIX_X11
 # PREVIEWER = to_x11
-# ALL_LIBS  = -lX11 -lm
+# ALL_LIBS  = -lX -lm
 #
 # SunOS + Sunview previewer
 #
@@ -115,22 +96,34 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 # PREVIEWER = to_sunvw
 # ALL_LIBS  = -lsunwindow -lsuntool -lpixrect -lm
 #
-# OS/2 2.x + PM previewer, gcc/emx
+# OS/2 2.x + PM previewer with stderr output, gcc/emx
 #
-# SHELL     =
-# DEFINES   = -DOS2 -DHAS_OS2_PM
-# PREVIEWER = to_pm
-# ALL_LIBS  = -los2 -lm
-# BINDCMD   = emxbind -p c:/emx/bin/emxl.exe $(PROGRAM)
+DEFINES   = -DOS2 -DHAS_OS2_PM -D__ST_MT_ERRNO__ -Zbin-files -Zmtd
+PREVIEWER = to_pm
+ALL_LIBS  = -los2 -lm
+BINDCMD   = emxbind -w c:/emx/bin/emxl.exe $(PROGRAM)
+#
+# OS/2 2.x + PM previewer without stderr output, gcc/emx
+#
+#DEFINES   = -DOS2 -DHAS_OS2_PM
+#PREVIEWER = to_pm
+#ALL_LIBS  = -los2 -lm
+#BINDCMD   = emxbind -p c:/emx/bin/emxl.exe $(PROGRAM)
 #
 # OS/2 2.x + EMX full-screen previewer
 #
-# SHELL     =
-# DEFINES   = -DOS2 -DHAS_OS2_EMX
-# PREVIEWER = to_os2
-# ALL_LIBS  = -los2 -lm
-# BINDCMD   = emxbind -f c:/emx/bin/emxl.exe $(PROGRAM) -ac
+#DEFINES   = -DOS2 -DHAS_OS2_EMX
+#PREVIEWER = to_os2
+#ALL_LIBS  = -los2 -lm
+#BINDCMD   = emxbind -f c:/emx/bin/emxl.exe $(PROGRAM) -ac
 #
+# OS/2 2.x + EMX + XFree86/OS2 X11 previewer
+#
+#DEFINES   = -DUNIX -DHAS_UNIX_X11 -D__ST_MT_ERRNO__
+#PREVIEWER = to_x11
+#ALL_LIBS  = -lX11 -lm
+#LFLAGS   = -Zmtd
+#BINDCMD   = emxbind -w c:/emx/bin/emxl.exe $(PROGRAM)
 #
 #--------------------------------------------------------------------------
 # Below find *fragments* of how to augment this makefile for other systems.
@@ -186,47 +179,62 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 #	Recommendation: Add PIC & PAC only for ATARI
 #
 # Standard setting: No extras:
-EX_SRC	=
-EX_OBJ	=
-EX_DEFS	=
 #
-# PNG support (requires -lpng and -lz on the ALL_LIBS line)
-#EX_SRC	= png.c to_png.c
-#EX_OBJ	= png.o to_png.o 
-#EX_DEFS= -DPNG
+EX_SRC =
+EX_OBJ =
+EX_DEFS =
 #
-# TIFF support (requires -ltiff and possibly -lz on the ALL_LIBS line)
-#EX_SRC	= to_tif.c
-#EX_OBJ	= to_tif.o
-#EX_DEFS	= -DTIF
+# Epson Esc/P2 support 
 #
-# Include extras:
-# EX_SRC	= to_pic.c to_pac.c
-# EX_OBJ	= to_pic.o to_pac.o
-# EX_DEFS	= -DPIC_PAC
+#EX_SRC	 += to_escp2.c
+#EX_OBJ	 += to_escp2.o
+#EX_DEFS += -DEPSON
+#
+# Include PNG support:
+EX_SRC  += png.c to_png.c
+EX_OBJ  += png.o to_png.o
+EX_DEFS += -DPNG
+ALL_LIBS += -lpng
+LFLAGS += -L/usr/local/lib
+#
+# Include TIFF support:
+EX_SRC  +=  to_tif.c
+EX_OBJ  += to_tif.o
+EX_DEFS += -DTIF
+ALL_LIBS += -ltiff -lz -ljpeg
+#
+# Include ATARI extras:
+# EX_SRC	+= to_pic.c to_pac.c
+# EX_OBJ	+= to_pic.o to_pac.o
+# EX_DEFS	+= -DPIC_PAC
 #
 #############################################################################
 # No user-serviceable parts below!
 #############################################################################
 
-COMMON_INCS	= hp2xx.h bresnham.h pendef.h lindef.h
-ALL_INCS	= $(COMMON_INCS) chardraw.h charset0.h getopt.h x11.h ilbm.h iff.h
+COMMON_INCS	= hp2xx.h bresnham.h
+ALL_INCS	= $(COMMON_INCS) chardraw.h charset0.h charset5.h charset7.h \
+		getopt.h x11.h ilbm.h iff.h clip.h
 ALL_CFLAGS	= -c $(CFLAGS)
 
 
 # $(SRCS) NOT USED YET:
-SRCS	= hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c getopt1.c \
+SRCS	= clip.c fillpoly.c\
+	  hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c getopt1.c \
 	  $(ALL_INCS)\
-	  to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c to_pbm.c to_rgip.c \
-	  std_main.c to_fig.c clip.c fillpoly.c pendef.c lindef.c \
-	  $(PREVIEWER).c $(EX_SRC)
+	  to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c to_pbm.c  \
+	  to_rgip.c to_fig.c std_main.c $(PREVIEWER).c pendef.c lindef.c $(EX_SRC)
 
-OBJS	= hp2xx.o hpgl.o picbuf.o bresnham.o chardraw.o getopt.o getopt1.o \
-	  to_vec.o to_pcx.o to_pcl.o to_eps.o to_img.o to_pbm.o to_rgip.o \
-	  std_main.o to_fig.o clip.o fillpoly.o pendef.o lindef.o \
-	  $(PREVIEWER).o $(EX_OBJ)
+OBJS	= clip.o fillpoly.o\
+	  hp2xx.o hpgl.o picbuf.o bresnham.o chardraw.o getopt.o getopt1.o \
+	  to_vec.o to_pcx.o to_pcl.o  to_eps.o to_img.o to_pbm.o \
+	  to_rgip.o to_fig.o std_main.o $(PREVIEWER).o pendef.o lindef.o $(EX_OBJ)
 
 PROGRAM	= hp2xx
+
+$(PROGRAM): $(OBJS)
+	$(CC) $(LFLAGS) $(OBJS) $(ALL_LIBS) -o $(PROGRAM)
+	$(BINDCMD)
 
 default:
 	@echo "This makefile needs manual configuration! Edit it now!
@@ -250,14 +258,9 @@ default:
 #									#
 #########################################################################
 
-all: $(OBJS)
-	$(CC) $(LFLAGS) $(OBJS) $(ALL_LIBS) -o $(PROGRAM)
-	$(BINDCMD)
-
-
-.c.o:	$< $(COMMON_INCS)
-	-$(RMCMD) $@
-	$(CC) $(DEFINES) $(EX_DEFS) $(ALL_CFLAGS) $(CPPFLAGS) $<
+# .c.o:	$< $(COMMON_INCS)
+#	-$(RMCMD) $@
+#	$(CC) $(DEFINES) $(EX_DEFS) $(ALL_CFLAGS) $(CPPFLAGS) $<
 
 
 #########################################################################
@@ -268,23 +271,23 @@ all: $(OBJS)
 
 hp2xx.info:	../doc/hp2xxinf.tex
 		$(CP) ../doc/hp2xxinf.tex hp2xx.texinfo
-		$(MKINFO) hp2xx.texinfo
+		-$(MKINFO) hp2xx.texinfo
 
-bresnham.o:	$< bresnham.h
+# bresnham.o:	$< bresnham.h
 
-chardraw.o:	$< $(COMMON_INCS) chardraw.h charset0.h
+# chardraw.o:	$< $(COMMON_INCS) chardraw.h charset0.h
 
-getopt.o:	$< getopt.h
+# getopt.o:	$< getopt.h
 
-getopt1.o:	$< getopt.h
+# getopt1.o:	$< getopt.h
 
-hp2xx.o:	$< $(COMMON_INCS) getopt.h
+# hp2xx.o:	$< $(COMMON_INCS) getopt.h
 
-hpgl.o:		$< $(COMMON_INCS) chardraw.h
+# hpgl.o:		$< $(COMMON_INCS) chardraw.h
 
-ilbm.o:		$< $(COMMON_INCS) ilbm.h iff.h
+# ilbm.o:		$< $(COMMON_INCS) ilbm.h iff.h
 
-to_x11.o:	$< $(COMMON_INCS) x11.h
+# to_x11.o:	$< $(COMMON_INCS) x11.h
 
 #########################################################################
 
@@ -293,7 +296,7 @@ check:
 
 clean:
 	-make mostlyclean
-	-$(RMCMD) core a.out ./hp2xx.texinfo ./hp2xx.info
+	-$(RMCMD) core a.out ./hp2xx.texinfo ./hp2xx.info $(PROGRAM)
 
 distclean:
 	@echo make distclean -- not supported yet.
@@ -315,14 +318,14 @@ install:	install-bin install-info install-man
 
 install-bin:	$(PROGRAM)
 		-$(STRIP) $(PROGRAM)
-		$(CP) $(PROGRAM) $(bindir)
-		$(CHMOD) 755 $(bindir)/$(PROGRAM)
+		-$(CP) $(PROGRAM) $(bindir)
+		-$(CHMOD) 755 $(bindir)/$(PROGRAM)
 
 install-info:	hp2xx.info
-		$(CP) hp2xx.info $(infodir)
-		$(CHMOD) 644 $(infodir)/hp2xx.info
+		-$(CP) hp2xx.info $(infodir)
+		-$(CHMOD) 644 $(infodir)/hp2xx.info
 
 install-man:	../doc/hp2xx.1
-		$(CP) ../doc/hp2xx.1 $(man1dir)
-		$(CHMOD) 644 $(man1dir)/hp2xx.1
+		-$(CP) ../doc/hp2xx.1 $(man1dir)
+		-$(CHMOD) 644 $(man1dir)/hp2xx.1
 

@@ -7,8 +7,10 @@ Files in ./sources:
 
 README       This file
 
-makefile     A symbolic link to ../makes/generic.mak
-
+makefile     This should normally be a copy of (or symbolic link to)
+	     the appropriate Makefile for your platform from ../makes, 
+	     or an appropriately edited copy of ../makes/generic.mak
+	     As distributed, it is what i use myself on Linux.
 bresnham.c   Implementation of Bresenham algorithm (for line rasterization)
 chardraw.c   Code for drawing ASCII characters
 getopt.c     from GNU getopt, slightly modified -- don't re-distribute!
@@ -22,23 +24,27 @@ clip.c       Auxiliary routines for clipping (IW command)
 to_amiga.c   AMIGA previewer
 to_atari.c   ATARI previewer
 to_dj_gr.c   DOS full-screen (S)VGA previewer, based on DJ Delorie's gr lib
+to_emf.c     Previewer, printout and EMF converter for MS Windows
 to_eps.c     Output converter for EPS (Encapsulated PostScript)
+to_escp2.c   Output converter for Epson ESC/P2 format as used in the Stylus
 to_ilbm.c    AMIGA only: IFF-InterLeave BitMap converter
 to_img.c     Output converter for IMF (DR's Image format)
-to_vec.c     Output converter for Metafont and other vector formats
+to_vec.c     Output converter for several vector formats (Metafont,DXF,SVG...)
 to_os2.c     OS/2 full-screen previewer (only b/w); uses to_vga.c in DOS mode
 to_pac.c     Output converter for ATARI PAC format (unsupported)
 to_pbm.c     Output converter for PBM (Portable BitMap) format
-to_pcl.c     Output converter for HP PLC Level 3 (and some Deskjet extras)
-to_pcx.c     Output converter for Paintbrush PCX format (color not working yet!)
+to_pcl.c     Output converter for HP PCL Level 3 (and some Deskjet extras)
+to_pcx.c     Output converter for Paintbrush PCX format 
+to_pdf.c     Output converter for Portable Document format (requires libpdf)
 to_pic.c     Output converter for ATARI PIC format (unsupported)
-to_pm.c      OS/2 PM previewer (unsupported -- stderr output is lost yet)
+to_pm.c      OS/2 PM previewer 
 to_rgip.c    Output converter for Uniplex RGIP vector format
 to_sunvw.c   SunView previewer (unsupported -- outdated)
 to_uis.c     VAX-VMS UIS previewer
 to_vga.c     DOS full-screen VGA previewer
 to_x11.c     X11 previewer
 to_png.c     Output converter for PNG format (requires libpng and libz)
+png.c	     Support functions for to_png.c
 to_fig.c     Output converter for FIG (XFig) format
 to_tif.c     Output converter for TIFF format (requires libtiff)
 
@@ -52,6 +58,8 @@ charset4.h   Definition of built-in font 4 , Spanish/Latin American
 charset5.h   Definition of built-in font 5 , Special Symbols 
 charset6.h   Definition of built-in font 6 , JIS ASCII
 charset7.h   Definition of built-in font 7 , HP-Roman Extensions
+font173.h    Definition of built-in PS Math font
+font205.h    Definition of built-in Ventura Math font
 getopt.h     from GNU getopt -- don't re-distribute, use original!
 hp2xx.h      Central to almost all C sources
 iff.h        AMIGA only: for IFF-InterLeave BitMap converter
@@ -66,14 +74,6 @@ NOTE about unsupported formats (HWW - these are even less supported now, MK):
   o  to_dj_gr.c  works fine on 386 and 486 CPUs, but I'd rather replace it
                  by code both applicable to DOS and OS/2, and that will be
                  emx.
-
-  o  to_pm.c     is my first OS/2 PM project. It seems to work nicely, with
-                 the exception that I don't know how to re-direct hp2xx's
-                 diag output (to stderr or log file) into a second window
-                 WITHOUT significant changes in the sources.
-
-                 If you know a simple way -- please tell me
-                 (I'm aware of pmprtf -- this come close but won't do it).
 
   o  to_pic.c    The PIC format was mainly used by ATARI programs like
                  Signum. I consider it outdated. Try to work with IMG.

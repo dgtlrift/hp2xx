@@ -300,7 +300,7 @@ if (p_Y[0] == 0 && memcmp(p_Y, p_Y+1,3*nb-1)==0) {
 
 
 
-
+#if 0
 static void
 KCMY_to_K (int nb)
 /**
@@ -336,7 +336,7 @@ Byte	*pK = p_K, *pC = p_C, *pM = p_M, *pY = p_Y;
   }
 }
 
-
+#endif
 
 
 static void
@@ -370,10 +370,13 @@ int size;
 /* \033(U10 set unidirectional off          */   
 fputs("\033@", fd);
 fwrite("\033(G\001\000\001", 6, 1, fd);      /* Enter graphics mode */
-        fwrite("\033(U\001\000\005", 6, 1, fd); /*set unidirectional off*/
+/*        fwrite("\033(U\001\000\005", 5, 1, fd);*/ /*set unidirectional off*/
+        fwrite("\033(U\001\000", 5, 1, fd); /* set resolution, unidirectional off*/
+	size=3600/po->dpi_y;
+	putc(size,fd);
          fwrite("\033(i\001\000\001", 6, 1, fd);      /* Microweave mode on */
            fwrite("\033(C\002\000", 5, 1, fd);          /* Page length */
-             size = po->dpi_y * 12.2;
+             size = po->dpi_y * po->height ;
                putc(size & 255, fd);
                  putc(size >> 8, fd);
                  

@@ -235,7 +235,7 @@ win_open (const GEN_PAR * pg, char *title, int x, int y, int w, int h)
 	 **/
 
   XSelectInput (XDisplay, XWin,
-		ExposureMask  | KeyPressMask | VisibilityChangeMask |
+		ExposureMask | VisibilityChangeMask | KeyPressMask |
 		ButtonPressMask | ButtonReleaseMask);
 
 	/**
@@ -246,7 +246,7 @@ win_open (const GEN_PAR * pg, char *title, int x, int y, int w, int h)
     {
       XNextEvent (XDisplay, &Event);
     }
-  while (Event.type != Expose && Event.type != VisibilityNotify );
+  while (Event.type != Expose && Event.type != VisibilityNotify);
 
   width = w;
   height = h;
@@ -309,14 +309,11 @@ REDRAW:
   for (row_c = row_start, y = MIN (height-row_start, pb->nr - 1);
        row_c < pb->nr; row_c++, y--)
     {
-   row =NULL;
-   if (row_c>=0) row = get_RowBuf (pb, row_c);
-      /*if (row == NULL)
-	return 0;*/
+      row = get_RowBuf (pb, row_c);
+      if (row == NULL)
+	return 0;
       for (x = col_start; x < pb->nc; x++)
 	{
-        if (row_c <0 || x < 0) setXcolor(GRAY);
-         else
 	  switch (index_from_RowBuf (row, x, pb))
 	    {
 
@@ -325,6 +322,14 @@ REDRAW:
 	    case xxForeground:
 	      setXcolor (WHITE);
 	      break;
+/*
+		case xxRed:	setXcolor (RED);	break;
+		case xxGreen:	setXcolor (GREEN);	break;
+		case xxBlue:	setXcolor (BLUE);	break;
+		case xxCyan:	setXcolor (CYAN);	break;
+		case xxMagenta:	setXcolor (MAGENTA);	break;
+		case xxYellow:	setXcolor (YELLOW);	break;
+*/
 	    default:
 	      setXcolor (index_from_RowBuf (row, x, pb));
 	      break;
@@ -333,7 +338,7 @@ REDRAW:
 	}
     }
 
-/* Wait for KeyPress or mouse Button  - exit on keypress or button 3 */
+/* Wait KeyPress of any mouse ButtonPress to exit */
   do
     {
       XNextEvent (XDisplay, &WaitEvent);
@@ -348,14 +353,14 @@ REDRAW:
 	    {
 	    if (!zoomed){
 	      zoomed=1;
+	      po->dpi_x *=2;
+	      po->dpi_y *=2;
 	       po->HP_to_xdots *=2;
 	       po->HP_to_ydots *=2;
-	       po->dpi_x *=2;
-	       po->dpi_y *=2;
 		saved_row=row_start;
 		saved_col=col_start;
 		  row_start = height-WaitEvent.xbutton.y+2*saved_row;
-		  if (height < scr_height) row_start = height-WaitEvent.xbutton.y;
+		  if (height <scr_height) row_start = (height-WaitEvent.xbutton.y);
 		  col_start =  WaitEvent.xbutton.x+col_start;
 	    } else {
 	      zoomed=0;
@@ -365,14 +370,12 @@ REDRAW:
 	       po->HP_to_ydots = po->HP_to_ydots/2;
 		row_start=saved_row;
 		col_start=saved_col;
-
 		}	
 		free(po->picbuf);
 		po->picbuf=NULL;    
 	      TMP_to_BUF(pg, po);
-	      pb=po->picbuf;
+		pb=po->picbuf;
 	    }
-	  if (WaitEvent.xbutton.button == Button3) {win_close();return(0);}
 	}
       else if (WaitEvent.type == ButtonRelease)
 	{
@@ -382,6 +385,14 @@ REDRAW:
 		{
 		  row_start += WaitEvent.xbutton.y - yref;
 		  col_start += xref - WaitEvent.xbutton.x;
+		  if (row_start > pb->nr)
+		    row_start = pb->nr - scr_height;
+		  if (row_start < 0)
+		    row_start = 0;
+		  if (scr_width + col_start > pb->nc)
+		    col_start = pb->nc - scr_width;
+		  if (col_start < 0)
+		    col_start = 0;
 		}
 	      XSetForeground (XDisplay, XGcWin,
 			      WhitePixel (XDisplay, XScreen));
@@ -397,10 +408,10 @@ REDRAW:
 	      goto REDRAW;	/* yes, goto in C is ugly */
 		} 	
 	  break;
-/*	  select (0, NULL, NULL, NULL, &tv);*/
+	  select (0, NULL, NULL, NULL, &tv);
 	}
     }
-  while (WaitEvent.type != KeyPress );
+  while (WaitEvent.type != KeyPress);
 
   win_close ();
   return 0;

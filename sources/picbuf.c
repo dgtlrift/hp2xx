@@ -305,7 +305,9 @@ int maxps;
   HPcoord_to_dotcoord (&HP_Pt, &D_Pt, po);
   /* Pensize correction	*/
  /* maxps= (int)(1. + pg->maxpensize *po->HP_to_xdots/10.0/0.025); */
-  maxps= pg->maxpensize; /* thick lines are drawn to penwidth - not currently scaled */
+	maxps =	 ceil(pg->maxpensize *po->HP_to_xdots/10.0/0.025), 
+/*  maxps= pg->maxpensize; */
+                         /* thick lines are drawn to penwidth - not currently scaled */
                          /* so we must do the same when calculating limits - or we try to draw outside page */ 
   *p_cols  = D_Pt.x + maxps;	
   *p_rows  = D_Pt.y + maxps;
@@ -675,7 +677,7 @@ int		pen_no = 1;
                 }
 		break;
 	  case DEF_PC:
-                if(!load_pen_color_table(pg->td)) {
+                if(load_pen_color_table(pg->td) <0) {
                     PError("Unexpected end of temp. file");
 		    exit(ERROR);
                 }
@@ -688,7 +690,7 @@ int		pen_no = 1;
 		HPGL_Pt_from_tmpfile(&pt1);
 		HPcoord_to_dotcoord (&pt1, &next, po);
 		line_PicBuf (&ref, &next,
-			pt.width[pen_no], 
+			ceil(pt.width[pen_no]*po->HP_to_xdots/10.0/0.025), 
 			pt.color[pen_no], 
 			po->picbuf);
 		memcpy (&ref, &next, sizeof(ref));
@@ -697,7 +699,7 @@ int		pen_no = 1;
 		HPGL_Pt_from_tmpfile(&pt1);
 		HPcoord_to_dotcoord (&pt1, &ref, po);
 		line_PicBuf (&ref, &ref,
-			pt.width[pen_no],
+			ceil(pt.width[pen_no]*po->HP_to_xdots/10.0/0.025), 
 			pt.color[pen_no],
 			po->picbuf);
 		break;

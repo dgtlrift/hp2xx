@@ -30,8 +30,10 @@ For installation,
 
   o  select the makefile template most closely resembling
      your system's needs. On Unix systems, use "generic.mak".
-
-  o  copy it to ../sources/makefile
+     
+  o  copy it to ../sources/makefile. The Makefile that is originally 
+     installed there as part of the source distribution is what i use
+     for development on Linux systems.
 
   o  cd ../sources
 
@@ -62,9 +64,21 @@ For installation,
              of what modification may be necessary.
 
        3) Optional additions:
-
-          Optionally add support for modes PIC and PAC by un-commenting
-          the appropriate lines.
+	  Optionally select support for TIFF and/or PNG output by un-commenting
+	  the appropriate definitions. Both require additional libraries, which
+	  are available from www.libtiff.org and www.libpng.org, respectively.
+          Libpng (and potentially also libtiff, depending on which options
+	  you chose for it) also requires zlib for compression algorithms,
+	  the libpng website should contain a pointer to it.
+	  Users of Epson Stylus family inkjets may add the preliminary 
+	  support provided by the to_escp2 module. Printing is currently
+	  very slow due to the use of only one line of nozzles, so piping
+	  the output of the postscript module into ghostscript might be a
+	  better choice.
+	  Optionally add support for modes PIC and PAC by un-commenting
+          the appropriate lines. These formats appear to have been
+	  quite popular in the Atari world once, and the code for them
+ 	  in hp2xx dates back to Werntges' original version.
 
 
   o  Run "make all" from ../sources. This should result in a binary file.

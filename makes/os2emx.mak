@@ -19,11 +19,10 @@
 # copies.
 ###########################################################################
 #
-# Makefile for OS/2 2.x & emx 0.8f  version of hp2xx
+# Makefile for OS/2 2.x or later & emx 0.9d version of hp2xx
 #
 CC	= gcc
 OPTIONS	= -O2 -ansi -fstrength-reduce -finline-functions -Wall
-LIBS	= -lgr -lm
 EMXBIN	= e:/emx/bin
 
 # There are two versions available which you select by un-commenting
@@ -52,9 +51,12 @@ EX_OBJ	=
 # allow for easy switching:
 #
 
-LIBS	= -los2 # -l16bit
+LIBS	= -los2
 OS2DISP		= to_pm
-OS2DISPFLAG	= -p	# -f (full screen), -p (PM), -w (windowed)
+
+# -f (full screen), -p (PM), -w (windowed with stderr output redirection 
+# to a separate window)
+OS2DISPFLAG	= -w
 
 
 

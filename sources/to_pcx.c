@@ -198,11 +198,14 @@ else
   }
 
   h.vmode       = 0;            /* Reserved                        */
-  h.planes      = po->picbuf->depth; /* Number of color planes	   */
-  if (po->picbuf->depth ==1 )
+/*  h.planes      = po->picbuf->depth; *//* Number of color planes	   */
+  if (po->picbuf->depth ==1 ){
+  h.planes = 1;
   h.byteperline = po->picbuf->nb;
-  else
+  }else{
   h.byteperline = 8*po->picbuf->nb;    /* Number of bytes per line   */
+  h.planes= 3;
+  }
   h.paletteinfo = 1;            /* 1 = color & b/w, 2 = gray scale */
   h.hscreensize = po->picbuf->nc - 1; /* Horizontal screen size in pixels */
   h.vscreensize = po->picbuf->nr - 1; /* Vertical screen size in pixels */
@@ -340,7 +343,7 @@ Byte    *p_R=NULL, *p_G=NULL, *p_B=NULL, *p_I=NULL;
 	if ((!pg->quiet) && (row_c % 10 == 0))
 		  /* For the impatients among us ...    */
 		Eprintf(".");
-fprintf(stderr,"coverting row %d (%d bytes)\n",row_c,po->picbuf->nb);
+/*fprintf(stderr,"coverting row %d (%d bytes)\n",row_c,po->picbuf->nb);*/
 	row = get_RowBuf(po->picbuf, row_c);
 	byte_to_PCX (0, PCX_INIT, fd);
 
@@ -368,7 +371,7 @@ for (x=0; x < po->picbuf->nb; x++)fprintf(stderr,"%d%d%d\n",p_R[x],p_G[x],p_B[x]
 		Buf_to_PCX (p_R, 8*po->picbuf->nb, fd);
 		Buf_to_PCX (p_G, 8*po->picbuf->nb, fd);
 		Buf_to_PCX (p_B, 8*po->picbuf->nb, fd);
-		Buf_to_PCX (p_I, 8*po->picbuf->nb, fd);
+/*		Buf_to_PCX (p_I, 8*po->picbuf->nb, fd);*/
 	}
   }
   if (!pg->quiet)

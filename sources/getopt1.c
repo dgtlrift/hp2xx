@@ -26,7 +26,9 @@
 #include "config.h"
 #endif
 #endif
-
+#ifndef _NO_VCL
+#include <unistd.h>
+#endif
 #include "getopt.h"
 
 #ifndef __STDC__

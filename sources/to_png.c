@@ -148,7 +148,6 @@ int pdcol;
 
 ERROR_EXIT:
   PError ("write_PNG");
-ERROR_EXIT_2:
   return ERROR;
 }
 

@@ -16,6 +16,8 @@ extern signed int CurrentLinePattern;
 #define LT_PATTERNS  ((LT_MIN*-1) + 1 + LT_MAX)         /* -8 .. 0 ..  +8  */
 #define LT_ELEMENTS   20
 
+#define LT_PATTERN_TOL 0.005  /* 0.5% of pattern length */
+
 typedef signed char SCHAR;    
 
 typedef double LINESTYLE[LT_PATTERNS][LT_ELEMENTS+1];

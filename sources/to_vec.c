@@ -164,8 +164,29 @@ HPGL_Pt         old_pt;
   	draw_dot        = "\n#PU\n%g  %g\n#PD\n%g  %g\n\n#PU\n\n";
   	exit_cmd        = "";
   	break;
-
-  }
+	case 7:	/* DXF */
+	ftype		= "DXF";
+	scale_cmd	= "  0\nSECTION\n  2\nENTITIES\n  0\n";
+	pen_cmd		= ""; /*FIXME*/
+	poly_start	= "LINE\n  8\n  0\n 10\n%g\n 20\n%g\n 30\n0.0\n";
+	poly_next	= " 11\n%g\n 21\n%g\n 31\n0.0\n  0\n";
+	poly_last	= poly_next;
+	poly_end	= "";
+	draw_dot	= ""; /*FIXME*/
+	exit_cmd	= "ENDSEC\n  0\nEOF\n";
+	break;
+    case 8: /* SVG */
+	ftype		= "SVG";
+	scale_cmd	= "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n<svg width=\"100%%\" height=\"100%%\" viewBox=\"0 0 %4.3f %4.3f\" xmlns=\"http://www.w3.org/2000/svg\"><g>\n";
+	pen_cmd		= "</g><g style=\"stroke:black; fill:none; stroke-width:%d\" >\n";
+	poly_start	= "<path d=\"M %4.3f, %4.3f \n";
+	poly_next	= "	L %4.3f, %4.3f \n";
+	poly_last	= "	L %4.3f, %4.3f \n\" />\n";
+	poly_end	= "\" />\n";
+	draw_dot	= "";
+	exit_cmd	= "</g>\n</svg>\n";
+	break;
+}
 
 #ifdef ATARI
   if (mode == 4)
@@ -278,12 +299,15 @@ HPGL_Pt         old_pt;
   else
   {
 #endif
-	if (mode != 5 && mode !=6)
+	if (mode < 5 )
 	{
 		fprintf(md,"%% %s code in %s, created by hp2xx\n",
 			ftype, po->outfile);
 		fprintf(md, scale_cmd, po->width, po->height);
 	}
+
+	if (mode == 7 ) fprintf(md, scale_cmd);
+	if (mode == 8 ) fprintf(md, scale_cmd, po->width, po->height);
 #ifdef ATARI
   }
 #endif
@@ -298,6 +322,8 @@ HPGL_Pt         old_pt;
 	   case 5:
 		fprintf(md, pen_cmd, pen_no);
 		break;
+	   case 7:
+	   	break;
 	   default:
 		fprintf(md, pen_cmd, pensize);
 		break;
@@ -352,7 +378,7 @@ HPGL_Pt         old_pt;
 		break;
 
           case DEF_PW:
-                if(!load_pen_width_table(pg->td)) {
+                if(load_pen_width_table(pg->td)<0) {
                     PError("Unexpected end of temp. file");
                     err = ERROR;
                     goto MF_exit;
@@ -366,6 +392,8 @@ HPGL_Pt         old_pt;
 	   case 5:
 		fprintf(md, pen_cmd, pen_no);
 		break;
+	   case 8:
+		break;
 	   default:
 		fprintf(md, pen_cmd, pensize);
 		break;
@@ -373,17 +401,20 @@ HPGL_Pt         old_pt;
 	break;
 	  case MOVE_TO:
 		HPGL_Pt_from_tmpfile (&pt1);
-		if (pensize == 0 || mode == 3 || mode == 4)
+		if (pensize == 0 || mode == 3 || mode == 4 || mode == 7 )
 			break;
 		if (chars_out)          /* Finish up old polygon */
 			fprintf(md, poly_end);
+    if (mode == 8) pt1.y = po->ymax -pt1.y;
+
 		chars_out =  fprintf(md, poly_start,
 			(pt1.x - po->xmin) * xcoord2mm,
 			(pt1.y - po->ymin) * ycoord2mm);
+
 		break;
 
 	  case DRAW_TO:
-		if (mode == 3)  /* Needs special treatment: no polygons!        */
+		if (mode == 3 || mode == 7)  /* Needs special treatment: no polygons!        */
 		{
 			chars_out =  fprintf(md, poly_start,
 			  (pt1.x - po->xmin) * xcoord2mm,
@@ -411,8 +442,12 @@ HPGL_Pt         old_pt;
 #endif
 
 		HPGL_Pt_from_tmpfile (&pt1);
+    if (mode == 8) pt1.y = po->ymax -pt1.y;
+
 		if (pensize == 0)
 			break;
+
+
 		if (chars_out > max_chars_out)
 					/* prevent overlong lines */
 		{
@@ -458,6 +493,15 @@ HPGL_Pt         old_pt;
 					(pt1.y - po->ymin) * ycoord2mm);
 		break;
 
+	  case DEF_PC:
+		     if(load_pen_color_table(pg->td)<0) {
+                    PError("Unexpected end of temp. file");
+                    err = ERROR;
+                    goto MF_exit;
+                	}
+
+			Eprintf("Warning, no PC support in vector modes!");
+			break;
 	  default:
 		Eprintf ("Illegal cmd in temp. file!");
 		err = ERROR;

@@ -54,7 +54,7 @@ pymax=MAX(pymax,polygon[i].y);
 }
 
 if (pxmin == pxmax && pymin == pymax){
-fprintf(stderr,"zero area polygon\n");
+/*fprintf(stderr,"zero area polygon\n");*/
 return;
 }
 

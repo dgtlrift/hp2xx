@@ -1,13 +1,16 @@
-hp2xx-3.4.0
+hp2xx-3.4.1
 
-Besides numerous bug fixes over 3.3.2 , this version provides support
-for a number of HPGL/2 commands, most notably those related to polygon
-drawing. Thanks to  Eugene Doudine, it contains better handling of 
-PJL file headers and PE commands. Andrew Bird has rewritten the penwidth
-and line style code, adding support for changing penwidth in the course
-of a drawing. Many others have provided patches, suggestions and test
-files.
-
+Besides several bugfixes, this release adds support for the BZ/BR commands
+(bezier curve plotting) and plotter fonts for European Languages, greek 
+characters and mathematical symbols.
+The automatic A4 margin generation introduced by the original author in 3.2.0 
+have been removed, so positioning and clipping should hopefully work as 
+expected again. NULL characters in labels are now ignored as they should be, 
+an overlooked debug message in the pcx driver has been silenced, and build 
+fixes for the OS/2 and Windows platforms have been added. This release also
+introduces new output modules for direct generation of PDF,SVG and DXF files.
+The preview mode for X11 has been enhanced with simple zoom and pan options,
+and a previewer for MS windows platforms has been added.
 I would greatly appreciate receiving bug reports, patches or even sample 
 HPGL files. (In the latter case, please make sure that no copyright or 
 confidentiality agreements are violated before sending any materials.)
@@ -22,78 +25,60 @@ Disclaimer: while i currently work for Daveg GmbH and they have generously
 See the file 'copying' (i.e. the GNU GPL) for license and warranty
 information.
 
-Changes from 3.3.2 to 3.4.0
+Changes from 3.4.0 to 3.4.1
 
-New features:
-
-- Support for HPGL/2 commands related to polygons and area fills :
-  EP, ER, FP, FT, PM, PT, RA, RR, WG (no user-defined fill types yet)
-- WU command support, PW fixed accordingly.
-- AT,RT command support (arc through three points)
-- New linetype handling including support for line types 7,8,-7,-8 and
-  user-defined linetype (UL) (written by Andrew Bird)
-- Support for the COmment keyword added (Andrew Bird)
-- PD;PU-sequences without pen movement create a small dot now to mimick the
-  behaviour of a real pen plotter. 
-- Parser improved to be more robust (especially with PE commands),
-  cliping (IW) support for PE lines, PJL and RTL control sequence handler,
-  type 1 and 2 (anisotropic) scaling support added to SC (Eugene Doudine).
-- Rewrote pen property handling - a pen can now change width during a 
-  plot (Andrew Bird). Similarly added pencolor changing support (though for
-  the postscript driver only - all other modes require a rewrite of the 
-  intermediate raster 'picbuf' code).
-
-- Added -S option for selection of TIFF compression mode (Andrew Bird)
-- added command line option '-n'/'--nofill' to suppress polygon filling  
-- file names may start with non-alphabetic characters (e.g. numbers
-  or unix-style path names) now (Michael Kennedy)
-
-- Modified to_pcx to produce PCX mode 5 (truecolor) files in color mode,
-  PCX2 in monochrome. (The old PCX2 module is in the 'old' directory, in 
-  case this proves to be worse - i have changed a few of the palette 
-  definitions to get correct b/w output and primary colors even with this 
-  version).
-- Output mode 'esc2' for the Epson Stylus series of printers at 720dpi.
-  (limited to A4 size for now, and in 'microweave' mode, i.e. using only
-   one row of nozzles, which results in exact but very slow printing)
-- OS/2 PM previewer now has stderr output redirection to a separate window
-  (patch provided by Kazutaka Nishiyama)
-- X11 preview generates a warning, but no longer aborts if the window is
-  larger than the current screen size 
-- Added step-by-step instructions for compiling on Windows NT (provided by
-  James D. Shaw)
+- Scale penwidths in raster modes to resolve the metric/pixelcount
+  controversy in interpretation of the pen widths. (Gerhard Buergmann)
+- Added support for BR and BZ (cubic bezier curves)
+- Added Makefile template for Microsoft platforms, explicitly set binary
+  i/o mode on the standard in/out channels on these systems (Bruce Lightner)
+- Added support for character sets 9 (ISO reference) and 30-39 (western 
+  european languages).
+- Added Ventura Math and PS Math fonts and partial support for the AD and 
+  SD commands (font selection, but no font properties yet)
+- X11 preview can be terminated by pressing any key on the preview window
+  now (Yury Strelenko). The preview window is limited to the available screen
+  size again, but if the drawing is larger than the screen, one can
+  now pan about the window using the mouse. The preview image can be zoomed
+  to twice the original resolution using mouse button 2. 
+- Added test case spectrum.plt, donated by Yuri Strelenko, to hp-tests
+- Added PDF output mode (requires libpdf)
+- Added simple DXF output.
+- Added output mode for XML/SVG.
+- Improved Epson Esc/P2 output mode, now known to work with the Stylus 1520.
+- Added description and templates for building on MS Windows using VisualC++
+  and added output as Windows Enhanced Metafile (EMF) with printing and 
+  preview support for this platform (Bengt-Arne Fjellner)
+- Added Makefile section for IRIX and fixed some compiler warnings (Yves
+  Nodet)  
 
 Bug fixes:
-- IW limits were interpreted as plotter units even if scaling (SC) was set.
-- PCX output sometimes had dark red background in b/w mode and wrong colors
-  in colormap mode (rewrote to_pcx.c for PCX5, see above).
-- lines drawn in IW mode had extraneous pen-up moves added, which confused 
-  the line pattern generator.
-- removed extraneous asterisk in the INFO-DIR-ENTRY section of the
-  texinfo doc file (Reinhard Kotucha)
-- IW could clip lines just inside the limits due to rounding errors on
-  some platforms
-- LB text was sometimes incorrectly clipped by IW
-- LB text in unsupported character sets was replaced by blanks instead of the
-  corresponding characters from set 0.
-- changed PostScript 'translate' parameters to adjust plot position on page
-- Line pattern length was too long for LT-2
-- SC scale factors were not applied to XT/YT tick marks, resulting in
-  distorted plots
-- PS command with height only and PS with width>height were not treated 
-  correctly
+ 
+- Removed extraneous progress message in PCX output (leftover from debugging,
+  pointed out by Francisco Filho)
+- Removed the intensity plane from PCX output, as it is not needed anymore
+  and appears to confuses some software.
+- backspacing degree sign in charset 2 looked more like a tiny A
+- NULL characters in labels were not ignored, causing incomplete labels
+- the default 'hardware limits' introduced by the original author in
+  3.2.0 (A4 with margins) were messing up the scaling and clipping.
+  (Joe Green). This version defaults to A0 (1188x840mm) hardware limits.
+- made OS/2 version compile again, updated makefile template for OS/2
+  (Kazutaka Nishiyama) 
+- reduced 'penwidth correction' in eps output (Yuri Strelenko)
+- the effects of a previous RO or WU commands were not undone by the next
+  IN command (Yuri Strelenko)
+- The provided Unix manual page was outdated in several areas
+- A pencolor (PC) command for pen 0 would cause hp2xx to abort with a spurious
+  error message(Tyler Mitchell)
+- Added x and y dpi to the TIFF header to placate certain viewers and plotters
+  (Glen Barr)
+- Dots in line definitions were drawn as very short lines (Andrew Bird)
+- the optional parameters of a BP statement were interpreted as regular
+  HPGL commands (causing strange error messages when there was a filename with 
+  HPGL-like character sequence among them)
+- reverted a change in the scaling mechanism for PS/IW. Geometry surrounded
+  by whitespace should be positioned correctly again.  
+- The trailing semicolon is now suppressed when reporting inline COmments.
+- The Postscript BeginProcSet command lacked a colon (Bengt-Arne Fjellner).
 
-including contributions by:
-Todd Beverly
-David Billinghurst
-Andrew Bird
-Gerhard Buergmann
-Eugene Doudine
-Lars Eriksson
-Michael Kennedy
-Robert S. Maier
-Dan McMahill
-Kazutaka Nishiyama
-John Reeve
-Wilfred van Rooyen
-Jim Shaw

@@ -49,7 +49,8 @@ copies.
  **                   by Kazutaka Nishiyama (nishiyama@ep.isas.ac.jp)
  ** NOTES:     
  **      Now the PM version has a redirector of stderr into 
- **      a separate window.
+ **      a separate window. Make is successful with emx 0.9d under 
+ **      OS/2 Warp 4.0.
  **/
 
 #define	INCL_WIN
@@ -61,6 +62,7 @@ copies.
 #include <string.h>
 #include <stdio.h>
 #include "bresnham.h"
+#include "pendef.h"
 #include "hp2xx.h"
 
 #define far	/* Not needed in 32 bit mode	*/

@@ -4,9 +4,11 @@
 #include "lindef.h"
 #include "hpgl.h"
 
+
 double     CurrentLinePatLen;
 LineType   CurrentLineType;
 signed int CurrentLinePattern;
+
 
 LINESTYLE lt;
 
@@ -34,7 +36,6 @@ void set_line_style(SCHAR index, ...){
    lt[index-LT_MIN][count] = -1;
 
    if(fabs(percentage - 100.) > 0.5) {
-/*      fprintf(stderr,"\nset_line_style: style %d percentage != 100 - adjusting\n",index);*/
       factor=100.0/percentage;
       for(count=0;count < LT_ELEMENTS;count++) {
         if(lt[index-LT_MIN][count] < 0) {
@@ -50,7 +51,7 @@ void set_line_style(SCHAR index, ...){
 }
 
 void set_line_style_by_UL(FILE *hd){ 
-   SCHAR index,count;
+   SCHAR index,pos_index,neg_index,count,i;
    double factor,percentage;
    float tmp;
 
@@ -61,24 +62,43 @@ void set_line_style_by_UL(FILE *hd){
      index = (int) tmp;
    }
 
+    pos_index=index-LT_MIN;
+    neg_index=(index*-1)-LT_MIN;
+
    for(count=0,percentage=0;(read_float(&tmp,hd)==0);count++) {  /* while there is an argument */
-     lt[index-LT_MIN][count] = (int) tmp;
+     lt[pos_index][count] = (int) tmp;
      percentage += (int) tmp;
    }
 
-   lt[index-LT_MIN][count] = -1;
+   lt[pos_index][count] = -1;
 
    if(fabs(percentage - 100.) > 0.5) {
-/*      fprintf(stderr,"\nset_line_style_by_UL: style %d percentage != 100\n",index);*/
       factor=100.0/percentage;
       for(count=0;count < LT_ELEMENTS;count++) {
-        if(lt[index-LT_MIN][count] < 0) {
+        if(lt[pos_index][count] < 0) {
            break;
         } else  {
-            lt[index-LT_MIN][count] *= factor;
+            lt[pos_index][count] *= factor;
         }
       }
    }                                                                                                                    
+ /* now derive the adaptive version */
+
+    count--;
+
+    if(count%2) {                                         /* last value denotes a gap */
+       lt[neg_index][0]=lt[pos_index][0]/2;
+       for(i=1;i<=count;i++)
+         lt[neg_index][i]=lt[pos_index][i];
+       lt[neg_index][count+1]=lt[pos_index][0]/2;
+       lt[neg_index][count+2] = -1;
+    } else {                                             /* last value denotes a line */
+       lt[neg_index][0]=(lt[pos_index][0]+lt[pos_index][count])/2;
+       for(i=1;i<count;i++)
+         lt[neg_index][i]=lt[pos_index][i];
+       lt[neg_index][count]=lt[neg_index][0];
+       lt[neg_index][count+1] = -1;
+    }
 
 }
 
@@ -105,7 +125,7 @@ void set_line_style_defaults() {
 /* 0 */
    set_line_style( 0,  0,100, -1);
 /* 1 */
-   set_line_style( 1,  1, 99, -1);
+   set_line_style( 1,  0,100, -1);
 /* 2 */
    set_line_style( 2, 50, 50, -1);
 /* 3 */

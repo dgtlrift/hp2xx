@@ -1,4 +1,4 @@
-.TH hp2xx 1 "12 February 2000"
+.TH hp2xx 1 "6 May 2001"
 .SH NAME
 hp2xx \- A HPGL converter into some vector- and raster formats
 .SH USAGE
@@ -17,7 +17,7 @@ General options:
   -f   char *  ""        Name of output file. "" = autom., "-" = stdout
   -l   char *  ""        Name of optional log file
   -m   char *  pre       Mode. Valid:
-                         mf,cad,em,epic,eps,fig,gpt,hpgl,rgip, pcl,pcx,pic,img,pbm, png, pre
+                         mf,cad,dxf,em,emf,epic,eps,escp2,fig,gpt,hpgl,rgip,pcl,pcx,pic,img,pbm,png,pre,svg
   -p   char *  11111111  Pensize(s) [dots] (default), [1/10 mm] (mf, ps).
                          Valid: 1 to 8 digits of 0-9 each.
   -P   int     0:0       Selected page range (m:n) (0 = 0:0 = all pages)
@@ -50,7 +50,11 @@ EPS, PCL, and some previews:
   -o   double  0.0       x offset [mm] of picture (left  margin)
   -O   double  0.0       y offset [mm] of picture (upper margin)
   -C                     Modify -o -O to center picture within -w -h frame
- 
+
+TIFF only: 
+  -S   int     0         Compression: 0/1=off,2=RLE,3=G3FAX,4=G4FAX,
+                                      6=OJPEG,7=JPEG,8=deflate
+
 Preview on PC's (DOS):
   -V   int     18        VGA mode byte (decimal)
 -------------------------------------------------------------------------
@@ -61,8 +65,8 @@ Preview on PC's (DOS):
 .I hp2xx
 reads HPGL ASCII source files, interprets them, and converts them
 into either another vector-oriented  format or one of several rasterfile
-formats. Currently, its HPGL parser recognizes a subset of HPGL/2.
-Some high-level functions like polygon mode and fill patterns are missing.
+formats. Currently, its HPGL parser recognizes a large subset of HPGL/2.
+Some high-level functions related to polygon filling are missing.
 Also, only some of the fixed space vector fonts and none of the variable
 space arc fonts are supported. Beside these limitations,
 .I hp2xx
@@ -81,9 +85,6 @@ writes the output to a file "foo.pcl". Use option
 to specify your output file name explicitly, or
 -I -f-
 to write to stdout, e.g. when piping into a queue.
-(DOS users beware: DOS limits output redirection to ASCII data only, so -f-
-here is restricted to modes generating just ASCII ouput --
-no binaries please!).
 
 The program scans the current HPGL source, converts all drawing commands into
 elementary vectors, saves these in a temporary file, and concurrently
@@ -106,7 +107,7 @@ and -w width, padded with background color at the lower or right margin
 if needed.
 
 A second way of defining sizes is relying on the size the picture
-would actually show if plotted on an (A4) sheet of paper by a HP-compatible
+would actually show if plotted on a sheet of paper by a HP-compatible
 plotter. By activating flag
 -I -t
 (true size), options -a, -h, and -w are ignored, and the sizes are
@@ -146,14 +147,22 @@ Use option
 to select the program mode, i.e. the output format. Currently supported:
 mode = "mf" (Metafont), "em" (emTeX \special{} commands), "epic"
 (line drawing using TeX macros within epic.sty), "eps" (PostScript),
+"dxf" (Autocad), "emf/emp" (MS Enhanced Metafile / Printing - available
+in Windows-built executables only), "svg" (Scalable Vector Graphics),
 "fig" (XFig 3.2), "gpt" (GnuPlot ascii), "hpgl" (simplified HP-GL, 
 e.g. for import tasks), "pcl" (HP-PCL Level 3 format (suitable for printing 
-on a HP Laserjet II, DeskJet, or compatible printer), "img" (GEMs IMG format), 
+on a HP Laserjet II, DeskJet, or compatible printer), "escp2" (Epson Esc/P2
+printer commands, suitable for printing on Epson Stylus models),
+"img" (GEMs IMG format), "pdf" (Adobe Portable Document format),
 "pbm" (Portable Bit Map / Portable PixMap for color plots), "pcx" (PC-Paintbrush format, also accepted by 
 MS-Paintbrush / Windows 3.0 and many other PC based pixel renderers), 
 "png" (Portable Network Graphics format), or "rgip" (Uniplex RGIP).
 There is also a preview option "pre" which supports VGA cards (DOS),
 ATARI, AMIGA, X11 servers, and Sunview. Default mode is "pre".
+(As some of these modes rely on external libraries, they may not be builtin
+by default, and not be available in prebuilt binaries supplied e.g. in
+Linux distributions. The usage messsage generated when hp2xx is invoked without
+parameters will always list exactly those modes that are actually available.)
 
 If you use a raster format, the picture is rasterized by default into a
 75 DPI resolution image. Use option
@@ -169,8 +178,9 @@ may start swapping. Optionally change the swap file by using
 .I -s swapfile,
 e.g. to speed up processing by swapping to a RAM disk.
 
-A carusel of 8 pens is simulated. You can specify pen sizes and colors
-for each of these pens via options
+Unless the hpgl file specifies its own selection of pen widths and colors
+(for up to 256 pens), a carousel of 8 pens is simulated. You can specify 
+pen sizes and colors for each of these pens via options
 .I -p string
 and
 .I -c string.
@@ -212,10 +222,13 @@ Supported vector formats are:
 .I TeX/Metafont,
 .I emTex-specials,
 .I TeX/epic-Macros,
+.I Autocad DXF
 .I XFig 3.2,
 .I GnuPlot ASCII,
 .I Simplified HP_GL,
 .I Uniplex RGIP
+.I Scalable Vector Graphics (SVG)
+.I Adobe PDF(if libpdf is available)
 and
 -I PostScript.
 Use
@@ -246,7 +259,8 @@ puts your picture "flush" to the left and upper paper limit by default.
 .LP
 .SH RASTER FORMATS
 .LP
-The following formats are supported: HP-PCL, PCX, PIC, IMG, PBM/PPM, PNG, and previews.
+The following formats are supported: HP-PCL, Esc/P2, PCX, PIC, IMG, PBM/PPM, PNG, TIFF, and previews. (PNG and TIFF formats rely on external libpng,zlib and libtiff. Versions built on MS windows systems may additionally 
+support EMF generation and printing.)
 However, generation of
 other formats is made easy for programmers because of
 .I hp2xx's
@@ -304,7 +318,8 @@ if needed. PAC features file compression, PIC does not.
 PCL: HP-PCL Level 3 format, most useful for direct printer output. Due to
 this action, there have been added some extra flags and options: Use flag
 .I -i
-to send a printer initialization sequence before the actual image. Flag
+to send a printer initialization sequence before the actual image. Among
+other things, this will instruct the printer which paper size to use. Flag
 .I -F
 adds a Form Feed (FF, hex 0C) after the image is completed, which is what
 you may want most of the time. However, overlay printing of several files
@@ -318,6 +333,25 @@ or
 and 20 mm additional left margin. Option -C modifies these offsets to
 center the picture within the frame defined by -w -h.
 
+The option
+.I -C
+will attempt to center the drawing on the paper automatically. Note also
+that 
+.I hp2xx
+now honors any PS (page size) commands in the hpgl file, which can also
+create white space around the actual drawing.
+
+The option
+.I -N
+will make hp2xx ignore any PS commands given in the hpgl file, and recalculate
+the image size based on the actual geometry instead.
+
+The option
+.I -n
+will make hp2xx ignore any polygon filling commands, rendering only their
+outlines. This may serve both as a work-around for hp2xx' limited polyfill
+support, and improve clarity of thumbnail images of PCB designs and the like.
+ 
 For DeskJet / DeskJet Plus / DeskJet 500 / Deskjet 550 printers, there are
 some special printer commands. Activate them with option
 .I -S n.
@@ -325,8 +359,25 @@ n=0 switches them off, n=1 activates black/white mode, n=3 (DJ500C and DJ550
 only) supports CMY color data, n=4 (DJ550C only) supports CMYK color data.
 Any n!=0 activates PLC data compression (TIFF mode: 2).
 
+Esc/P2: This is the control language used in the Epson Stylus family of
+inkjets. 
+.I hp2xx
+currently does not address more than one line of nozzles in the print head,
+so printing, while exact, is extremely slow. Users might prefer piping the
+output of the PostScript module through 
+.I ghostscript
+until this issue is resolved.
+
+PNG: Support for the Portable Network Graphics format relies on 
+.I libpng
+which is available from www.libpng.org.
+
 PRE: Preview on all machines. Use options -h -w -o -O -C to define the screen
 size and position of your output (-o -O -C may not always apply).
+Under X11, you can pan around an image that is larger than the screen size
+by 'dragging' it with the mouse (pressing button 1 while moving the mouse
+in the desired direction). Any other mouse button or keyboard key will terminate
+the preview.
 For VGA cards (DOS), option
 .I -V VGAmode
 gives you a simple way to utilize SVGA modes. Please take
@@ -335,6 +386,25 @@ as the results are unpredictable. As hp2xx uses standard BIOS calls to
 set pixels on VGA cards (slow but portable), you can select any hi-res
 mode supported by your system by simply specifying the mode byte with this
 option.
+
+TIFF: The tagged image file format is supported by most graphics and image
+manipulation programs. Support for TIFF in 
+.I hp2xx
+relies on the 
+.I TIFF library
+available from www.libtiff.org, which offers several means of image compression.
+The
+.I -S
+commandline option selects between them as follows:
+.I -S 0 or -S 1: no compression
+.I -S 2: RLE (run length encoding)
+.I -S 3: Group 3 FAX (monochrome)
+.I -S 4: Group 4 FAX (monochrome)
+.I -S 5: GIF (not available by default, because of the UNISYS patent)
+.I -S 6: JPEG ('old' TIFF 6.0 style)
+.I -S 7: JPEG
+.I -S 8: deflate
+
 .LP
 .SH EXAMPLES
 .nf

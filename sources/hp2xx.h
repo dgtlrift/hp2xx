@@ -169,10 +169,10 @@ typedef unsigned char	Byte;
  **/
 
 typedef	enum{
-	XX_CAD, XX_CS, XX_EM, XX_EPIC, XX_EPS, XX_FIG, XX_GPT, XX_HPGL, 
+	XX_CAD, XX_CS, XX_DXF, XX_EM, XX_EMF, XX_EMP, XX_EPIC, XX_EPS, XX_ESC2, XX_FIG, XX_GPT, XX_HPGL, 
         XX_ILBM, XX_IMG,
-	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PIC, XX_PNG, XX_PRE, 
-	XX_RGIP, XX_TIFF, XX_ESC2, XX_TERM	/* Dummy: terminator	*/
+	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PDF, XX_PIC, XX_PNG, XX_PRE, 
+	XX_RGIP, XX_SVG, XX_TIFF, XX_TERM	/* Dummy: terminator	*/
 } hp2xx_mode;
 
 
@@ -273,6 +273,7 @@ typedef struct			/* Corresponding option(s)	*/
    char	 *swapfile;		/* -s swapfile			*/
    int	 quiet;			/* -q				*/
    int   nofill;		/* -n				*/
+   int   no_ps;			/* -N				*/
    int	 maxpensize;		/* (internally needed)		*/
    int	 is_color;		/* (internally needed)		*/
    int	 maxcolor;		/* (internally needed)		*/
@@ -296,7 +297,7 @@ typedef struct {
 #define	FLAGSTATE(flag)		(flag) ? "ON" : "off"
 
 
-#if defined(TURBO_C) || defined (GNU) || defined (OS2)
+#if defined(TURBO_C) || defined (GNU) || defined (OS2) || defined (_NO_VCL)
 #define	READ_BIN	"rb"
 #define	WRITE_BIN	"w+b"
 #else
@@ -320,7 +321,7 @@ void	autoset_outfile_name (const char*, const char*, char**);
 int	HPGL_to_TMP	(GEN_PAR*, IN_PAR*);
 int	TMP_to_VEC	(const GEN_PAR*, const OUT_PAR*);
 int	TMP_to_BUF	(const GEN_PAR*, OUT_PAR*);
-int	BUF_to_RAS	(const GEN_PAR*, const OUT_PAR*);
+int	BUF_to_RAS	(const GEN_PAR*, OUT_PAR*);
 
 void	cleanup_g	(GEN_PAR*);
 void	cleanup_i	(IN_PAR*);
@@ -339,6 +340,7 @@ PlotCmd	PlotCmd_from_tmpfile	(void);
 void	HPGL_Pt_from_tmpfile	(HPGL_Pt *);
 void	Pen_action_to_tmpfile	(PlotCmd, const HPGL_Pt*, int);
 int	read_float		(float*, FILE*);
+double ceil_with_tolerance (double, double);
 void    line(int relative, HPGL_Pt p);
 int read_PE_flags(const GEN_PAR *, int, FILE *, PE_flags *);
 int read_PE_coord(int ,FILE *, PE_flags *, float *);
@@ -370,6 +372,9 @@ int	PicBuf_to_ILBM	(const GEN_PAR*, const OUT_PAR*);
 #ifdef EPSON
 int	PicBuf_to_ESCP2	(const GEN_PAR*, const OUT_PAR*);
 #endif
+#ifdef USEPDF
+int	to_pdf	(const GEN_PAR*, const OUT_PAR*);
+#endif
 
 #ifdef PIC_PAC
 int	PicBuf_to_PIC	(const GEN_PAR*, const OUT_PAR*);
@@ -386,7 +391,13 @@ int	PicBuf_to_Sunview(const GEN_PAR*,const OUT_PAR*);
 int	PicBuf_to_UIS	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_HGC	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_VGA	(const GEN_PAR*, const OUT_PAR*);
-int	PicBuf_to_X11	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_X11	(const GEN_PAR*,  OUT_PAR*);
+
+#ifdef EMF
+int to_emf (const GEN_PAR *pg, const OUT_PAR *po);    
+int to_emw (const GEN_PAR *pg, const OUT_PAR *po);
+int to_emp (const GEN_PAR *pg, const OUT_PAR *po);    
+#endif
 
 void fill (HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt P1, HPGL_Pt P2,
            int scale_flag, int filltype, float spacing, float hatchangle);

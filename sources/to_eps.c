@@ -40,6 +40,7 @@ copies.
  ** 93/04/25  V 1.10e HWW  BoundingBox corrected for (half) max. pen width
  ** 93/11/15  V 1.11a HWW  EPS syntax corrections (courtesy N. H. F. Beebe)
  ** 94/02/15  V 1.20a HWW  Adapted to changes in hp2xx.h
+ ** 01/12/04          MK   Added missing colon to BeginProcSet (Bengt-Arne Fjellner)
  **/
 
 #include <stdio.h>
@@ -143,10 +144,10 @@ void	ps_line_to (HPGL_Pt *ppt, char mode, FILE *fd)
 char	*Getdate (void)
 {
 int len;
-long t;
+time_t t;
 char *p;
 
-  t = time((long *) 0);
+  t = time((time_t *) 0);
   p = ctime(&t);
   len = strlen(p);
   *(p + len - 1) = '\0';  /* zap the newline character */
@@ -208,7 +209,7 @@ A4_height=297.;
  ** Definitions
  **/
 
-  fprintf(fd,"%%%%BeginProcSet\n");
+  fprintf(fd,"%%%%BeginProcSet:\n");
   fprintf(fd,"/PSSave save def\n");      /* save VM state */
   fprintf(fd,"/PSDict 200 dict def\n");  /* define a dictionary */
   fprintf(fd,"PSDict begin\n");          /* start using it */
@@ -265,7 +266,7 @@ A4_height=297.;
   fprintf(fd,"    2.834646 2.834646 scale\n");	/* 1/72"--> mm */
 /*  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff,
 			A4_height - po->yoff - po->height);*/
-  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff+hmxpenw*200, po->yoff+hmxpenw*200);
+  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff+hmxpenw*20, po->yoff+hmxpenw*20);
   fprintf(fd,"    %6.3f setlinewidth\n", pensize/10.0);
   fprintf(fd,"   } def\n");
   fprintf(fd,"/C {setrgbcolor} def\n");
@@ -378,7 +379,7 @@ int	pen_no=0, pensize, pencolor=0, err;
                 break;
           case DEF_PC:
                 err=load_pen_color_table(pg->td);
-                if (err==0) {
+                if (err<0) {
                     PError("Unexpected end of temp. file");
 		    err = ERROR;
 		    goto EPS_exit;

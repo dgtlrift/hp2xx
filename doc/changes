@@ -1,5 +1,39 @@
 Changes to hp2xx:
 =================
+
+V 3.4.1, hopefully sometime in Jan 02:
+
+call line_PicBuf with pt.width scaled by HP_to_xdots/10./0.025 to achieve
+more sensible translation from metric penwidths to integer multiples of a
+pixel in picbuf.c (Gerhard Buergmann; requires different pensizes correction
+in size_PicBuf as well). Added function bezier for the cubic bezier curves
+(BR,BZ) to hpgl.c - need real-world cases for testing. Added #ifdef'd code
+to stdmain.c that opens stdin/stdout in binary mode on windoze. to_pcx.c
+still had one of my eloquent fprintf statements from the debugging phase.
+charset2.h was missing a comma in the declaration of the degree sign. 
+Finally identified(?) Werntges' default setting of P1,P2 to A4-size paper 
+with margins as the cause of strange offsets and bad cliping ranges. 
+Joe Greens patch suggested using A3 dimensions (the largest size a 7550 could
+handle), i've decided to try A0 unless that blows up something somewhere.
+read_string() in hpgl.c was treating '\0', a valid no-op control character 
+in HPGL, like an ordinary character, accidentally terminating the label at 
+that point. Added charsets 9,30-39 (by selecting appropriate characters from 
+sets 0 and 7). Changed status of 'CV' (curved line generator)  command from 
+'unsupported' to 'not applicable' in hp_cmds.lst, as it is basically a pause 
+command that makes no sense for an emulation. Modified X11 previewer to allow
+terminating the program by keypresses or mouse clicks on the preview window,
+and to allow moving(paning) about a drawing that is larger than the available
+screensize (Based on patches and suggestions by Yuri Strelenko). Updated the
+manual page. Changed load_pen_color_table to return -1 instead of 0 on failure,
+as assigning and retrieving the color of pen 0 is a valid action in HPGL2. The
+previous code would gladly store PC0,255,255,255, but panic with a spurious
+'unexpected end of temp. file: SUCCESS' in the output module. Added the math
+fonts (Ventura math and the related PS math), as they contain greek characters
+and other symbols that might appear in scientific or engineering plots (after
+receiving a sample file from Bengt-Arne Fjellner that used several characters
+from ventura math). I do not claim to be an artist, and Werntges' encoding scheme
+does not simplify matters, but all glyphs should at least be recognizable.
+
 V 3.4.0, 01/02/09:
 
 case CI in hpgl.c did not yet feed the polygon buffer (and adding it

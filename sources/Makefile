@@ -40,13 +40,14 @@ bindir   = $(prefix)/bin
 includedir = $(prefix)/include
 mandir   = $(prefix)/man
 man1dir  = $(mandir)/man1
-infodir  = /usr/local/lib/info
+infodir  = $(prefix)/info
 
 # CC and CFLAGS set for gcc, but any ANSI-C compiler should work.
 # For non-gcc compilers, simply set CFLAGS = -O (to start with)
 #
 CC       = gcc
-CFLAGS	= -O2 -I/usr/X11R6/include $(DEFINES) $(EX_DEFS) -Wall -pedantic -Wuninitialized -Wreturn-type -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS	= -O2 -g -I/usr/X11R6/include $(DEFINES) $(EX_DEFS) -Wall -pedantic -Wuninitialized -Wunused -Wreturn-type -Wmissing-prototypes -Wstrict-prototypes  
+
 #CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES)
 
 LFLAGS   = -L/usr/X11R6/lib            # only sometimes needed; see below for examples
@@ -64,9 +65,9 @@ BINDCMD  =                # only needed for EMX and DJGPP DOS extenders
 # add -lpng -lz for PNG support
 # and/or -ltiff for TIFF
 #
-DEFINES   = -DUNIX -DHAS_UNIX_X11
+DEFINES   = -DUNIX -DHAS_UNIX_X11 
 PREVIEWER = to_x11
-ALL_LIBS  = -L/usr/lib/X11R6 -lX11 -lm #-lpng -lz -ltiff    
+ALL_LIBS  = -L/usr/lib/X11R6 -lX11 -lm     
 #
 # Generic UNIX, no previewer
 #
@@ -171,12 +172,16 @@ ALL_LIBS  = -L/usr/lib/X11R6 -lX11 -lm #-lpng -lz -ltiff
 EX_SRC =
 EX_OBJ =
 EX_DEFS =
+# Include PDF support
+#EX_SRC += to_pdf.c
+#EX_OBJ += to_pdf.o
+#EX_DEFS += -DUSEPDF
 #
 # Epson Esc/P2 support 
 #
-EX_SRC	 += to_escp2.c
-EX_OBJ	 += to_escp2.o
-EX_DEFS += -DEPSON
+#EX_SRC	 += to_escp2.c
+#EX_OBJ	 += to_escp2.o
+#EX_DEFS += -DEPSON
 #
 # Include PNG support:
 #EX_SRC  += png.c to_png.c

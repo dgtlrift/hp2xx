@@ -8,6 +8,7 @@
  **/
 
 #include <stdio.h>
+void    Eprintf (const char*, ...);
 
 void	PicBuf_to_Dummy()
 {

@@ -30,6 +30,10 @@ copies.
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#ifdef WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif /* WIN32 */
 #include "bresnham.h"
 #include "pendef.h"
 #include "hp2xx.h"
@@ -302,7 +306,11 @@ char	*p, cdummy;
 	  case 'n':
 	  	pg->nofill = TRUE;
 	  	break;
-	  	
+
+	  case 'N':
+	  	pg->no_ps = TRUE;
+	  	break;
+	  		  	
 	  case 'o':
 		pi->xoff = atof (optarg);
 		if (pi->xoff < 0.0)
@@ -459,7 +467,7 @@ IN_PAR	Pi;
 OUT_PAR	Po;
 int	i;
 
-char	*shortopts = "a:c:d:D:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtv";
+char	*shortopts = "a:c:d:D:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtvN";
 struct	option longopts[] =
 {
 	{"mode",	1, NULL,	'm'},
@@ -468,6 +476,7 @@ struct	option longopts[] =
 	{"pages",	1, NULL,	'P'},
 	{"quiet",	0, NULL,	'q'},
 	{"nofill",	0, NULL,	'n'},
+	{"no_ps",	0, NULL,	'N'},
 
 	{"DPI",		1, NULL,	'd'},
 	{"DPI_x",	1, NULL,	'd'},
@@ -509,6 +518,11 @@ struct	option longopts[] =
 	usage_msg (&Pg, &Pi, &Po);
 	exit (ERROR);
   }
+#ifdef WIN32
+   /* set stdin and stdout to binary mode: */
+   _setmode( _fileno(stdin), _O_BINARY );
+   _setmode( _fileno(stdout), _O_BINARY );
+#endif /* WIN32 */
   process_opts (argc, argv, shortopts, longopts, &Pg, &Pi, &Po);
 
 /**
@@ -516,8 +530,9 @@ struct	option longopts[] =
  **/
 
   for (i=0; ModeList[i].mode != XX_TERM; i++)
-	if (strncmp(Pg.mode, ModeList[i].modestr,
-		strlen(ModeList[i].modestr)) == 0)
+/*	if (strncmp(Pg.mode, ModeList[i].modestr,
+		strlen(ModeList[i].modestr)) == 0)*/
+	if (strcmp(Pg.mode, ModeList[i].modestr)==0)
 	{
 		Pg.xx_mode = ModeList[i].mode;
 		break;

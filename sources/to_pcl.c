@@ -386,7 +386,6 @@ start_graphmode (const OUT_PAR *po, FILE *fd)
 	fprintf(fd,"\033&a+%dV",(int)(po->yoff * 720.0 / 25.4) );
   if (po->xoff != 0.0)
 	fprintf(fd,"\033&a+%dH",(int)(po->xoff * 720.0 / 25.4) );
-fprintf(stderr,"xoff, yoff: %f %f\n",po->xoff,po->yoff);
 /**
  ** Set Graphics Resolution (300 / 150 / 100 / 75):
  ** This is NO PCL level 3 feature, but LaserjetII and compatibles

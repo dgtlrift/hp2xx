@@ -19,7 +19,7 @@
 # copies.
 ###########################################################################
 #
-# Generic Makefile for misc. versions of hp2xx; strong emphasis on UNIXes
+# Windows 32 Makefile for misc. versions of hp2xx; strong emphasis on UNIXes
 #
 
 # Utilities etc.:
@@ -51,6 +51,7 @@ LFLAGS   =                # only sometimes needed; see below for examples
 CPPFLAGS = -I.            # only sometimes needed; see below for examples
 BINDCMD  =                # only needed for EMX and DJGPP DOS extenders
 
+0=o
 
 
 #############################################################################
@@ -60,9 +61,21 @@ BINDCMD  =                # only needed for EMX and DJGPP DOS extenders
 #
 # Generic UNIX + X11 previewer (default)
 #
-DEFINES   = -DUNIX -DHAS_UNIX_X11
-PREVIEWER = to_x11
-ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
+# DEFINES   = -DUNIX -DHAS_UNIX_X11
+# PREVIEWER = to_x11
+# ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
+#
+# MS Windows, no previewer
+#
+DEFINES   = -DUNIX -D_NO_VCL -DWIN32
+PREVIEWER = no_prev
+ALL_LIBS  = 
+O = obj
+CFLAGS = 
+CC = cl $(DEFINES) $(EX_DEFS) $(CPPFLAGS)
+# add wild_cards and force binary mode
+EXTRA_OBJS = setargv.obj binmode.obj
+EXE = .exe
 #
 # Generic UNIX, no previewer
 #
@@ -84,15 +97,6 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 # ALL_LIBS  = -lX11 -lm
 # CC        = cc
 # CFLAGS    = -O
-#
-# SGI IRIX 6.5 with tiff and png support (declare EX_SRC.. below)
-# CC=cc
-# CFLAGS = -O -I/usr/freeware/include $(DEFINES) $(EX_DEFS)
-# LFLAGS = -L/usr/freeware/lib32
-# CPPFLAGS = -I/usr/freeware/include
-# DEFINES = -DUNIX -DHAS_UNIX_X11
-# PREVIEWER = to_x11
-# ALL_LIBS = -L/usr/lib/X11R6 -lX11 -lm -lpng -lz -ltiff
 #
 # Solaris /SunOS >5.x
 # LFLAGS    = -L$(OPENWINHOME)/lib -R$(OPENWINHOME)/lib
@@ -192,17 +196,17 @@ EX_DEFS	=
 #
 # PNG support (requires -lpng and -lz on the ALL_LIBS line)
 #EX_SRC	= png.c to_png.c
-#EX_OBJ	= png.o to_png.o 
+#EX_OBJ	= png.$O to_png.$O 
 #EX_DEFS= -DPNG
 #
 # TIFF support (requires -ltiff and possibly -lz on the ALL_LIBS line)
 #EX_SRC	= to_tif.c
-#EX_OBJ	= to_tif.o
+#EX_OBJ	= to_tif.$O
 #EX_DEFS	= -DTIF
 #
 # Include extras:
 # EX_SRC	= to_pic.c to_pac.c
-# EX_OBJ	= to_pic.o to_pac.o
+# EX_OBJ	= to_pic.$O to_pac.$O
 # EX_DEFS	= -DPIC_PAC
 #
 #############################################################################
@@ -221,12 +225,12 @@ SRCS	= hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c getopt1.c \
 	  std_main.c to_fig.c clip.c fillpoly.c pendef.c lindef.c \
 	  $(PREVIEWER).c $(EX_SRC)
 
-OBJS	= hp2xx.o hpgl.o picbuf.o bresnham.o chardraw.o getopt.o getopt1.o \
-	  to_vec.o to_pcx.o to_pcl.o to_eps.o to_img.o to_pbm.o to_rgip.o \
-	  std_main.o to_fig.o clip.o fillpoly.o pendef.o lindef.o \
-	  $(PREVIEWER).o $(EX_OBJ)
+OBJS	= hp2xx.$O hpgl.$O picbuf.$O bresnham.$O chardraw.$O getopt.$O getopt1.$O \
+	  to_vec.$O to_pcx.$O to_pcl.$O to_eps.$O to_img.$O to_pbm.$O to_rgip.$O \
+	  std_main.$O to_fig.$O clip.$O fillpoly.$O pendef.$O lindef.$O \
+	  $(PREVIEWER).$O $(EX_OBJ)
 
-PROGRAM	= hp2xx
+PROGRAM	= hp2xx$(EXE)
 
 default:
 	@echo "This makefile needs manual configuration! Edit it now!
@@ -251,13 +255,13 @@ default:
 #########################################################################
 
 all: $(OBJS)
-	$(CC) $(LFLAGS) $(OBJS) $(ALL_LIBS) -o $(PROGRAM)
+	$(CC) $(LFLAGS) $(OBJS) $(EXTRA_OBJS) $(ALL_LIBS) -o $(PROGRAM)
 	$(BINDCMD)
 
 
-.c.o:	$< $(COMMON_INCS)
-	-$(RMCMD) $@
-	$(CC) $(DEFINES) $(EX_DEFS) $(ALL_CFLAGS) $(CPPFLAGS) $<
+#.c.$O:	$< $(COMMON_INCS)
+#	-$(RMCMD) $@
+#	$(CC) $(DEFINES) $(EX_DEFS) $(ALL_CFLAGS) $(CPPFLAGS) $<
 
 
 #########################################################################
@@ -270,21 +274,21 @@ hp2xx.info:	../doc/hp2xxinf.tex
 		$(CP) ../doc/hp2xxinf.tex hp2xx.texinfo
 		$(MKINFO) hp2xx.texinfo
 
-bresnham.o:	$< bresnham.h
+bresnham.$O:	bresnham.c bresnham.h
 
-chardraw.o:	$< $(COMMON_INCS) chardraw.h charset0.h
+chardraw.$O:	chardraw.c $(COMMON_INCS) chardraw.h charset0.h
 
-getopt.o:	$< getopt.h
+getopt.$O:	getopt.c getopt.h
 
-getopt1.o:	$< getopt.h
+getopt1.$O:	getopt1.c getopt.h
 
-hp2xx.o:	$< $(COMMON_INCS) getopt.h
+hp2xx.$O:	hp2xx.c $(COMMON_INCS) getopt.h
 
-hpgl.o:		$< $(COMMON_INCS) chardraw.h
+hpgl.$O:		hpgl.c $(COMMON_INCS) chardraw.h
 
-ilbm.o:		$< $(COMMON_INCS) ilbm.h iff.h
+ilbm.$O:		ilbm.c $(COMMON_INCS) ilbm.h iff.h
 
-to_x11.o:	$< $(COMMON_INCS) x11.h
+to_x11.$O:	to_x11.c $(COMMON_INCS) x11.h
 
 #########################################################################
 
@@ -302,7 +306,7 @@ dist:
 	@echo make dist -- not supported yet.
 
 mostlyclean:
-	-$(RMCMD) *.o
+	-$(RMCMD) *.$O
 
 realclean:
 	-make clean

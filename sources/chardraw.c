@@ -54,6 +54,8 @@ copies.
 #include "charset5.h"
 #include "charset6.h"
 #include "charset7.h"
+#include "font205.h"
+#include "font173.h"
 
 /**
  ** NOTE: There is code here masked off by symbol STROKED_FONTS
@@ -217,7 +219,483 @@ if (c == 101 ) { /* backspacing for special characters  */
 	ptr = &charset7[c][0];
 	break;
 
-    default:	/* Currently, only charsets 0-7 are supported	*/
+    case 9:	/* charset 9, 'ISO Reference Version'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 36:
+			c = 58;
+			ptr = &charset7[c][0];
+			break;
+		case 126:
+			ptr = &charset6[c][0];
+			break;
+		default:
+			ptr = &charset0[c][0];
+			break;
+		}
+	break;
+
+    case 30:	/* charset 30, 'ISO 646 Swedish'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 36:
+			c = 58;
+			ptr = &charset7[c][0];
+			break;
+		case 91:
+			c = 88;
+			ptr = &charset7[c][0];
+			break;
+		case 92:
+			c = 90;
+			ptr = &charset7[c][0];
+			break;
+		case 93: 
+			c = 80;
+			ptr = &charset7[c][0];
+			break;
+		case 123:
+			c = 76;
+			ptr = &charset7[c][0];
+			break;
+		case 124:
+			c = 78;
+			ptr = &charset7[c][0];
+			break;
+		case 125:
+			c = 84;
+			ptr = &charset7[c][0];
+			break;						
+		case 126:
+			ptr = &charset6[c][0];
+		default:
+		ptr = &charset0[c][0];
+		break;
+		}
+	break;	
+
+    case 31:	/* charset 31, 'ISO 646 Swedish for Names'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 36:
+			c = 58;
+			ptr = &charset7[c][0];
+			break;
+		case 64:
+			c = 92;
+			ptr = &charset7[c][0];
+			break;	
+		case 91:
+			c = 88;
+			ptr = &charset7[c][0];
+			break;
+		case 92:
+			c = 90;
+			ptr = &charset7[c][0];
+			break;
+		case 93: 
+			c = 80;
+			ptr = &charset7[c][0];
+			break;
+		case 94:
+			c = 91;
+			ptr = &charset7[c][0];
+			break;
+		case 96:
+			c = 69;
+			ptr = &charset7[c][0];
+			break;
+		case 123:
+			c = 76;
+			ptr = &charset7[c][0];
+			break;
+		case 124:
+			c = 78;
+			ptr = &charset7[c][0];
+			break;
+		case 125:
+			c = 84;
+			ptr = &charset7[c][0];
+			break;						
+		case 126:
+			c = 79;
+			ptr = &charset7[c][0];
+		default:
+		ptr = &charset0[c][0];
+		break;
+		}
+	break;	
+
+    case 32:	/* charset 30, 'ISO 646 Norway, Version 1'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 91:
+			c = 83;
+			ptr = &charset7[c][0];
+			break;
+		case 92:
+			c = 82;
+			ptr = &charset7[c][0];
+			break;
+		case 93: 
+			c = 80;
+			ptr = &charset7[c][0];
+			break;
+		case 123:
+			c = 87;
+			ptr = &charset7[c][0];
+			break;
+		case 124:
+			c = 86;
+			ptr = &charset7[c][0];
+			break;
+		case 125:
+			c = 84;
+			ptr = &charset7[c][0];
+			break;						
+		case 126:
+			ptr = &charset6[c][0];
+		default:
+		ptr = &charset0[c][0];
+		break;
+		}
+	break;	
+
+    case 33:	/* charset 33, 'ISO 646 German'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 64:
+			c = 61;
+			ptr = &charset7[c][0];
+			break;
+		case 91:
+			c = 88;
+			ptr = &charset7[c][0];
+			break;
+		case 92:
+			c = 90;
+			ptr = &charset7[c][0];
+			break;
+		case 93: 
+			c = 91;
+			ptr = &charset7[c][0];
+			break;
+		case 123:
+			c = 76;
+			ptr = &charset7[c][0];
+			break;
+		case 124:
+			c = 78;
+			ptr = &charset7[c][0];
+			break;
+		case 125:
+			c = 79;
+			ptr = &charset7[c][0];
+			break;						
+		case 126:
+			c = 94;
+			ptr = &charset7[c][0];
+		default:
+		ptr = &charset0[c][0];
+		break;
+		} 
+	break;	
+
+    case 34:	/* charset 34, 'ISO 646 French'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 35:
+			c = 59;
+			ptr = &charset7[c][0];
+			break;
+		case 64:
+			c = 72;
+			ptr = &charset7[c][0];
+			break;
+		case 91:
+			c = 51;
+			ptr = &charset7[c][0];
+			break;
+		case 92:
+			c = 53;
+			ptr = &charset7[c][0];
+			break;
+		case 93: 
+			c = 61;
+			ptr = &charset7[c][0];
+			break;
+		case 123:
+			c = 69;
+			ptr = &charset7[c][0];
+			break;
+		case 124:
+			c = 75;
+			ptr = &charset7[c][0];
+			break;
+		case 125:
+			c = 73;
+			ptr = &charset7[c][0];
+			break;						
+		case 126:
+			c = 43;
+			ptr = &charset7[c][0];
+		default:
+		ptr = &charset0[c][0];
+		break;
+		}
+	break;	
+
+    case 35:	/* charset 35, 'ISO 646 United Kingdom'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 35:
+			c = 59;
+			ptr = &charset7[c][0];
+			break;
+		case 126:
+			ptr = &charset6[c][0];
+		default:
+		ptr = &charset0[c][0];
+		break;
+		}
+	break;	
+
+    case 36:	/* charset 36, 'ISO 646 Italian'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 35:
+			c = 59;
+			ptr = &charset7[c][0];
+			break;
+		case 64:
+			c = 61;
+			ptr = &charset7[c][0];
+			break;
+		case 91:
+			c = 51;
+			ptr = &charset7[c][0];
+			break;
+		case 92:
+			c = 53;
+			ptr = &charset7[c][0];
+			break;
+		case 93: 
+			c = 69;
+			ptr = &charset7[c][0];
+			break;
+		case 96:
+			c = 75;
+			ptr = &charset7[c][0];
+			break;	
+		case 123:
+			c = 72;
+			ptr = &charset7[c][0];
+			break;
+		case 124:
+			c = 74;
+			ptr = &charset7[c][0];
+			break;
+		case 125:
+			c = 73;
+			ptr = &charset7[c][0];
+			break;						
+		case 126:
+			c = 89;
+			ptr = &charset7[c][0];
+		default:
+		ptr = &charset0[c][0];
+		break;
+		}
+	break;	
+
+
+    case 37:	/* charset 37, 'ISO 646 Spanish'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 35:
+			c = 59;
+			ptr = &charset7[c][0];
+			break;
+		case 64:
+			c = 61;
+			ptr = &charset7[c][0];
+			break;
+		case 91:
+			c = 56;
+			ptr = &charset7[c][0];
+			break;
+		case 92:
+			c = 54;
+			ptr = &charset7[c][0];
+			break;
+		case 93: 
+			c = 57;
+			ptr = &charset7[c][0];
+			break;
+		case 123:
+			c = 51;
+			ptr = &charset7[c][0];
+			break;
+		case 124:
+			c = 55;
+			ptr = &charset7[c][0];
+			break;
+		case 125:
+			c = 53;
+			ptr = &charset7[c][0];
+			break;						
+		default:
+		ptr = &charset0[c][0];
+		break;
+		}
+	break;	
+
+
+    case 38:	/* charset 38, 'ISO 646 Portuguese'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 64:
+			c = 61;
+			ptr = &charset7[c][0];
+			break;
+		case 91:
+			c = 97;
+			ptr = &charset7[c][0];
+			break;
+		case 92:
+			c = 52;
+			ptr = &charset7[c][0];
+			break;
+		case 93: 
+			c = 105;
+			ptr = &charset7[c][0];
+			break;
+		case 123:
+			c = 98;
+			ptr = &charset7[c][0];
+			break;
+		case 124:
+			c = 53;
+			ptr = &charset7[c][0];
+			break;
+		case 125:
+			c = 106;
+			ptr = &charset7[c][0];
+			break;						
+		case 126:
+			c = 51;
+			ptr = &charset7[c][0];
+			break;						
+		default:
+		ptr = &charset0[c][0];
+		break;
+		}
+	break;	
+
+    case 39:	/* charset 39, 'ISO 646 Norway Version 2'*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	switch (c){
+		case 35:
+			c = 61;
+			ptr = &charset7[c][0];
+			break;
+		case 91:
+			c = 83;
+			ptr = &charset7[c][0];
+			break;
+		case 92:
+			c = 82;
+			ptr = &charset7[c][0];
+			break;
+		case 93: 
+			c = 80;
+			ptr = &charset7[c][0];
+			break;
+		case 123:
+			c = 87;
+			ptr = &charset7[c][0];
+			break;
+		case 124:
+			c = 86;
+			ptr = &charset7[c][0];
+			break;
+		case 125:
+			c = 84;
+			ptr = &charset7[c][0];
+			break;						
+		case 126:
+			c = 124;
+			ptr = &charset0[c][0];
+			break;						
+		default:
+		ptr = &charset0[c][0];
+		break;
+		}
+	break;	
+    case 173: /* PS Math */
+		if (c<0) c+=256;
+		ptr= &charset173[c][0];
+		break;
+    case 205: /* Ventura Math */
+		if (c<0) c+=256;
+		ptr= &charset205[c][0];
+		break;		
+    default:	/* Currently, only charsets 0-7,30-39 are supported	*/
 	Eprintf ("Charset %d not supported -- replaced by charset 0!\n", tp->font);
 	if (c & 0x80)
 	{
@@ -239,22 +717,18 @@ if (c == 101 ) { /* backspacing for special characters  */
       {
       if (scale_flag) {
 	if ( P1.x+p.x > C2.x || P1.y+p.y > C2.y){
-		fprintf(stderr,"A2C IW set:point %f %f >P2\n",p.x,p.y);
 		outside=1;
  		}
 	if ( P1.x+p.x  < C1.x  || P1.y+p.y < C1.y) {
- 		fprintf(stderr,"A2C IW set:point  %f %f <P1\n",p.x,p.y);
  		outside=1;
   		}
       }else{
       if (P1.x + (p.x - S1.x) * Q.x > C2.x || P1.y + (p.y - S1.y) * Q.y > C2.y)
        {
-       /*fprintf(stderr,"IW set:point %f %f >P2\n",p.x,p.y); */
        outside = 1;
        }
       if (P1.x + (p.x - S1.x) * Q.x < C1.x || P1.y + (p.y - S1.y) * Q.y < C1.y)
        {
-       /*fprintf(stderr,"IW set:point  %f %f <P1\n",p.x,p.y); */
        outside = 1;
        }
      }
@@ -564,7 +1038,7 @@ char	*txt0;
 	  	if (tp->altfont)
 	  	tp->font = tp->altfont;
 		break;
-	  case _SI:	
+	  case _SI:
 	  	tp->font = tp->stdfont;
 		break;
 	  default:
@@ -720,7 +1194,7 @@ double	x, y;
 float	fx, fy;
 int	pendown = FALSE;
 
-  int SafeLineType = CurrentLineType; /* Save Current Line Type */
+  LineType SafeLineType = CurrentLineType; /* Save Current Line Type */
   CurrentLineType  = LT_solid;
 
   tp->refpoint		= HP_pos;

@@ -1,6 +1,6 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
-   Parts Copyright (c) 1998-2001 Martin Kroeker  All rights reserved.
+   Parts Copyright (c) 1998-2002 Martin Kroeker  All rights reserved.
    
    Distributed by Free Software Foundation, Inc.
 
@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.0";
-char	*VERS_DATE = "01/02/09";
+char	*VERS_NO = "3.4.1";
+char	*VERS_DATE = "02/01/28";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -156,7 +156,7 @@ char	*VERS_ADDITIONS =
 char	*VERS_ADDITIONS =
 	"\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n";
 #else
-char	*VERS_ADDITIONS = "                              (c) 1999 - 2001 Martin Kroeker\n";
+char	*VERS_ADDITIONS = "                              (c) 1999 - 2002 Martin Kroeker\n";
 #endif
 
 
@@ -182,9 +182,17 @@ mode_list  ModeList[] =
 #ifdef	ATARI
 	{XX_CS,		"cs"},	/* LaTeX using \special{...} for C. Strunk's TeX	*/
 #endif
+	{XX_DXF,	"dxf"}, /* AutoCAD DXF format			*/
 	{XX_EM,		"em"},	/* LaTeX using \special{em:...}		*/
+#ifdef EMF
+	{XX_EMF,	"emf"}, /* Microsoft Enhanced Metafile		*/
+	{XX_EMP,	"emp"}, /* Microsoft EMF printing		*/
+#endif
 	{XX_EPIC,	"epic"},/* LaTeX using epic.sty macros		*/
 	{XX_EPS,	"eps"},	/* Encapulated PostScript		*/
+#ifdef EPSON
+        {XX_ESC2,       "esc2"}, /* Epson Esc/P2 printer language       */
+#endif
 	{XX_FIG,        "fig"}, /* FIG 3.1 Drawing Files                */
 	{XX_GPT,        "gpt"}, /* gnuplot vector ascii format          */
 	{XX_HPGL,	"hpgl"},/* Simplified HP-GL			*/
@@ -200,16 +208,16 @@ mode_list  ModeList[] =
 	{XX_PAC,	"pac"},	/* for ATARI, e.g. used by StaD		*/
 	{XX_PIC,	"pic"},	/* for ATARI. Try to replace by IMG	*/
 #endif
-	{XX_RGIP,	"rgip"},/* Uniplex RGIP vector format		*/
+#ifdef USEPDF
+        {XX_PDF,        "pdf"}, /* Portable Document Format       */
+#endif
 #ifdef PNG
         {XX_PNG,        "png"}, /* Portable Network Graphics            */
 #endif
 	{XX_PRE,	"pre"},	/* DEFAULT: Preview on screen		*/
+        {XX_RGIP,       "rgip"},/* Uniplex RGIP vector format           */
 #ifdef TIF
         {XX_TIFF,        "tiff"}, /* Tagged image file format            */
-#endif
-#ifdef EPSON
-	{XX_ESC2,	"esc2"}, /* Epson Esc/P2 printer language       */
 #endif
 	{XX_TERM,	""},	/* Dummy: List terminator		*/
 };
@@ -442,6 +450,7 @@ void	Send_Copyright(void)
  **	Remnant of older (non-GNU) releases. Leave here if you like
  **/
 {
+/*
 static	unsigned char msg[] =
 	{0xaf,0xa8,0xcd,0xd5,0x97,0xdd,0xdd,0x9f,
 	 0x85,0x8d,0xc6,0x8c,0x85,0xed,0x8b,0x85,
@@ -453,6 +462,8 @@ unsigned char	*p;
   while (*p!=0xa5)
 	Eprintf("%c", (*p++ ^ 0xa5));
   exit  (COPYNOTE);
+*/
+exit(-1);
 }
 
 
@@ -481,10 +492,11 @@ int	len, i;
 	return;
   }
 
+#if 0
   if (strcmp(mode,"pre") == 0)
 	return;		/* If preview mode:				*/
 			/*    then output file name is unused		*/
-
+#endif
   for (i=len-1; i; i--)	/* Search for (last) '.' char in path		*/
 	if (in_name[i] == '.')
 		break;
@@ -503,6 +515,10 @@ int	len, i;
 	exit   (ERROR);
   }
   strcpy(*outfile, in_name);
+
+  if (strcmp(mode,"pre") == 0)
+	return;		/* If preview mode:				*/
+			/*    then file name is used only for window title */
 
   if (i==1 || len-i > 3) /* No or non-DOS extension: Add mode string	*/
   {
@@ -698,6 +714,18 @@ int	TMP_to_VEC (const GEN_PAR *pg, const OUT_PAR *po)
 	return 0;
 #endif
 
+#ifdef EMF       /*BAF */
+    case XX_EMF:
+        to_emf  (pg, po);
+        return 0;
+    case XX_EMP:
+        to_emp  (pg, po);
+         return 0;
+    case XX_PRE:
+        to_emw  (pg, po);
+         return 0;
+#endif           /*end BAF*/
+
     case XX_GPT:
         to_mftex(pg, po, 6);
         return 0;
@@ -706,10 +734,18 @@ int	TMP_to_VEC (const GEN_PAR *pg, const OUT_PAR *po)
 	to_mftex(pg, po, 5);
 	return 0;
 
+    case XX_DXF:
+    	to_mftex(pg, po, 7);
+    	return 0;
+
     case XX_EPS:
 	to_eps	(pg, po);
 	return 0;
-
+#ifdef USEPDF
+    case XX_PDF:
+	to_pdf	(pg, po);
+	return 0;
+#endif
     case XX_RGIP:
 	to_rgip	(pg, po);
 	return 0;
@@ -790,7 +826,7 @@ int	n_rows, n_cols;
  **	0 	if successfully processed
  **/
 
-int	BUF_to_RAS (const GEN_PAR *pg, const OUT_PAR *po)
+int	BUF_to_RAS (const GEN_PAR *pg, OUT_PAR *po)
 {
   if (po->picbuf == NULL)
 	return ERROR;
@@ -864,7 +900,6 @@ int	BUF_to_RAS (const GEN_PAR *pg, const OUT_PAR *po)
 default:
 	return 1;
   }
-  return 1;
 }
 
 

@@ -66,6 +66,7 @@ copies.
 #include <dos.h>
 #include <conio.h>
 #include "bresnham.h"
+#include "pendef.h"
 #include "hp2xx.h"
 
 #define INCL_VIO

@@ -36,19 +36,19 @@ int load_pen_color_table(FILE *td){
    PEN_C          r,g,b;
 
    if (fread( (void *) &tp,sizeof(tp),1,td) != 1) {
-      return(0);
+      return(-1);
    }
 
    if (fread( (void *) &r,sizeof(r),1,td) != 1) {
-      return(0);
+      return(-1);
    }
 
    if (fread( (void *) &g,sizeof(g),1,td) != 1) {
-      return(0);
+      return(-1);
    }
    
    if (fread( (void *) &b,sizeof(b),1,td) != 1) {
-      return(0);
+      return(-1);
    }
 
    if(tp >= NUMPENS) { /* don't check < 0 - unsigned */
@@ -56,7 +56,6 @@ int load_pen_color_table(FILE *td){
    }
 
    set_color_rgb(tp,r,g,b);
-
    return(tp);
 }
 
