@@ -166,7 +166,7 @@ HPGL_Pt         old_pt;
   	break;
 	case 7:	/* DXF */
 	ftype		= "DXF";
-	scale_cmd	= "  0\nSECTION\n  2\nENTITIES\n  0\n";
+	scale_cmd = "  0\nSECTION\n  2\nHEADER\n  9\n$ACADVER\n  1\nAC1009\n  0\nENDSEC\n  0\nSECTION\n  2\nBLOCKS\n  0\nENDSEC\n  0\nSECTION\n  2\nENTITIES\n  0\n";
 	pen_cmd		= ""; /*FIXME*/
 	poly_start	= "LINE\n  8\n0\n 10\n%g\n 20\n%g\n 30\n0.0\n";
 	poly_next	= " 11\n%g\n 21\n%g\n 31\n0.0\n  0\n";

@@ -1,3 +1,18 @@
+Changes from 3.4.2 to 3.4.3
+
+Bug fixes:
+
+- hp2xx now ignores SC commands with invalid parameters 
+  (original patch by Slavek Banko)
+- AC support in 3.4.2 slowed down the polygon fill code
+- raster mode was allocating a big 8 bit per pixel memory
+  buffer even when the pen data would fit in 4bpp
+- PDF output would fold the image in some cases (Jay Dawes)
+- The RO/IW fix in 3.4.2 broke other cases, fixed again.
+- The DXF header was a bit too minimalistic for some readers
+  (Francisco Doubrawa Filho)
+- Dots drawn for PUPDPU sequences were not clipped by IW
+
 Changes from 3.4.1 to 3.4.2
 
 - Added support for the AC (fill pattern anchor corner) command

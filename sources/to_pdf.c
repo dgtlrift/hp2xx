@@ -214,7 +214,7 @@ int firstmove;
 		HPGL_Pt_from_tmpfile (&pt1);
 		if (pensize != 0){
 
-		 PDF_moveto(md,(pt1.x-xmin)*xcoord2mm,pt1.y*ycoord2mm);
+		 PDF_moveto(md,(pt1.x-xmin)*xcoord2mm,(pt1.y-ymin)*ycoord2mm);
 		 }
 		break;
 	  case DRAW_TO:
@@ -235,7 +235,7 @@ int firstmove;
                 }
 		HPGL_Pt_from_tmpfile (&pt1);
 		if (pensize != 0){
-			PDF_lineto(md,(pt1.x-xmin)*xcoord2mm,pt1.y*ycoord2mm);
+			PDF_lineto(md,(pt1.x-xmin)*xcoord2mm,(pt1.y-ymin)*ycoord2mm);
 			        }
 	firstmove=0;
 		break;
@@ -259,8 +259,8 @@ int firstmove;
 		HPGL_Pt_from_tmpfile (&pt1);
 		if (pensize != 0)
 		{
-		 PDF_moveto(md,(pt1.x-xmin)*xcoord2mm,pt1.y*ycoord2mm);
-		 PDF_lineto(md,(pt1.x-xmin)*xcoord2mm,pt1.y*ycoord2mm);
+		 PDF_moveto(md,(pt1.x-xmin)*xcoord2mm,(pt1.y-ymin)*ycoord2mm);
+		 PDF_lineto(md,(pt1.x-xmin)*xcoord2mm,(pt1.y-ymin)*ycoord2mm);
 		         
 	firstmove=0;
 		}

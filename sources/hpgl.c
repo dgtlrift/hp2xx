@@ -156,7 +156,7 @@ HPGL_Pt C1 = { P1X_default, P1Y_default };	/* Clipping points        */
 HPGL_Pt C2 = { P2X_default, P2Y_default };
 HPGL_Pt S1 = { P1X_default, P1Y_default };	/* Scaled       */
 HPGL_Pt S2 = { P2X_default, P2Y_default };	/* points       */
-HPGL_Pt Q;			/* Delta-P/Delta-S: Initialized with first SC   */
+HPGL_Pt Q = {1.,1.};			/* Delta-P/Delta-S: Initialized with first SC   */
 HPGL_Pt M;			/* maximum coordinates set by PS instruction */
 /**
  ** Global from chardraw.c:
@@ -1616,20 +1616,38 @@ lines (int relative, FILE * hd)
 {
   HPGL_Pt p;
   int numcmds = 0;
+  int outside=0;
+  double p1x,p1y,p2x,p2y;
 
   for (;;)
     {
       if (read_float (&p.x, hd))
 	{			/* No number found      */
+#if 1
 	  if (numcmds > 0)
 	    return;
 	  if (pen_down)
 	    {			/*simulate dot created by 'real' pen on PD;PU; */
 	      p.x=p_last.x+0.01;
 	      p.y=p_last.y+0.01;
+	outside=0;
+  if (iwflag)
+    {
+      p1x = P1.x + (p_last.x - S1.x) * Q.x;
+      p1y = P1.y + (p_last.y - S1.y) * Q.y;
+      p2x = P1.x + (p.x - S1.x) * Q.x;
+      p2y = P1.y + (p.y - S1.y) * Q.y;
+
+      outside =
+        (DtClipLine (C1.x, C1.y, C2.x, C2.y, &p1x, &p1y, &p2x, &p2y) ==
+         CLIP_NODRAW);
+	}
+	if (!outside){	 
 	      Pen_action_to_tmpfile (MOVE_TO, &p, scale_flag);
 	      Pen_action_to_tmpfile (DRAW_TO, &p_last, scale_flag);
 	    }
+	}
+#endif
 	  return;
 	}
 
@@ -2836,14 +2854,14 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	User_to_Plotter_coord (&p1, &p2);
       else
 	p2 = p1;		/* Local copy   */
-
-
+#if 0
       if (rotate_flag)		/* hp2xx-specific global rotation       */
 	{
 	  ftmp = rot_cos * p2.x - rot_sin * p2.y;
 	  p2.y = rot_sin * p2.x + rot_cos * p2.y;
 	  p2.x = ftmp;
 	}
+#endif
       xmin = MIN (p2.x, xmin);
       ymin = MIN (p2.y, ymin);
       xmax = MAX (p2.x, xmax);
@@ -2856,6 +2874,10 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       P1.y = 0;
       P2.x = myheight;
       P2.y = mywidth;
+if (rotate_flag){
+	P2.x=mywidth;
+	P2.y=myheight;
+}
       Diag_P1_P2 = HYPOT (P2.x - P1.x, P2.y - P1.y);
       CurrentLinePatLen = 0.04 * Diag_P1_P2;
       S1 = P1;
@@ -3016,15 +3038,6 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 
 
     IP_Exit:
-/*L+M      if (rotate_flag!=0){
-      ftmp=P2.x;
-      P2.x=P1.x;
-      P1.x=ftmp;
-      ftmp=P2.y;
-      P2.y=P1.y;
-      P1.y=ftmp;
-      }
-*/      
       Q.x = (P2.x - P1.x) / (S2.x - S1.x);
       Q.y = (P2.y - P1.y) / (S2.y - S1.y);
       Diag_P1_P2 = HYPOT (P2.x - P1.x, P2.y - P1.y);
@@ -3191,7 +3204,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 
     case SC:			/* Input Scale Points S1,S2     */
       User_to_Plotter_coord (&p_last, &p_last);
-      if (read_float (&S1.x, hd))	/* No number found  */
+      if (read_float (&p1.x, hd))	/* No number found  */
 	{
 	  S1.x = P1X_default;
 	  S1.y = P1Y_default;
@@ -3199,18 +3212,26 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	  S2.y = P2Y_default;
 	  scale_flag = FALSE;
 	  Q.x = Q.y = 1.0;
-	  return;
+	  break;
 	}
-      if (read_float (&S2.x, hd))	/* x without y! */
+      if (read_float (&p2.x, hd))	/* x without y! */
 	par_err_exit (2, cmd);
-      if (read_float (&S1.y, hd))	/* No number found  */
+      if (read_float (&p1.y, hd))	/* No number found  */
 	par_err_exit (3, cmd);
-      if (read_float (&S2.y, hd))	/* x without y! */
+      if (read_float (&p2.y, hd))	/* x without y! */
 	par_err_exit (4, cmd);
 
+	if (p1.x == p2.x || p1.y == p2.y) {/* min must differ from max*/
+	          if (!silent_mode)
+            Eprintf ("Warning: Invalid SC command parameters -- ignored\n");
+	break;
+	}
+	S1.x=p1.x;
+	S1.y=p1.y;
+	S2.x=p2.x;
+	S2.y=p2.y;
       if (read_float (&ftmp, hd))
 	ftmp = 0;		/*scaling defaults to type 0 */
-
       switch ((int) ftmp)
 	{
 	case 0:		/* anisotropic scaling */
@@ -3254,7 +3275,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       Plotter_to_User_coord (&p_last, &p_last);
       break;
 
-    case SP:			/* Select pen: none/0, or 1...8 */
+    case SP:			/* Select pen: none/0, or number */
       old_pen = pen;
       thickness = 0.;		/* clear any PT setting (should we default to 0.3 here ??) */
       if (read_float (&p1.x, hd))	/* just SP;     */
@@ -3280,6 +3301,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	}
       if (pen)
 	pens_in_use[pen] = 1;
+	pg->maxcolor=MAX(pg->maxcolor,pen);
 /*              pens_in_use |= (1 << (pen-1)); */
       break;
 

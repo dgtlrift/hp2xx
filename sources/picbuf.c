@@ -387,7 +387,7 @@ int	nr, not_allocated;
  **/
 
   pb->depth = (pg->is_color) ? 4 : 1;
-  if (pg->is_color && pg->maxpens > 15) {
+  if (pg->is_color && pg->maxcolor > 15) {
                         pb->depth = 8;
                         if (!pg->quiet) fprintf(stderr,"using 8bpp picbuf for NP>15\n");
 			 }

@@ -10,6 +10,7 @@ void fill(HPGL_Pt polygon[MAXPOLY], int numpoints,HPGL_Pt P1, HPGL_Pt P2,
 int scale_flag,int filltype,float spacing,float hatchangle)
 {
 double pxmin,pxmax,pymin,pymax;
+double polyxmin,polyymin,polyxmax,polyymax;
 double scanx1,scanx2,scany1,scany2;
 HPGL_Pt segment[MAXPOLY];
 double segx,segy;
@@ -24,21 +25,17 @@ double A1,B1,C1,A2,B2,C2;
 double tmp2;
 
 if (filltype >2) penwidth=spacing;
-/*fprintf(stderr,"edges to test : %d\n",numpoints);*/
 
-pxmin=P2.x;
-pymin=P2.y;
-pxmax=P1.x;
-pymax=P1.y;
-pxmin=P1.x;
-pymin=P1.y;
-pxmax=P2.x;
-pymax=P2.y;
-
-pxmin=100000.;
-pymin=100000.;
-pxmax=-100000.;
-pymax=-100000.;
+polyxmin=100000.;
+polyymin=100000.;
+polyxmax=-100000.;
+polyymax=-100000.;
+for (i = 0 ; i <= numpoints; i++ ) {
+polyxmin=MIN(polyxmin,polygon[i].x);
+polyymin=MIN(polyymin,polygon[i].y);
+polyxmax=MAX(polyxmax,polygon[i].x);
+polyymax=MAX(polyymax,polygon[i].y);
+}
 
 if (hatchangle >89.9 && hatchangle < 180.) {  
 	hatchangle = hatchangle-90.;
@@ -46,22 +43,15 @@ if (hatchangle >89.9 && hatchangle < 180.) {
         goto FILL_VERT;
         }
 
-for (i = 0 ; i <= numpoints; i++ ) {
-pxmin=MIN(pxmin,polygon[i].x);
-pymin=MIN(pymin,polygon[i].y);
-pxmax=MAX(pxmax,polygon[i].x);
-pymax=MAX(pymax,polygon[i].y);
-}
 pxmin=P1.x;
 pymin=P1.y;
-if (pxmin == pxmax && pymin == pymax){
-/*fprintf(stderr,"zero area polygon\n");*/
+pxmax=polyxmax;
+pymax=polyymax;
+if (polyxmin == polyxmax && polyymin == polyymax){
+fprintf(stderr,"zero area polygon\n");
 return;
 }
 
-
-
-/*****?*pymin=P1.y-1.;pymax=P2.y+1.;*****?*/
 
 pydiff=pymax-pymin;
 pxdiff=pxmax-pxmin;
@@ -70,13 +60,6 @@ rot_ang=tan(M_PI*hatchangle/180.);
 pymin=pymin-rot_ang*pxdiff;
 pymax=pymax+rot_ang*pxdiff;
 }
-/*********
-pxmin=pxmin-10.;
-pxmax=pxmax+10.;
-pymin=pymin-10.;
-pymax=pymax+10.;
-pydiff=pymax-pymin;
-**********/
 numlines = fabs(1. +  ( pymax - pymin +penwidth) / penwidth);
 #if 0
 /* debug code to show shade box */
@@ -111,6 +94,7 @@ if(scany1 >= pymax || scany1<=pymin) {
 /*fprintf(stderr,"zu weit\n");*/
 continue;
 }
+if (scany2<polyymin )continue;
 /* coefficients for current scan line */
 A1=scany2-scany1;
 B1=pxmin-pxmax;
@@ -155,8 +139,8 @@ segy= (C1*A2-C2*A1) /denominator;     /*y coordinate of intersection */
 /*fprintf(stderr,"fill: intersection %d with line %d at (%f %f)\n",k,j,segx,segy);*/
 			if (k >0) {
 			for (jj=0;jj<k;jj++){
-if ( (fabs(segment[jj].x-segment[k].x) < 1.e-10 )
-			&& (fabs(segment[jj].y-segment[k].y) < 1.e-10) ){
+if ( (fabs(segment[jj].x-segment[k].x) < 1.e-5 )
+			&& (fabs(segment[jj].y-segment[k].y) < 1.e-5) ){
 			k--;
 			break;
 			}
@@ -181,8 +165,8 @@ fprintf(stderr,"para\n");
 		segment[++k].x=MAX(polygon[j].x,polygon[j+1].x);
 		segment[k].y=polygon[j].y;
 			for (jj=0;jj<k;jj++){
-if ( (fabs(segment[jj].x-segment[k].x) < 1.e-10 )
-			&& (fabs(segment[jj].y-segment[k].y) < 1.e-10) ){
+if ( (fabs(segment[jj].x-segment[k].x) < 1.e-5 )
+			&& (fabs(segment[jj].y-segment[k].y) < 1.e-5) ){
 			k--;
 			break;
 			}
@@ -200,8 +184,8 @@ if ( (fabs(segment[jj].x-segment[k].x) < 1.e-10 )
 		segment[++k].x=MIN(polygon[j].x,polygon[j+1].x);
 		segment[k].y=polygon[j].y;
 			for (jj=0;jj<k;jj++){
-if ( (fabs(segment[jj].x-segment[k].x) < 1.e-10 )
-			&& (fabs(segment[jj].y-segment[k].y) < 1.e-10) ){
+if ( (fabs(segment[jj].x-segment[k].x) < 1.e-5 )
+			&& (fabs(segment[jj].y-segment[k].y) < 1.e-5) ){
 			k--;
 			break;
 			}
@@ -251,25 +235,11 @@ if (filltype !=4) return;
 
 FILL_VERT:
 
-pxmin=P2.x;
-pymin=P2.y;
-pxmax=P1.x;
-pymax=P1.y;
-
-for (i = 0 ; i <= numpoints; i++ ) {
-pxmin=MIN(pxmin,polygon[i].x);
-pymin=MIN(pymin,polygon[i].y);
-pxmax=MAX(pxmax,polygon[i].x);
-pymax=MAX(pymax,polygon[i].y);
-}
-
-/*pxmin=P1.x-1.;pxmax=P2.x+1.;*/
-
-
-/*pymin=P1.y-10.;pymax=P2.y+10.; ???*/
 
 pxmin=P1.x;
 pymin=P1.y;
+pxmax=polyxmax;
+pymax=polyymax;
 
 pydiff=pymax-pymin;
 if (hatchangle != 0.) {
@@ -290,7 +260,7 @@ for (i = 0; i <= numlines; ++i) { /* for all scanlines ...*/
 k=-1;
 scanx1=pxmin + (double)i * penwidth;
 scanx2=scanx1 - pxdiff;
-
+if (scanx2< polyxmin) continue;
 /* coefficients for current scan line */
 A1=pymax-pymin;
 B1=scanx1-scanx2;
@@ -324,8 +294,8 @@ segy= (C1*A2-C2*A1) /denominator;     /*y coordinate of intersection */
 /*fprintf(stderr,"fill: intersection %d with line %d at (%f %f)\n",k,j,segx,segy);*/
 			if (k >0) {
 			for (jj=0;jj<k;jj++){
-if ( (fabs(segment[jj].x-segment[k].x) < 1.e-10 )
-			&& (fabs(segment[jj].y-segment[k].y) < 1.e0) ){
+if ( (fabs(segment[jj].x-segment[k].x) < 1.e-5 )
+			&& (fabs(segment[jj].y-segment[k].y) < 1.e-5) ){
 			k--;
 			break;
 			}
