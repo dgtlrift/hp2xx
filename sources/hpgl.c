@@ -656,12 +656,13 @@ void HPGL_Pt_to_polygon(HPGL_Pt pf)
 
 	polygons[++vertices] = pf;
 	polygon_penstate[vertices]=polygon_penup;
+
+	if (scale_flag) User_to_Plotter_coord(&pf,&pf);
 	if (rotate_flag) {
 		double tmp = rot_cos * pf.x - rot_sin * pf.y;
 		pf.y = rot_sin * pf.x + rot_cos * pf.y;
 		pf.x = tmp;
 	}
-	if (scale_flag) User_to_Plotter_coord(&pf,&pf);
 	xmin = MIN(pf.x, xmin);
 	ymin = MIN(pf.y, ymin);
 	xmax = MAX(pf.x, xmax);
@@ -1713,6 +1714,8 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 	 * ESC%-1B        Enter HPGL/2 context
 	 * ESC%0B         -
 	 * ESC%1B         -
+	 * ESC%2B         -
+	 * ESC%3B         -
 	 *
 	 * ESC%1A         Exit HPGL/2 context
 	 * ESC%0A         -
@@ -1738,6 +1741,8 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				Eprintf("\nUnexpected EOF!\n");
 				return;
 				break;
+			case '3':
+			case '2':	
 			case '1':
 			case '0':
 				switch (ctmp = getc(hd)) {
@@ -1821,9 +1826,13 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 		}
 		if (hp == TRUE && !nf && c1 != '%' && c1 != 'E') {
 			ungetc(ctmp, hd);
-			if (!silent_mode)
+			if (!silent_mode) {
+				if ( c1 == '&' && c2 == 'l' )
+				Eprintf("ignoring escape ESC&l... (paper size/orientation/...)\n");
+				else
 				Eprintf("invalid escape ESC%c%c (Esc%d%d)\n", c1,
 					c2,c1,c2);
+			}
 			return;
 		}
 	}
@@ -2564,14 +2573,29 @@ static void circles(FILE * hd)
 			Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
 		outside = 0;
 	}
+
 	p.x = center.x + r;	/* Close circle at r * (1, 0)   */
 	p.y = center.y;
+		if (iwflag) {
+			if (P1.x + (p.x - S1.x) * Q.x > C2.x
+			    || P1.y + (p.y - S1.y) * Q.y > C2.y) {
+				outside = 1;
+			}
+			if (P1.x + (p.x - S1.x) * Q.x < C1.x
+			    || P1.y + (p.y - S1.y) * Q.y < C1.y) {
+				outside = 1;
+			}
+		}
+
+		if (!outside) {
 	if (polygon_mode) {
 		HPGL_Pt_to_polygon(polyp);
 		HPGL_Pt_to_polygon(p);
 	} else
 		Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
-
+	} else
+		Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
+	
 	if (!polygon_mode) {
 		/* draw one overlapping segment to avoid leaving gap with wide pens */
 		p.x = center.x + r * cos(eps);

@@ -1,0 +1,30 @@
+In file included from /usr/include/zlib.h:34,
+                 from /usr/include/png.h:302,
+                 from gif.c:47:
+/usr/include/zconf.h:214: warning: redefinition of `Byte'
+pendef.h:47: warning: `Byte' previously declared here
+gif.c: In function `GetPixel':
+gif.c:156: warning: unused variable `presort_colorindex'
+gif.c: In function `write_raster_LZW':
+gif.c:151: warning: `colorindex' might be used uninitialized in this function
+gif.c:151: warning: `colorindex' might be used uninitialized in this function
+gif.c: In function `write_raster_uncompressed':
+gif.c:151: warning: `colorindex' might be used uninitialized in this function
+gif.c: In function `pdImageGIF':
+gif.c:1099: `i' undeclared (first use in this function)
+gif.c:1099: (Each undeclared identifier is reported only once
+gif.c:1099: for each function it appears in.)
+gif.c:1100: invalid type argument of `->'
+gif.c:1101: invalid type argument of `->'
+gif.c:1102: invalid type argument of `->'
+gif.c:1071: warning: unused variable `fake_transparent'
+gif.c:1061: warning: unused variable `input_maxval'
+gif.c:1060: warning: unused variable `pixels'
+gif.c:1058: warning: unused variable `cols'
+gif.c:1058: warning: unused variable `rows'
+gif.c:1062: warning: `alpha' might be used uninitialized in this function
+gif.c:1063: warning: `alpha_maxval' might be used uninitialized in this function
+gif.c: At top level:
+gif.c:984: warning: `sort_colormap' defined but not used
+gif.c:1028: warning: `normalize_to_255' defined but not used
+make: *** [gif.o] Fehler 1

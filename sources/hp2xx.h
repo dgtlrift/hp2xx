@@ -65,8 +65,8 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
-#define VERS_NO        "3.5.0a12"
-#define VERS_DATE      "04/08/29"
+#define VERS_NO        "3.5.0a14"
+#define VERS_DATE      "04/11/07"
 #define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
 #if defined(AMIGA)
 #define VERS_ADDITIONS "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"
@@ -185,7 +185,7 @@ copies.
 
 typedef enum {
 	XX_CAD, XX_CS, XX_DXF, XX_EM, XX_EMF, XX_EMP, XX_EPIC, XX_PS, XX_EPS,
-	    XX_ESC2, XX_FIG, XX_GPT, XX_HPGL,
+	    XX_ESC2, XX_FIG, XX_GIF, XX_GPT, XX_HPGL,
 	XX_ILBM, XX_IMG, XX_JPG,
 	XX_MF, XX_NC, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PDF, XX_PIC,
 	    XX_PNG, XX_PRE,
@@ -276,6 +276,7 @@ typedef struct {		/* Corresponding option(s)        */
         int ps_defer;		/* -S d  defer media selection (PS only)  */
         int ps_media;		/* -S e  media selection (PS only)  */
 	int pagecount;		/* for naming multi-page output */
+        int simplewidths;       /* -u uniform linewidths        */
 	char *outfile;		/* -f outfile ("-" = stdout)    */
 	double xmin, ymin, xmax, ymax;	/* (internally needed)          */
 	double xoff, yoff;	/* Internal copies from IN_PAR  */
@@ -399,6 +400,7 @@ RowBuf *get_RowBuf(const PicBuf *, int);
 int PicBuf_to_PCL(const GEN_PAR *, const OUT_PAR *);
 int PicBuf_to_PCX(const GEN_PAR *, const OUT_PAR *);
 int PicBuf_to_PNG(const GEN_PAR *, const OUT_PAR *);
+int PicBuf_to_GIF(const GEN_PAR *, const OUT_PAR *);
 #ifdef JPG
 int PicBuf_to_JPG(const GEN_PAR *, const OUT_PAR *);
 #endif

@@ -201,10 +201,14 @@ EX_OBJ	+= to_escp2.o
 EX_DEFS += -DEPSON
 #
 # Include PNG support:
-EX_SRC  += png.c to_png.c
-EX_OBJ  += png.o to_png.o
-EX_DEFS += -DPNG
-EX_LIBS += -lpng -lz
+#EX_SRC  += png.c to_png.c
+#EX_OBJ  += png.o to_png.o
+#EX_DEFS += -DPNG
+#EX_LIBS += -lpng -lz
+# Include GIF support:
+EX_SRC  += gif.c to_gif.c
+EX_OBJ  += gif.o to_gif.o
+EX_DEFS += -DGIF
 #
 # Include TIFF support:
 EX_SRC  += to_tif.c

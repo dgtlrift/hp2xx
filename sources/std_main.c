@@ -342,6 +342,9 @@ process_opts(int argc, char *argv[],
 			} else
 				Logfile_flag = TRUE;
 			break;
+		case 'u':
+			po->simplewidths = TRUE;
+			break;
 /*MJR These are NOT sanity checked, GIGO*/
 		case 'z':
 			po->zengage = atof(optarg);
@@ -540,7 +543,7 @@ int main(int argc, char *argv[])
 	char outname[128] = "";
 
 	char *shortopts =
-	    "a:c:d:D:e:f:h:l:m:M:o:O:p:P:r:R::s:S:V:w:x:X:y:Y:z:Z:CFH:W:inqtvNI?";
+	    "a:c:d:D:e:f:h:l:m:M:o:O:p:P:r:R::s:S:V:w:x:X:y:Y:z:Z:CFH:W:inqtuvNI?";
 	struct option longopts[] = {
 		{"mode", 1, NULL, 'm'},
 		{"pencolors", 1, NULL, 'c'},
@@ -569,7 +572,8 @@ int main(int argc, char *argv[])
 		{"height", 1, NULL, 'h'},
 		{"width", 1, NULL, 'w'},
 		{"truesize", 0, NULL, 't'},
-
+		{"uniform_width,0,NULL,'u'},
+		
 		{"x0", 1, NULL, 'x'},
 		{"x1", 1, NULL, 'X'},
 		{"y0", 1, NULL, 'y'},

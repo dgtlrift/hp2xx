@@ -1,5 +1,18 @@
 Changes to hp2xx:
 =================
+3.5.0a14:
+Polygons went into the image extents calculation without scaling, which 
+could cause strange side-effects such as an increase in "canvas" size
+during rotation of the plot. Final segments of circles were not clipped
+correctly, resulting in seemingly empty borders around plots. New option
+-u,-uniform_width to select the old (pre-3.4.3) method for drawing "wide"
+lines (the "new" method can create ragged-looking lines in some circumstances).
+
+3.5.0a13:
+Reenabled LZW-compressed TIFF mode (-S 5 option). Added GIF output option
+(by cloning to_png.c, which ironically started out as to_gif.c ten years
+ ago, shortly before the now-expired LZW patent raised its ugly head)
+
 3.5.0a12:
 Added do-while loops in AD and SD option processing to handle more than
 one font option per command. IW without parameters was scaled twice if SC

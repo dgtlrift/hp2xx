@@ -81,8 +81,8 @@ int PicBuf_to_TIF(const GEN_PAR * pg, const OUT_PAR * po)
 			     COMPRESSION_CCITTFAX4);
 		D = 1;
 		break;
-	case 5:		/* LZW is patented by Unisys - only license holders should use next line */
-		/*  TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_LZW); */
+	case 5:		/* LZW compression */
+		TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_LZW); 
 		break;
 	case 6:		/* JPEG formats */
 		TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_OJPEG);

@@ -1,4 +1,6 @@
 /*
+** to_gif.h : include file for hp2xx GIF export module to_gif.c
+** this is a clone of
 ** to_png.h : include file for hp2xx PNG export module to_png.c
 **
 ** 95/09/26 V 1.00  MS   Produced from Tom Boutells gd.h; deleted all
@@ -50,14 +52,13 @@ typedef pdImage * pdImagePtr;
 
 /* Functions to manipulate images. */
 
-pdImagePtr pdImageCreate(int , int);
-void pdImageDestroy(pdImagePtr);
-void pdImageSetPixel(pdImagePtr, int, int, int);
-int pdImageGetPixel(pdImagePtr, int, int);
-int pdImageBoundsSafe(pdImagePtr, int, int);
-int pdImageColorAllocate(pdImagePtr, int, int, int);
-void pdImageColorTransparent(pdImagePtr, int);
-void pdImagePNG(pdImagePtr, FILE *);
+pdImagePtr pdGImageCreate(int , int);
+void pdGImageDestroy(pdImagePtr);
+void pdGImageSetPixel(pdImagePtr, int, int, int);
+int pdGImageGetPixel(pdImagePtr, int, int);
+int pdGImageBoundsSafe(pdImagePtr, int, int);
+int pdIGmageColorAllocate(pdImagePtr, int, int, int);
+void pdGImageColorTransparent(pdImagePtr, int);
 void pdImageGIF(pdImagePtr, FILE *);
 
 

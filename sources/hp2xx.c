@@ -185,6 +185,9 @@ mode_list ModeList[] = {
 	{XX_ESC2, "esc2"},	/* Epson Esc/P2 printer language       */
 #endif
 	{XX_FIG, "fig"},	/* FIG 3.1 Drawing Files                */
+#ifdef GIF
+	{XX_GIF, "gif"},	/* Graphics Interchange Format          */
+#endif
 	{XX_GPT, "gpt"},	/* gnuplot vector ascii format          */
 	{XX_HPGL, "hpgl"},	/* Simplified HP-GL                     */
 #ifdef	AMIGA
@@ -324,6 +327,9 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	/* x, not y! */
 	Eprintf("-e int    %d\t\tExtra clipping space\n", pg->extraclip);
 
+        Eprintf("-u         %s\tUse more uniform, less exact linewidth (as in versions <3.4.3)\n",
+                FLAGSTATE(po->simplewidths));
+                        
 	Eprintf("\nPCL-exclusive options:\n");
 	Eprintf("-i         %s\tPre-initialize printer\n",
 		FLAGSTATE(po->init_p));
@@ -463,6 +469,7 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	pi->hwlimit.x = 33600.;
 	pi->hwlimit.y = 47520.;
 
+	po->simplewidths = FALSE;
 	po->init_p = FALSE;
 	po->init_p3gui = FALSE;
 	po->formfeed = FALSE;
@@ -935,6 +942,10 @@ int BUF_to_RAS(const GEN_PAR * pg, OUT_PAR * po)
 #ifdef PNG
 	case XX_PNG:		/* Portable Network fmt */
 		return PicBuf_to_PNG(pg, po);
+#endif
+#ifdef GIF
+	case XX_GIF:		/* Compuserve Graphics Interchange fmt */
+		return PicBuf_to_GIF(pg, po);
 #endif
 
 #ifdef TIF

@@ -1,4 +1,11 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a13
+
+New features:
+
+- GIF output module (based on netpbm's ppmtogif.c and hp2xx' own to_png.c)
+- enabled LZW compression option in TIFF output (provided libtiff offers it)
+
 3.5.0a12
 
 Bug fixes:

@@ -577,9 +577,9 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, PEN_C pencolor,
 	double len, xoff, yoff;
 	int dx, dy;
 	int linewidth = (int) ceil(pensize * po->HP_to_xdots / 0.025);	/* convert to pixel space */
-
-/*   printf("pensize = %0.3f mm, linewidth = %d pixels\n",pensize,linewidth); */
-
+/*
+   printf("pensize = %0.3f mm, linewidth = %d pixels\n",pensize,linewidth); 
+*/
 	if (linewidth == 0)	/* No pen selected! */
 		return;
 
@@ -595,9 +595,94 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, PEN_C pencolor,
 	}
 
 	if ((p1->x == p0->x) && (p1->y == p0->y)) {	/* No Movement Dot Only */
-		dot_PicBuf(p0, linewidth, pencolor, pb);
+		if (!po->simplewidths) dot_PicBuf(p0, linewidth, pencolor, pb);
 		return;
 	}
+
+	if (po->simplewidths) { /* use simple pre-3.4.3 Bresenham hack */
+	
+	DevPt pt;	
+		p_act = bresenham_init (p0, p1);
+
+		do
+			{
+			plot_PicBuf (pb, p_act, pencolor);
+
+			pt = *p_act;
+			pt.x++;	plot_PicBuf (pb, &pt, pencolor);
+			pt.y++; plot_PicBuf (pb, &pt, pencolor);
+			pt.x--; plot_PicBuf (pb, &pt, pencolor);
+
+			if (pensize > 2)
+				{
+				pt = *p_act;
+				pt.x += 2;	plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			
+			if (pensize > 3)	/* expecting 4 ... 9	*/
+				{
+				pt = *p_act;
+				pt.x += 3;	plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			}
+
+			if (pensize > 7)	/* who knows	*/
+				{
+				pt = *p_act;
+				pt.x += 4;	plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			}
+			if (pensize > 12)	/* who knows	*/
+				{
+				pt = *p_act;
+				pt.x += 5;	plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			}
+			if (pensize > 15)	/* who knows	*/
+				{
+				pt = *p_act;
+				pt.x += 6;	plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+				pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			}
+			}
+		} while (bresenham_next() != BRESENHAM_ERR);
+ 
+	} else { /* use wide-line Bresenham algorithm for more precise widths */
 
 	murphy_init(pb, pencolor);	/* Wide Lines */
 	murphy_wideline(*p0, *p1, linewidth, (consecutive >1?1:0));
@@ -666,7 +751,7 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, PEN_C pencolor,
 		dot_PicBuf(p0, linewidth, pencolor, pb);	/* lines upto 0.35 always have round ends */
 		dot_PicBuf(p1, linewidth, pencolor, pb);
 	}
-
+	} /* simple or true wide-line Bresenham */
 }
 
 void polygon_PicBuf(DevPt p4, DevPt p2, DevPt p1, DevPt p3, PEN_C pencolor,
