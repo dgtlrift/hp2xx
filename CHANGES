@@ -23,6 +23,11 @@ Bug fixes:
   caused an error exit instead of simply being ignored
 - extremely short line segments could confuse the pattern state machine,
   resulting in no or extraneous lines being drawn (J.L. Fernandez Jambrina)
+- BP did not handle kind=5 (autorotation control). This could lead to
+  misinterpretation of further arguments to BP, specifically title strings
+- Escape sequences inside PJL headers (two or more header lines starting
+  with 'Esc-12345X') are now handled gracefully
+
 
 Changes from 3.4.1 to 3.4.2
 

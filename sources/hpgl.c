@@ -1351,6 +1351,10 @@ read_PJL (FILE * hd)
       for (i = ov = qt = 0;; i++)
 	{
 	  ctmp = getc (hd);
+	if (ctmp == ESC) {
+		while (ctmp!='X') ctmp=getc(hd);
+		ctmp=getc(hd);
+		}
 	  if (PJLBS - 1 == i)
 	    {
 	      if (!silent_mode)
@@ -2872,6 +2876,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       ymax = MAX (p2.y, ymax);
       p1.x = myheight;
       p1.y = mywidth;
+
 #if 1
 /* add the following - to get the correct linetype scale etc */
       P1.x = 0;
@@ -3099,18 +3104,18 @@ if (rotate_flag){
 	  if (read_float (&C2.y, hd))	/* x without y! */
 	    par_err_exit (4, cmd);
 	}
-	
-	if ( C1.x > C2.x) {
+#if 1
+	if ( C1.x > C2.x && P1.x<P2.x) {
 		ftmp=C1.x;
 		C1.x=C2.x;
 		C2.x=ftmp;
 		}
-	if ( C1.y > C2.y) {	
+	if ( C1.y > C2.y && P1.y<P2.y) {	
 		ftmp=C1.y;
 		C1.y=C2.y;
 		C2.y=ftmp;
 		}	
-
+#endif
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
 
@@ -3309,8 +3314,11 @@ if (rotate_flag){
       break;
 
     case BP:			/* Begin Plot */
+     for (;;){
    	if (read_float(&ftmp,hd))	/* No number found */
-	{}
+	{
+	break;
+	}
    	else {
    		switch((int)ftmp) {
    		case 1: /* picture name follows */
@@ -3329,11 +3337,13 @@ if (rotate_flag){
    		case 2: /* number of copies */
    		case 3: /* disposition code */
    		case 4: /* render unfinished */
+   		case 5: /* autorotation */
 			if (read_float (&ftmp, hd )) break;
 			break;
 		default:
 			break;
 		}
+	 }
 	}	 
 		/* fall through to initialization code now */	
     case DF:			/* Set to default               */

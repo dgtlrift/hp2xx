@@ -183,21 +183,21 @@ EX_OBJ	+= to_escp2.o
 EX_DEFS += -DEPSON
 #
 # Include PNG support:
-#EX_SRC  += png.c to_png.c
-#EX_OBJ  += png.o to_png.o
-#EX_DEFS += -DPNG
-#EX_LIBS += -lpng -lz
+EX_SRC  += png.c to_png.c
+EX_OBJ  += png.o to_png.o
+EX_DEFS += -DPNG
+EX_LIBS += -lpng -lz
 #
 # Include TIFF support:
-#EX_SRC  += to_tif.c
-#EX_OBJ  += to_tif.o
-#EX_DEFS += -DTIF
-#EX_LIBS += -ltiff
+EX_SRC  += to_tif.c
+EX_OBJ  += to_tif.o
+EX_DEFS += -DTIF
+EX_LIBS += -ltiff
 #
-#EX_SRC  += to_jpg.c
-#EX_OBJ  += to_jpg.o
-#EX_DEFS += -DJPG
-#EX_LIBS += -ljpeg
+EX_SRC  += to_jpg.c
+EX_OBJ  += to_jpg.o
+EX_DEFS += -DJPG
+EX_LIBS += -ljpeg
 #
 # Include ATARI extras:
 # EX_SRC	+= to_pic.c to_pac.c
