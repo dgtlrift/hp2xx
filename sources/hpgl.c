@@ -1630,9 +1630,10 @@ lines (int relative, FILE * hd)
 #if 1
 	  if (numcmds > 0)
 	    return;
-	  if (pen_down && mv_flag)
+	  if (pen_down && mv_flag && pen >0 && pt.width[pen] <0.35)
 	    {			/*simulate dot created by 'real' pen on PD;PU; */
 				/*but not on PDPA*/
+/*fprintf(stderr,"dot for pen %d - %f\n",pen,pt.width[pen]);*/
 	      p.x=p_last.x+0.01;
 	      p.y=p_last.y+0.01;
 	outside=0;
@@ -2899,8 +2900,8 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       tp->CR_point = HP_pos;
       break;
     case PS:
-      if (read_float (&ftmp, hd))
-	{			/* no parameters */
+      if (read_float (&ftmp, hd)|| ftmp==0.)
+	{			/* no parameters or PS0;*/
 	  break;
 	}
       else
@@ -3184,6 +3185,11 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
       iwflag = 1;
       if (read_float (&C1.x, hd))	/* No number found  */
 	{
+	if (P1.x==P1X_default && P1.y==P1Y_default 
+	 && P2.x==P2X_default && P2.y==P2Y_default){
+	iwflag=0;
+	break;
+		}	
 	      		C1 = P1;
 	      		C2 = P2;
 	      	if (scale_flag){
@@ -3206,7 +3212,6 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 			}
 		}
 	}	
-/*fprintf (stderr," clip limits (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);*/
       else
 	{
 	  if (read_float (&C1.y, hd))	/* x without y! */
@@ -3216,8 +3221,9 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 	  if (read_float (&C2.y, hd))	/* x without y! */
 	    par_err_exit (4, cmd);
 	}
+/*fprintf (stderr," clip limits (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);*/
 
-	  if (scale_flag){
+	  if (scale_flag ){
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
 	  }

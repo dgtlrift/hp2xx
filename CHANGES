@@ -34,6 +34,9 @@ Bug fixes:
 
 - hp2xx now ignores SC commands with invalid parameters 
   (Slavek Banko)
+- hp2xx now ignores PS0
+- IW without parameters now does not cause clipping when P1,P2 are still
+  set to the 'hardware defaults'.
 - AC support in 3.4.2 slowed down the polygon fill code
 - raster mode was allocating a big 8 bit per pixel memory
   buffer even when the pen data would fit in 4bpp

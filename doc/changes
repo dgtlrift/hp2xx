@@ -1,5 +1,10 @@
 Changes to hp2xx:
 =================
+3.4.3a19:
+Revised the 'butt miter' code for wide lines - the implementation in a17 was
+working more by accident than by design. Caught special cases of PS with zero
+pagewidth and of blank IW; with default values of P1,P2 .
+
 3.4.3a18:
 Small changes to improve numerical stability - the LPattern_Generator 
 could enter an endless loop on Sun/Solaris due to comparisons of small 

@@ -1,5 +1,9 @@
 Recent changes :
 =================
+3.4.3a19:
+Redid the butt miter code for raster output of wide lines. Fixed handling
+of special cases 'PS0;' and 'IN;IW'.
+
 3.4.3a18:
 Small changes to improve numerical stability - the LPattern_Generator
 could enter an endless loop on Sun/Solaris.

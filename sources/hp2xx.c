@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a18";
-char	*VERS_DATE = "02/09/03";
+char	*VERS_NO = "3.4.3a19";
+char	*VERS_DATE = "02/10/13";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -287,6 +287,8 @@ print_supported_modes();
   
   Eprintf ("-n        %s\t\tno filling of polygons (ignore FP commands)\n",
   	FLAGSTATE(pg->nofill));
+  Eprintf ("-N        %s\t\tno honoring of papersize (PS) requests (plotsize calculated from data instead)\n",
+  	FLAGSTATE(pg->no_ps));
   
   Eprintf ("-f strg   (auto gen.)\tName of output file ('-' = to stdout)\n");
   Eprintf ("-l strg   (stderr)\tName of log file\n");
