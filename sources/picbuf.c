@@ -830,20 +830,20 @@ void tmpfile_to_PicBuf(const GEN_PAR * pg, const OUT_PAR * po)
 			consecutive = 0;
 			break;
 		case DEF_PW:
-			if (!load_pen_width_table(pg->td)) {
+			if (!load_pen_width_table(pg->td,0)) {
 				PError("Unexpected end of temp. file");
 				exit(ERROR);
 			}
 			break;
 		case DEF_PC:
-			if (load_pen_color_table(pg->td) < 0) {
+			if (load_pen_color_table(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				exit(ERROR);
 			}
 			consecutive = 0;
 			break;
 		case DEF_LA:
-			if (load_line_attr(pg->td) < 0) {
+			if (load_line_attr(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				exit(ERROR);
 			}

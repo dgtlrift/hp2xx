@@ -232,12 +232,12 @@ ALL_CFLAGS	= -c $(CFLAGS)
 SRCS	= clip.c fillpoly.c\
 	  hp2xx.c hpgl.c picbuf.c bresnham.c murphy.c chardraw.c getopt.c getopt1.c \
 	  $(ALL_INCS)\
-	  to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c to_pbm.c  \
+	  to_vec.c to_pcx.c to_pcl.c to_ps.c to_eps.c to_img.c to_pbm.c  \
 	  to_rgip.c to_fig.c std_main.c $(PREVIEWER).c pendef.c lindef.c $(EX_SRC)
 
 OBJS	= clip.o fillpoly.o\
 	  hp2xx.o hpgl.o picbuf.o bresnham.o murphy.o chardraw.o getopt.o getopt1.o \
-	  to_vec.o to_pcx.o to_pcl.o  to_eps.o to_img.o to_pbm.o \
+	  to_vec.o to_pcx.o to_pcl.o  to_ps.o to_eps.o to_img.o to_pbm.o \
 	  to_rgip.o to_fig.o std_main.o $(PREVIEWER).o pendef.o lindef.o $(EX_OBJ)
 
 PROGRAM	= hp2xx

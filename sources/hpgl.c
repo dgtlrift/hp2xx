@@ -180,8 +180,10 @@ static int vertices = -1;
 static short polygon_mode = FALSE;
 static int filltype = 1;
 static float hatchspace = 0.;
+static short hatchscale = FALSE;
 static float hatchangle = 0.;
 static float saved_hatchspace[2] = { 0., 0. };
+static int saved_hatchscale[2] = { FALSE , FALSE };
 static float saved_hatchangle[2] = { 0., 0. };
 static float thickness = 0.;
 static short polygon_penup = FALSE;
@@ -197,6 +199,7 @@ static double rot_tmp = 0.;	/* saved RO value for resetting after drawing */
 static short mv_flag = FALSE;
 static short pg_flag = FALSE;
 static short ct_dist = FALSE;
+static int   mmsupress= TRUE;
 static short fixedcolor = FALSE;
 static short fixedwidth = FALSE;
 static int first_page = 0;
@@ -366,6 +369,7 @@ static void reset_HPGL(void)
 	filltype = 1;
 	saved_hatchangle[0] = saved_hatchangle[1] = 0.;
 	saved_hatchspace[0] = saved_hatchspace[1] = 0.;
+	saved_hatchscale[0] = saved_hatchscale[1] = FALSE;
 	ct_dist = FALSE;
 	CurrentLineType = LT_solid;
 
@@ -480,6 +484,11 @@ static void init_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 	if (pi->hwlimit.y > 0.)
 		P2.y = S2.y = pi->hwlimit.y;
 
+	if (HAS_POLY(pg->xx_mode))
+		mmsupress = FALSE;
+	else
+		mmsupress = TRUE;
+			
 	reset_HPGL();
 }
 
@@ -850,11 +859,46 @@ LPattern_Generator(HPGL_Pt * pa,
 		}
 }
 
+static void fillpoly(FILE* tf,int fillalg,int filltype,
+                       float xscale,float hatchspace,float hatchscale,float hatchangle,
+                       int rotate_flag,float rot_ang) 
+{
+       float ftmp;
+       PlotCmd_to_tmpfile(NZFILL_POLY);
+       if ((EOF==fputc(filltype,td))) {
+               PError("Writing to temporary file:");
+               Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
+               exit (ERROR);
+       }
+       if (3==filltype || 4==filltype) {
+               if (hatchscale) {
+                       ftmp=hatchspace*Q.x;
+               } else {
+                       ftmp=hatchspace;
+               }
+               if (fwrite ((VOID *) &ftmp, sizeof(ftmp), 1, td) != 1) {
+                       PError("Writing to temporary file:");
+                       Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
+                       exit (ERROR);
+               }
+               ftmp=hatchangle;
+               if (rotate_flag) {
+                       ftmp+=rot_ang;
+               }
+               if (fwrite ((VOID *) &ftmp, sizeof(ftmp), 1, td) != 1) {
+                       PError("Writing to temporary file:");
+                       Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
+                       exit (ERROR);
+               }
+       }
+}
+
+
 /**
  ** Rectangles --  by Th. Hiller (hiller@tu-harburg.d400.de)
  **/
 
-static void rect(int relative, int filled, float cur_pensize, HPGL_Pt p)
+static void rect(const GEN_PAR * pg, int relative, int filled, float cur_pensize, HPGL_Pt p)
 {
 	HPGL_Pt p1;
 
@@ -862,7 +906,10 @@ static void rect(int relative, int filled, float cur_pensize, HPGL_Pt p)
 		p.x += p_last.x;
 		p.y += p_last.y;
 	}
-	if (!filled) {
+	if (!filled || HAS_POLY(pg->xx_mode)) {
+		if (HAS_POLY(pg->xx_mode)) {
+			PlotCmd_to_tmpfile(OP_PBUF);
+		}
 		p1.x = p_last.x;
 		p1.y = p.y;
 		Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
@@ -875,6 +922,15 @@ static void rect(int relative, int filled, float cur_pensize, HPGL_Pt p)
 		p1.x = p_last.x;
 		p1.y = p_last.y;
 		Pen_action_to_tmpfile(DRAW_TO, &p1, scale_flag);
+		if (HAS_POLY(pg->xx_mode)) {
+			PlotCmd_to_tmpfile(CL_PBUF);			
+			if (filled) {
+			        fillpoly(td,NZFILL_POLY,filltype,Q.x,
+					 hatchspace,hatchscale,hatchangle,rotate_flag,rot_ang);
+			} else {
+				PlotCmd_to_tmpfile(EDGE_POLY);			
+			}
+		}
 	} else {
 		vertices = -1;
 		HPGL_Pt_to_polygon(p_last);
@@ -906,7 +962,7 @@ static void rect(int relative, int filled, float cur_pensize, HPGL_Pt p)
 	Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 }
 
-static void rects(int relative, int filled, float cur_pensize, FILE * hd)
+static void rects(const GEN_PAR * pg, int relative, int filled, float cur_pensize, FILE * hd)
 {
 	HPGL_Pt p;
 	for (;;) {
@@ -915,20 +971,10 @@ static void rects(int relative, int filled, float cur_pensize, FILE * hd)
 
 		if (read_float(&p.y, hd))	/* x without y invalid! */
 			par_err_exit(2, EA, hd);
-		rect(relative, filled, cur_pensize, p);
+		rect(pg, relative, filled, cur_pensize, p);
 	}
 }
 
-
-/*
-   struct PE_flags{
-   int abs;
-   int up;
-   int sbmode;
-   int fract;
-   int pen;
-   } ;
- */
 int read_PE_flags(GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 {
 	short old_pen;
@@ -1102,7 +1148,7 @@ void read_PE(GEN_PAR * pg, FILE * hd)
 				break;
 			case 2:
 				pen_down = 1;
-				rect(1, pg->nofill ? 0 : 1, pt.width[pen],
+				rect(pg, 1, pg->nofill ? 0 : 1, pt.width[pen],
 				     p);
 				fl.rect = 1;
 				/* should be up when PE ends while */
@@ -1254,6 +1300,10 @@ void Pen_action_to_tmpfile(PlotCmd cmd, const HPGL_Pt * p, int scaled)
 
 	switch (cmd) {
 	case MOVE_TO:
+		if (!mmsupress) {
+			PlotCmd_to_tmpfile(MOVE_TO);
+			HPGL_Pt_to_tmpfile(&P);
+		}
 		mv_flag = TRUE;
 		break;
 
@@ -1263,7 +1313,7 @@ void Pen_action_to_tmpfile(PlotCmd cmd, const HPGL_Pt * p, int scaled)
    **/
 
 	case DRAW_TO:
-		if (mv_flag) {
+		if (mv_flag && mmsupress) {
 			PlotCmd_to_tmpfile(MOVE_TO);
 			HPGL_Pt_to_tmpfile(&P_last);
 		}
@@ -2720,6 +2770,11 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			ct_dist = TRUE;
 		break;
 	case EP:		/* edge polygon */
+		/* EA, ER, EW, RA, RR, and WG */
+		if (HAS_POLY(pg->xx_mode)) {
+			 PlotCmd_to_tmpfile(EDGE_POLY);
+			 break;
+		}
 		if (polygon_penup == TRUE)
 			if (p_last.x != polystart.x
 			    || p_last.y != polystart.y)
@@ -2745,6 +2800,16 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		break;
 
 	case FP:		/* fill polygon */
+		if (HAS_POLY(pg->xx_mode)) {
+			if (read_float (&ftmp, hd)) ftmp=0; /* No number found  */
+			if (pg->nofill) {
+				PlotCmd_to_tmpfile(EDGE_POLY);
+				break;
+			}
+			fillpoly(td,((ftmp)?NZFILL_POLY:EOFILL_POLY),filltype,Q.x,
+				 hatchspace,hatchscale,hatchangle,rotate_flag,rot_ang);
+			break;
+		}
 		if (pg->nofill) {	/* treat like EP */
 			if (!silent_mode)
 				fprintf(stderr, "FP : suppressed\n");
@@ -2792,27 +2857,30 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 						"\nNo support for user-defined fill types, using type 1 instead\n");
 			}
 			filltype = 1;
-			break;
 		}
+		if (filltype < 3)
+			break;
 
 		if (read_float(&ftmp, hd)) {
 			hatchspace = saved_hatchspace[filltype - 3];
 			if (hatchspace == 0.)
 				hatchspace = 0.01 * Diag_P1_P2;
 			hatchangle = saved_hatchangle[filltype - 3];
-			break;
 		} else {
 			if (ftmp <= 0.)
 				ftmp = 0.01 * Diag_P1_P2;
 			hatchspace = ftmp;
+			hatchscale=scale_flag;
+
 			saved_hatchspace[filltype - 3] = hatchspace;
-		}
+			saved_hatchscale[filltype - 3] = hatchscale;
+		
 		if (read_float(&ftmp, hd)) {
 			hatchangle = saved_hatchangle[filltype - 3];
-			break;
 		} else {
 			hatchangle = ftmp;
 			saved_hatchangle[filltype - 3] = hatchangle;
+		}
 		}
 		break;
 	case NP:		/* Number of Pens                    */
@@ -2872,20 +2940,34 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		break;
 	case PM:
 		if (read_float(&ftmp, hd) || ftmp == 0) {	/* no parameters or PM0 */
+			polystart = p_last;
+			if (HAS_POLY(pg->xx_mode)) {
+				PlotCmd_to_tmpfile(OP_PBUF);
+				break;
+			}
 			polygon_mode = TRUE;
 			polygon_penup = FALSE;
 			saved_penstate = pen_down;
 			vertices = -1;
-			polystart = p_last;
 			break;
 		}
 		if (ftmp == 1) {
+			if (HAS_POLY(pg->xx_mode)) {
+				PlotCmd_to_tmpfile(SUBPOLY);
+				break;
+			}
 			if (vertices > 0)
 				polygon_penup = TRUE;
 			pen_down = FALSE;
 			break;
 		}
 		if (ftmp == 2) {
+			
+			p_last=polystart;
+			if (HAS_POLY(pg->xx_mode)) {
+				PlotCmd_to_tmpfile(CL_PBUF);
+				break;
+			}
 			polygon_mode = FALSE;
 			pen_down = saved_penstate;
 			if (p_last.x != polystart.x
@@ -3084,7 +3166,16 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			neg_ticklen = ftmp / 100.0;
 		break;
 	case WG:		/* Filled Wedge                 */
+	        if (HAS_POLY(pg->xx_mode) && !pg->nofill) {
+		  	PlotCmd_to_tmpfile(OP_PBUF);
+		    	wedges(hd);
+	    		PlotCmd_to_tmpfile(CL_PBUF);
+			fillpoly(td,NZFILL_POLY,filltype,Q.x,
+				 hatchspace,hatchscale,hatchangle,rotate_flag,rot_ang);
+	  	} else {
 		fwedges(hd, pt.width[pen]);
+
+	  	}
 		break;
 	case WU:		/* pen Width Unit is relative  */
 		if (read_float(&ftmp, hd) || ftmp == 0.)	/* Zero or no number  */
@@ -3187,6 +3278,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			    && P2.x == P2X_default
 			    && P2.y == P2Y_default) {
 				iwflag = 0;
+				if (HAS_CLIP(pg->xx_mode)) {
+				  PlotCmd_to_tmpfile(NOCLIP);
+				}
 				break;
 			}
 			C1 = P1;
@@ -3249,6 +3343,44 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			Eprintf("\nP1 = (%g, %g)\n", P1.x, P1.y);
 			Eprintf("P2 = (%g, %g)\n", P2.x, P2.y);
 		}
+
+		C1.x -= pg->extraclip;
+		C1.y -= pg->extraclip;
+		C2.x += pg->extraclip;
+		C2.y += pg->extraclip;
+
+
+		if (HAS_CLIP(pg->xx_mode)) {
+		  PlotCmd_to_tmpfile(CLIP);
+		  if (rotate_flag) {	/* hp2xx-specific global rotation       */
+		    p1.x = rot_cos * C1.x - rot_sin * C1.y;
+		    p1.y = rot_sin * C1.x + rot_cos * C1.y;
+    		    HPGL_Pt_to_tmpfile(&p1);
+
+		    p1.x = rot_cos * C2.x - rot_sin * C1.y;
+		    p1.y = rot_sin * C2.x + rot_cos * C1.y;
+    		    HPGL_Pt_to_tmpfile(&p1);
+
+		    p1.x = rot_cos * C2.x - rot_sin * C2.y;
+		    p1.y = rot_sin * C2.x + rot_cos * C2.y;
+
+		    HPGL_Pt_to_tmpfile(&p1);
+		    
+		    p1.x = rot_cos * C1.x - rot_sin * C2.y;
+		    p1.y = rot_sin * C1.x + rot_cos * C2.y;
+    		    HPGL_Pt_to_tmpfile(&p1);
+		  } else {
+		    HPGL_Pt_to_tmpfile(&C1);
+		    p1.x=C2.x;
+ 		    p1.y=C1.y;
+		    HPGL_Pt_to_tmpfile(&p1);
+		    HPGL_Pt_to_tmpfile(&C2);
+		    p1.x=C1.x;
+ 		    p1.y=C2.y;
+		    HPGL_Pt_to_tmpfile(&p1);
+		  }
+		  iwflag=0;
+		}
 		break;
 	case OW:		/* Output clip box  */
 		if (!silent_mode) {
@@ -3270,22 +3402,22 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		break;
 
 	case EA:		/* Edge Rectangle absolute */
-		rects(plot_rel = FALSE, 0, pt.width[pen], hd);
+		rects(pg,plot_rel = FALSE, 0, pt.width[pen], hd);
 		tp->CR_point = HP_pos;
 		break;
 
 	case ER:		/* Edge Rectangle relative */
-		rects(TRUE, 0, 0., hd);
+		rects(pg,TRUE, 0, 0., hd);
 		tp->CR_point = HP_pos;
 		break;
 
 	case RA:		/* Fill Rectangle absolute */
-		rects(plot_rel = FALSE, 1, pt.width[pen], hd);
+		rects(pg,plot_rel = FALSE, 1, pt.width[pen], hd);
 		tp->CR_point = HP_pos;
 		break;
 
 	case RR:		/* Fill Rectangle relative */
-		rects(plot_rel = TRUE, 1, pt.width[pen], hd);
+		rects(pg,plot_rel = TRUE, 1, pt.width[pen], hd);
 		tp->CR_point = HP_pos;
 		break;
 
@@ -3485,6 +3617,13 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 	case DF:		/* Set to default               */
 	case IN:		/* Initialize */
 		reset_HPGL();
+		if (HAS_POLY(pg->xx_mode)) {
+		  PlotCmd_to_tmpfile(OP_PBUF);
+		  PlotCmd_to_tmpfile(CL_PBUF);
+		}
+		if (HAS_CLIP(pg->xx_mode)) {
+		  PlotCmd_to_tmpfile(NOCLIP);
+		}
 		tp->CR_point = HP_pos;
 		break;
 	case RO:
@@ -4111,6 +4250,15 @@ PlotCmd PlotCmd_from_tmpfile(void)
 	case DEF_PW:
 	case DEF_PC:
 	case DEF_LA:
+	case OP_PBUF:
+	case CL_PBUF:
+	case SUBPOLY:
+	case EDGE_POLY:
+	case NZFILL_POLY:
+	case EOFILL_POLY:
+	case CLIP:
+	case NOCLIP:
+	case FILL_TYPE:
 		return cmd;
 	case (unsigned int) EOF:
 	default:

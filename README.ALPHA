@@ -1,0 +1,9 @@
+Recent changes in the 3.5.0 development ("alpha") series:
+
+3.5.0a1
+
+New features:
+
+- Support for drivers that provide native routines for polygon filling
+  (currently implemented in a new postscript driver) (Eugene Doudine).
+

@@ -300,7 +300,7 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 			break;
 
 		case DEF_PW:
-			if (!load_pen_width_table(pg->td)) {
+			if (!load_pen_width_table(pg->td),0) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto PDF_exit;
@@ -309,7 +309,7 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 			break;
 
 		case DEF_PC:
-			err = load_pen_color_table(pg->td);
+			err = load_pen_color_table(pg->td,0);
 			if (err < 0) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
@@ -318,7 +318,7 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 			break;
 
 		case DEF_LA:
-			if (load_line_attr(pg->td) < 0) {
+			if (load_line_attr(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto PDF_exit;

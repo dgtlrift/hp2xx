@@ -432,7 +432,7 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 			break;
 
 		case DEF_PW:
-			if (load_pen_width_table(pg->td) < 0) {
+			if (load_pen_width_table(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto MF_exit;
@@ -658,7 +658,7 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 			break;
 
 		case DEF_PC:
-			if (load_pen_color_table(pg->td) < 0) {
+			if (load_pen_color_table(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto MF_exit;
@@ -666,7 +666,7 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 			Eprintf("Warning, no PC support in vector modes!");
 			break;
 		case DEF_LA:
-			if (load_line_attr(pg->td) < 0) {
+			if (load_line_attr(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto MF_exit;

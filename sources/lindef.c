@@ -277,7 +277,7 @@ void Line_Attr_to_tmpfile(LineAttrKind kind, int value)
 	return;
 }
 
-int load_line_attr(FILE * td)
+int load_line_attr(FILE * td, int ignore)
 {
 	LineAttrKind kind;
 	int value;
@@ -292,6 +292,8 @@ int load_line_attr(FILE * td)
 		return (-1);
 	}
 
+	if (ignore) return 0;
+	
 	switch (kind) {
 	case LineAttrEnd:
 		CurrentLineAttr.End = value;

@@ -55,7 +55,7 @@ extern PEN pt;
 void set_color_rgb(PEN_N index,BYTE r,BYTE g, BYTE b);
 void Pen_Width_to_tmpfile (int pen, PEN_W width);
 void Pen_Color_to_tmpfile (int pen, int red, int green, int blue);
-int load_pen_width_table(FILE *td);
-int load_pen_color_table(FILE *td);
+int load_pen_width_table(FILE *td,int ignore);
+int load_pen_color_table(FILE *td,int ignore);
 
 #endif /* __PENDEF_H */

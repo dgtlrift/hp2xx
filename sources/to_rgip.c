@@ -275,7 +275,7 @@ int to_rgip(const GEN_PAR * pg, const OUT_PAR * po)
 			break;
 
 		case DEF_PC:
-			if (!load_pen_color_table(pg->td)) {
+			if (!load_pen_color_table(pg->td,0)) {
 				PError("Unexpected end of temp. file");
 				exit(ERROR);
 			}
@@ -285,7 +285,7 @@ int to_rgip(const GEN_PAR * pg, const OUT_PAR * po)
 				       pt.clut[pencolor][2] / 255.0);
 			break;
 		case DEF_PW:
-			if (!load_pen_width_table(pg->td)) {
+			if (!load_pen_width_table(pg->td,0)) {
 				PError("Unexpected end of temp. file");
 				exit(ERROR);
 			}

@@ -291,6 +291,10 @@ process_opts(int argc, char *argv[],
 			pg->extraclip = atoi(optarg);
 			break;
 
+		case 'R':
+			po->ps_incres = optarg;
+			break;
+
 		case 'F':
 			po->formfeed = TRUE;
 			break;
@@ -450,6 +454,15 @@ process_opts(int argc, char *argv[],
 
 		case 'S':
 			po->specials = atoi(optarg);
+	               if (strchr(optarg,'E') || strchr(optarg,'e')) {
+                 		po->ps_eps=TRUE;
+	               }
+	               if (strchr(optarg,'M') || strchr(optarg,'m')) {
+		                 po->ps_media=TRUE;
+	               }
+	               if (strchr(optarg,'D') || strchr(optarg,'d')) {
+		                 po->ps_defer=TRUE;
+	               }
 			break;
 
 		case 's':
@@ -521,7 +534,7 @@ int main(int argc, char *argv[])
 	char outname[128] = "";
 
 	char *shortopts =
-	    "a:c:d:D:e:f:h:l:m:M:o:O:p:P:r:s:S:V:w:x:X:y:Y:z:Z:CFH:W:inqtvNI?";
+	    "a:c:d:D:e:f:h:l:m:M:o:O:p:P:r:R::s:S:V:w:x:X:y:Y:z:Z:CFH:W:inqtvNI?";
 	struct option longopts[] = {
 		{"mode", 1, NULL, 'm'},
 		{"pencolors", 1, NULL, 'c'},

@@ -65,6 +65,17 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
+#define VERS_NO        "3.5.0a1"
+#define VERS_DATE      "03/06/22"
+#define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
+#if defined(AMIGA)
+#define VERS_ADDITIONS "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"
+#elif defined (ATARI)
+#define VERS_ADDITIONS "\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n"
+#else
+#define VERS_ADDITIONS "                                (c) 1999 - 2003 Martin Kroeker\n"
+#endif
+
 #include "pendef.h"
 
 /**
@@ -144,6 +155,8 @@ copies.
 #define	BEL	'\007'
 
 #define MM_TO_PS_POINT 2.834646
+#define HAS_POLY(x) ((x)==XX_PS)
+#define HAS_CLIP(x) ((x)==XX_PS)
 
 #define	MAX_LB_LEN	150	/* Max num of chars per label   */
 
@@ -166,25 +179,13 @@ copies.
 typedef unsigned char Byte;
 
 
-#define VERS_NO "3.4.4"
-#define VERS_DATE "03/06/22"
-#define VERS_COPYRIGHT  "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
-#if defined(AMIGA)
-#define VERS_ADDITIONS     "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"
-#elif defined (ATARI)
-#define VERS_ADDITIONS     "\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n"
-#else
-#define VERS_ADDITIONS "                              (c) 1999 - 2003 Martin Kroeker\n"
-#endif
-
-
 /**
  ** When adding your special mode, add a symbol here.
  ** Please note the alphabetical order (and keep it).
  **/
 
 typedef enum {
-	XX_CAD, XX_CS, XX_DXF, XX_EM, XX_EMF, XX_EMP, XX_EPIC, XX_EPS,
+	XX_CAD, XX_CS, XX_DXF, XX_EM, XX_EMF, XX_EMP, XX_EPIC, XX_PS, XX_EPS,
 	    XX_ESC2, XX_FIG, XX_GPT, XX_HPGL,
 	XX_ILBM, XX_IMG, XX_JPG,
 	XX_MF, XX_NC, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PDF, XX_PIC,
@@ -225,6 +226,8 @@ typedef struct {
 
 typedef enum {
 	NOP, MOVE_TO, DRAW_TO, PLOT_AT, SET_PEN, DEF_PW, DEF_PC, DEF_LA,
+	EDGE_POLY,EOFILL_POLY,NZFILL_POLY,FILL_TYPE,OP_PBUF,SUBPOLY,CL_PBUF,
+	CLIP,NOCLIP,
 	    CMD_EOF
 } PlotCmd;
 
@@ -268,6 +271,10 @@ typedef struct {		/* Corresponding option(s)        */
 	int init_p3gui;		/* -I  (PCL only)               */
 	int formfeed;		/* -F  (PCL only)               */
 	int specials;		/* -s specials  (PCL only)      */
+        int ps_eps;		/* -S e EPS output (PS only)    */
+        char* ps_incres;	/* -R include resource (PS only)*/
+        int ps_defer;		/* -S d  defer media selection (PS only)  */
+        int ps_media;		/* -S e  media selection (PS only)  */
 	int pagecount;		/* for naming multi-page output */
 	char *outfile;		/* -f outfile ("-" = stdout)    */
 	double xmin, ymin, xmax, ymax;	/* (internally needed)          */
@@ -372,6 +379,7 @@ int isPEterm(int, PE_flags *);
 void to_ATARI(GEN_PAR *, FILE *);
 int to_mftex(const GEN_PAR *, const OUT_PAR *, int);
 int to_eps(const GEN_PAR *, const OUT_PAR *);
+int to_ps(const GEN_PAR *, const OUT_PAR *);
 int to_rgip(const GEN_PAR *, const OUT_PAR *);
 int to_fig(const GEN_PAR *, const OUT_PAR *);
 

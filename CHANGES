@@ -44,8 +44,6 @@ Bug fixes:
   color loss in the raster modes.
 - Using -h, -? or even -help for help no longer generates an error message
   before the help text is shown.
-- WG command drew weird shapes instead of filled wedges (broken by the
-  polygon buffer rewrite in 3.4.3 - one coordinate was lost)
  
 Changes from 3.4.2 to 3.4.3
 

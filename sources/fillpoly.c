@@ -60,6 +60,7 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 
 	if (hatchangle > 89.9 && hatchangle < 180.) {
 		hatchangle = hatchangle - 90.;
+/*fprintf(stderr,"vertical fill\n");*/
 		goto FILL_VERT;
 	}
 
@@ -67,12 +68,14 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	pymin = point1.y - 0.5;
 	pxmax = polyxmax;
 	pymax = polyymax;
-	
 	if (polyxmin == polyxmax && polyymin == polyymax) {
 		fprintf(stderr, "zero area polygon\n");
 		return;
 	}
 
+/*	PlotCmd_to_tmpfile(DEF_LA);
+	Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
+*/
 	pydiff = pymax - pymin;
 	pxdiff = pxmax - pxmin;
 	if (hatchangle != 0.) {
@@ -98,18 +101,6 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	p.x = pxmin;
 	p.y = pymin;
 	Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
-#endif
-#if 0
-/* debug code to show outline */
-		for (j=0;j<=numpoints;j=j+2){
-			p.x = polygon[j].x;
-			p.y = polygon[j].y;
-			Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
-			p.x = polygon[j + 1].x;
-			p.y = polygon[j + 1].y;
-			Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
-		}
-return;
 #endif
 
 /* start at lowest y , run scanlines parallel x across polygon */
@@ -151,6 +142,15 @@ return;
 			      avy * (bx - ax)) / (bvy * avx - avy * bvx);
 
 
+#if 0
+/* debug code to show outline */
+			p.x = polygon[j].x;
+			p.y = polygon[j].y;
+			Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
+			p.x = polygon[j + 1].x;
+			p.y = polygon[j + 1].y;
+			Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
+#endif
 
 /*determine coordinates of intersection */
 			if (mu >= 0. && mu <= 1.01) {
@@ -238,6 +238,7 @@ return;
 	}
 
       FILL_VERT:
+
 
 	pxmin = point1.x;
 	pymin = point1.y;

@@ -97,7 +97,7 @@ void Pen_Color_to_tmpfile(int pen, int red, int green, int blue)
 	}
 }
 
-int load_pen_width_table(FILE * td)
+int load_pen_width_table(FILE * td,int ignore)
 {
 	PEN_N tp;
 	PEN_W tw;
@@ -110,6 +110,7 @@ int load_pen_width_table(FILE * td)
 	if (fread((void *) &tw, sizeof(tw), 1, td) != 1) {
 		return (0);
 	}
+	if (ignore) return 1;
 
 	if (tp >= NUMPENS) {	/* don't check < 0 - unsigned */
 		return (1);
@@ -125,7 +126,7 @@ int load_pen_width_table(FILE * td)
 	return (1);
 }
 
-int load_pen_color_table(FILE * td)
+int load_pen_color_table(FILE * td,int ignore)
 {
 	PEN_N tp;
 	PEN_C r, g, b;
@@ -145,6 +146,8 @@ int load_pen_color_table(FILE * td)
 	if (fread((void *) &b, sizeof(b), 1, td) != 1) {
 		return (-1);
 	}
+
+	if (ignore) return (1);
 
 	if (tp >= NUMPENS) {	/* don't check < 0 - unsigned */
 		return (1);

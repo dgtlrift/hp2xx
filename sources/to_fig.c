@@ -138,7 +138,7 @@ int to_fig(const GEN_PAR * pg, const OUT_PAR * po)
 			break;
 
 		case DEF_PW:
-			if (!load_pen_width_table(pg->td)) {
+			if (!load_pen_width_table(pg->td,0)) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto FIG_exit;
@@ -146,7 +146,7 @@ int to_fig(const GEN_PAR * pg, const OUT_PAR * po)
 			pensize = pt.width[pen_no];
 			break;
 		case DEF_PC:
-			if (!load_pen_color_table(pg->td)) {
+			if (!load_pen_color_table(pg->td,0)) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto FIG_exit;
@@ -157,7 +157,7 @@ int to_fig(const GEN_PAR * pg, const OUT_PAR * po)
 				colour = -1;
 			break;
 		case DEF_LA:
-			if (load_line_attr(pg->td) < 0) {
+			if (load_line_attr(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto FIG_exit;

@@ -69,25 +69,25 @@ static int lastjoin;
 static int lastlimit;
 static BYTE lastred, lastgreen, lastblue;
 
-void ps_set_linewidth(PEN_W, HPGL_Pt *, FILE *);
-void ps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt,
+void eps_set_linewidth(PEN_W, HPGL_Pt *, FILE *);
+void eps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt,
 		    FILE * fd);
-void ps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize,
+void eps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize,
 		     HPGL_Pt * ppt, FILE * fd);
-void ps_set_color(PEN_C pencolor, HPGL_Pt * ppt, FILE * fd);
-void ps_init(const GEN_PAR *, const OUT_PAR *, FILE *, PEN_W);
-void ps_end(FILE *);
-void ps_stroke_and_move_to(HPGL_Pt *, FILE *);
-void ps_line_to(HPGL_Pt *, char, FILE *);
-void ps_draw_dot(HPGL_Pt * ppt, double radius, FILE * fd);
-char *Getdate(void);
+void eps_set_color(PEN_C pencolor, HPGL_Pt * ppt, FILE * fd);
+void eps_init(const GEN_PAR *, const OUT_PAR *, FILE *, PEN_W);
+void eps_end(FILE *);
+void eps_stroke_and_move_to(HPGL_Pt *, FILE *);
+void eps_line_to(HPGL_Pt *, char, FILE *);
+void eps_draw_dot(HPGL_Pt * ppt, double radius, FILE * fd);
+char *eps_Getdate(void);
 
 
 
 /**
  ** Close graphics file
  **/
-void ps_end(FILE * fd)
+void eps_end(FILE * fd)
 {
 	fprintf(fd, " S\neop\n");
 	fprintf(fd, "@end\n");
@@ -102,7 +102,7 @@ void ps_end(FILE * fd)
 /**
  ** Flush old path and move
  **/
-void ps_stroke_and_move_to(HPGL_Pt * ppt, FILE * fd)
+void eps_stroke_and_move_to(HPGL_Pt * ppt, FILE * fd)
 {
 	fprintf(fd, " S\n%6.2f %6.2f M",	/* S: Start a new path  */
 		(ppt->x - xmin) * xcoord2mm, (ppt->y - ymin) * ycoord2mm);
@@ -112,10 +112,10 @@ void ps_stroke_and_move_to(HPGL_Pt * ppt, FILE * fd)
 /**
  ** Set line width
  **/
-void ps_set_linewidth(PEN_W width, HPGL_Pt * ppt, FILE * fd)
+void eps_set_linewidth(PEN_W width, HPGL_Pt * ppt, FILE * fd)
 {
 	if ((fabs(width - lastwidth) >= 0.01) && (width >= 0.05)) {
-		ps_stroke_and_move_to(ppt, fd);	/* MUST start a new path!      */
+		eps_stroke_and_move_to(ppt, fd);	/* MUST start a new path!      */
 		fprintf(fd, " %6.3f W\n", width);
 		lastwidth = width;
 	}
@@ -125,7 +125,7 @@ void ps_set_linewidth(PEN_W width, HPGL_Pt * ppt, FILE * fd)
 /**
  ** Set line ends
  **/
-void ps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt, FILE * fd)
+void eps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt, FILE * fd)
 {
 	int newcap;
 
@@ -152,7 +152,7 @@ void ps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt, FILE * fd)
 	}
 
 	if (newcap != lastcap) {
-		ps_stroke_and_move_to(ppt, fd);	/* MUST start a new path! */
+		eps_stroke_and_move_to(ppt, fd);	/* MUST start a new path! */
 		fprintf(fd, " %d setlinecap\n", newcap);
 		lastcap = newcap;
 	}
@@ -163,7 +163,7 @@ void ps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt, FILE * fd)
 /**
  ** Set line Joins
  **/
-void ps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize,
+void eps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize,
 		     HPGL_Pt * ppt, FILE * fd)
 {
 	int newjoin;
@@ -201,13 +201,13 @@ void ps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize,
 	}
 
 	if (newjoin != lastjoin) {
-		ps_stroke_and_move_to(ppt, fd);	/* MUST start a new path! */
+		eps_stroke_and_move_to(ppt, fd);	/* MUST start a new path! */
 		fprintf(fd, " %d setlinejoin\n", newjoin);
 		lastjoin = newjoin;
 	}
 
 	if (newlimit != lastlimit) {
-		ps_stroke_and_move_to(ppt, fd);	/* MUST start a new path! */
+		eps_stroke_and_move_to(ppt, fd);	/* MUST start a new path! */
 		fprintf(fd, " %d setmiterlimit\n", newlimit);
 		lastlimit = newlimit;
 	}
@@ -218,14 +218,14 @@ void ps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize,
 /**
  ** Set RGB color
  **/
-void ps_set_color(PEN_C pencolor, HPGL_Pt * ppt, FILE * fd)
+void eps_set_color(PEN_C pencolor, HPGL_Pt * ppt, FILE * fd)
 {
 	if ((pt.clut[pencolor][0] != lastred) ||
 	    (pt.clut[pencolor][1] != lastgreen)
 	    || (pt.clut[pencolor][2] != lastblue)) {
 
 
-		ps_stroke_and_move_to(ppt, fd);	/* MUST start a new path!       */
+		eps_stroke_and_move_to(ppt, fd);	/* MUST start a new path!       */
 		fprintf(fd, " %6.3f %6.3f %6.3f C\n",
 			(double) pt.clut[pencolor][0] / 255.0,
 			(double) pt.clut[pencolor][1] / 255.0,
@@ -239,7 +239,7 @@ void ps_set_color(PEN_C pencolor, HPGL_Pt * ppt, FILE * fd)
 	}
 }
 
-void ps_line_to(HPGL_Pt * ppt, char mode, FILE * fd)
+void eps_line_to(HPGL_Pt * ppt, char mode, FILE * fd)
 {
 	if (linecount > 3) {
 		putc('\n', fd);
@@ -253,7 +253,7 @@ void ps_line_to(HPGL_Pt * ppt, char mode, FILE * fd)
 	linecount++;
 }
 
-void ps_draw_dot(HPGL_Pt * ppt, double radius, FILE * fd)
+void eps_draw_dot(HPGL_Pt * ppt, double radius, FILE * fd)
 {
 	fprintf(fd, " currentpoint newpath %0.2f 0 360 arc fill\n",
 		radius);
@@ -265,7 +265,7 @@ void ps_draw_dot(HPGL_Pt * ppt, double radius, FILE * fd)
  ** appeares in the PS header.
  **/
 
-char *Getdate(void)
+char *eps_Getdate(void)
 {
 	int len;
 	time_t t;
@@ -285,7 +285,7 @@ char *Getdate(void)
  ** PostScript definitions
  **/
 
-void ps_init(const GEN_PAR * pg, const OUT_PAR * po, FILE * fd,
+void eps_init(const GEN_PAR * pg, const OUT_PAR * po, FILE * fd,
 	     PEN_W pensize)
 {
 	long left, right, low, high;
@@ -305,7 +305,7 @@ void ps_init(const GEN_PAR * pg, const OUT_PAR * po, FILE * fd,
 	fprintf(fd, "%%%%Title: %s\n", po->outfile);
 	fprintf(fd,
 		"%%%%Creator: hp2xx %s (c) 1991-1994 by H. Werntges, 1999-2003 by M. Kroeker\n",VERS_NO);
-	fprintf(fd, "%%%%CreationDate: %s\n", Getdate());
+	fprintf(fd, "%%%%CreationDate: %s\n", eps_Getdate());
 	fprintf(fd, "%%%%Pages: 1\n");
 
 /**
@@ -449,7 +449,7 @@ int to_eps(const GEN_PAR * pg, const OUT_PAR * po)
 	/* PS header */
 
 	pensize = pt.width[DEFAULT_PEN_NO];	/* Default pen    */
-	ps_init(pg, po, md, pensize);
+	eps_init(pg, po, md, pensize);
 
 	if (pensize > 0.05)
 		fprintf(md, " %6.3f W\n", pensize);
@@ -478,7 +478,7 @@ int to_eps(const GEN_PAR * pg, const OUT_PAR * po)
 			pensize = pt.width[pen_no];
 			break;
 		case DEF_PW:
-			if (!load_pen_width_table(pg->td)) {
+			if (!load_pen_width_table(pg->td,0)) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto EPS_exit;
@@ -486,7 +486,7 @@ int to_eps(const GEN_PAR * pg, const OUT_PAR * po)
 			pensize = pt.width[pen_no];
 			break;
 		case DEF_PC:
-			err = load_pen_color_table(pg->td);
+			err = load_pen_color_table(pg->td,0);
 			if (err < 0) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
@@ -494,52 +494,52 @@ int to_eps(const GEN_PAR * pg, const OUT_PAR * po)
 			}
 			break;
 		case DEF_LA:
-			if (load_line_attr(pg->td) < 0) {
+			if (load_line_attr(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				err = ERROR;
 				goto EPS_exit;
 			}
 			break;
 		case MOVE_TO:
-			ps_set_linewidth(pensize, &pt1, md);
-			ps_set_linecap(CurrentLineAttr.End, pensize, &pt1,
+			eps_set_linewidth(pensize, &pt1, md);
+			eps_set_linecap(CurrentLineAttr.End, pensize, &pt1,
 				       md);
-			ps_set_linejoin(CurrentLineAttr.Join,
+			eps_set_linejoin(CurrentLineAttr.Join,
 					CurrentLineAttr.Limit, pensize,
 					&pt1, md);
-			ps_set_color(pt.color[pen_no], &pt1, md);
+			eps_set_color(pt.color[pen_no], &pt1, md);
 
 			HPGL_Pt_from_tmpfile(&pt1);
 			if (pensize > 0.05)
-				ps_stroke_and_move_to(&pt1, md);
+				eps_stroke_and_move_to(&pt1, md);
 			break;
 		case DRAW_TO:
-			ps_set_linewidth(pensize, &pt1, md);
-			ps_set_linecap(CurrentLineAttr.End, pensize, &pt1,
+			eps_set_linewidth(pensize, &pt1, md);
+			eps_set_linecap(CurrentLineAttr.End, pensize, &pt1,
 				       md);
-			ps_set_linejoin(CurrentLineAttr.Join,
+			eps_set_linejoin(CurrentLineAttr.Join,
 					CurrentLineAttr.Limit, pensize,
 					&pt1, md);
-			ps_set_color(pt.color[pen_no], &pt1, md);
+			eps_set_color(pt.color[pen_no], &pt1, md);
 
 			HPGL_Pt_from_tmpfile(&pt1);
 			if (pensize > 0.05)
-				ps_line_to(&pt1, 'D', md);
+				eps_line_to(&pt1, 'D', md);
 			break;
 		case PLOT_AT:
-			ps_set_linewidth(pensize, &pt1, md);
-			ps_set_linecap(CurrentLineAttr.End, pensize, &pt1,
+			eps_set_linewidth(pensize, &pt1, md);
+			eps_set_linecap(CurrentLineAttr.End, pensize, &pt1,
 				       md);
-			ps_set_linejoin(CurrentLineAttr.Join,
+			eps_set_linejoin(CurrentLineAttr.Join,
 					CurrentLineAttr.Limit, pensize,
 					&pt1, md);
-			ps_set_color(pt.color[pen_no], &pt1, md);
+			eps_set_color(pt.color[pen_no], &pt1, md);
 
 			HPGL_Pt_from_tmpfile(&pt1);
 			if (pensize > 0.05) {
-				ps_line_to(&pt1, 'M', md);
-				ps_line_to(&pt1, 'D', md);	/* not sure whether this is needed */
-				ps_draw_dot(&pt1, pensize / 2, md);
+				eps_line_to(&pt1, 'M', md);
+				eps_line_to(&pt1, 'D', md);	/* not sure whether this is needed */
+				eps_draw_dot(&pt1, pensize / 2, md);
 			}
 			break;
 		default:
@@ -551,7 +551,7 @@ int to_eps(const GEN_PAR * pg, const OUT_PAR * po)
 
 	/* Finish up */
 
-	ps_end(md);
+	eps_end(md);
 
       EPS_exit:
 	if (md != stdout)

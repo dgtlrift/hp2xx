@@ -150,7 +150,6 @@ copies.
  ** 03/02/26	      GV   Add -S option for DXF mode (pen attribute mapping)
  **/
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -160,8 +159,6 @@ copies.
 #include "hp2xx.h"
 #include "hpgl.h"
 
-/* the version string is now declared in hp2xx.h, so that output modules
-   may easily include the version of hp2xx that generated the file */
 
 /**
  ** When adding your special mode, add a line here.
@@ -213,6 +210,7 @@ mode_list ModeList[] = {
 	{XX_PNG, "png"},	/* Portable Network Graphics            */
 #endif
 	{XX_PRE, "pre"},	/* DEFAULT: Preview on screen           */
+	{XX_PS,  "ps"}, 	/* PostScript 				*/
 	{XX_RGIP, "rgip"},	/* Uniplex RGIP vector format           */
 	{XX_SVG, "svg"},	/* W3C Scalable vector graphics         */
 #ifdef TIF
@@ -357,6 +355,15 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	    ("-S int     %d\tMap pens to DXF colors (0=No mapping, 1=use pen no., 2=use width*10 , 3=map widths <0.2 to 1, <0.3 to 2,0.4 to 3 , above 0.4 to 4 )\n",
 	     po->specials);
 
+       Eprintf("\nPS-exclusive options:\n");
+       Eprintf("-S    option[,option...]  \tPostscript driver options\n");
+       Eprintf("      e\t\tGenerate Encapsulated postscript\n");
+       Eprintf("      m\t\tuse media selection logic\n");
+       Eprintf("      d\t\tdefer media selection\n");
+       Eprintf("-R    file\tinclude postscript resource in document setup\n\n");
+
+	NormalWait();
+
 	Eprintf("\nSize controls:\n");
 
 	Eprintf
@@ -460,6 +467,10 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	po->init_p3gui = FALSE;
 	po->formfeed = FALSE;
 	po->specials = 0;
+	po->ps_eps = FALSE;
+	po->ps_incres = NULL;
+	po->ps_media = FALSE;
+	po->ps_defer = FALSE;
 	po->dpi_x = 75;
 	po->dpi_y = 0;
 	po->vga_mode = 18;	/* 0x12: VGA 640x480, 16 colors */
@@ -792,6 +803,11 @@ int TMP_to_VEC(const GEN_PAR * pg, const OUT_PAR * po)
 	case XX_EPS:
 		to_eps(pg, po);
 		return 0;
+
+	case XX_PS:
+		to_ps(pg, po);
+		return 0;
+
 #ifdef USEPDF
 	case XX_PDF:
 		to_pdf(pg, po);
