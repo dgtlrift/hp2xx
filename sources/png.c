@@ -22,7 +22,6 @@ void pdImagePNG(im, fd)
 	int ci;
 	png_bytep *row_pointers;
 
-
 	/* allocate and init png_struct */
 	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
 			NULL, NULL, NULL);
@@ -44,6 +43,7 @@ void pdImagePNG(im, fd)
 		return;
 	}
 
+	png_data_freer(png_ptr,info_ptr,PNG_DESTROY_WILL_FREE_DATA,-1);
 	/* initialize I/O */
 	png_init_io(png_ptr, fd);
 	
@@ -59,7 +59,8 @@ void pdImagePNG(im, fd)
 	png_set_compression_strategy(png_ptr, Z_DEFAULT_STRATEGY);
 	png_set_compression_window_bits(png_ptr, 15);
 	png_set_compression_method(png_ptr, 8);
-
+	png_set_compression_buffer_size(png_ptr,8192);
+	
 	width     = im->sx;
 	height    = im->sy;
 	bit_depth = 8; /* for now */
@@ -98,13 +99,14 @@ void pdImagePNG(im, fd)
 	png_write_end(png_ptr, info_ptr);
 
 	/* if you malloced the palette, free it here */
-	free(info_ptr->palette);
+/*	free(info_ptr->palette);*/
 
 	/* if you allocated any text comments, free them here */
 
 	/* clean up after the write, and free any memory allocated */
-	png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
-
+/*	png_destroy_write_struct(&png_ptr, (png_infopp)NULL);*/
+	png_destroy_write_struct(&png_ptr, &info_ptr);
+	png_free_data(png_ptr,info_ptr,PNG_FREE_ALL,-1);
 	return;
 
 }

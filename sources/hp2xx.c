@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a13";
-char	*VERS_DATE = "02/08/06";
+char	*VERS_NO = "3.4.3a14";
+char	*VERS_DATE = "02/08/10";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -520,14 +520,14 @@ int	len, i;
  ** If not, the following fopen() in main() will fail
  ** and no harm will be done by an incorrect output file name.
  **/
-
-  if ((*outfile = malloc(len+2+strlen(mode))) == NULL)
+/*  if ((*outfile = malloc(len+2+strlen(mode))) == NULL)*/
+  if ((*outfile = realloc(*outfile,len+2+strlen(mode))) == NULL)
   {
 	Eprintf("Error: No mem for output file name!\n");
 	PError ("autoset_outfile_name");
 	exit   (ERROR);
   }
-  strcpy(*outfile, in_name);
+   strcpy(*outfile, in_name);
 
   if (strcmp(mode,"pre") == 0)
 	return;		/* If preview mode:				*/

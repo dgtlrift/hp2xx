@@ -48,7 +48,7 @@ infodir  = $(prefix)/info
 CC       = gcc
 CFLAGS	=  -O2 -m486 -I/usr/X11R6/include $(DEFINES) $(EX_DEFS) -Wall -pedantic -Wuninitialized -Wunused -Wreturn-type -Wmissing-prototypes -Wstrict-prototypes  
 
-#CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES)
+#CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES) $(EX_DEFS)
 
 LFLAGS   = -L/usr/X11R6/lib            # only sometimes needed; see below for examples
 CPPFLAGS = -I.            # only sometimes needed; see below for examples

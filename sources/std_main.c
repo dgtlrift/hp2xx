@@ -134,6 +134,7 @@ strcpy(savedname,po->outfile);
    **/
   err = HPGL_to_TMP (pg, pi);
   if (err){
+/*	po->outfile=realloc(po->outfile,2*sizeof(char));*/
   strcpy(po->outfile,"");
    cleanup_i(pi);
    cleanup_g(pg);
@@ -509,7 +510,7 @@ GEN_PAR	Pg;
 IN_PAR	Pi;
 OUT_PAR	Po;
 int	i;
-char 	*outname=malloc(128*sizeof(char));
+char 	outname[128]="";
 
 char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtvN";
 struct	option longopts[] =
@@ -593,7 +594,10 @@ struct	option longopts[] =
  	Po.pagecount=-1;
 	if(strlen(Po.outfile)>0)
 	strcpy(outname,Po.outfile); /* store fixed outfile name if present*/
-
+	else{
+	Po.outfile=malloc(1*sizeof(char));
+	strcpy(Po.outfile,"");
+	}
 /**
  ** Action loop over all input files
  **/
@@ -608,16 +612,19 @@ struct	option longopts[] =
 	{			/* Multiple-input file handling: */
 		Pi.in_file = argv[optind];
 	/* if output file name given on commandline, use it for all files */		
-		if (strlen(outname)>0)
+		if (strlen(outname)>0){
 			strcpy(Po.outfile,outname);
-		else
+			}
+		else{
 			Po.pagecount=-1; /* reset page counter for new file*/
+				}
 		autoset_outfile_name (Pg.mode, Pi.in_file, &Po.outfile);
 		action_oldstyle (&Pg, &Pi, &Po);
 		reset_par (&Pi);
 	}
 
   cleanup (&Pg, &Pi, &Po);
+  if (!strcmp(Pg.mode,"pre"))free(Po.outfile);
   if (*Pg.logfile)
 	fclose (stderr);
   return NOERROR;

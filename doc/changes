@@ -1,5 +1,14 @@
 Changes to hp2xx:
 =================
+3.4.3a14:
+Reset default colors only if they were not overridden by the -c option.
+Reset penwidths and IW clipping flag between plots.
+Fixed several memory leaks in output filename generation and png output. 
+Fixed PJL header misinterpretation introduced with the treatment of unknown 
+esc sequences. Added missing $(EX_DEFS) in HPUX section of generic.mak.
+Added special treatment of AF/AH as for PG (AF at end caused crash). Fixed
+IW handling for P2<P1. 
+
 3.4.3a13: 
 reset outfile name between files in multiple-file mode (unless a common
 basename was declared via -f) to ensure generation of correct output file 

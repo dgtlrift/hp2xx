@@ -73,7 +73,7 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 # HP-UX, CC compiler
 #
 # CC = cc
-# CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES)
+# CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES) $(EX_DEFS)
 # DEFINES = -DUNIX -DHAS_UNIX_X11
 # PREVIEWER = to_x11
 #

@@ -153,6 +153,7 @@ jpeg_start_compress(&cinfo, TRUE);
 
   free(jpgbuf);
   jpeg_finish_compress(&cinfo);
+  jpeg_destroy_compress(&cinfo);
   if (*po->outfile != '-') fclose(w);
   
   return 0;

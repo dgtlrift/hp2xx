@@ -343,6 +343,8 @@ static void par_err_exit (int code, int cmd) {
 static void
 reset_HPGL (void)
 {
+int i;
+
   p_last.x = p_last.y = M_PI;
   pen_down = FALSE;
   plot_rel = FALSE;
@@ -352,6 +354,11 @@ reset_HPGL (void)
   mv_flag = FALSE;
   wu_relative = FALSE;
   pg_flag = FALSE;
+  iwflag = FALSE;
+  ps_flag = FALSE;
+  ac_flag = FALSE;
+  saved_hatchangle[0]=saved_hatchangle[1]=0.;
+  saved_hatchspace[0]=saved_hatchspace[1]=0.;
   ct_dist = FALSE;
   CurrentLineType = LT_solid;
 
@@ -398,6 +405,7 @@ reset_HPGL (void)
       rot_sin = sin (M_PI * rot_ang / 180.0);
     }
   init_text_par ();
+  if (fixedcolor == FALSE){
   set_color_rgb(xxBackground,255,255,255);  
   set_color_rgb(xxForeground,  0,  0,  0);  
   set_color_rgb(xxRed,       255,  0,  0);  
@@ -406,6 +414,9 @@ reset_HPGL (void)
   set_color_rgb(xxCyan      ,  0,255,255);  
   set_color_rgb(xxMagenta   ,255,  0,255);
   set_color_rgb(xxYellow    ,255,255,  0);
+  for (i=0;i<8;i++)pt.color[i]=xxForeground;
+  }
+  if (fixedwidth==FALSE)  for (i=0;i<8;i++)pt.width[i]=0.1;
 }
   
   static void
@@ -427,7 +438,9 @@ init_HPGL (GEN_PAR * pg, const IN_PAR * pi)
   r_max=g_max=b_max=255;
 
 /*  pens_in_use = 0; */
-
+pg->maxpens=8;
+pg->maxcolor=1;
+memset(pens_in_use,0,NUMPENS*sizeof(short));
   /**
    ** Record ON if no page selected (pg->page == 0)!
    **/
@@ -1548,7 +1561,7 @@ read_ESC_RTL (FILE * hd, int c1, int hp)
 	      break;
 	    }
 	}
-	if (c1 != '%' && c1 != 'E') {
+	if (hp==TRUE &&!nf && c1 != '%' && c1 != 'E') {
 		ungetc(ctmp,hd);
 		fprintf(stderr,"invalid escape ESC%c%c\n",c1,c2);
 		return;
@@ -3120,7 +3133,7 @@ if (rotate_flag){
       if (read_float (&p1.y, hd))	/* x without y! */
 	par_err_exit (2, cmd);
 
-fprintf(stderr,"P1,P2 vor IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
+/*fprintf(stderr,"P1,P2 vor IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);*/
 	
 	mywidth=P2.x-P1.x;
 	myheight=P2.y-P1.y;
@@ -3134,7 +3147,7 @@ fprintf(stderr,"P1,P2 vor IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
       if (read_float (&p2.x, hd)){	/* No number found  */
 	P2.x=P1.x+mywidth;	/* P2 tracks new P1 too keep constant size*/
 	P2.y=P1.y+myheight;
-fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
+/*fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);*/
 	return;
 	}
       if (read_float (&p2.y, hd))	/* x without y! */
@@ -3185,6 +3198,9 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 		C1.y=C2.y;
 		C2.y=ftmp;
 		}
+#endif
+
+#if 0		
 	if (P2.y < P1.y){
                 ftmp=C1.y;
                 C1.y=C2.y;
@@ -3197,6 +3213,8 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 		C2.x=C1.x;
 		C1.x=ftmp;
 		}
+#endif
+#if 0
 	if (C2.y < C1.y){
 		ftmp=C2.y;
 		C2.y=C1.y;
@@ -3814,6 +3832,16 @@ read_HPGL (GEN_PAR * pg, const IN_PAR * pi)
 	if (c=='P'){
 	 if ( (cmd = getc(pi->hd)) == 'G') {
 /*	  fprintf(stderr,"***PG***\n");'*/
+	goto END;
+	 }else{
+         if (cmd==EOF) return;
+	 ungetc(cmd,pi->hd);
+	 }
+	}
+	if (c=='A'){
+		cmd=getc(pi->hd);
+	 if ( cmd  == 'F' || cmd == 'H') {
+/*	  fprintf(stderr,"***AF/AH***\n");*/
 	goto END;
 	 }else{
          if (cmd==EOF) return;
