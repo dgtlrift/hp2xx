@@ -1,5 +1,17 @@
 Changes to hp2xx:
 =================
+3.5.0a9:
+Made automatic closing of polygons on PM2 work again for output modes without
+highlevel polygon commands. Fixed several bugs in my wide-line miter code 
+that could cause filling of the wrong segments and/or spurious lines across 
+parts of the drawing. Removed Esc%0A from list of job separators as it broke 
+several files including our own spectrum.plt sample (where it is immediately
+followed by an 'enter HPGL mode' command - checking for this would entail
+pushing back several characters on the stream in case it is not Esc%.B, and
+ungetc does not guarantee this - checking for Esc only is inconclusive).
+Made eps module add the (postscript-only) PageSize directive when option -S 1
+is given (stopgap measure until the ps driver can completely replace it) 
+
 3.5.0a8: 
 raster fills got broken when i added percentage fills shortly before release
 of a7 - some missing parentheses etc. Experimentally added Esc%0A/Esc%1A (RTL

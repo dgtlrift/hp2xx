@@ -23,7 +23,10 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	double segx, segy;
 	static int i;		/* to please valgrind when debugging memory accesses */
 	int j, k, jj, kk;
-	int ia,ib,pati,l;
+	int ib,pati;
+#if 0
+	int ia,l;
+#endif	
 	int numlines;
 	double penwidth;
 	int patj=0;
@@ -48,7 +51,6 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 
 	if (filltype > 2 && filltype <5)
 		penwidth = spacing;
-
 
 if (filltype == 10) penwidth=4.;
 if (filltype == 11) penwidth=1.69;
@@ -91,6 +93,7 @@ if (filltype == 11) penwidth=1.69;
 		pymax = pymax + rot_ang * pxdiff;
 	}
 	numlines = (int) fabs(1. + (pymax - pymin + penwidth) / penwidth);
+/*fprintf(stderr,"running %d scanlines across %d polygon\n",numlines,numpoints);*/
 #if 0
 /* debug code to show shade box */
 	p.x = pxmin;
@@ -149,7 +152,7 @@ if (filltype == 11) penwidth=1.69;
 			      avy * (bx - ax)) / (bvy * avx - avy * bvx);
 
 
-#if 1
+#if 0
 /* debug code to show outline */
 			p.x = polygon[j].x;
 			p.y = polygon[j].y;
@@ -180,7 +183,7 @@ if (filltype == 11) penwidth=1.69;
 			    || (segx >
 				MAX((double) polygon[j].x,
 				    (double) polygon[j + 1].x))) {
-/*fprintf(stderr,"intersection  at %f %f is not within (%f,%f)-(%f,%f)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ) ; */
+/* fprintf(stderr,"intersection  at %f %f is not within (%f,%f)-(%f,%f)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ) ; */
 			} else {
 				for (kk = 0; kk <= k; kk++) {
 					if (fabs(segment[kk].x - segx) <

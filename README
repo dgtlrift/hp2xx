@@ -1,4 +1,4 @@
-hp2xx-3.5.0 
+hp2xx-3.5.0 (to be released sometime in spring 2004)
 
 I would greatly appreciate receiving bug reports, patches or even sample 
 HPGL files. (In the latter case, please make sure that no copyright or 
@@ -22,4 +22,21 @@ New features:
 
 - Support for drivers that provide native routines for polygon filling
   (currently implemented in a new postscript driver) (Eugene Doudine).
+- Support for filltypes 10 (percentage) and 11 (user-defined pattern) and
+  the RF command
+- PDF output generator can optionally be built using Takeshi Kanno's 
+  libharu, which has a much less restrictive license than PDFLIB.
 
+Bug fixes:
+
+- Corrected the implementation of the AT command
+- Fixed several cases where pen down/pen up sequences did not create a dot
+- Added missing quotation marks in some Makefile templates
+- made hp2xx handle lowercase HPGL commands 
+- Files containing polygons and SCaling had an extra margin added and/or
+  some polygons not filled correctly in some cases.
+- fig and rgip modules aborted when the color of pen 0 was changed
+- penwidth always reverted to that of pen 1 after polygon filling.
+- Corrected several bugs in the miter code for wide lines, which could
+  cause both jagged appearance of line sequences and extraneous lines 
+  being drawn.

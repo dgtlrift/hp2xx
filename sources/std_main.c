@@ -150,7 +150,13 @@ void action_oldstyle(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
    ** Phase 2: TMP file re-scaling
    **/
 		adjust_input_transform(pg, pi, po);
-
+				
+		if (po->xmax == -1.e10 || po->ymax == -1.e10) {
+			Eprintf("Warning: skipping empty drawing !\n");
+			cleanup_g(pg);
+			cleanup_o(po);
+			continue;
+			}
   /**
    ** Phase 3: (a) TMP file --> Vector formats
    **/

@@ -301,7 +301,11 @@ void eps_init(const GEN_PAR * pg, const OUT_PAR * po, FILE * fd,
  ** Header comments into PostScript file
  **/
 
+	if (po->specials)
+	fprintf(fd, "%%!PS-Adobe-2.0\n");
+	else
 	fprintf(fd, "%%!PS-Adobe-2.0 EPSF-2.0\n");
+	
 	fprintf(fd, "%%%%Title: %s\n", po->outfile);
 	fprintf(fd,
 		"%%%%Creator: hp2xx %s (c) 1991-1994 by H. Werntges, 1999-2003 by M. Kroeker\n",VERS_NO);
@@ -328,6 +332,14 @@ void eps_init(const GEN_PAR * pg, const OUT_PAR * po, FILE * fd,
 
 	fprintf(fd, "%%%%EndComments\n\n");
 
+if (po->specials == 1) { /* include pagesize directives - disallowed in EPS*/
+	fprintf(fd, "%%%%BeginFeature: PageSize %fx%fmm\n",po->width,po->height);
+	fprintf(fd, "<< /PageSize [\n");
+	fprintf(fd, "  %f 2.835 mul %f 2.835 mul\n",po->width,po->height);
+	fprintf(fd, "   ] >> setpagedevice\n");
+	fprintf(fd, "%%EndFeature\n");
+}
+	 
 /**
  ** Definitions
  **/

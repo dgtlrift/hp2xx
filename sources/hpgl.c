@@ -1,5 +1,6 @@
 /* Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.  
-   Parts Copyright (c) 1999 - 2001 Martin Kroeker All rights reserved.
+   Parts Copyright (c) 1999, 2001, 2002, 2003, 2004 
+                       Martin Kroeker All rights reserved.
 
    Distributed by Free Software Foundation, Inc.
 
@@ -1745,6 +1746,11 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 						    ("leaving HPGL context\n");
 #endif
 				        if (!record_off) cdot(0,NULL,0);
+#if 0
+	for (ctmp = getc(hd); (ctmp == EOF) || (ctmp == ';') || (ctmp ==13) || (ctmp==10); ctmp = getc(hd));
+					if (ctmp != ESC) {
+					fprintf(stderr,"pagebreak on %d\n",ctmp);
+					ungetc(ctmp,hd);
 					page_number++;
 					pg_flag=TRUE;
 					record_off =
@@ -1753,8 +1759,10 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 						&& (last_page > 0));
 						hp = FALSE;
 						return;
+					}else ungetc(ctmp,hd);
+#endif
 					}
-					continue;
+					return;
 				case 'B':
 #ifdef DEBUG_ESC
 					if (!silent_mode && !hp)
@@ -1802,7 +1810,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					Eprintf
 					    ("unknown escape: ESC%%%s%c",
 					     nf ? "-" : "", c2);
-				ungetc(ctmp, hd);
+				ungetc(c2, hd);
 				if (hp)
 					return;
 				break;
@@ -1811,8 +1819,8 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 		if (hp == TRUE && !nf && c1 != '%' && c1 != 'E') {
 			ungetc(ctmp, hd);
 			if (!silent_mode)
-				Eprintf("invalid escape ESC%c%c\n", c1,
-					c2);
+				Eprintf("invalid escape ESC%c%c (Esc%d%d)\n", c1,
+					c2,c1,c2);
 			return;
 		}
 	}
@@ -2920,8 +2928,8 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		break;
 
 	case FP:		/* fill polygon */
-		if (HAS_POLY(pg->xx_mode)) {
 			if (read_float (&ftmp, hd)) ftmp=0; /* No number found  */
+		if (HAS_POLY(pg->xx_mode)) {
 			if (pg->nofill) {
 				PlotCmd_to_tmpfile(EDGE_POLY);
 				break;
@@ -3082,6 +3090,46 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				PlotCmd_to_tmpfile(SUBPOLY);
 				break;
 			}
+			if (p_last.x != polystart.x
+			    || p_last.y != polystart.y) {
+				int outside = 0;
+				double x1, y1, x2, y2;
+				if (iwflag) {
+					x1 = P1.x + (p_last.x -
+						     S1.x) * Q.x;
+					y1 = P1.y + (p_last.y -
+						     S1.y) * Q.y;
+					x2 = P1.x + (polystart.x -
+						     S1.x) * Q.x;
+					y2 = P1.y + (polystart.y -
+						     S1.y) * Q.y;
+
+					outside =
+					    (DtClipLine
+					     (C1.x, C1.y, C2.x, C2.y, &x1,
+					      &y1, &x2,
+					      &y2) == CLIP_NODRAW);
+
+					if (!outside) {
+						p_last.x =
+						    (x2 - P1.x) / Q.x +
+						    S1.x;
+						p_last.y =
+						    (y2 - P1.y) / Q.y +
+						    S1.y;
+						polystart.x =
+						    (x1 - P1.x) / Q.x +
+						    S1.x;
+						polystart.y =
+						    (y1 - P1.y) / Q.y +
+						    S1.y;
+					}
+				}
+				if (!outside) {
+					HPGL_Pt_to_polygon(p_last);
+					HPGL_Pt_to_polygon(polystart);	/* force closing of open polygon */
+				}
+			}
 			if (vertices > 0)
 				polygon_penup = TRUE;
 			pen_down = FALSE;
@@ -3089,9 +3137,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		}
 		if (ftmp == 2) {
 			
-			p_last=polystart;
 			if (HAS_POLY(pg->xx_mode)) {
 				PlotCmd_to_tmpfile(CL_PBUF);
+			p_last=polystart;
 				break;
 			}
 			polygon_mode = FALSE;
@@ -3136,6 +3184,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 					HPGL_Pt_to_polygon(polystart);	/* force closing of open polygon */
 				}
 			}
+			p_last=polystart;
 		}
 		break;
 	case PR:		/* Plot Relative                */

@@ -578,16 +578,13 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, PEN_C pencolor,
 	int dx, dy;
 	int linewidth = (int) ceil(pensize * po->HP_to_xdots / 0.025);	/* convert to pixel space */
 
-/*   printf("pensize = %0.3f mm, linewidth = %d pixels\n",pensize,linewidth);*/
+/*   printf("pensize = %0.3f mm, linewidth = %d pixels\n",pensize,linewidth); */
 
 	if (linewidth == 0)	/* No pen selected! */
 		return;
 
 	if (pencolor == xxBackground)	/* No drawable color!       */
 		return;
-
-	if (linewidth < 5)
-		consecutive = 0;
 
 	if (linewidth == 1) {	/* Thin lines of any attitude */
 		p_act = bresenham_init(p0, p1);
@@ -603,7 +600,7 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, PEN_C pencolor,
 	}
 
 	murphy_init(pb, pencolor);	/* Wide Lines */
-	murphy_wideline(*p0, *p1, linewidth, consecutive);
+	murphy_wideline(*p0, *p1, linewidth, (consecutive >1?1:0));
 
 	if (pensize > 0.35) {
 		switch (CurrentLineAttr.End) {
@@ -821,38 +818,40 @@ void tmpfile_to_PicBuf(const GEN_PAR * pg, const OUT_PAR * po)
 	while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
 		switch (cmd) {
 		case NOP:
+			consecutive = -1;
 			break;
 		case SET_PEN:
 			if ((pen_no = fgetc(pg->td)) == EOF) {
 				PError("Unexpected end of temp. file");
 				exit(ERROR);
 			}
-			consecutive = 0;
+			consecutive = -1;
 			break;
 		case DEF_PW:
 			if (!load_pen_width_table(pg->td,0)) {
 				PError("Unexpected end of temp. file");
 				exit(ERROR);
 			}
+			consecutive = -1;
 			break;
 		case DEF_PC:
 			if (load_pen_color_table(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				exit(ERROR);
 			}
-			consecutive = 0;
+			consecutive = -1;
 			break;
 		case DEF_LA:
 			if (load_line_attr(pg->td,0) < 0) {
 				PError("Unexpected end of temp. file");
 				exit(ERROR);
 			}
-			consecutive = 0;
+			consecutive = -1;
 			break;
 		case MOVE_TO:
 			HPGL_Pt_from_tmpfile(&pt1);
 			HPcoord_to_dotcoord(&pt1, &ref, po);
-			consecutive = 0;
+			consecutive = -1;
 			break;
 		case DRAW_TO:
 			HPGL_Pt_from_tmpfile(&pt1);
@@ -867,7 +866,7 @@ void tmpfile_to_PicBuf(const GEN_PAR * pg, const OUT_PAR * po)
 			HPcoord_to_dotcoord(&pt1, &ref, po);
 			line_PicBuf(&ref, &ref, pt.width[pen_no],
 				    pt.color[pen_no], consecutive, po);
-			consecutive = 0;
+			consecutive = -1;
 			break;
 
 		default:

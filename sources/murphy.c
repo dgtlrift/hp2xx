@@ -176,14 +176,20 @@ void murphy_wideline(DevPt p0, DevPt p1, int width, int miter)
 
 	for (q = 0; dd <= tk; q++) {	/* outer loop, stepping perpendicular to line */
 
+				/* store start of line for miter calculation */
+		if (q==0) 
+			ml1=pt;
+		else
+			ml2=pt;
 		murphy_paraline(pt, d1);	/* call to inner loop - right edge */
-		if (q == 0) {
-			ml1 = pt;
+		
+				/* store end of line for miter calculation */
+		if (q == 0) 
 			ml1b = murphy.temp;
-		} else {
-			ml2 = pt;
+		else 
 			ml2b = murphy.temp;
-		}
+		
+		
 		if (d0 < murphy.kt) {	/* square move  - M2 */
 			if (murphy.oct2 == 0) {
 				if (murphy.quad4 == 0) {
@@ -256,26 +262,30 @@ int miter;
 DevPt ml1b, ml2b, ml1, ml2;
 
 {
-	int ftmp1, ftmp2;
-	DevPt m1, m2, *p_act;
-	DevPt fi, la, cur;
+	int ftmp1, ftmp2,ftmp3,ftmp4;
+	DevPt m1, m2, c1, c2, *p_act;
+	DevPt fi, la, cur,cur2;
 
-	if (miter > 1) {
+/* murphy.[first/last] contains the vertices of the rectangle that forms
+   the preceding line, ml?/ml?b those of the current line. As drawing direction
+   can be reversed between consecutive lines, e.g in arcs and circles, we
+   first need to determine which of their midpoints is closer to the 
+   current position */
+
+	if (miter > 0) {
 		if (murphy.first1.x != -10000000) {
 			fi.x = (murphy.first1.x + murphy.first2.x) / 2;
 			fi.y = (murphy.first1.y + murphy.first2.y) / 2;
 			la.x = (murphy.last1.x + murphy.last2.x) / 2;
 			la.y = (murphy.last1.y + murphy.last2.y) / 2;
-			cur.x = (ml1.x + ml2.x) / 2;
-			cur.y = (ml1.y + ml2.y) / 2;
+			cur.x = (ml1.x + ml2.x) / 2.;
+			cur.y = (ml1.y + ml2.y) / 2.;
 			ftmp1 =
-			    (fi.x - cur.x) * (fi.x - cur.x) + (fi.y -
-							       cur.y) *
-			    (fi.y - cur.y);
+			    (fi.x - cur.x) * (fi.x - cur.x) 
+			      + (fi.y - cur.y) * (fi.y - cur.y);
 			ftmp2 =
-			    (la.x - cur.x) * (la.x - cur.x) + (la.y -
-							       cur.y) *
-			    (la.y - cur.y);
+			    (la.x - cur.x) * (la.x - cur.x) 
+			      + (la.y - cur.y) * (la.y - cur.y);
 			if (ftmp1 <= ftmp2) {
 				m1 = murphy.first1;
 				m2 = murphy.first2;
@@ -283,28 +293,39 @@ DevPt ml1b, ml2b, ml1, ml2;
 				m1 = murphy.last1;
 				m2 = murphy.last2;
 			}
-			ftmp2 =
-			    (m2.x - ml2b.x) * (m2.x - ml2b.x) + (m2.y -
-								 ml2b.y) *
-			    (m2.y - ml2b.y);
-			ftmp1 =
-			    (m2.x - ml2.x) * (m2.x - ml2.x) + (m2.y -
-							       ml2.y) *
-			    (m2.y - ml2.y);
-
-			if (abs(ftmp2) >= abs(ftmp1)) {
-				ftmp1 = ml2b.x;
-				ftmp2 = ml2b.y;
-				ml2b.x = ml2.x;
-				ml2b.y = ml2.y;
-				ml2.x = ftmp1;
-				ml2.y = ftmp2;
-				ftmp1 = ml1b.x;
-				ftmp2 = ml1b.y;
-				ml1b.x = ml1.x;
-				ml1b.y = ml1.y;
-				ml1.x = ftmp1;
-				ml1.y = ftmp2;
+			c1=ml1;
+			c2=ml2;
+			cur2.x = (ml1b.x + ml2b.x) / 2.;
+			cur2.y = (ml1b.y + ml2b.y) / 2.;
+			ftmp3 =
+			    (fi.x - cur2.x) * (fi.x - cur2.x) 
+			      + (fi.y - cur2.y) * (fi.y - cur2.y);
+			ftmp4 =
+			    (la.x - cur2.x) * (la.x - cur2.x) 
+			      + (la.y - cur2.y) * (la.y - cur2.y);
+		if (ftmp3<MIN(ftmp1,ftmp2) || ftmp4<MIN(ftmp1,ftmp2) ) {	      
+			c1=ml1b;
+			c2=ml2b;
+			if (ftmp3 <= ftmp4) {
+				m1 = murphy.first1;
+				m2 = murphy.first2;
+			} else {
+				m1 = murphy.last1;
+				m2 = murphy.last2;
+			}
+		}	
+/* m1,m2 should now hold the left and right corners of the adjacent end of
+   the previous line, c1,c2 those of the current one. Next we need to make
+   sure that 'left' and 'right' corners are aligned, forming a convex polygon */
+		ftmp1= (m1.x-c1.x)*(m1.x-c1.x)+(m1.y-c1.y)*(m1.y-c1.y);
+		ftmp2= (m1.x-c2.x)*(m1.x-c2.x)+(m1.y-c2.y)*(m1.y-c2.y);
+		if (ftmp2<ftmp1) {
+			ftmp1=c1.x;
+			ftmp2=c1.y;
+			c1.x=c2.x;
+			c1.y=c2.y;
+			c2.x=ftmp1;
+			c2.y=ftmp2;
 			}
 
 /*draw outline of miter segment */
@@ -314,24 +335,24 @@ DevPt ml1b, ml2b, ml1, ml2;
 					    murphy.color);
 			} while (bresenham_next() != BRESENHAM_ERR);
 
-			p_act = bresenham_init(&m1, &ml1b);
+			p_act = bresenham_init(&m1, &c1);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
 					    murphy.color);
 			} while (bresenham_next() != BRESENHAM_ERR);
 
-			p_act = bresenham_init(&ml1b, &ml2b);
+			p_act = bresenham_init(&c1, &c2);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
 					    murphy.color);
 			} while (bresenham_next() != BRESENHAM_ERR);
 
-			p_act = bresenham_init(&ml2b, &m2);
+			p_act = bresenham_init(&c2, &m2);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
 					    murphy.color);
 			} while (bresenham_next() != BRESENHAM_ERR);
-			polygon_PicBuf(m1, m2, ml1b, ml2b, murphy.color,
+			polygon_PicBuf(m1, m2, c1, c2, murphy.color,
 				       murphy.pb);
 		}
 	}

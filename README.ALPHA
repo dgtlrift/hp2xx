@@ -1,4 +1,23 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a9
+
+New features:
+
+- EPS driver now creates a postscript file (including the PageSize Feature, 
+  which - unlike the BoundingBox is honored by ghostscript et al.) when
+  used with -S 1 option (suggested by Hannu Virtanen). Note that 3.5 also
+  will have a full-featured postscript driver (currently needing just some
+  more work in polygon and fill handling). 
+
+Bug fixes:
+
+- reverted the 'Esc%0A acts as pagebreak' change of a8, as it broke files
+  like our spectrum.plt example where it is immediately followed by Esc%0B. 
+  This may have to become a configurable option.
+- Fixed several bugs in the 'wide line miter' code that could lead to 
+  spurious lines being drawn and miter regions being left unfilled.
+- Made automatic closing of polygons by PM2 work again.
+
 3.5.0a8
 
 New features:
