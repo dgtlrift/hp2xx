@@ -421,6 +421,7 @@ int	i;
   pg->td	= NULL;
   pg->xx_mode	= XX_PRE;
   pg->nofill	= FALSE;
+  pg->no_ps	= FALSE;
   pg->quiet	= FALSE;
   pg->maxpensize= 0.1;		/* 1/10 mm		*/
   pg->maxcolor	= 1;		/* max. color index		*/

@@ -6,6 +6,7 @@ New features:
   crude approximations (Andrew J. Bird, using a 'wide line Bresenham' 
   algorithm by Alan Murphy of IBM that was released into the public 
   domain through an IBM Technical Bulletin)
+- Added support for (most of) the LA command (Andrew J. Bird)
 
 Bug fixes:
 
@@ -27,7 +28,8 @@ Bug fixes:
   misinterpretation of further arguments to BP, specifically title strings
 - Escape sequences inside PJL headers (two or more header lines starting
   with 'Esc-12345X') are now handled gracefully
-
+- Removed memory leak in the X11 previewers' zoom function
+- PDF output could omit lines in some cases
 
 Changes from 3.4.1 to 3.4.2
 

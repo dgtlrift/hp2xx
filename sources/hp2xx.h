@@ -209,7 +209,7 @@ typedef	struct {
 
 
 typedef enum {
-	NOP, MOVE_TO, DRAW_TO, PLOT_AT, SET_PEN, DEF_PW, DEF_PC, CMD_EOF
+	NOP, MOVE_TO, DRAW_TO, PLOT_AT, SET_PEN, DEF_PW, DEF_PC, DEF_LA, CMD_EOF
 } PlotCmd;
 
 

@@ -369,7 +369,7 @@ REDRAW:
 		col_start=saved_col;
 
 		}	
-		free(po->picbuf);
+		free_PicBuf(po->picbuf);
 		po->picbuf=NULL;    
 	      TMP_to_BUF(pg, po);
 	      pb=po->picbuf;

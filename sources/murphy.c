@@ -1,3 +1,25 @@
+/*
+   Copyright (c) 2002 Andrew Bird  All rights reserved.
+   Distributed by Free Software Foundation, Inc.
+
+This file is part of HP2xx.
+
+HP2xx is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY.  No author or distributor accepts responsibility
+to anyone for the consequences of using it or for whether it serves any
+particular purpose or works at all, unless he says so in writing.  Refer
+to the GNU General Public License, Version 2 or later, for full details.
+
+Everyone is granted permission to copy, modify and redistribute
+HP2xx, but only under the conditions described in the GNU General Public
+License.  A copy of this license is supposed to have been
+given to you along with HP2xx so you can know your rights and
+responsibilities.  It should be in a file named COPYING.  Among other
+things, the copyright notice and this notice must be preserved on all
+copies.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,6 +29,7 @@
 #include "murphy.h"
 #include "picbuf.h"
 #include "hp2xx.h"
+#include "hpgl.h"
 
 static struct {
    int color;
@@ -120,8 +143,8 @@ void murphy_wideline(DevPt p0, DevPt p1, int width) {  /* implements figure 5A -
       }
    }
 
-   tk = 4 * murphy_normconst(pt.x-p0.x,pt.y-p0.y) * murphy_normconst(murphy.u,
-   murphy.v); /* used here for constant thickness line */
+   tk = 4 * HYPOT(pt.x-p0.x,pt.y-p0.y) * HYPOT(murphy.u, murphy.v); /* used here for constant thickness line */
+
    for (q = 0; dd <= tk; q++) {  /* outer loop, stepping perpendicular to line */
 
       murphy_paraline(pt,d1);         /* call to inner loop - right edge */
@@ -186,18 +209,3 @@ void murphy_wideline(DevPt p0, DevPt p1, int width) {  /* implements figure 5A -
    }
 }
 
-double murphy_normconst(int u, int v) {
-   u = abs(u);
-   v = abs(v);
-
-#if 0
-   /* 12% thickness error - uses add and shift only */
-   return (u + v / 4);
-
-   /* 2.7% thickness error, uses compare, add and shift only */
-   return ((v + v + v) > u) ? u - (u / 8) + v / 2 : u + v / 8;
-#endif
-
-   /* ideal */
-   return sqrt(u * u + v * v);
-}

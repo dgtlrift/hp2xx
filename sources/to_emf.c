@@ -180,6 +180,13 @@ plotit(HANDLE outDC,const GEN_PAR *pg, const OUT_PAR *po)
 			}
 			if (err==pencolor) pencolor *=-1; /*current pen changed*/
 			break;
+                case DEF_LA:
+                        if(load_line_attr(pg->td) <0) {
+                             PError("Unexpected end of temp. file");
+ 			    err = ERROR;
+			    goto emf_exit;
+                        }
+                        break;
 		case MOVE_TO: // Moveto
 
 			HPGL_Pt_from_tmpfile (&pt1);

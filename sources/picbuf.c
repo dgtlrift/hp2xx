@@ -54,6 +54,7 @@ copies.
 #include "bresnham.h"
 #include "murphy.h"
 #include "pendef.h"
+#include "lindef.h"
 #include "picbuf.h"
 #include "hp2xx.h"
 
@@ -614,11 +615,22 @@ static void
    murphy_init(pb,pencolor);                                                                         /* Wide Lines */
    murphy_wideline(*p0,*p1, pensize);
 
-/* if(LA.Kind == 1) && (LA.Value == 4)) { */
-   if(1){
-      dot_PicBuf(p0,pensize,pencolor,pb);                                       /* Wide lines need Line Attributes */
-      dot_PicBuf(p1,pensize,pencolor,pb);                             /* make them round until we can implement LA */
+   if ( pensize > 0.35 ) {
+      switch (CurrentLineAttr.End) {
+         case LAE_butt:
+            break;
+         case LAE_square:   /* square + triangular not implemented yet */
+         case LAE_triangular:
+         case LAE_round:
+            dot_PicBuf(p0,pensize,pencolor,pb);
+            dot_PicBuf(p1,pensize,pencolor,pb);
+            break;
+      }
+   } else {
+      dot_PicBuf(p0,pensize,pencolor,pb);                                /* lines upto 0.35 always have round ends */
+      dot_PicBuf(p1,pensize,pencolor,pb);
    }
+
 }
 
 
@@ -655,7 +667,6 @@ int		pen_no = 1;
 			PError("Unexpected end of temp. file");
 			exit (ERROR);
 		}
-/*                printf("\npen number %d == %f\n",pen_no,ceil(pt.width[pen_no]*po->HP_to_xdots/0.025));*/
 		break;
 	  case DEF_PW:
                 if(!load_pen_width_table(pg->td)) {
@@ -667,6 +678,11 @@ int		pen_no = 1;
                 if(load_pen_color_table(pg->td) <0) {
                     PError("Unexpected end of temp. file");
 		    exit(ERROR);
+                }
+          case DEF_LA:
+                if(load_line_attr(pg->td) <0) {
+                    PError("Unexpected end of temp. file");
+                    exit(ERROR);
                 }
 		break;
 	  case MOVE_TO:

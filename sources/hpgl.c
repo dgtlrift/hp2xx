@@ -98,6 +98,7 @@
  ** 01/12/04	      MK   moved reinitialization of n_unknown and n_unexpected
  **			   from reset_HPGL to init_HPGL so that they are not overwritten
  **			   when a single drawing contains several IN statements
+ ** 02/06/02	      AJB  Moved HYPOT macro to hpgl.h - so we can use it in murphy.c
  **/
 
 #include <stdio.h>
@@ -111,6 +112,7 @@
 #include "clip.h"
 #include "pendef.h"
 #include "lindef.h"
+#include "hpgl.h"
 
 #define	ETX		'\003'
 
@@ -130,22 +132,19 @@
 #define P2Y_default   47520.
 
 
-#ifdef __TURBOC__
-#define	HYPOT(x,y)	sqrt((x)*(x)+(y)*(y))
-#else
-#define	HYPOT(x,y)	hypot(x,y)
-#endif
-
 #ifdef NORINT
 #define rint(a) (long)(a+0.5)
 #endif
 
 /**
- ** Globals needed in chardraw.c:
+ ** Globals needed in other source files:
  **/
-				/* Line type selected by HP-GL code     */
-				/* Currently effective line type        */
 LineType CurrentLineType = LT_solid;
+short scale_flag = FALSE;
+short record_off = FALSE;
+long vec_cntr_w = 0L;
+short silent_mode = FALSE;
+FILE *td;
 
 HPGL_Pt HP_pos = { 0 };		/* Actual plotter pen position  */
 HPGL_Pt P1 = { P1X_default, P1Y_default };	/* Scaling points */
@@ -187,25 +186,17 @@ static short rotate_flag = FALSE;	/* Flags tec external to HP-GL  */
 static short ps_flag = FALSE;
 static double rot_ang = 0.;
 static double rot_tmp = 0.;	/* saved RO value for resetting after drawing */
-short scale_flag = FALSE;
 static short mv_flag = FALSE;
 static short ct_dist = FALSE;
-#ifdef	ATARI
-extern short silent_mode = FALSE;	/* Don't clobber ATARI preview! */
-#else
-static short silent_mode = FALSE;
-#endif
 static short fixedcolor = FALSE;
 static short fixedwidth = FALSE;
-static short record_off = FALSE;
 static short first_page = 0;
 static int last_page = 0;
 static int n_unexpected = 0;
 static int n_unknown = 0;
 static int page_number = 1;
 static long vec_cntr_r = 0L;
-static long vec_cntr_w = 0L;
-static short pen = -1;
+static short pen = 1;
 static short pens_in_use[NUMPENS];
 static short pen_down = FALSE;	/* Internal HP-GL book-keeping: */
 static short plot_rel = FALSE;
@@ -216,9 +207,6 @@ static char StrTerm = ETX;	/* String terminator char       */
 static char *strbuf = NULL;
 static unsigned int strbufsize = MAX_LB_LEN + 1;
 static char symbol_char = '\0';	/* Char in Symbol Mode (0=off)  */
-
-static FILE *td;
-
 
 /* Known HPGL commands, ASCII-coded as High-byte/low-byte int's */
 
@@ -235,7 +223,7 @@ static FILE *td;
 #define BZ      0x425A
 #define CA      0x4341		/*MK */
 #define CI	0x4349
-#define CO	0x434F /*AJB*/
+#define CO	0x434F		/*AJB*/
 #define CP	0x4350
 #define CS      0x4353		/*MK */
 #define CT	0x4354
@@ -245,7 +233,7 @@ static FILE *td;
 #define DT	0x4454
 #define DV      0x4456
 #define EA	0x4541
-#define EC	0x4543 /*AJB*/
+#define EC	0x4543		/*AJB*/
 #define EP      0x4550
 #define ER      0x4552
 #define ES	0x4553
@@ -255,6 +243,7 @@ static FILE *td;
 #define IN	0x494E
 #define IP	0x4950
 #define IW      0x4957		/*MK */
+#define LA	0x4C41		/*AJB*/
 #define LB	0x4C42
 #define LO	0x4C4F
 #define LT	0x4C54
@@ -295,14 +284,12 @@ static FILE *td;
 #define WU      0x5755
 #define XT	0x5854
 #define YT	0x5954
-  static void
-par_err_exit (int code, int cmd)
-/*par_err_exit (short code, short cmd)*/
-{
+
+static void par_err_exit (int code, int cmd) {
+
   const char *msg;
 
-  switch (code)
-    {
+  switch (code) {
     case 0:
       msg = "Illegal parameters";
       break;
@@ -325,7 +312,7 @@ par_err_exit (int code, int cmd)
     default:
       msg = "Internal error";
       break;
-    }
+  }
   Eprintf ("\nError in command %c%c: %s\n", cmd >> 8, cmd & 0xFF, msg);
   Eprintf (" @ Cmd %ld\n", vec_cntr_w);
   exit (ERROR);
@@ -340,7 +327,7 @@ reset_HPGL (void)
   p_last.x = p_last.y = M_PI;
   pen_down = FALSE;
   plot_rel = FALSE;
-  pen = -1;
+  pen = 1;
 /*  n_unexpected = 0;
   n_unknown = 0;*/
   mv_flag = FALSE;
@@ -348,7 +335,8 @@ reset_HPGL (void)
   ct_dist = FALSE;
   CurrentLineType = LT_solid;
 
-  set_line_style_defaults ();
+  set_line_style_defaults();
+  set_line_attr_defaults();
 
   StrTerm = ETX;
   if (strbuf == NULL)
@@ -460,9 +448,7 @@ Plotter_to_User_coord (const HPGL_Pt * p_plot, HPGL_Pt * p_usr)
 
 
 
-static void
-PlotCmd_to_tmpfile (PlotCmd cmd)
-{
+void PlotCmd_to_tmpfile (PlotCmd cmd) {
   if (record_off)		/* Wrong page!  */
     return;
 
@@ -543,75 +529,9 @@ PlotCmd_to_tmpfile (PlotCmd cmd)
 }
 
 
-static void
-Pen_Width_to_tmpfile (int pen, PEN_W width)
-{
-  PEN_N tp;
-  PEN_W tw;
 
-  tp = pen;
-  tw = width;
 
-  if (record_off)		/* Wrong page!  */
-    return;
-
-  if (fwrite (&tp, sizeof (tp), 1, td) != 1)
-    {
-      PError ("Pen_Width_to_tmpfile - pen");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-  if (fwrite (&tw, sizeof (tw), 1, td) != 1)
-    {
-      PError ("Pen_Width_to_tmpfile - width");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-}
-
-static void
-Pen_Color_to_tmpfile (int pen, int red, int green, int blue)
-{
-  PEN_N tp;
-  PEN_C r, g, b;
-
-  tp = pen;
-  r = red;
-  g = green;
-  b = blue;
-
-  if (record_off)		/* Wrong page!  */
-    return;
-
-  if (fwrite (&tp, sizeof (tp), 1, td) != 1)
-    {
-      PError ("Pen_Color_to_tmpfile - pen");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-  if (fwrite (&r, sizeof (r), 1, td) != 1)
-    {
-      PError ("Pen_Color_to_tmpfile - red component");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-  if (fwrite (&g, sizeof (g), 1, td) != 1)
-    {
-      PError ("Pen_Color_to_tmpfile - green component");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-  if (fwrite (&b, sizeof (b), 1, td) != 1)
-    {
-      PError ("Pen_Color_to_tmpfile - blue component");
-      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
-      exit (ERROR);
-    }
-}
-
-static void
-HPGL_Pt_to_tmpfile (const HPGL_Pt * pf)
-{
+void HPGL_Pt_to_tmpfile (const HPGL_Pt * pf) {
   if (record_off)		/* Wrong page!  */
     return;
 
@@ -2559,6 +2479,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
   float mywidth, myheight;
   char tmpstr[1024];
   char SafeTerm;
+  static int FoundUserFill = 0;
 /**
  ** Each command consists of 2 characters. We unite them here to a single int
  ** to allow for easy processing within a big switch statement:
@@ -2713,14 +2634,15 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       if (filltype < 3)
 	break;
 
-      if (filltype > 4)
-	{
-	  if (!silent_mode)
-	    fprintf (stderr,
-		     "No support for user-defined fill types, using type 1 instead\n");
-	  filltype = 1;
-	  break;
-	}
+      if (filltype > 4) {
+        if(FoundUserFill==0) {
+           FoundUserFill=1;
+	   if (!silent_mode)
+	      fprintf (stderr, "\nNo support for user-defined fill types, using type 1 instead\n");
+         }
+	 filltype = 1;
+	 break;
+      }
 
       if (read_float (&ftmp, hd)){
       	hatchspace = saved_hatchspace[filltype-3];
@@ -2785,9 +2707,6 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	  pg->is_color = TRUE;
 	  PlotCmd_to_tmpfile (DEF_PC);
 	  Pen_Color_to_tmpfile (mypen, myred, mygreen, myblue);
-/*          set_color_rgb(mypen,myred,mygreen,myblue);
-	  pt.color[mypen] = mypen;
-*/
 	  break;
 	}
     case PD:			/* Pen  Down                    */
@@ -3490,6 +3409,9 @@ if (rotate_flag){
 	tp->eline = 0.0;	/* Supply default       */
       adjust_text_par ();
       break;
+    case LA:			/* Line Attributes */
+       set_line_attr(hd);
+       break;
     case LB:			/* Label string                 */
       read_string (strbuf, hd);
       plot_string (strbuf, LB_direct);
@@ -3883,6 +3805,7 @@ PlotCmd PlotCmd_from_tmpfile (void)
     case SET_PEN:
     case DEF_PW:
     case DEF_PC:
+    case DEF_LA:
       return cmd;
     case EOF:
     default:

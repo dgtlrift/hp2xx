@@ -14,7 +14,8 @@ double polyxmin,polyymin,polyxmax,polyymax;
 double scanx1,scanx2,scany1,scany2;
 HPGL_Pt segment[MAXPOLY];
 double segx,segy;
-int i, j, k, jj;
+static int i; /* to please valgrind when debugging memory accesses */
+int j, k, jj;
 int numlines;
 double penwidth = 1.;
 HPGL_Pt p;

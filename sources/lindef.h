@@ -1,3 +1,25 @@
+/*
+   Copyright (c) 2001-2002 Andrew Bird  All rights reserved.
+   Distributed by Free Software Foundation, Inc.
+
+This file is part of HP2xx.
+
+HP2xx is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY.  No author or distributor accepts responsibility
+to anyone for the consequences of using it or for whether it serves any
+particular purpose or works at all, unless he says so in writing.  Refer
+to the GNU General Public License, Version 2 or later, for full details.
+
+Everyone is granted permission to copy, modify and redistribute
+HP2xx, but only under the conditions described in the GNU General Public
+License.  A copy of this license is supposed to have been
+given to you along with HP2xx so you can know your rights and
+responsibilities.  It should be in a file named COPYING.  Among other
+things, the copyright notice and this notice must be preserved on all
+copies.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*/
 
 
 #ifndef __LINDEF_H
@@ -29,5 +51,43 @@ void set_line_style(SCHAR index, ...);
 void set_line_style_by_UL(FILE *hd);
 
 void print_line_style(void);
+
+/* line attributes */
+
+typedef enum { LAE_butt,
+               LAE_square,
+               LAE_triangular,
+               LAE_round 
+} LineEnds;
+
+typedef enum { LAJ_plain_miter,
+               LAJ_bevel_miter,
+               LAJ_triangular,
+               LAJ_round,
+               LAJ_bevelled,
+               LAJ_nojoin
+} LineJoins;
+
+typedef int LineLimit;
+
+typedef struct {
+   LineEnds  End;
+   LineJoins Join;
+   LineLimit Limit;
+} LineAttr;
+
+typedef enum { LineAttrEnd,
+               LineAttrJoin,
+               LineAttrLimit 
+} LineAttrKind;
+
+extern LineAttr CurrentLineAttr;
+extern LineEnds CurrentLineEnd;    /* used in pre tempfile context only */
+
+void set_line_attr_defaults(void);
+void set_line_attr(FILE *hd);
+void Line_Attr_to_tmpfile ( LineAttrKind kind, int value);
+int load_line_attr(FILE *td);
+
 
 #endif /* __LINDEF_H */

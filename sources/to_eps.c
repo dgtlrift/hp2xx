@@ -51,6 +51,7 @@ copies.
 #include "bresnham.h"
 #include "hp2xx.h"
 #include "pendef.h"
+#include "lindef.h"
 
 
 /*#define	A4_height	297*/	/* in [mm]	*/
@@ -62,6 +63,8 @@ static	float	xcoord2mm, ycoord2mm;
 static	float	xmin, ymin;
 
 
+void ps_set_linecap(LineEnds type,PEN_W pensize, HPGL_Pt *ppt, FILE *fd);
+void ps_draw_dot(HPGL_Pt *ppt,double radius, FILE *fd);
 
 
 /**
@@ -107,6 +110,36 @@ void	ps_set_linewidth (PEN_W width, HPGL_Pt *ppt, FILE *fd)
    return;
 }
 
+/**
+ ** Set line ends
+ **/
+void ps_set_linecap(LineEnds type,PEN_W pensize, HPGL_Pt *ppt, FILE *fd) {
+
+   static int lasttype = -1;
+
+   if(type != lasttype) {
+      ps_stroke_and_move_to (ppt, fd);	                                 /* MUST start a new path!	*/
+      if ( pensize > 0.35 ) {
+         switch (type) {
+            case LAE_butt:
+               fprintf(fd," %d setlinecap\n", 0);
+               break;
+            case LAE_round:
+            case LAE_triangular:                                /* triangular not implemented in PS/PDF */
+               fprintf(fd," %d setlinecap\n", 1);
+               break;
+            case LAE_square:
+               fprintf(fd," %d setlinecap\n", 2);
+               break;
+         }
+      } else {
+         fprintf  (fd," %d setlinecap\n", 1);
+      }
+      lasttype=type;
+   }
+   return;
+}
+
 
 
 /**
@@ -138,8 +171,9 @@ void	ps_line_to (HPGL_Pt *ppt, char mode, FILE *fd)
   linecount++;
 }
 
-
-
+void ps_draw_dot(HPGL_Pt *ppt,double radius, FILE *fd) {
+   fprintf(fd, " currentpoint newpath %0.2f 0 360 arc fill\n",radius);
+}
 
 
 /**
@@ -250,8 +284,8 @@ double	hmxpenw;
   fprintf(fd,"    SaveImage restore\n");
   fprintf(fd,"   } def\n");
 
-  fprintf(fd,"/@line\n");     /* set line parameters */
-  fprintf(fd,"   {1 setlinecap  %%%% Replace 1 by 0 for cut-off lines\n");
+  fprintf(fd,"/@line\n{");     /* set line parameters */
+/*   fprintf(fd,"   1 setlinecap  %%%% Replace 1 by 0 for cut-off lines\n"); */
   fprintf(fd,"    1 setlinejoin %%%% Replace 1 by 0 for cut-off lines\n");
   fprintf(fd,"%%%%    1 setmiterlimit    %%%%  Uncomment this for cut-off lines\n");
   fprintf(fd,"   } def\n");
@@ -370,8 +404,16 @@ to_eps (const GEN_PAR *pg, const OUT_PAR *po)
                 }
                 if (err==pencolor) pencolor *=-1; /*current pen changed*/
                 break;
+          case DEF_LA:
+                if(load_line_attr(pg->td) <0) {
+                    PError("Unexpected end of temp. file");
+		    err = ERROR;
+		    goto EPS_exit;
+                }
+                break;
 	  case MOVE_TO:
                 ps_set_linewidth(pensize, &pt1, md);
+                ps_set_linecap(CurrentLineAttr.End, pensize, &pt1, md);
 
                 if(pencolor <0) {
                     pencolor=pt.color[pen_no];
@@ -387,6 +429,7 @@ to_eps (const GEN_PAR *pg, const OUT_PAR *po)
 		break;
 	  case DRAW_TO:
                 ps_set_linewidth(pensize, &pt1, md);
+                ps_set_linecap(CurrentLineAttr.End, pensize, &pt1, md);
 
                 if(pencolor <0) {
                    pencolor=pt.color[pen_no];
@@ -402,6 +445,7 @@ to_eps (const GEN_PAR *pg, const OUT_PAR *po)
 		break;
 	  case PLOT_AT:
                 ps_set_linewidth(pensize, &pt1, md);
+                ps_set_linecap(CurrentLineAttr.End, pensize, &pt1, md);
 
                 if(pencolor<0) {
                    pencolor=pt.color[pen_no];
@@ -413,8 +457,9 @@ to_eps (const GEN_PAR *pg, const OUT_PAR *po)
 
 		HPGL_Pt_from_tmpfile (&pt1);
 		if (pensize > 0.05) {
-			ps_line_to (&pt1, 'M', md);
-			ps_line_to (&pt1, 'D', md);
+                   ps_line_to (&pt1, 'M', md);
+                   ps_line_to (&pt1, 'D', md); /* not sure whether this is needed */
+                   ps_draw_dot(&pt1,pensize/2,md);
 		}
 		break;
 	  default:

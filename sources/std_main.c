@@ -353,7 +353,7 @@ char	*p, cdummy;
 				Eprintf("Invalid size of pen %d: %c\n",	j, *p);
 				exit(ERROR);
 			}
-			pt.width[j] = *p - '0';
+			pt.width[j] = (*p - '0') / 10.0;
 			if (pg->maxpensize < pt.width[j])
 				pg->maxpensize = pt.width[j];
 		}

@@ -55,6 +55,7 @@ copies.
 
 #include "bresnham.h"
 #include "pendef.h"
+#include "lindef.h"
 #include "hp2xx.h"
 
 
@@ -509,14 +510,20 @@ HPGL_Pt         old_pt;
 		break;
 
 	  case DEF_PC:
-		     if(load_pen_color_table(pg->td)<0) {
+               if(load_pen_color_table(pg->td)<0) {
                     PError("Unexpected end of temp. file");
                     err = ERROR;
                     goto MF_exit;
-                	}
-
-			Eprintf("Warning, no PC support in vector modes!");
-			break;
+               }
+               Eprintf("Warning, no PC support in vector modes!");
+               break;
+          case DEF_LA:
+                if(load_line_attr(pg->td) <0) {
+                    PError("Unexpected end of temp. file");
+                    err = ERROR;
+                    goto MF_exit;
+                }
+               break;
 	  default:
 		Eprintf ("Illegal cmd in temp. file!");
 		err = ERROR;

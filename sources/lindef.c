@@ -1,3 +1,27 @@
+/*
+   Copyright (c) 2001-2002 Andrew Bird  All rights reserved.
+   Distributed by Free Software Foundation, Inc.
+
+This file is part of HP2xx.
+
+HP2xx is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY.  No author or distributor accepts responsibility
+to anyone for the consequences of using it or for whether it serves any
+particular purpose or works at all, unless he says so in writing.  Refer
+to the GNU General Public License, Version 2 or later, for full details.
+
+Everyone is granted permission to copy, modify and redistribute
+HP2xx, but only under the conditions described in the GNU General Public
+License.  A copy of this license is supposed to have been
+given to you along with HP2xx so you can know your rights and
+responsibilities.  It should be in a file named COPYING.  Among other
+things, the copyright notice and this notice must be preserved on all
+copies.
+
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+*/
+
+#include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <math.h>
@@ -9,8 +33,14 @@ double     CurrentLinePatLen;
 LineType   CurrentLineType;
 signed int CurrentLinePattern;
 
-
 LINESTYLE lt;
+
+LineAttr CurrentLineAttr;
+LineEnds CurrentLineEnd;
+
+/********************************************
+ * Line Style
+ ********************************************/
 
 void set_line_style(SCHAR index, ...){
    SCHAR count;
@@ -106,39 +136,22 @@ void set_line_style_by_UL(FILE *hd){
 void set_line_style_defaults() {
 /*                 Line  gap   Line  gap   Line   gap   Line  TERM        */
 
-/*-8 */
    set_line_style(-8, 25, 10, 0, 10, 10, 10, 0, 10, 25, -1);
-/*-7 */
    set_line_style(-7, 35, 10, 0, 10, 0, 10, 35, -1);
-/*-6 */
    set_line_style(-6, 25, 10, 10, 10, 10, 10, 25, -1);
-/*-5 */
    set_line_style(-5, 35, 10, 10, 10, 35, -1);
-/*-4 */
    set_line_style(-4, 40, 10,  0, 10, 40, -1);
-/*-3 */
    set_line_style(-3, 35, 30, 35, -1);
-/*-2 */
    set_line_style(-2, 25, 50, 25, -1);
-/*-1 */
    set_line_style(-1,  0,100, 0, -1);
-/* 0 */
    set_line_style( 0,  0,100, -1);
-/* 1 */
    set_line_style( 1,  0,100, -1);
-/* 2 */
    set_line_style( 2, 50, 50, -1);
-/* 3 */
    set_line_style( 3, 70, 30, -1);
-/* 4 */
    set_line_style( 4, 80, 10,  0, 10, -1);
-/* 5 */
    set_line_style( 5, 70, 10, 10, 10, -1);
-/* 6 */
    set_line_style( 6, 50, 10, 10, 10, 10, 10, -1);
-/* 7 */
    set_line_style( 7, 70, 10, 0, 10, 0, 10, -1);
-/* 8 */
    set_line_style( 8, 50, 10, 0, 10, 10, 10, 0, 10, -1);
 }
 
@@ -160,5 +173,156 @@ void print_line_style(void) {
       }
       printf("\n");
    }
+}
+
+
+/************************************************* 
+ *  Line Attributes
+ *************************************************/
+
+void set_line_attr_defaults(void){
+   PlotCmd_to_tmpfile (DEF_LA);
+   Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
+
+#ifdef LA_JOINS_LIMIT_SUPPORT
+   PlotCmd_to_tmpfile (DEF_LA);
+   Line_Attr_to_tmpfile(LineAttrJoin,LAJ_plain_miter);
+
+   PlotCmd_to_tmpfile (DEF_LA);
+   Line_Attr_to_tmpfile(LineAttrLimit,5);   /* 5 times line width */
+#endif
+}
+
+void set_line_attr(FILE *hd){
+   float ftmp1;
+   float ftmp2;
+
+   for (;;) {
+      if (read_float (&ftmp1, hd)) { /* No kind found        */
+         set_line_attr_defaults();
+         return;
+      }
+      if (read_float (&ftmp2, hd)) { /* No value found       */
+         /* do_error */
+         break;
+      }
+
+      PlotCmd_to_tmpfile (DEF_LA);
+
+      switch ((int)ftmp1) {
+         case 1: 
+            switch ((int)ftmp2) {
+               case 1:
+                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
+                  break;
+               case 2:
+                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_square);
+                  break;
+               case 3:
+                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_triangular);
+                  break;
+               case 4:
+                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_round);
+                  break;
+               default:
+                  Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
+                  break;
+            }
+            break;
+         case 2:
+            switch ((int)ftmp2) {
+               case 1:
+                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_plain_miter);
+                  break;
+               case 2:
+                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_bevel_miter);
+                  break;
+               case 3:
+                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_triangular);
+                  break;
+               case 4:
+                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_round);
+                  break;
+               case 5:
+                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_bevelled);
+                  break;
+               case 6:
+                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_nojoin);
+                  break;
+               default:
+                  Line_Attr_to_tmpfile(LineAttrJoin,LAJ_plain_miter);
+                  break;
+            }
+            break;
+         case 3:
+            Line_Attr_to_tmpfile(LineAttrLimit,(int)ftmp2);
+            break;
+      }
+   }
+   return;
+}
+
+void Line_Attr_to_tmpfile ( LineAttrKind kind, int value) {
+   LineAttrKind tk=kind;
+   int tv=value;
+
+   if (record_off)             /* return if current plot is not the selected one */
+      return;                  /* (of a multi-image file) */
+   
+   if(kind == LineAttrEnd)     /* save this so we may save/restore the current state before character draw */ 
+      CurrentLineEnd=value;
+
+   if (fwrite (&tk, sizeof (tk), 1, td) != 1) {
+      PError ("Line_Attr_to_tmpfile - kind");
+      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
+      exit (ERROR);
+   }
+
+   if (fwrite (&tv, sizeof (tv), 1, td) != 1) {
+      PError ("Line_Attr_to_tmpfile - value");
+      Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
+      exit (ERROR);
+   }
+
+   return;
+}
+
+int load_line_attr(FILE *td){
+  
+   LineAttrKind kind;
+   static int FoundJoin = 0;
+   static int FoundLimit = 0;
+
+   if (fread( (void *) &kind,sizeof(kind),1,td) != 1) {
+      return(-1);
+   }
+
+   switch(kind) {
+      case LineAttrEnd:
+         if (fread( (void *) &CurrentLineAttr.End,sizeof(CurrentLineAttr.End),1,td) != 1) {
+            return(-1);
+         }
+         break;
+      case LineAttrJoin:
+         if(!FoundJoin) {
+            if(!silent_mode) fprintf(stderr,"\nLA - Joins not supported\n");
+            FoundJoin=1;
+         }
+         if (fread( (void *) &CurrentLineAttr.Join,sizeof(CurrentLineAttr.Join),1,td) != 1) {
+            return(-1);
+         }
+         break;
+      case LineAttrLimit:
+         if(!FoundLimit) {
+            if(!silent_mode) fprintf(stderr,"\nLA - Limit not supported\n");
+            FoundLimit=1;
+         }
+         if (fread( (void *) &CurrentLineAttr.Limit,sizeof(CurrentLineAttr.Limit),1,td) != 1) {
+            return(-1);
+         }
+         break;
+   }
+
+   return(0);
 }
 

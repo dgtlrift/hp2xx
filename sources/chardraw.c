@@ -45,6 +45,7 @@ copies.
 #include "bresnham.h"
 #include "hp2xx.h"
 #include "lindef.h"
+#include "hpgl.h"
 #include "chardraw.h"
 #include "charset0.h"
 #include "charset1.h"
@@ -108,15 +109,18 @@ ASCII_to_char (int c)
  ** of move/draw vectors which draw a corresponding character
  **/
 {
-HPGL_Pt	p;
-char	*ptr;
-int outside=0;
+   HPGL_Pt	p;
+   char	*ptr;
+   int outside=0;
+   int SafeLineType = CurrentLineType;
+   LineEnds SafeLineEnd = CurrentLineEnd;
 
-  int SafeLineType = CurrentLineType;
-  CurrentLineType = LT_solid;
+   CurrentLineType = LT_solid;
+   PlotCmd_to_tmpfile (DEF_LA);
+   Line_Attr_to_tmpfile(LineAttrEnd,LAE_round);
 
-  switch (tp->font)
-  {
+   switch (tp->font)
+   {
     case 0:	/* charset 0, limited to 7 bit ASCII - 8bit addressing maps to charset 7	*/
 
 	if (c & 0x80)
@@ -748,6 +752,9 @@ if (c == 101 ) { /* backspacing for special characters  */
   tp->refpoint.y += tp->chardiff.y;
   CurrentLineType = SafeLineType;
 
+  /* Restore Line Ends */
+  PlotCmd_to_tmpfile (DEF_LA);
+  Line_Attr_to_tmpfile(LineAttrEnd,SafeLineEnd);
 
 }
 

@@ -12,6 +12,7 @@ makefile     This should normally be a copy of (or symbolic link to)
 	     or an appropriately edited copy of ../makes/generic.mak
 	     As distributed, it is what i use myself on Linux.
 bresnham.c   Implementation of Bresenham algorithm (for line rasterization)
+murphy.c     Implementation of Alan Murphys (IBM) thick line algorithm 
 chardraw.c   Code for drawing ASCII characters
 getopt.c     from GNU getopt, slightly modified -- don't re-distribute!
 getopt1.c    from GNU getopt -- don't re-distribute, use original!
@@ -21,6 +22,7 @@ no_prev.c    A dummy previewer
 picbuf.c     Code for raster ops (vector-to-internal-bitmap)
 std_main.c   Traditional command line interface including "main()"
 clip.c       Auxiliary routines for clipping (IW command)
+pendef.c     Pen colour / width routines
 to_amiga.c   AMIGA previewer
 to_atari.c   ATARI previewer
 to_dj_gr.c   DOS full-screen (S)VGA previewer, based on DJ Delorie's gr lib
@@ -49,6 +51,7 @@ to_fig.c     Output converter for FIG (XFig) format
 to_tif.c     Output converter for TIFF format (requires libtiff)
 
 bresnham.h   Contains a basic struct -- needed by almost all C sources
+murphy.h     Function declarations for thick line algorithm
 chardraw.h   Header for character drawing.
 charset0.h   Definition of built-in font 0 , ANSI ASCII 
 charset1.h   Definition of built-in font 1 , 9825 character set
@@ -62,10 +65,12 @@ font173.h    Definition of built-in PS Math font
 font205.h    Definition of built-in Ventura Math font
 getopt.h     from GNU getopt -- don't re-distribute, use original!
 hp2xx.h      Central to almost all C sources
+pendef.h     Function declarations and typedefs for pen
 iff.h        AMIGA only: for IFF-InterLeave BitMap converter
 ilbm.h       AMIGA only: for IFF-InterLeave BitMap converter
 x11.h        Some X11 extras
 clip.h       Some declarations for clip.c
+
 
 
 NOTE about unsupported formats (HWW - these are even less supported now, MK):
