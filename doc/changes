@@ -1,5 +1,13 @@
 Changes to hp2xx:
 =================
+3.4.3a17:
+Fixed incompletely applied patch for endcap selection in a16. Added 
+experimental code for filling the miter section on wide lines to correct
+the rendering of arcs and circles drawn with wide pens (replaces the arcs
+hack of a16). Fixes size_PicBuf (buffer could be one pixel line too small
+depending on penwidths and line endings - this will probably need more work
+when (if) we do mitering).
+
 3.4.3a16:
 Reverted line end changes from a15 (thin lines should already be handled in 
 other parts of the code, only this was broken in the raster modes). Modified 

@@ -1,0 +1,9 @@
+CO Concentric circles drawn with different linewidths;
+PU 500,500;
+CI50,1;
+PW0.4
+CI100,1;
+PW0.8
+CI200,1;
+PW2.5
+CI500,1;

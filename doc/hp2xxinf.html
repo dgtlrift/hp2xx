@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
-<!-- Created on August, 3  2002 by texi2html 1.65 -->
+<!-- Created on September, 1  2002 by texi2html 1.65 -->
 <!-- 
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -36,7 +36,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 </P><P>
 
-This is Edition 1.3, July 2002, for HP2XX Version 3.4.3
+This is Edition 1.3, September 2002, for HP2XX Version 3.4.3
 </P><P>
 
 <BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
@@ -46,7 +46,7 @@ This is Edition 1.3, July 2002, for HP2XX Version 3.4.3
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC22">4. Installation and modification notes</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC29">A. Known HP-GL commands</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC30">B. Option summary</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC39">C. Acknowledgements</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC39">C. Acknowledgements</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">Acknowledgement, Copyright notice</TD></TR>
 </TABLE></BLOCKQUOTE>
 <P>
 
@@ -379,8 +379,12 @@ is selected.
 
 <CODE>hp2xx</CODE> emulates a carousel of up to 8 pens of various colors and sizes.
 By default, all pens are present, have <VAR>foreground</VAR> color
-(typically <VAR>black</VAR>), and their tip thicknesses are one unit
-(here: 1/10 <CODE>mm</CODE> for vector modes, 1 pixel for raster modes).
+(typically <VAR>black</VAR>), and their tip thicknesses are one unit (1/10 <CODE>mm</CODE>).
+(NOTE: in versions before 3.4.2, pen widths in raster modes were counted in
+pixels, so the default in those versions was 1/10 <CODE>mm</CODE> for vector modes,
+1 pixel for raster modes).
+</P><P>
+
 HPGL/2 commands NP,PC,PW may override this for up to 255 freely configurable
 pens.
 </P><P>
@@ -388,11 +392,13 @@ pens.
 Pen colors and sizes are represented by digits to allow for a compact
 option list. There are 8 colors including <VAR>background</VAR> (usually white).
 See section <A HREF="hp2xxinf.html#SEC30">B. Option summary</A>, the Option Summary, for a list of all colors. E.g., color 3 is green,
-and color 7 means yellow. Permitted pen sizes are 0 ... 9 units.
+and color 7 means yellow. Permitted pen sizes are 0 ... 9 units in versions 
+before 3.4.3, or up to 3.5mm (using characters A to Z to denote the range from
+1.0 to 3.5) in later versions.
 WARNING: In versions of <CODE>hp2xx</CODE> before 3.4.3, all raster mode pen sizes 
 were approximated by double, triple, etc. width, and lines wider than 4 would
 normally not give useful results. In 3.4.3, the line drawing algorithm has
-been substantially improved and should render accurate pen widths. 
+been substantially improved and should render accurately scaled pen widths. 
 </P><P>
 
 Options `<SAMP>-c <VAR>c-string</VAR></SAMP>' and `<SAMP>-s <VAR>s-string</VAR></SAMP>' tell
@@ -421,7 +427,7 @@ pens keep `<SAMP>foreground</SAMP>' color, e.g., black.
 If your HP-GL file contains the PC and/or PW commands introduced with
 HP-GL/2, these are interpreted to allow up to 255 pens. The special case
 where a pen is redefined to take on different colors is currently only
-supported in PostScript output mode. In all other modes, the last PC
+supported in PostScript or PDF output mode. In all other modes, the last PC
 command encountered determines that pens' color for the entire plot.
 </P><P>
 
@@ -2659,7 +2665,7 @@ the following structure:
 <BR>  
 <FONT SIZE="-1">
 This document was generated
-on <I>August, 3  2002</I>
+on <I>September, 1  2002</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
 </FONT>

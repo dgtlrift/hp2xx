@@ -1,5 +1,10 @@
 Recent changes :
 =================
+
+3.4.3a17:
+Fixed incompletely applied patch for endcap selection in a16. Added 
+experimental code for filling the miter section on wide lines.
+
 3.4.3a16:
 Reverted line end changes from a15 (thin lines should already be handled in 
 other parts of the code, only this was broken in the raster modes). Modified 

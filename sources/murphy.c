@@ -38,9 +38,11 @@ static struct {
    int ku,kt,kv,kd;               /* loop constants */
    int oct2;
    int quad4;
+	DevPt last1,last2;
 } murphy;
 
-#ifdef NORINT
+
+#ifdef NORINT 
 #define lrint(a) ((long)(a+0.5))
 #endif
 
@@ -82,9 +84,12 @@ void murphy_wideline(DevPt p0, DevPt p1, int width) {  /* implements figure 5A -
 
    float offset = width/2;
 
-   DevPt pt;
-   int d0, d1;                    /* difference terms d0=perpendicular to line, d1=along line */
+   DevPt pt,ptx,ml1,*p_act;
+DevPt fill1,fill2;
+int dist1,dist2,miter;
 
+   int d0, d1;                    /* difference terms d0=perpendicular to line, d1=along line */
+int i;
    int q;                       /* pel counter,q=perpendicular to line */
    int tmp;
 
@@ -149,10 +154,21 @@ void murphy_wideline(DevPt p0, DevPt p1, int width) {  /* implements figure 5A -
 
    tk = 4 * HYPOT(pt.x-p0.x,pt.y-p0.y) * HYPOT(murphy.u, murphy.v); /* used here for constant thickness line */
 
+	dist1=(pt.x-murphy.last1.x)*(pt.x-murphy.last1.x)+(pt.y-murphy.last1.y)*(pt.y-murphy.last1.y);
+	dist2=(pt.x-murphy.last2.x)*(pt.x-murphy.last2.x)+(pt.y-murphy.last2.y)*(pt.y-murphy.last2.y);
+	if(dist1>dist2){
+	ptx=murphy.last1;
+	murphy.last1=murphy.last2;
+	murphy.last2=ptx;
+	}
+	miter=0;
+	if (MAX(dist1,dist2)<= width*width*4) miter=1;
+	ptx=pt;
+
    for (q = 0; dd <= tk; q++) {  /* outer loop, stepping perpendicular to line */
 
       murphy_paraline(pt,d1);         /* call to inner loop - right edge */
-
+	if (q==0) ml1=pt;
       if (d0 < murphy.kt) {            /* square move  - M2 */
          if(murphy.oct2 == 0) {
             if(murphy.quad4 == 0) {
@@ -194,8 +210,23 @@ void murphy_wideline(DevPt p0, DevPt p1, int width) {  /* implements figure 5A -
                }
             }
             d1 += murphy.kd;
-            if (dd > tk)
+            if (dd > tk){
+	if (miter==1){
+	for (i=0;i<width*2;i++){
+	fill1.x=murphy.last1.x-i* (murphy.last1.x-murphy.last2.x)/(width*2);
+	fill1.y=murphy.last1.y-i* (murphy.last1.y-murphy.last2.y)/(width*2);
+	fill2.x=ptx.x-i*(ptx.x-pt.x)/(width*2);
+        fill2.y=ptx.y-i*(ptx.y-pt.y)/(width*2);
+       p_act = bresenham_init (&fill2, &fill1);
+      do {                
+	 plot_PicBuf (murphy.pb, p_act, murphy.color);
+      } while (bresenham_next() != BRESENHAM_ERR);
+      }
+    }
+	murphy.last2=pt;
+	murphy.last1=ml1;
                return;          /* breakout on the extra line */
+            }
             murphy_paraline(pt,d1);
             if(murphy.oct2 == 0) {
                if(murphy.quad4 == 0) {
@@ -211,5 +242,20 @@ void murphy_wideline(DevPt p0, DevPt p1, int width) {  /* implements figure 5A -
       dd += murphy.ku;
       d0 += murphy.kv;
    }
+	if (miter==1){
+	for (i=0;i<width*2;i++){
+	fill1.x=murphy.last1.x-i* (murphy.last1.x-murphy.last2.x)/(width*2);
+	fill1.y=murphy.last1.y-i* (murphy.last1.y-murphy.last2.y)/(width*2);
+	fill2.x=ptx.x-i*(ptx.x-pt.x)/(width*2);
+        fill2.y=ptx.y-i*(ptx.y-pt.y)/(width*2);
+       p_act = bresenham_init (&fill2, &fill1);
+      do {                
+	 plot_PicBuf (murphy.pb, p_act, murphy.color);
+      } while (bresenham_next() != BRESENHAM_ERR);
+      }
+    }
+    
+	murphy.last2=pt;
+	murphy.last1=ml1;
 }
 

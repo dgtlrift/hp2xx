@@ -321,11 +321,8 @@ int maxps;
   HP_Pt.y  = po->ymax;
   HPcoord_to_dotcoord (&HP_Pt, &D_Pt, po);
   /* Pensize correction	*/
- /* maxps= (int)(1. + pg->maxpensize *po->HP_to_xdots/0.025); */
-   maxps = ceil(pg->maxpensize *po->HP_to_xdots/0.025); 
-/*  maxps= pg->maxpensize; */
-                         /* thick lines are drawn to penwidth - not currently scaled */
-                         /* so we must do the same when calculating limits - or we try to draw outside page */ 
+/*  maxps= (int)(1. + pg->maxpensize *po->HP_to_xdots/0.025); */
+   maxps = 1+ceil(pg->maxpensize *po->HP_to_xdots/0.025); 
    X_Offset = maxps / 2;
    Y_Offset = maxps / 2;
 
@@ -619,7 +616,7 @@ static void
    murphy_init(pb,pencolor);                                                                         /* Wide Lines */
    murphy_wideline(*p0,*p1, linewidth);
 
-   if ( linewidth > 0.35 ) {
+   if ( pensize > 0.35 ) {
       switch (CurrentLineAttr.End) {
          case LAE_square:        /* square not implemented yet */
          case LAE_butt:

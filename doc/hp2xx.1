@@ -19,7 +19,8 @@ General options:
   -m   char *  pre       Mode. Valid (some are compile-time options):
                          mf,cad,dxf,em,emf,epic,eps,escp2,fig,jpg,gpt,hpgl,rgip,pcl,pcx,pic,img,pbm,png,pre,svg,tiff,pdf 
   -p   char *  11111111  Pensize(s) [dots] (default), [1/10 mm] (mf, ps).
-                         Valid: 1 to 8 digits of 0-9 each.
+                         Valid: 1 to 8 digits of 0-9 (or characters A-Z for
+			 widths beyond 0.9mm) each.
   -P   int     0:0       Selected page range (m:n) (0 = 0:0 = all pages)
   -q           off       Quiet mode. No diagnostic output.
   -r   double  0.0       Rotation angle [deg]. -r90 gives landscape

@@ -2040,10 +2040,9 @@ arcs (int relative, FILE * hd)
 {
   HPGL_Pt p, d, center;
   float alpha, eps;
-  double phi, phi0, r;
+  double phi, phi0, r; 
   double SafeLinePatLen = CurrentLinePatLen;
-  LineEnds SafeLineEnd=CurrentLineEnd;
- 
+
   if (read_float (&p.x, hd))	/* No number found      */
     return;
 
@@ -2104,22 +2103,17 @@ arcs (int relative, FILE * hd)
       /*      Pattern length = chord length           */
       CurrentLinePatLen = HYPOT (p.x, p.y);
     }
-PlotCmd_to_tmpfile(DEF_LA);
-Line_Attr_to_tmpfile(LineAttrEnd,LAE_round);
+
   if (alpha > 0.0)
     {
       for (phi = phi0 + MIN (eps, alpha); phi < phi0 + alpha; phi += eps)
 	arc_increment (&center, r, phi);
-PlotCmd_to_tmpfile(DEF_LA);
-Line_Attr_to_tmpfile(LineAttrEnd,SafeLineEnd);
       arc_increment (&center, r, phi0 + alpha);	/* to endpoint */
     }
   else
     {
       for (phi = phi0 - MIN (eps, -alpha); phi > phi0 + alpha; phi -= eps)
 	arc_increment (&center, r, phi);
-PlotCmd_to_tmpfile(DEF_LA);
-Line_Attr_to_tmpfile(LineAttrEnd,SafeLineEnd);
       arc_increment (&center, r, phi0 + alpha);	/* to endpoint */
     }
   CurrentLinePatLen = SafeLinePatLen;	/* Restore */
