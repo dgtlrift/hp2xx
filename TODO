@@ -1,0 +1,16 @@
+- There are still lots of unsupported fonts, and some of the existing
+  characters are ugly (and perhaps even wrong), as i sketched them after
+  the small illustrations in an old manual.
+- Polygon commands are missing (every polygon command acts like PM...EP now,
+  as the pen movements are immediately interpreted)
+- Fill commands (FT, FP, RA,RR, WG) are unsupported
+- Polyline Encoded does not yet understand fractional coordinates
+- [full] color support may be buggy in some modes, and is not implemented
+  in the Sun, OS/2 and MS Windows modules
+- The OS/2 PM and other modules that H.Werntges had already marked as
+  'unsupported' in 3.2.0 have now fallen even farther behind
+- to_vga, to_atari and to_sunvw do not yet support more than eight colors
+  (contributions from MS DOS/Windows, OS/2, Atari and Sun users needed).
+- Automatic selection of paper size has not been tested beyond A3 format.
+- This version has only been tested on various Unix systems 
+  

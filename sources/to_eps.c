@@ -1,5 +1,7 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
+   Parts Copyright (c) 1999  Martin Kroeker  All rights reserved.
+   
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.

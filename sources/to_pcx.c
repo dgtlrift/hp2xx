@@ -1,5 +1,7 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
+   Parts Copyright (c) 1999  Martin Kroeker  All rights reserved.
+   
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -342,6 +344,13 @@ Byte    mask, *p_R=NULL, *p_G=NULL, *p_B=NULL, *p_I=NULL;
 				mask = 0x80;
 				if ((i = x & 0x07) != 0)
 					mask >>= i;
+
+	*(p_R + offset ) |= ( mask ^ ( pg->Clut[color_index][0] & mask ) );
+	*(p_G + offset ) |= ( mask ^ ( pg->Clut[color_index][1] & mask ) );
+        *(p_B + offset ) |= ( mask ^ ( pg->Clut[color_index][2] & mask ) ); 
+
+
+/*
 				switch (color_index)
 				{
 				  case xxForeground:
@@ -372,8 +381,10 @@ Byte    mask, *p_R=NULL, *p_G=NULL, *p_B=NULL, *p_I=NULL;
 					*(p_B + offset) |= mask;
 					break;
 				  default:
+
 					break;
 				}
+*/
 		}
 		Buf_to_PCX (p_R, po->picbuf->nb, fd);
 		Buf_to_PCX (p_G, po->picbuf->nb, fd);

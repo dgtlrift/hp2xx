@@ -1,0 +1,53 @@
+hp2xx-3.3.0
+
+Several years have passed now since the last release, 3.2.0, of HP2XX was
+made by its original author, Heinz W. Werntges. 
+As both the FSF and the previous contributors to hp2xx have lost contact
+with him, i have combined my own extensions to his work with the existing
+patches pointed out or sent to me by people i contacted in my search or who
+were put in touch with me by the FSF. 
+
+I would greatly appreciate receiving bug reports, patches or even sample 
+HPGL files. (In the latter case, please make sure that no copyright or 
+confidentiality agreements are violated before sending any materials.)
+
+Martin Kroeker, 
+mk@daveg.com OR martin@ruby.chemie.uni-freiburg.de
+
+Disclaimer: while i currently work for Daveg GmbH and they have generously 
+            waived their rights (as per German employment laws) on the code 
+            i wrote for hp2xx, this software is totally unrelated to, and 
+            not endorsed by, Daveg GmbH. 
+See the file 'copying' (i.e. the GNU GPL) for license and warranty information.
+
+
+New features in 3.3.0
+
+- Character set support for fonts 1-7, and the 'upper half' of font 0.
+- Support for most character-related commands (CA,CS,SA,SS)
+- Support for the IW (input window, i.e. clipping) command
+- Partial support for the PE (polyline encoded) command (integer coords only)
+- Output generation for Brian Smith's XFig
+- Output generation for Gnuplot
+- Output generation in PNG format
+- Automatic medium size selection code in the PCL initialization sequence
+- Centering (-C) now supported even in true-size (-t) mode
+- HPGL/2 Pen Color and Pen Width support for up to 256 virtual pens
+- the PS (plot size) command is now supported, allowing 'white space'
+  around plots
+- support for the EW (edge wedge) command
+
+Bug fixes :
+- tick marks were scaled incorrectly (long-standing bug)
+- EA advanced pen position (long-standing bug)
+
+including contributions by:
+Emmanuel Bigler
+Eugene Doudine
+Ian McPhedran
+Michael Schmitz
+Rolf Schreck
+
+and bug-hunting by:
+Bernd Bartmann
+Rolf Schreck

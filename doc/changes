@@ -1,5 +1,53 @@
 Changes to hp2xx:
 =================
+V 3.3.0     , 99/09/30:
+
+Corrected scaling of PS with RO and -r. Corrected positioning and scaling
+of clipping box for LB with IW. Removed BF from the list of unsupported 
+commands, as none of my HP-GL references mentions such a command.
+
+V 3.3 ALPHA2, 99/09/12:
+
+Corrected interpretation of PW (parameter list was backwards and there
+was no provision for the 'default' cases),  added support for NP and
+>8 pens, added PS (plot size) command to accurately reproduce page
+position, added EW (edge wedge) command support. Removed improper scaling
+of tick marks in ax_ticks(). Corrected rect(), which was advancing the
+pen position after an EA.
+
+=====================================================================
+
+V 3.3 ALPHA,  99/09/01:
+
+Incorporated PNG support (patches by Michael Schmitz(?) as packaged
+by Lars Koeller for FreeBSD) and partial support for the PE command
+(by Eugene Doudine). Added more character sets, so that 0-7 are now
+supported (although some glyphs may be ugly or even wrong, they were
+drawn after the small illustrations in an old plotter manual). Added
+PenColor and PenWidth commands from HPGL/2 (not yet supported in the
+old Sun and OS/2 output modules - help needed for these platforms).
+PCL initialization sequence changed to use maximum available area in
+"-t" mode and generate paper selection commands for formats larger than
+A3 (untested).
+
+=====================================================================
+
+
+V 3.30.0, 99/01/31: (unreleased) 
+
+First version packaged by new maintainer (this is what you get when you
+ask where to send patches for an orphaned project).
+Output functions for xfig (by Ian McPhedran) and gnuplot (by Emmanuel Bigler).
+Support for the HP-GL commands IW (clipping) and CS (character set selection),
+implementation of character sets 5 (Special Symbols) and 7 (HP Roman8 
+Extensions), and support for 8bit addressing of charset 7 from charset 0.
+PCL initialization sequence now includes appropriate paper size selection 
+when in "-t" mode (European A4 and A3 formats only), as some (most?) printers 
+do not select the larger size automatically.
+
+
+
+======================================================================
 
 NOTES:
      o  Intermediate versions have not been made publicly available.

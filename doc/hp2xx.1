@@ -17,7 +17,7 @@ General options:
   -f   char *  ""        Name of output file. "" = autom., "-" = stdout
   -l   char *  ""        Name of optional log file
   -m   char *  pre       Mode. Valid:
-                         mf,cad,em,epic,eps,hpgl,rgip, pcl,pcx,pic,img,pbm, pre
+                         mf,cad,em,epic,eps,fig,gpt,hpgl,rgip, pcl,pcx,pic,img,pbm, png, pre
   -p   char *  11111111  Pensize(s) [dots] (default), [1/10 mm] (mf, ps).
                          Valid: 1 to 8 digits of 0-9 each.
   -P   int     0:0       Selected page range (m:n) (0 = 0:0 = all pages)
@@ -63,8 +63,8 @@ reads HPGL ASCII source files, interprets them, and converts them
 into either another vector-oriented  format or one of several rasterfile
 formats. Currently, its HPGL parser recognizes a subset of the HP 7550A
 command set. Some high-level functions like filled polygons are missing.
-Also, only the basic fixed character set 0 is supported. Beside these
-limitations,
+Also, only some of the fixed space vector fonts and none of the variable
+space arc fonts are supported. Beside these limitations,
 .I hp2xx
 has proven to work with many HP-GL sources without any trouble.
 .LP
@@ -146,11 +146,12 @@ Use option
 to select the program mode, i.e. the output format. Currently supported:
 mode = "mf" (Metafont), "em" (emTeX \special{} commands), "epic"
 (line drawing using TeX macros within epic.sty), "eps" (PostScript),
-"hpgl" (simplified HP-GL, e.g. for import tasks),
-"pcl" (HP-PCL Level 3 format (suitable for printing on a HP Laserjet II,
-DeskJet, or compatible printer), "img" (GEMs IMG format), "pbm" (Portable
-Bit Map), "pcx" (PC-Paintbrush format, also accepted by MS-Paintbrush /
-Windows 3.0 and many other PC based pixel renderers), or "rgip" (Uniplex RGIP).
+"fig" (XFig 3.1), "gpt" (GnuPlot ascii), "hpgl" (simplified HP-GL, 
+e.g. for import tasks), "pcl" (HP-PCL Level 3 format (suitable for printing 
+on a HP Laserjet II, DeskJet, or compatible printer), "img" (GEMs IMG format), 
+"pbm" (Portable Bit Map), "pcx" (PC-Paintbrush format, also accepted by 
+MS-Paintbrush / Windows 3.0 and many other PC based pixel renderers), 
+"png" (Portable Network Graphics format), or "rgip" (Uniplex RGIP).
 There is also a preview option "pre" which supports VGA cards (DOS),
 ATARI, AMIGA, X11 servers, and Sunview. Default mode is "pre".
 
@@ -209,6 +210,10 @@ Supported vector formats are:
 .I TeX/Metafont,
 .I emTex-specials,
 .I TeX/epic-Macros,
+.I XFig 3.1,
+.I GnuPlot ASCII,
+.I Simplified HP_GL,
+.I Uniplex RGIP
 and
 -I PostScript.
 Use
@@ -239,7 +244,7 @@ puts your picture "flush" to the left and upper paper limit by default.
 .LP
 .SH RASTER FORMATS
 .LP
-The following formats are supported: HP-PCL, PCX, PIC, IMG, PBM, and previews.
+The following formats are supported: HP-PCL, PCX, PIC, IMG, PBM, PNG, and previews.
 However, generation of
 other formats is made easy for programmers because of
 .I hp2xx's
@@ -340,14 +345,22 @@ option.
 
    Preview on screen or into window.
 .LP
-.SH AUTHOR
+.SH ORIGINAL AUTHOR
 .LP
 .nf
  Heinz W. Werntges, Physikal. Biologie, Geb. 26.12,
  Heinrich-Heine-Universitaet,
  D-40225 Duesseldorf, Germany.
- Internet: werntges@convex.rz.uni-duesseldorf.de
 
+.LP
+.SH MAINTAINER SINCE V 3.30
+.LP
+.nf 
+ Martin Kroeker, daVeg GmbH,
+ Schottener Weg 2
+ D-64289 Darmstadt, Germany.
+ mk@daveg.com or martin@tutor.oc.chemie.tu-darmstadt.de
+.LP
  ATARI features & PIC, PAC, IMG modes are due to Norbert Meyer, Duesseldorf.
  AMIGA version & PBM mode are due to Claus Langhans, Kelkheim (Ts.)
  X11 previewer is due to Michael Schoene, Duesseldorf.

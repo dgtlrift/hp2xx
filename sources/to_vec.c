@@ -1,6 +1,7 @@
 /*
-   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
-   Distributed by Free Software Foundation, Inc.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  
+   Parts Copyright (c) 1995 Emmanuel Bigler, (c) 1999 Martin Kroeker.
+   All rights reserved. Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
 
@@ -41,6 +42,7 @@ copies.
  ** 93/09/01  V 1.09a HWW  Mode 5 (Simple HP-GL) added
  ** 93/12/30  V 1.09b HWW  Mode 5: Pen number preserved
  ** 94/02/14  V 1.10a HWW  Adapted to changes in hp2xx.h
+ ** 95/03/23  V 1.11  E.B. new mode 6 gnuplot ascii format
  **/
 
 #include <stdio.h>
@@ -150,6 +152,18 @@ HPGL_Pt         old_pt;
 	draw_dot        = "PU%g,%g;PD%g,%g;PU;";
 	exit_cmd        = "";
 	break;
+      case 6:     /* gnuplot ascii input from HP-GL mode */
+  	ftype           = "gnuplot ASCII";
+  	scale_cmd       = "";
+  	pen_cmd         = "#SP1\n";	/* Not fully implemented!! */
+  	poly_start      = "#PA\n\n#PU\n%g  %g\n";
+  	poly_next       = "#PD\n%g  %g\n";
+  	poly_last       = poly_next;
+  	poly_end        = "";
+  	draw_dot        = "\n#PU\n%g  %g\n#PD\n%g  %g\n\n#PU\n\n";
+  	exit_cmd        = "";
+  	break;
+
   }
 
 #ifdef ATARI
@@ -263,7 +277,7 @@ HPGL_Pt         old_pt;
   else
   {
 #endif
-	if (mode != 5)
+	if (mode != 5 && mode !=6)
 	{
 		fprintf(md,"%% %s code in %s, created by hp2xx\n",
 			ftype, po->outfile);

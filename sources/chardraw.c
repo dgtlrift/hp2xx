@@ -1,5 +1,6 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
+   Parts Copyright (c) 1999  Martin Kroeker  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -45,6 +46,13 @@ copies.
 #include "hp2xx.h"
 #include "chardraw.h"
 #include "charset0.h"
+#include "charset1.h"
+#include "charset2.h"
+#include "charset3.h"
+#include "charset4.h"
+#include "charset5.h"
+#include "charset6.h"
+#include "charset7.h"
 
 /**
  ** NOTE: There is code here masked off by symbol STROKED_FONTS
@@ -57,6 +65,9 @@ copies.
 
 extern	HPGL_Pt		HP_pos, P1, P2;
 extern	LineType	CurrentLineType, GlobalLineType;
+
+extern int iwflag;
+extern HPGL_Pt		C1,C2;
 
 TEXTPAR	TEXTP, *tp = &TEXTP;
 
@@ -95,20 +106,114 @@ ASCII_to_char (int c)
 {
 HPGL_Pt	p;
 char	*ptr;
+int outside=0;
 
   CurrentLineType = LT_solid;
   switch (tp->font)
   {
-    case 0:	/* charset 0, limited to 7 bit ASCII	*/
+    case 0:	/* charset 0, limited to 7 bit ASCII - 8bit addressing maps to charset 7	*/
+
 	if (c & 0x80)
 	{
-		Eprintf ("Illegal char in string: %c replaced by blank!\n", c);
-		c = ' ';
-	}
+		/*Eprintf ("8bit character mapped to charset 7\n");*/
+		c+=128;
+		ptr = &charset7[c][0];
+	} else {
 	ptr = &charset0[c][0];
+	}
 	break;
 
-    default:	/* Currently, there is just one charset	*/
+    case 1:	/* charset 1, 9825	*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+if (c == 95 || c == 96 || c == 126 ) { /* backspacing for special characters  */ 
+  tp->refpoint.x -= tp->chardiff.x;
+  tp->refpoint.y -= tp->chardiff.y;
+}
+	ptr = &charset1[c][0];
+	break;
+
+    case 2:	/* charset 2, French/German	*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+if (c == 39 || c == 94 || c == 95 || c == 96 || c == 123 || c == 124 || c == 125) { /* backspacing for special characters  */ 
+  tp->refpoint.x -= tp->chardiff.x;
+  tp->refpoint.y -= tp->chardiff.y;
+  }
+	ptr = &charset2[c][0];
+	break;
+
+    case 3:	/* charset 3, Scandinavian	*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+if ( c == 95 || c >= 123 ) { /* backspacing for special characters  */ 
+  tp->refpoint.x -= tp->chardiff.x;
+  tp->refpoint.y -= tp->chardiff.y;
+  }
+	ptr = &charset3[c][0];
+	break;
+
+    case 4:	/* charset 4, Spanish/Latin American	*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+if ( c == 39  || c == 94 || c == 95 || c >= 123 ) { /* backspacing for special characters  */ 
+  tp->refpoint.x -= tp->chardiff.x;
+  tp->refpoint.y -= tp->chardiff.y;
+  }
+	ptr = &charset4[c][0];
+	break;
+
+    case 5:	/* charset 5, Special Symbols	*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+if (c == 101 ) { /* backspacing for special characters  */ 
+  tp->refpoint.x -= tp->chardiff.x;
+  tp->refpoint.y -= tp->chardiff.y;
+  }
+	ptr = &charset5[c][0];
+	break;
+
+    case 6:	/* charset 6, JIS ASCII	*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	ptr = &charset6[c][0];
+	break;
+
+    case 7:	/* charset 7, 'HP Roman 8', limited to 7 bit ASCII	*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	ptr = &charset7[c][0];
+	break;
+
+    default:	/* Currently, only charsets 0-7 are supported	*/
 	Eprintf ("Charset %d not supported -- replaced by blank!\n", tp->font);
 		c = ' ';
 	ptr = &charset0[c][0];
@@ -118,9 +223,24 @@ char	*ptr;
   for (; *ptr; ptr++)	/* Draw this char	*/
   {
 	code_to_ucoord (*ptr & 0x7f, &p);
-	if (*ptr & 0x80)	/* High bit is draw flag */
+/*MK*/
+if (iwflag)
+{
+
+if ( P1.x+p.x > C2.x || P1.y+p.y > C2.y){
+/*fprintf(stderr,"A2C IW set:point %f %f >P2\n",p.x,p.y);*/
+outside=1;
+ }
+ 
+if ( P1.x+p.x  < C1.x  || P1.y+p.y < C1.y) {
+/* fprintf(stderr,"A2C IW set:point  %f %f <P1\n",p.x,p.y);*/
+ outside=1;
+  }
+  }	
+ /*MK*/ 
+	if ((*ptr & 0x80) && !outside)	/* High bit is draw flag */
 		Pen_action_to_tmpfile (DRAW_TO, &p, FALSE);
-	else
+	else 
 		Pen_action_to_tmpfile (MOVE_TO, &p, FALSE);
   }
 
@@ -129,6 +249,9 @@ char	*ptr;
   tp->refpoint.x += tp->chardiff.x;
   tp->refpoint.y += tp->chardiff.y;
   CurrentLineType = GlobalLineType;
+
+		outside=0;
+
 }
 
 
@@ -410,7 +533,11 @@ char	*txt0;
 		tp->refpoint.y -= tp->linediff.y;
 		break;
 	  case _SO:
-	  case _SI:	/* Not implemented yet	*/
+	  	if (tp->altfont)
+	  	tp->font = tp->altfont;
+		break;
+	  case _SI:	
+	  	tp->font = tp->stdfont;
 		break;
 	  default:
 #ifdef STROKED_FONTS
@@ -446,13 +573,37 @@ char	*ptr;
 
   switch (tp->font)
   {
-    case 0:	/* charset 0, limited to 7 bit ASCII	*/
+
+    case 0:	/* charset 0, limited to 7 bit ASCII - 8bit addressing maps to charset 7	*/
+
 	if (c & 0x80)
 	{
-		Eprintf ("Illegal symbol char: %c replaced by blank!\n", c);
+		Eprintf ("8bit character mapped to charset 7\n");
+		c+=128;
+		ptr = &charset7[c][0];
+	} else {
+	ptr = &charset0[c][0];
+	}
+	break;
+
+    case 5:	/* charset 5, limited to 7 bit ASCII	*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
 		c = ' ';
 	}
-	ptr = &charset0[c][0];
+	ptr = &charset5[c][0];
+	break;
+
+    case 7:	/* charset 7, 'HP Roman 8', limited to 7 bit ASCII	*/
+
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal char in string: %d = %c replaced by blank!\n", c,c);
+		c = ' ';
+	}
+	ptr = &charset7[c][0];
 	break;
 
     default:	/* Currently, there is just one charset	*/

@@ -1,5 +1,7 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
+   Parts Copyright (c) 1999  Martin Kroeker  All rights reserved.
+   
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -45,6 +47,8 @@ copies.
  ** 94/01/01  V 1.10b HWW  init_printer(), start_graphmode():
  **			   L. Lowe's modifications
  ** 94/02/14  V 1.20a HWW  Adapted to changes in hp2xx.h
+ ** 97/12/1           MK   add initialization code for A3 paper size
+ ** 99/05/10         RS/MK autoselect A4/A3/A2 paper, reduce margins
  **/
 
 #include <stdio.h>
@@ -332,10 +336,40 @@ Byte	*pK = p_K, *pC = p_C, *pM = p_M, *pY = p_Y;
 
 
 static void
-init_printer (FILE *fd)
+init_printer (const OUT_PAR *po, FILE *fd)
 {
-  fprintf(fd,"%cE%c&a0V", ESC, ESC);
-}
+int size;
+
+
+	size=26; /* default to A4 paper */
+	
+ if ((po->width >= po->height && (po->width > 297. || po->height >210.)) || 
+    (po->width < po->height && (po->height >297. || po->width >210.))) 
+ 	size=27; /* A3 format */
+	
+ if ((po->width >= po->height && (po->width > 420. || po->height >297.)) || 
+    (po->width < po->height && (po->height >420. || po->width >297.))) 
+ 	size=28; /* A2 format */
+
+ if ((po->width >= po->height && (po->width > 584. || po->height >420.)) || 
+    (po->width < po->height && (po->height >584. || po->width >420.))) 
+ 	size=29; /* A1 format */
+
+
+ if ((po->width >= po->height && (po->width > 820. || po->height >584.)) || 
+    (po->width < po->height && (po->height >820. || po->width >584.))) 
+ 	size=30; /* A0 format :-) */
+
+
+   /*  \033E      reset printer            */
+   /*  \033&l26A  select paper size        */
+   /*  \033&l0L   perforation skip off     */
+   /*  \033&l0E   no top margin            */
+   /*  \0339      no side margins          */
+   /*  \033&a0V   vertical position  0     */
+   fprintf(fd,"%cE%c&l%dA%c&l0L%c&l0E%c9%c&a0V", ESC, ESC, size, ESC, ESC, ESC, ESC);
+ }
+
 
 
 
@@ -351,7 +385,7 @@ start_graphmode (const OUT_PAR *po, FILE *fd)
 	fprintf(fd,"\033&a+%dV",(int)(po->yoff * 720.0 / 25.4) );
   if (po->xoff != 0.0)
 	fprintf(fd,"\033&a+%dH",(int)(po->xoff * 720.0 / 25.4) );
-
+fprintf(stderr,"xoff, yoff: %f %f\n",po->xoff,po->yoff);
 /**
  ** Set Graphics Resolution (300 / 150 / 100 / 75):
  ** This is NO PCL level 3 feature, but LaserjetII and compatibles
@@ -461,7 +495,7 @@ Byte	mask;
   }
 
   if (po->init_p)
-	init_printer (fd);
+	init_printer (po, fd);
 
   start_graphmode (po, fd);
 
@@ -496,6 +530,15 @@ Byte	mask;
 				mask = 0x80;
 				if ((i = x & 0x07) != 0)
 					mask >>= i;
+					
+if (pg->Clut[color_index][0]+pg->Clut[color_index][1]+pg->Clut[color_index][2] == 0){
+ *(p_K +offset) |= mask;
+}else{					
+		*(p_C + offset ) |= ( mask ^ ( pg->Clut[color_index][0] & mask ) );
+		*(p_M + offset ) |= ( mask ^ ( pg->Clut[color_index][1] & mask ) );
+		*(p_Y + offset ) |= ( mask ^ ( pg->Clut[color_index][2] & mask ) );
+}					                        
+/*					
 				switch (color_index)
 				{
 				  case xxForeground:
@@ -525,6 +568,7 @@ Byte	mask;
 				  default:
 					break;
 				}
+*/
 			}
 		}
 

@@ -1,5 +1,7 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
+   Parts Copyright (c) 1999  Martin Kroeker  All rights reserved.
+   
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -34,6 +36,10 @@ copies.
  **	HWW	Heinz W. Werntges  (werntges@convex.rz.uni-duesseldorf.de)
  **		Fruchtstr. 2,  40223 Duesseldorf, Germany
  **
+ ** New maintainer since version 3.3 and (c) 1999:
+ **     MK      Dr. Martin Kroeker (mk@daveg.com, 
+ **                                 martin@ruby.chemie.uni-freiburg.de)
+ **             Zum Markwald 6, D-63165 Muehlheim, Germany                    
  **
  ** Amiga stuff & PBM & ILBM by:
  **
@@ -126,11 +132,16 @@ copies.
  ** 93/09/22  V 3.13b HWW  Fix in autoset_outfile_name()
  ** 94/01/01  V 3.14a HWW  Additions by L. Lowe
  ** 94/02/14  V 3.20b HWW  Re-structured to facilitate multiple user interfaces
+ ** Separate additions to HWW's V 3.20, assembled in this release  by MK:
+ ** 94/03/23          EB   Mode "gpt", Gnuplot, added by Emmanuel Bigler
+ ** 94/08/08          IMP  Mode "xfig" added by Ian MacPhedran
+ ** 97/11/29          MS   Mode "png" added by Michael Schmitz
+ ** 99/03/01  V 3.30  MK   HPGL commands CA,CS,IW,SA,SS and charsets1-8 added
  **/
 
-char	*VERS_NO = "3.20";
-char	*VERS_DATE = "94/02/14";
-char	*VERS_COPYRIGHT = "(c) 1991 - 1994  Heinz W. Werntges";
+char	*VERS_NO = "3.30";
+char	*VERS_DATE = "99/10/01";
+char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
 	"\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n";
@@ -138,7 +149,7 @@ char	*VERS_ADDITIONS =
 char	*VERS_ADDITIONS =
 	"\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n";
 #else
-char	*VERS_ADDITIONS = "";
+char	*VERS_ADDITIONS = "                             (c) 1999 Martin Kroeker\n";
 #endif
 
 
@@ -166,6 +177,8 @@ mode_list  ModeList[] =
 	{XX_EM,		"em"},	/* LaTeX using \special{em:...}		*/
 	{XX_EPIC,	"epic"},/* LaTeX using epic.sty macros		*/
 	{XX_EPS,	"eps"},	/* Encapulated PostScript		*/
+	{XX_FIG,        "fig"}, /* FIG 3.1 Drawing Files                */
+	{XX_GPT,        "gpt"}, /* gnuplot vector ascii format          */
 	{XX_HPGL,	"hpgl"},/* Simplified HP-GL			*/
 #ifdef	AMIGA
 	{XX_ILBM,	"ilbm"},/* Special AMIGA format			*/
@@ -180,6 +193,9 @@ mode_list  ModeList[] =
 	{XX_PIC,	"pic"},	/* for ATARI. Try to replace by IMG	*/
 #endif
 	{XX_RGIP,	"rgip"},/* Uniplex RGIP vector format		*/
+#ifdef PNG
+        {XX_PNG,        "png"}, /* Portable Network Graphics            */
+#endif
 	{XX_PRE,	"pre"},	/* DEFAULT: Preview on screen		*/
 	{XX_TERM,	""},	/* Dummy: List terminator		*/
 };
@@ -374,7 +390,8 @@ int	i;
   pg->maxcolor	= 1;		/* max. color index		*/
   pg->pensize[0]= 0;		/* in pixel or 1/10 mm		*/
   pg->pencolor[0]= xxBackground;
-  for (i=1; i<=8; i++)
+  pg->maxpens=8;
+  for (i=1; i<=NUMPENS; i++)
   {
 	pg->pensize [i]	= 1;	/* in pixel or 1/10 mm		*/
 	pg->pencolor[i]	= xxForeground;
@@ -663,6 +680,10 @@ int	TMP_to_VEC (const GEN_PAR *pg, const OUT_PAR *po)
 	return 0;
 #endif
 
+    case XX_GPT:
+        to_mftex(pg, po, 6);
+        return 0;
+        
     case XX_HPGL:
 	to_mftex(pg, po, 5);
 	return 0;
@@ -675,6 +696,10 @@ int	TMP_to_VEC (const GEN_PAR *pg, const OUT_PAR *po)
 	to_rgip	(pg, po);
 	return 0;
 
+    case XX_FIG:
+        to_fig (pg, po);
+        return 0;
+        
     default:
 	return 1;
   }
@@ -778,6 +803,10 @@ int	BUF_to_RAS (const GEN_PAR *pg, const OUT_PAR *po)
 
 	case XX_PBM:		/* Portable BitMap fmt	*/
 		return PicBuf_to_PBM (pg, po);
+#ifdef PNG
+        case XX_PNG:            /* Portable Network fmt */
+               return PicBuf_to_PNG (pg, po);
+#endif
 
 /**
  ** Previewers (depending on hardware platform):

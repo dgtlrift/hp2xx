@@ -567,6 +567,52 @@ DevPt	pt, *p_act;
 			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
 			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
 		}
+
+		if (pensize > 7)	/* who knows	*/
+		{
+			pt = *p_act;
+			pt.x += 4;	plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+		}
+		if (pensize > 12)	/* who knows	*/
+		{
+			pt = *p_act;
+			pt.x += 5;	plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+		}
+		if (pensize > 15)	/* who knows	*/
+		{
+			pt = *p_act;
+			pt.x += 6;	plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+		}
 	}
   } while (bresenham_next() != BRESENHAM_ERR);
 }

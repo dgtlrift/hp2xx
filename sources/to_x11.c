@@ -1,5 +1,7 @@
 /*
    Copyright (c) 1991 - 1994 Michael Schoene & Heinz W. Werntges.
+   Parts Copyright (c) 1999  Martin Kroeker.
+   
    All rights reserved. Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -93,7 +95,7 @@ static int	height;
  **/
 
 static int
-win_open( int x, int y, int w, int h )
+win_open(const GEN_PAR *pg, int x, int y, int w, int h )
 {
 	char*			DisplayName = NULL;
 	char**			argv;
@@ -101,7 +103,8 @@ win_open( int x, int y, int w, int h )
 	unsigned long		ValueMask;
 	XSetWindowAttributes	WinAttr;
 	XEvent			Event;
-
+	char 			colorname[13];
+        int i;
 
 	/**
 	 ** Simulate command line arguments
@@ -165,7 +168,7 @@ win_open( int x, int y, int w, int h )
 	Hints.height= Hints.min_height = Hints.max_height = h;
 
 	XSetStandardProperties( XDisplay, XWin,
-					WIN_NAME, WIN_NAME, NULL,
+					WIN_NAME, WIN_NAME, 0,
 					argv, 1, &Hints );
 
 /**
@@ -197,61 +200,14 @@ win_open( int x, int y, int w, int h )
 	XAllocColor( XDisplay, def_cmap, &Xcol );
 	col_table[GRAY] = Xcol.pixel;
 
-	XParseColor( XDisplay, def_cmap, "orange red",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[RED] = Xcol.pixel;
+for (i=1;i<=pg->maxpens;i++){
 
-	XParseColor( XDisplay, def_cmap, "pale green",&Xcol );
+sprintf (colorname,"#%2.2X%2.2X%2.2X", pg->Clut[i][0],pg->Clut[i][1],pg->Clut[i][2]);
+/*fprintf (stderr,"#%2.2X%2.2X%2.2X", pg->Clut[i][0],pg->Clut[i][1],pg->Clut[i][2]);*/
+	XParseColor( XDisplay, def_cmap, colorname, &Xcol );
 	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[GREEN] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "medium blue",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[BLUE] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "medium aquamarine",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[CYAN] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "medium violet red",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[MAGENTA] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "yellow",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[YELLOW] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "light gray",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[LIGHTGRAY] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "red",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[LIGHTRED] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "green",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[LIGHTGREEN] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "blue",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[LIGHTBLUE] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "cyan",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[LIGHTCYAN] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "magenta",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[LIGHTMAGENTA] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "black",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[WHITE] = Xcol.pixel;
-
-	XParseColor( XDisplay, def_cmap, "white",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
-	col_table[BLACK] = Xcol.pixel;
+	col_table[i] = Xcol.pixel;
+}
   }
 
 	/**
@@ -325,7 +281,7 @@ const PicBuf	*pb;
 	Eprintf ("Press <return> to end graphics mode\n");
   }
 
-  if (win_open( (int)(po->xoff * po->dpi_x / 25.4),
+  if (win_open(pg, (int)(po->xoff * po->dpi_x / 25.4),
 		(int)(po->yoff * po->dpi_y / 25.4),
 		pb->nb << 3, pb->nr ) )
 	return ERROR;
@@ -335,20 +291,23 @@ const PicBuf	*pb;
   {
 	row = get_RowBuf (pb, row_c);
 	if (row == NULL)
-		return NULL;
+		return 0;
 	for (x=0; x < pb->nc; x++)
 	{
 		switch (index_from_RowBuf(row, x, pb))
 		{
+
 		case xxBackground:			continue;
 		case xxForeground:setXcolor (WHITE);	break;
+/*
 		case xxRed:	setXcolor (RED);	break;
 		case xxGreen:	setXcolor (GREEN);	break;
 		case xxBlue:	setXcolor (BLUE);	break;
 		case xxCyan:	setXcolor (CYAN);	break;
 		case xxMagenta:	setXcolor (MAGENTA);	break;
 		case xxYellow:	setXcolor (YELLOW);	break;
-		default:				continue;
+*/
+		default:	setXcolor(index_from_RowBuf(row,x,pb)); break;
 		}
 		XDrawPoint (XDisplay, XWin, XGcWin, x, y);
 	}

@@ -25,6 +25,7 @@ copies.
  **
  ** 92/02/19  V 1.01  HWW  Derived from sprite.h (V 2.01)
  ** 92/05/28  V 1.02  HWW  plot_symbol_char() added
+ ** 99/02/01  V 1.03  MK   charsets 5 and 7 added
  **
  ** Structure definition as used by pplib for character drawing
  **/
@@ -71,8 +72,10 @@ typedef struct
   float eline;	/* Extra line space rel. to 'line'	*/
   float dir;	/* Direction to x axis (rad)		*/
   float slant;	/* Character slant (tan angle)		*/
-  int   font;	/* Font number: Currently, only 0 	*/
-  int   orig;	/* Label origin code			*/
+  int  font;	/* Active Font number                   */
+  int  stdfont; /* Designated tandard font number       */
+  int  altfont; /* Designated alternate font number     */
+  int  orig;	/* Label origin code			*/
 
 
 /**

@@ -62,6 +62,7 @@ copies.
  **			   rect(), to_rgip(): prototypes added
  ** 94/01/02  V 2.11a HWW  PlotCmd_from_tmpfile(): new type; center_mode
  ** 94/02/10  V 3.00  HWW  New concept: Now three central parameter structs ...
+ ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
 
@@ -143,6 +144,7 @@ copies.
 
 #define	MAX_LB_LEN	150	/* Max num of chars per label	*/
 
+#define NUMPENS 256  /* Maximum number of pens supported */
 
 #ifndef VOID
 #ifdef	__STDC__
@@ -183,9 +185,10 @@ typedef unsigned char	Byte;
  **/
 
 typedef	enum{
-	XX_CAD, XX_CS, XX_EM, XX_EPIC, XX_EPS, XX_HPGL, XX_ILBM, XX_IMG,
-	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PIC, XX_PRE, XX_RGIP,
-	XX_TERM	/* Dummy: terminator	*/
+	XX_CAD, XX_CS, XX_EM, XX_EPIC, XX_EPS, XX_FIG, XX_GPT, XX_HPGL, 
+        XX_ILBM, XX_IMG,
+	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PIC, XX_PNG, XX_PRE, 
+	XX_RGIP, XX_TERM	/* Dummy: terminator	*/
 } hp2xx_mode;
 
 
@@ -319,14 +322,15 @@ typedef struct			/* Corresponding option(s)	*/
    char  *logfile;		/* -l logfile			*/
    char	 *swapfile;		/* -s swapfile			*/
    int	 quiet;			/* -q				*/
-   int	 pensize[9];		/* -p xxxxxxxx			*/
-   int	 pencolor[9];		/* -c xxxxxxxx			*/
+   int	 pensize[NUMPENS+1];	/* -p xxxxxxxx			*/
+   int	 pencolor[NUMPENS+1];	/* -c xxxxxxxx			*/
    int	 maxpensize;		/* (internally needed)		*/
    int	 is_color;		/* (internally needed)		*/
    int	 maxcolor;		/* (internally needed)		*/
-   Byte	 	Clut[16][3];	/* (internally needed)		*/
+   Byte	 	Clut[NUMPENS+8][3];	/* (internally needed)		*/
    FILE	 	*td;		/* (internally needed)		*/
    hp2xx_mode	xx_mode;	/* (internally needed)		*/
+   int   maxpens;               /* (internally needed)          */
 }	GEN_PAR;
 
 
@@ -372,7 +376,7 @@ void	SilentWait	(void);
 void	NormalWait	(void);
 
 void	plot_user_char	(FILE *);
-void	read_HPGL	(const GEN_PAR*, const IN_PAR*);
+void	read_HPGL	(GEN_PAR*, const IN_PAR*);
 void	adjust_input_transform	(const GEN_PAR*, const IN_PAR*, OUT_PAR*);
 PlotCmd	PlotCmd_from_tmpfile	(void);
 void	HPGL_Pt_from_tmpfile	(HPGL_Pt *);
@@ -394,7 +398,7 @@ RowBuf	*get_RowBuf	(const PicBuf*, int);
 
 int	PicBuf_to_PCL	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_PCX	(const GEN_PAR*, const OUT_PAR*);
-
+int     PicBuf_to_PNG   (const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_IMG	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_PBM	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_ILBM	(const GEN_PAR*, const OUT_PAR*);

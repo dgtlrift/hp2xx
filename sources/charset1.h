@@ -22,6 +22,16 @@ copies.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
+/**
+ ** charset1.h             HP-GL character set 1, 9825 character set
+ ** According to the 1987 HP Draftmaster manual, this is identical to
+ ** charset0 except for the root sign instead of the backslash in
+ ** position 92,the uparrow instead of the hat accent in 94, pi, vdash
+ ** and rightarrow (123-125) instead of curly braces and vline.
+ ** Characters 95,96 and 126 should backspace (but do not).
+ **                                           MK February 1999
+ **/
+     
 
 /**
  ** This file defines a standard character set by elementary
@@ -80,7 +90,7 @@ copies.
  ** commands needed for switching from one to the other.
  **/
 
-char	*charset0[128] =
+char	*charset1[128] =
 {
 	/* 0x00 ... 0x1f	*/
 
@@ -167,9 +177,9 @@ char	*charset0[128] =
 "\032\231\266\264\066\331\332",
 "\032\332\224\324",
 "\124\264\272\332",
-"\032\324",
+"\026\246\264\311\331",                                  /* root */
 "\024\264\272\232",
-"\030\272\330",
+"\072\264\030\272\330",                                  /*uparrow*/
 "\023\323",
 
 	/* 0x60 ... 0x6f	*/
@@ -202,9 +212,9 @@ char	*charset0[128] =
 "\030\324\024\330",
 "\022\326\330\030\226\264",
 "\030\310\224\304",
-"\113\273\252\250\227\246\244\263\303",
-"\073\263",
-"\053\273\312\310\327\306\304\263\243",
-"\031\252\310\331",
+"\033\254\312\333\044\247\104\307",                       /* pi */
+"\073\263\027\327",                                      /* vdash */
+"\027\327\106\327\310",                                  /* rightarrow */
+"\031\252\310\331",                                      /* (BS) tilde */
 ""
 };

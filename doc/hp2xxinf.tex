@@ -1,5 +1,6 @@
 \input texinfo      @c -*-texinfo-*-
 @c Copyright (c) 1992 - 1994  Heinz W. Werntges
+@c Copyright (c) 1998 - 1999  Martin Kroeker
 @c %**start of header
 @setfilename hp2xx.info
 @settitle HP2XX, A HP-GL Converter
@@ -13,7 +14,7 @@
 
 @tex
 % \def\$#1${{#1}}  % Kludge: collect RCS revision info without $...$
-\xdef\manvers{$Revision: 1.0.4 $}  % For use in headers, footers too
+\xdef\manvers{$Revision: 1.1.0 $}  % For use in headers, footers too
 @end tex
 
 @c HP2XX CHANGE LOG:
@@ -27,6 +28,7 @@
 @c 93/09/02  V 1.03  HWW  EA support; RGIP & HPGL modes; DJ5x0: data compression
 @c 93/11/23  V 1.04a HWW  Typos fixed
 @c 94/02/15  V 1.04b HWW  Option -C added
+@c 99/08/01  V 1.10  MK   Updated for 3.30 (new options, new HPGL commands)
 
 @c THIS MANUAL REQUIRES TEXINFO-2 macros and info-makers to format properly.
 
@@ -43,9 +45,10 @@ END-INFO-DIR-ENTRY
 This file documents the HP-GL converter HP2XX
 
 @c !!set edition, date, version
-This is Edition 1.0.4, February 1994,
+This is Edition 1.1.0, August 1999,
 of @cite{Using HP2XX: A HP-GL Converter}.
 
+Copyright (C) 1998 - 1999 Martin Kroeker
 Copyright (C) 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
@@ -79,19 +82,20 @@ by the Free Software Foundation instead of in the original English.
 @c @subtitle on XXXX Systems
 @sp 1
 @c !!set edition, date, version
-@subtitle Edition 1.0.4, for HP2XX version 3.2.x
-@subtitle February 1994
-@author by Heinz W. Werntges
+@subtitle Edition 1.1.0, for HP2XX version 3.3.x
+@subtitle August 1999
+@author by Martin Kroeker (previously by Heinz W. Werntges)
 @page
 @tex
 {\parskip=0pt
-\hfill werntges\@convex.rz.uni-duesseldorf.de\par
+\hfill mk\@daveg.com\par
 \hfill {\it Using HP2XX}, \manvers\par
 \hfill \TeX{}info \texinfoversion\par
 }
 @end tex
 
 @vskip 0pt plus 1filll
+Copyright @copyright{} 1998 - 1999 Martin Kroeker
 Copyright @copyright{} 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
@@ -122,7 +126,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 
 @c !!set edition, date, version
-This is Edition 1.0.4, February 1994, for HP2XX Version 3.2.x
+This is Edition 1.1.0, August 1999, for HP2XX Version 3.3.x
 @end ifinfo
 
 
@@ -397,8 +401,8 @@ all others are set to various sizes.
 Pen #2 is red, #3 is yellow, and #4 is blue, while all other
 pens keep @samp{foreground} color, e.g., black.
 
-
-
+If your HP-GL file contains the PC and/or PW commands introduced with
+HP-GL/2, these are interpreted to allow up to 255 pens. 
 
 @node Selecting a page (range), Vector formats, Pen sizes and colors, Basics
 @comment  node-name,  next,  previous,  up
@@ -469,7 +473,7 @@ direction.
 
 There are plenty of raster formats on various platforms, much more
 than @code{hp2xx} will ever handle. The supported raster formats
-IMG, PBM, PCL, PCX were chosen for their widespread use, their simplicity,
+IMG, PBM, PCL, PCX and PNG were chosen for their widespread use, their simplicity,
 for actual demand, and for accessibility of specifications.
 If your desired format is not supported, look for a converter. E.g., the
 Portable Bitmap (PBM) project offers quite a variety of such converters.
@@ -498,12 +502,13 @@ and @samp{-d 300} are permitted; option @samp{-D} must not be used.
 
 
 There are two flags which may be useful if the output goes directly
-to a printer: Option @samp{-i} initializes the printer before the
-output starts, and @samp{-F} sends a FormFeed (ASCII 12) after the output.
+to a printer: Option @samp{-i} initializes the printer and tries to select
+the required paper format before the output starts, and @samp{-F} sends a 
+FormFeed (ASCII 12) after the output.
 
 For the HP Deskjet printer series, there is support of some ``special''
 commands; @samp{-S 1} activates these. There is a limited support of color
-modes available, too: For the DJ500C or DJ550C models, @code{hp2xx} can
+modes available, too: For the DJ500C and newer models, @code{hp2xx} can
 generate both CMY-based and CMYK-based color output (if colors are used:
 see option @samp{-c}). Supply option @samp{-S 3} for CMY color mode, and
 option @samp{-S 4} for CMYK color mode (for the DJ550C). The Deskjet modes
@@ -783,15 +788,18 @@ This is just a brief note, not a real manual entry -- sorry.
 @item DJ_GR
 	DOS previewer, based on DJ Delorie's gcc port and extender go32.
 	Works fine, but will be replaced by DOS/OS2 EMX version.
+	Abandoned by new maintainer due to lack of platform - volunteers
+	welcome.
 
 @item OS2
-	Full-screen OS/2 2.x and DOS previewer. I don't yet have the
+	Full-screen OS/2 2.x and DOS previewer. HWW: I don't yet have the
 	right development system, so this code is still missing.
-	However, it *will* be supported as soon as possible!
+	MK: Any volunteers ?
 
 @item PM
 	OS/2 2.0 PM previewer. Working, but without redirection of
-	messages to stderr into a second window.
+	messages to stderr into a second window. Volunteers needed to
+	keep OS/2 support up to date in new versions.
 @end table
 
 
@@ -924,9 +932,10 @@ manual will elaborate on the following subsection instead of this one.
 @comment  node-name,  next,  previous,  up
 @subsection Source-level installation
 
-NOTE: Source level installation is in beta state: At this writing,
-the @code{hp2xx} sources are about to be released, and there have only few
-different installations been done. Currently, installation depends too much
+NOTE: I am tempted to switch to GNU autoconf , i.e. have a configure
+script generate the necessary Makefile automagically. This will probably
+not be welcomed by those not on Unix-like platforms, however.
+Currently, installation depends too much
 on manual work yet. Here is a description how to proceed:
 
 After unbundling all sources, go to subdirectory @file{./makes}. Select a
@@ -946,7 +955,7 @@ The second type of course applies to systems with special needs which are not
 yet covered by any makefile template. Currently, you are on your own when
 it comes to supplying alternate paths, renaming or adding system libraries
 and alike. Most probably you might have to tell the makefile where to
-look for the X11 stuff.
+look for the X11 stuff, and where to find the png library, if at all.
 
 Note: Don't feel alarmed if your makefile seems to neglect many source files.
 Any single installation will make use of only one previewer (two on
@@ -1032,11 +1041,10 @@ variable-width characters. There are commands for font selection
 and quick switching between two pre-selected fonts, and there
 is also a way for users to download own character definitions.
 
-@code{hp2xx} currently features just one character set (set 0).
-Therefore, all HP-GL commands dealing with font selection etc.
-have not been implemented.
+@code{hp2xx} currently features just a few fixed-width  character sets 
+(sets 0-7).
 
-If you plan to modify this character set or to add more,
+If you plan to modify these characters set or to add more,
 you need an understanding of how characters are drawn by
 @code{hp2xx}. The source file @file{charset.h} contains a comment
 explaining this procedure. Below you find a (modified) copy of
@@ -1095,9 +1103,11 @@ this:
 @comment  node-name,  next,  previous,  up
 @appendix   Known HP-GL commands
 
-@code{hp2xx} emulates a subset of the Hewlett-Packard 7550A plotter.
+@code{hp2xx} originally emulated a subset of the Hewlett-Packard 7550A plotter.
 The following manual was used as reference for command definitions:
-@cite{[1] HP 7550A Interfacing and Programming Manual}.
+@cite{[1] HP 7550A Interfacing and Programming Manual}. This has gradually
+been expanded to include allmost all of what is now known as HPGL/1, and
+some of the commands from HPGL/2.
 
 Not all commands are supported. Among the non-supported commands
 are those which do not really apply to a software emulator, like:
@@ -1111,12 +1121,9 @@ commands causing various plotter display outputs.
 
 Other non-supported commands would be desirable, but were left out
 due to their inherent complexity (or just because nobody pushed me, :-) ).
-Among those are:
+The most important ones remaining are probably the
 
 @display
-commands for font (character set) management. Since there is only one font
-         built into @code{hp2xx}, there is no point in providing font switching etc.
-windowing/clipping and rotation
 polygon and box filling commands
 @end display
 
@@ -1164,12 +1171,12 @@ that @code{hp2xx} will give you the picture you want!
 @code{BF   | - | Buffer Plot}
 @code{BL   |+  | Buffer Label}
 @code{-----|---|--------------------------------------------------------}
-@code{CA   | - | Designate alternate character set}
+@code{CA   |+  | Designate alternate character set}
 @code{CC   | - | Character Chord angle}
 @code{CI   |+  | Circle}
-@code{CM   | - | Character selection mode}
+@code{CM   |  .| Character selection mode}
 @code{CP   |+  | Character plot}
-@code{CS   | - | Designate standard character set}
+@code{CS   |+  | Designate standard character set}
 @code{CT   | - | Chord tolerance}
 @code{CV   | - | Curved line generator}
 @code{-----|---|--------------------------------------------------------}
@@ -1199,7 +1206,7 @@ that @code{hp2xx} will give you the picture you want!
 @code{IN   |+  | Initialize}
 @code{IP   |+  | Input P1 and P2}
 @code{IV   | - | Invoke character slot}
-@code{IW   | - | Input window}
+@code{IW   |+  | Input window}
 @code{-----|---|--------------------------------------------------------}
 @code{KY   |  .| Define key}
 @code{-----|---|--------------------------------------------------------}
@@ -1234,18 +1241,18 @@ that @code{hp2xx} will give you the picture you want!
 @code{PU   |+  | Pen up}
 @code{-----|---|--------------------------------------------------------}
 @code{RA   | - | Fill rectangle absolute}
-@code{RO   | - | Rotate coordinate system  [use option -r instead!]}
+@code{RO   |+  | Rotate coordinate system}
 @code{RP   | - | Replot}
 @code{RR   | - | Fill rectangle relative}
 @code{-----|---|--------------------------------------------------------}
-@code{SA   | - | Select alternate character set}
+@code{SA   |+  | Select alternate character set}
 @code{SC   |+  | Scale}
 @code{SI   |+  | Absolute character size}
 @code{SL   |+  | Character slant}
 @code{SM   |+  | Symbol mode}
 @code{SP   |+  | Select pen}
 @code{SR   |+  | Relative character size}
-@code{SS   | - | Select standard character set}
+@code{SS   |+  | Select standard character set}
 @code{-----|---|--------------------------------------------------------}
 @code{TL   |+  | Tick length}
 @code{-----|---|--------------------------------------------------------}
@@ -1260,6 +1267,10 @@ that @code{hp2xx} will give you the picture you want!
 @code{XT   |+  | X-Tick}
 @code{-----|---|--------------------------------------------------------}
 @code{YT   |+  | Y-Tick}
+@code{-------------------HPGL/2 commands--------------------------------}
+@code{PC   |+  | Pen color}
+@code{PE   |+  | Polygon encoded}
+@code{PW   |+  | Pen width}
 @end display
 
 
@@ -1321,9 +1332,11 @@ Mode string. Valid: @var{string} =
   @samp{pbm}  (Portable Bitmap),
   @samp{pcl}  (HP-PCL Level 3),
   @samp{pcx}  (Paintbrush format),
+  @samp{png}  (Portable Network Graphics format),
   @samp{pre}  (Preview mode; no output!),
   @samp{rgip} (Uniplex RGIP vector format),
   @samp{tex}  (line drawing with @TeX{}@ / @code{epic} macros)
+  @samp{fig}  (for Brian Smith's XFIG vector drawing program)
 @end display
 
 Occasionally available (unsupported) modes:
@@ -1542,7 +1555,7 @@ AMIGA portation; pbm, ilbm formats
 Many helpful suggestions and improvements, e.g. for pcl format
 
 @item Ian MacPhedran
-Color / binary format for pbm
+Color / binary format for pbm, xfig format
 
 @item Norbert Meyer
 ATARI portation; img, pic, pac formats; first ATARI previewer
@@ -1568,6 +1581,15 @@ OS/2 support, OS/2 full-screen previewer & help
 
 @item A. Treindl
 Code for UC support
+
+@item Heinz W. Werntges 
+for the original versions up to 3.2.0
+
+@item Emmanuel Bigler
+xfig and gnuplot ascii support
+
+@item Eugene Doudine
+PE command support
 @end table
 
 
@@ -1577,6 +1599,7 @@ Code for UC support
 @section Copyright notice
 
 @display
+Copyright (c) 1998 - 1999  Martin Kroeker
 Copyright (c) 1991 - 1994  Heinz W. Werntges
 All rights reserved.
 

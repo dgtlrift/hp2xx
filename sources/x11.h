@@ -49,7 +49,8 @@ copies.
 #define	SIZE		2
 #define	NO_MEM		3
 
-#define	CMS_SIZE	16
+/*#define	CMS_SIZE	16*/
+#define	CMS_SIZE	256
 #define	BLACK		0
 #define	WHITE		15
 #define	RED		2

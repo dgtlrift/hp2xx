@@ -22,7 +22,13 @@ copies.
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
-
+/**
+ ** charset6.h             HP-GL character set 6, JIS ASCII  
+ ** According to the 1987 HP Draftmaster manual, this is identical to 
+ ** charset0 except for the yen sign instead of the backslash in 
+ ** position 92.                  MK February 1999
+ **/
+ 
 /**
  ** This file defines a standard character set by elementary
  ** "draw" & "move" commands. The format is a very compact one from
@@ -80,7 +86,7 @@ copies.
  ** commands needed for switching from one to the other.
  **/
 
-char	*charset0[128] =
+char	*charset6[128] =
 {
 	/* 0x00 ... 0x1f	*/
 
@@ -167,7 +173,7 @@ char	*charset0[128] =
 "\032\231\266\264\066\331\332",
 "\032\332\224\324",
 "\124\264\272\332",
-"\032\324",
+"\032\270\264\070\332\050\310\047\307",        /* yen sign*/
 "\024\264\272\232",
 "\030\272\330",
 "\023\323",

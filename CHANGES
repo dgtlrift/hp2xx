@@ -1,0 +1,55 @@
+Changes from 3.3.ALPHA2 to 3.3.0
+
+New features:
+(none)
+
+Bug fixes: 
+
+- Combinations of PS, RO and the -r command line switch could lead to
+  wrong scaling
+- the position of a clipping box was miscalculated for labels
+
+Changes from 3.3.ALPHA to 3.3.ALPHA2:
+
+New features:
+
+- the PS (plot size) command is now supported, allowing 'white space'
+  around plots
+- support for the EW (edge wedge) command
+
+Bug fixes:
+
+- PC support in 3.3.ALPHA was still limited to 8 colors
+- PW had the parameters backwards and no provision for the 
+  'set them all to this value' variant
+- tick marks were scaled incorrectly (long-standing bug)
+- EA advanced pen position (long-standing bug)
+
+Changes from 3.2.0 to 3.3.ALPHA:
+
+New features:
+
+- Character set support for fonts 1-7, and the 'upper half' of font 0.
+- Support for most character-related commands (CA,CS,SA,SS)
+- Support for the IW (input window, i.e. clipping) command
+- Partial support for the PE (polyline encoded) command (integer coords only)
+- Output generation for Brian Smith's XFig
+- Output generation for Gnuplot
+- Output generation in PNG format
+- Automatic medium size selection code in the PCL initialization sequence
+- Centering (-C) now supported even in true-size (-t) mode
+- HPGL/2 Pen Color and Pen Width support for up to 256 virtual pens
+
+including contributions by:
+Emmanuel Bigler
+Eugene Doudine
+Ian McPhedran
+Michael Schmitz
+Rolf Schreck
+
+and bug-hunting by:
+Bernd Bartmann
+Rolf Schreck
+Thomas Mirlacher
+Laurent Santona
+

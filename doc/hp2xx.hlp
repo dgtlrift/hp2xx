@@ -5,8 +5,9 @@
  into either another vector-oriented  format or one of several rasterfile
  formats. Currently, its HPGL parser recognizes a subset of the HP 7550A
  command set. Some high-level functions like filled polygons are missing.
- Also, only the basic fixed character set 0 is supported. Beside these
- limitations, has proven to work with many HP-GL sources without any trouble.
+ Also, only some of the fixed space vector fonts and none of the variable
+ space arc fonts are supported. Beside these limitations, hp2xx has proven 
+ to work with many HP-GL sources without any trouble.
 
  USAGE: hp2xx [-options] [hpgl-file(s)]
 2 GENERAL_OPTIONS
@@ -75,15 +76,18 @@
  to select the program mode, i.e. the output format. Currently supported:
  mode = "mf" (Metafont), "em" (emTeX \special{} commands), "epic"
  (line drawing using TeX macros within epic.sty), "eps" (PostScript),
- "pcl" (HP-PCL Level 3 format (suitable for printing on a HP Laserjet II,
- DeskJet, or compatible printer), "img" (GEMs IMG format), "pbm" (Portable
- Bit Map), or "pcx" (PC-Paintbrush format, also accepted by 
- MS-Paintbrush / Windows 3.0 and many other PC based pixel renderers). 
+ "fig" (XFig version 3.1 format), "gpt" (Gnuplot ASCII format), "hpgl"
+ (simplified HP-GL, e.g. for import tasks), "pcl" (HP-PCL Level 3 format 
+(suitable for printing on a HP Laserjet II,  DeskJet, or compatible printer), 
+ "img" (GEMs IMG format), "pbm" (Portable Bit Map), "pcx" (PC-Paintbrush 
+ format, also accepted by  MS-Paintbrush / Windows 3.0 and many other PC 
+ based pixel renderers), "png" (Portable Network Graphics format), or
+ "rgip" (Uniplex RGIP). 
  There is also a preview option "pre" which supports VGA cards (DOS), 
  ATARI, AMIGA, X11 servers, Sunview and VWS. Default mode is "pre".
 4 RASTER_FORMATS
- The following formats are supported: HP-PCL, PCX, PIC, IMG, PBM, and 
- previews. However, generation of other formats is made easy for 
+ The following formats are supported: HP-PCL, PCX, PIC, IMG, PBM, PNG, 
+ and  previews. However, generation of other formats is made easy for 
  programmers because of hp2xx's modular structure. The program
  allocates a bitmap on a line-by-line basis, swapping lines to disk
  if needed, and plots into this bitmap. Depending on the selected
@@ -160,6 +164,8 @@
         emTex-specials,
         TeX/epic-Macros,
         Simplified HP-GL,
+        XFig 3.1,
+        Gnuplot ASCII,
  as well as
         Uniplex RGIP, and
         PostScript.
