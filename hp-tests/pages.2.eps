@@ -1,0 +1,82 @@
+%!PS-Adobe-2.0 EPSF-2.0
+%%Title: ../hp-tests/pages.2.eps
+%%Creator: hp2xx (c) 1991 - 1994 by  H. Werntges
+%%CreationDate: Mon Jun  2 11:22:21 2003
+%%Pages: 1
+%%BoundingBox: 0 0 568 568
+%%EndComments
+
+%%BeginProcSet:
+/PSSave save def
+/PSDict 200 dict def
+PSDict begin
+/@restore /restore load def
+/restore
+   {vmstatus pop
+    dup @VMused lt {pop @VMused} if
+    exch pop exch @restore /@VMused exch def
+   } def
+/@pri
+   {
+    ( ) print
+    (                                       ) cvs print
+   } def
+/@start
+   {
+    vmstatus pop /@VMused exch def pop
+   } def
+/@end
+   {(VM Used: ) print @VMused @pri
+    (. Unused: ) print vmstatus @VMused sub @pri pop pop
+    (\n) print flush
+    end
+    PSSave restore
+   } def
+/bop
+   {
+    /SaveImage save def
+   } def
+/eop
+   {
+    showpage
+    SaveImage restore
+   } def
+/@line
+   {
+%%    1 setlinejoin      %% now set from LA command
+%%    1 setmiterlimit    %% now set from LA command
+   } def
+/@SetPlot
+   {
+    2.834646 2.834646 scale
+      0.050   0.050 translate
+     0.100 setlinewidth
+   } def
+/C {setrgbcolor} def
+/D {lineto} def
+/M {moveto} def
+/S {stroke} def
+/W {setlinewidth} def
+/Z {stroke newpath} def
+end
+%%EndProcSet
+
+%%BeginSetup
+/#copies 1 def
+%%EndSetup
+%%Page: 1 1
+%%BeginPageSetup
+PSDict begin
+@start
+@line
+@SetPlot
+
+bop
+%%EndPageSetup
+  0.100 W
+ S
+eop
+@end
+%%PageTrailer
+%%Trailer
+%%EOF

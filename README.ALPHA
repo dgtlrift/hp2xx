@@ -1,3 +1,10 @@
+3.4.4a8
+
+Bug fixes:
+
+- corrected the page counting of multi-image files (all individual images
+  should be selectable again, and no extraneous blank images generated)
+
 3.4.4a7
 
 Modified STROKED_FONT character drawing and fill code to work with the

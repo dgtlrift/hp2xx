@@ -31,6 +31,8 @@ Bug fixes:
 - DT implementation was both incorrect and incomplete
 - AA with CT set to 'deviation distance' gave wrong results or even crashed
   the program
+- page counting of multi-image files was not always correct, rendering some
+  images inaccessible, or causing the generation of blank image files)
  
 Changes from 3.4.2 to 3.4.3
 

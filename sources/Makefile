@@ -71,9 +71,9 @@ ALL_LIBS  =  -L/usr/lib/X11R6 -lX11 -lm
 #
 # for experimental truetype font support
 #
-#DEFINES   = -DUNIX -DHAS_UNIX_X11 \
-# -DSTROKED_FONTS=\"/usr/X11R6/lib/X11/fonts/truetype/VeraMono.ttf\" `freetype-config --cflags`
-#ALL_LIBS  = `freetype-config --libs` -L/usr/lib/X11R6 -lX11 -lm     
+DEFINES   = -DUNIX -DHAS_UNIX_X11 \
+ -DSTROKED_FONTS=\"/usr/X11R6/lib/X11/fonts/truetype/VeraMono.ttf\" `freetype-config --cflags`
+ALL_LIBS  = `freetype-config --libs` -L/usr/lib/X11R6 -lX11 -lm     
 #
 # Generic UNIX, no previewer
 #
@@ -181,10 +181,10 @@ EX_DEFS =
 EX_LIBS =
 #
 # Include PDF support
-EX_SRC	+= to_pdf.c
-EX_OBJ += to_pdf.o
-EX_DEFS += -DUSEPDF
-EX_LIBS += -lpdf
+#EX_SRC	+= to_pdf.c
+#EX_OBJ += to_pdf.o
+#EX_DEFS += -DUSEPDF
+#EX_LIBS += -lpdf
 #
 # Epson Esc/P2 support 
 EX_SRC	+= to_escp2.c
@@ -192,10 +192,10 @@ EX_OBJ	+= to_escp2.o
 EX_DEFS += -DEPSON
 #
 # Include PNG support:
-EX_SRC  += png.c to_png.c
-EX_OBJ  += png.o to_png.o
-EX_DEFS += -DPNG
-EX_LIBS += -lpng -lz
+#EX_SRC  += png.c to_png.c
+#EX_OBJ  += png.o to_png.o
+#EX_DEFS += -DPNG
+#EX_LIBS += -lpng -lz
 #
 # Include TIFF support:
 EX_SRC  += to_tif.c

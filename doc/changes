@@ -1,5 +1,9 @@
 Changes to hp2xx:
 =================
+3.4.4a8:
+page_number was not incremented correctly, especially it should increase
+at end-of-file to match the multi-page selection algorithm.
+
 3.4.4a7:
 adapted the optional ttf character plot functions to Bitstream Vera Mono,
 added commented-out section for ttf support to makes/generic.mak.

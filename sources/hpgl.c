@@ -434,6 +434,8 @@ static void reset_HPGL(void)
 	if (fixedwidth == FALSE)
 		for (i = 0; i < 8; i++)
 			pt.width[i] = 0.1;
+	record_off = (first_page > page_number)
+	    || ((last_page < page_number) && (last_page > 0));
 }
 
 static void init_HPGL(GEN_PAR * pg, const IN_PAR * pi)
@@ -462,7 +464,6 @@ static void init_HPGL(GEN_PAR * pg, const IN_PAR * pi)
    **/
 	first_page = pi->first_page;	/* May be 0     */
 	last_page = pi->last_page;	/* May be 0     */
-/*  page_number = 1;*/
 	record_off = (first_page > page_number)
 	    || ((last_page < page_number) && (last_page > 0));
 
@@ -3254,7 +3255,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 	case PG:		/* new PaGe                     */
 		/* record ON happens only once! */
 		page_number++;
-		fprintf(stderr, "PG: page_number now %d\n", page_number);
+/*		fprintf(stderr, "PG: page_number now %d\n", page_number);*/
 		record_off = (first_page > page_number)
 		    || ((last_page < page_number) && (last_page > 0));
 #if 1
@@ -3828,8 +3829,10 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 #if 1
 			if (c == 'P') {
 				if ((cmd = getc(pi->hd)) == 'G') {
-/*	  fprintf(stderr,"***PG***\n");'*/
 					page_number++;
+/*		fprintf(stderr, "stream-reading PG: page_number now %d\n", page_number);*/
+	record_off = (first_page > page_number)
+	    || ((last_page < page_number) && (last_page > 0));
 					goto END;
 				} else {
 					if (cmd == EOF)
@@ -3841,6 +3844,9 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 				if ((cmd = getc(pi->hd)) == 'R') {
 /*	  fprintf(stderr,"***NR***\n");'*/
 					page_number++;
+/*		fprintf(stderr, "stream-reading NR: page_number now %d\n", page_number);*/
+	record_off = (first_page > page_number)
+	    || ((last_page < page_number) && (last_page > 0));
 					goto END;
 				} else {
 					if (cmd == EOF)
@@ -3853,6 +3859,9 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 				if (cmd == 'F' || cmd == 'H') {
 /*	  fprintf(stderr,"***AF/AH***\n");*/
 					page_number++;
+/*		fprintf(stderr, "stream-reading AF/AH: page_number now %d\n", page_number);*/
+	record_off = (first_page > page_number)
+	    || ((last_page < page_number) && (last_page > 0));
 					goto END;
 				} else {
 					if (cmd == EOF)
@@ -3874,8 +3883,14 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 			read_HPGL_cmd(pg, cmd, pi->hd);
 		}
 	}
+	if (c == EOF) {
+			page_number++;
+/*			fprintf(stderr, "EOF : page_number now %d\n", page_number);*/
+	}
       END:
 	if (!pg->quiet && n_commands > 0) {
+		Eprintf("Page number %d of range %d - %d\n",
+		page_number-1,pi->first_page,pi->last_page);
 		Eprintf("\nHPGL commands read: %d\n", n_commands);
 		Eprintf("HPGL command(s) ignored: %d\n", n_unknown);
 		Eprintf("Unexpected event(s):  %d\n", n_unexpected);
@@ -3897,7 +3912,7 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 			if (pens_in_use[c] == 1)
 				Eprintf("%d ", c);
 /*                      Eprintf ("%d ", c+1); */
-		Eprintf("\nMax. number of pages: %d\n", page_number);
+		Eprintf("\nMax. number of pages: %d\n", page_number-1);
 	}
 }
 
