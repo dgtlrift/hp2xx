@@ -1,4 +1,4 @@
-(c) 1999         M. Kroeker     HP2XX release 3.3.1                 99/12/01
+(c) 1998 - 2000  M. Kroeker     HP2XX release 3.3.2                 00/02/12
 (c) 1992 - 1994  H. Werntges    HP2XX release 3.2.x                 94/02/14
                                 ===================
 
@@ -38,9 +38,10 @@ to_sunvw.c   SunView previewer (unsupported -- outdated)
 to_uis.c     VAX-VMS UIS previewer
 to_vga.c     DOS full-screen VGA previewer
 to_x11.c     X11 previewer
-to_png.c     Output converter for PNG format
+to_png.c     Output converter for PNG format (requires libpng and libz)
 to_fig.c     Output converter for FIG (XFig) format
- 
+to_tif.c     Output converter for TIFF format (requires libtiff)
+
 bresnham.h   Contains a basic struct -- needed by almost all C sources
 chardraw.h   Header for character drawing.
 charset0.h   Definition of built-in font 0 , ANSI ASCII 

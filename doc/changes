@@ -1,6 +1,19 @@
 Changes to hp2xx:
 =================
 
+V 3.3.2     , 00/02/12:
+
+Added flags to make the command line options -c and -s override any PC or PW 
+commands in the HPGL file. (One can now force monochrome output from a color 
+hpgl file again, and work around silly programs that use global PW at every 
+pen change). Fixed autoscaling of plot in landscape mode and interpretation
+of PE pen change commands. Removed artificial A4 page limitation in Postscript
+mode. Documented the automatic selection between PBM and PPM file formats 
+done in pbm mode. Changed color for 'black' pen in to_x11.c from (light) 
+gray to gray10. Added TIFF output module provided by M.Liberi after changing 
+requested compression from LZW to DEFLATE, added TIFF and PNG defines to 
+generic.mak. Added support for DV (vertical text).
+
 V 3.3.1     , 99/11/20:
 
 Changed handling of PS/RO to finally(?) eliminate the scaling problems.

@@ -1,18 +1,49 @@
+Changes from 3.3.1 to 3.3.2
+
+New features:
+
+- Added TIFF output mode (provided by M.Liberi) based on libtiff. Uses ZIP
+  deflate compression to avoid LZW patent issues at the risk of reduced
+  portability.
+- DV command (vertical text)
+
+Bug fixes:
+
+- Command line options for pen color and pen width take precedence over PC
+  or PW statements in the HPGL file now. This allows creation of PBM bitmaps
+  instead of PPM pixmaps from color plots again (by setting all pens to 
+  black, -c11111111), and should also help for programs that use several pens 
+  at constant widths, but emit global PW commands with every SP statement. 
+  A true fix for the latter case would require keeping track of the current 
+  pen settings for every line in the internal metaformat (maybe in 3.4)
+
+- Removed the A4 size limitation for Encapsulated PostScript output 
+
+- Default 20x20 plot size calculation was broken for Landscape format
+
+- Black pen was displayed as light gray in X11 preview, now uses a very dark
+  gray (gray10) 
+
+- pen color was not decoded correctly in PE pencolor statements
+
+- output file was closed twice in to_eps.c, which could cause a segmentation
+  fault inside (g)libc if hp2xx was used in batch mode
+
 Changes from 3.3.0 to 3.3.1
 
 New features:
 - PE with fractional coordinates (completes PE support)
 - unlimited label lengths through dynamic reallocation of LB memory
-  (Georgy Salnikov)
+
 Bug fixes:
 - PS/RO handling was still broken, should be fixed now
 - xfig file headers had erroneously claimed 3.2 compliance, but the files
-  still had 3.1 format - should be valid FIG 3.2 now.
+  still had 3.1 format
 - Makefiles in ~/makes updated 
 - DR and DI did not initialize character properties when called without
-  parameters (Georgy Salnikov)
-- Current address of Michael Schmitz added to to_png.c
-- removed junk files hp-tests/acad.pcl and sources/rgb2cmyk.c  
+  parameters
+- Current address of Michael Schmitz added to documentation 
+- removed leftover PCL file acad.pcl from hp-tests 
 
 Changes from 3.3.ALPHA2 to 3.3.0
 
@@ -62,10 +93,12 @@ Eugene Doudine
 Ian McPhedran
 Michael Schmitz
 Rolf Schreck
+Lars Erikson
+Gerhard Buergmann
+Michele Liberi
 
 and bug-hunting by:
 Bernd Bartmann
-Rolf Schreck
 Thomas Mirlacher
 Laurent Santona
-
+Stephan Meystre

@@ -1,6 +1,6 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
-   Parts Copyright (c) 1999 -2000  Martin Kroeker  All rights reserved.
+   Parts Copyright (c) 1999  Martin Kroeker  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -67,7 +67,6 @@ extern	HPGL_Pt		HP_pos, P1, P2;
 extern	LineType	CurrentLineType, GlobalLineType;
 
 extern int iwflag;
-extern int mode_vert;
 extern HPGL_Pt		C1,C2;
 
 TEXTPAR	TEXTP, *tp = &TEXTP;
@@ -500,7 +499,6 @@ char	*txt0;
 		tp->refpoint.y += tp->chardiff.y;
 		break;
 	  case _CR:
-	  	if (mode_vert) tp->CR_point.y -= tp->linediff.y ; 
 		tp->refpoint = tp->CR_point;
 		switch (mode)
 		{
@@ -516,13 +514,9 @@ char	*txt0;
 		break;
 	  case _LF:
 		tp->CR_point.x += tp->linediff.x;
-		tp->refpoint.x += tp->linediff.x;
-		if (!mode_vert){
 		tp->CR_point.y += tp->linediff.y;
+		tp->refpoint.x += tp->linediff.x;
 		tp->refpoint.y += tp->linediff.y;
-		}else{
-		tp->refpoint.y -= tp->linediff.y;
-		}
 		break;
 	  case _BS:
 		tp->refpoint.x -= tp->chardiff.x;
@@ -557,10 +551,6 @@ char	*txt0;
 /**
  ** Move to next reference point, e. g. the next character origin
  **/
-        if (mode_vert) {
-        tp->refpoint.x -= tp->chardiff.x;
-        tp->refpoint.y += tp->linediff.y;
-        }
 	Pen_action_to_tmpfile (MOVE_TO, &tp->refpoint, FALSE);
 	txt++;
   }

@@ -1,4 +1,4 @@
-.TH hp2xx 1 "1 December 1999"
+.TH hp2xx 1 "12 February 2000"
 .SH NAME
 hp2xx \- A HPGL converter into some vector- and raster formats
 .SH USAGE
@@ -149,7 +149,7 @@ mode = "mf" (Metafont), "em" (emTeX \special{} commands), "epic"
 "fig" (XFig 3.2), "gpt" (GnuPlot ascii), "hpgl" (simplified HP-GL, 
 e.g. for import tasks), "pcl" (HP-PCL Level 3 format (suitable for printing 
 on a HP Laserjet II, DeskJet, or compatible printer), "img" (GEMs IMG format), 
-"pbm" (Portable Bit Map), "pcx" (PC-Paintbrush format, also accepted by 
+"pbm" (Portable Bit Map / Portable PixMap for color plots), "pcx" (PC-Paintbrush format, also accepted by 
 MS-Paintbrush / Windows 3.0 and many other PC based pixel renderers), 
 "png" (Portable Network Graphics format), or "rgip" (Uniplex RGIP).
 There is also a preview option "pre" which supports VGA cards (DOS),
@@ -188,6 +188,8 @@ changes all pensizes to 2 units, all colors to green
 makes pen #1 a blue pen of size 3 , pen #3 a yellow pen of size 2,
 suppresses all drawing with pen #2,
 and keeps all other pen sizes and colors.
+Setting either -p or -c will override the equivalent HPGL/2 commands
+(PC,PW) in the HP-GL file.
 
 Sometimes, HP-GL files contain several pages of plotter output.
 .I hp2xx
@@ -244,7 +246,7 @@ puts your picture "flush" to the left and upper paper limit by default.
 .LP
 .SH RASTER FORMATS
 .LP
-The following formats are supported: HP-PCL, PCX, PIC, IMG, PBM, PNG, and previews.
+The following formats are supported: HP-PCL, PCX, PIC, IMG, PBM/PPM, PNG, and previews.
 However, generation of
 other formats is made easy for programmers because of
 .I hp2xx's
@@ -266,7 +268,14 @@ PCX: The size of a PCX picture is controlled via its specified height and
 the current DPI value. To create a high-resolution PCX image, just increase
 the DPI value as desired. PCX format does not accept offsets.
 
-IMG, PBM: See PCX.
+IMG: See PCX.
+
+PBM/PPM: See PCX for options. If your hpgl file is not monochrome, hp2xx
+will automatically create a PPM (portable pixmap) file instead of a PBM
+bitmap. (Use -c11111111 to force generation of PBM from a color hpgl file).
+Depending on the compile-time option PBM_ASCII, hp2xx will create ascii or
+binary pbm (ppm) files - usually the more efficient binary format should be
+preferred.
 
 (Unsupported options) PIC, PAC: ATARI ST screens (640x400 pixels) can
 easily be dumped to files. Programs such as STAD accept graphics by

@@ -62,6 +62,7 @@ BINDCMD  =                # only needed for EMX and DJGPP DOS extenders
 #
 # Generic UNIX + X11 previewer (default)
 # add -lpng -lz for PNG support
+# and/or -ltiff for TIFF
 #
 DEFINES   = -DUNIX -DHAS_UNIX_X11
 PREVIEWER = to_x11
@@ -174,6 +175,11 @@ EX_DEFS	=
 #EX_SRC  = png.c to_png.c
 #EX_OBJ  = png.o to_png.o
 #EX_DEFS = -DPNG
+#
+# Include TIFF support:
+#EX_SRC  =  to_tif.c
+#EX_OBJ  = to_tif.o
+#EX_DEFS = -DTIF
 #
 # Include ATARI extras:
 # EX_SRC	= to_pic.c to_pac.c

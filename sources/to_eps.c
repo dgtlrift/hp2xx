@@ -51,7 +51,7 @@ copies.
 #include "hp2xx.h"
 
 
-#define	A4_height	297	/* in [mm]	*/
+/*#define	A4_height	297*/	/* in [mm]	*/
 
 
 
@@ -72,7 +72,6 @@ void	ps_end (FILE *fd)
   fprintf(fd, "%%%%PageTrailer\n");
   fprintf(fd, "%%%%Trailer\n");
   fprintf(fd, "%%%%EOF\n");
-  fclose (fd);
   linecount = 0;
 }
 
@@ -164,6 +163,11 @@ void	ps_init (const GEN_PAR *pg, const OUT_PAR *po, FILE *fd,
 {
 long	left, right, low, high;
 double	hmxpenw;
+double A4_height;
+
+A4_height=297.;
+/*if (po->height >297.) A4_height=584.;*/
+
 
   hmxpenw = pg->maxpensize / 20.0;	/* Half max. pen width, in mm	*/
 
@@ -182,11 +186,16 @@ double	hmxpenw;
  **
  ** (hmxpenw & floor/ceil corrections suggested by Eric Norum)
  **/
-
+/*
   left  = (long) floor((po->xoff-hmxpenw)		    * 2.834646);
   low   = (long) floor((A4_height-po->yoff-po->height-hmxpenw)* 2.834646);
   right = (long) ceil ((po->xoff   + po->width+hmxpenw)	    * 2.834646);
   high  = (long) ceil ((A4_height - po->yoff+hmxpenw)	    * 2.834646);
+*/
+  left  = (long) floor(abs(po->xoff-hmxpenw)		    * 2.834646);
+  low   = (long) floor(abs(po->yoff-hmxpenw)* 2.834646);
+  right = (long) ceil ((po->xoff   + po->width+hmxpenw)	    * 2.834646);
+  high  = (long) ceil ((po->yoff+po->height+hmxpenw)	    * 2.834646);
   fprintf(fd,"%%%%BoundingBox: %ld %ld %ld %ld\n", left, low, right, high);
   if (!pg->quiet)
 	Eprintf ("Bounding Box: [%ld %ld %ld %ld]\n",
@@ -253,8 +262,9 @@ double	hmxpenw;
   fprintf(fd,"/@SetPlot\n");
   fprintf(fd,"   {\n");
   fprintf(fd,"    2.834646 2.834646 scale\n");	/* 1/72"--> mm */
-  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff,
-			A4_height - po->yoff - po->height);
+/*  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff,
+			A4_height - po->yoff - po->height);*/
+  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff, po->yoff);
   fprintf(fd,"    %6.3f setlinewidth\n", pensize/10.0);
   fprintf(fd,"   } def\n");
   fprintf(fd,"/C {setrgbcolor} def\n");

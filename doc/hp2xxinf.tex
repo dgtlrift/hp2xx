@@ -1,6 +1,6 @@
 \input texinfo      @c -*-texinfo-*-
 @c Copyright (c) 1992 - 1994  Heinz W. Werntges
-@c Copyright (c) 1998 - 1999  Martin Kroeker
+@c Copyright (c) 1998 - 2000  Martin Kroeker
 @c %**start of header
 @setfilename hp2xx.info
 @settitle HP2XX, A HP-GL Converter
@@ -14,7 +14,7 @@
 
 @tex
 % \def\$#1${{#1}}  % Kludge: collect RCS revision info without $...$
-\xdef\manvers{$Revision: 1.1.1 $}  % For use in headers, footers too
+\xdef\manvers{$Revision: 1.1.2 $}  % For use in headers, footers too
 @end tex
 
 @c HP2XX CHANGE LOG:
@@ -30,7 +30,8 @@
 @c 94/02/15  V 1.04b HWW  Option -C added
 @c 99/08/01  V 1.10  MK   Updated for 3.30 (new options, new HPGL commands)
 @c 99/12/01  V 1.11  MK   Updated for 3.31 (HPGL commands,acknowledgements)
-
+@c 00/02/06  V 1.12  MK   Added notes on relation between -c/-s and PC/PW
+@c                        and on auto-generation of ppm files in pbm mode
 @c THIS MANUAL REQUIRES TEXINFO-2 macros and info-makers to format properly.
 
 @ifinfo
@@ -46,10 +47,10 @@ END-INFO-DIR-ENTRY
 This file documents the HP-GL converter HP2XX
 
 @c !!set edition, date, version
-This is Edition 1.1.1, December 1999,
+This is Edition 1.1.2, February 2000,
 of @cite{Using HP2XX: A HP-GL Converter}.
 
-Copyright (C) 1998 - 1999 Martin Kroeker
+Copyright (C) 1998 - 2000 Martin Kroeker
 Copyright (C) 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
@@ -83,8 +84,8 @@ by the Free Software Foundation instead of in the original English.
 @c @subtitle on XXXX Systems
 @sp 1
 @c !!set edition, date, version
-@subtitle Edition 1.1.1, for HP2XX version 3.3.1
-@subtitle December 1999
+@subtitle Edition 1.1.2, for HP2XX version 3.3.x
+@subtitle February 2000
 @author by Martin Kroeker (previously by Heinz W. Werntges)
 @page
 @tex
@@ -96,7 +97,7 @@ by the Free Software Foundation instead of in the original English.
 @end tex
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1998 - 1999 Martin Kroeker
+Copyright @copyright{} 1998 - 2000 Martin Kroeker
 Copyright @copyright{} 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
@@ -127,7 +128,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 
 @c !!set edition, date, version
-This is Edition 1.1.1, December 1999, for HP2XX Version 3.3.1
+This is Edition 1.1.2, February 2000, for HP2XX Version 3.3.x
 @end ifinfo
 
 
@@ -372,19 +373,23 @@ is selected.
 By default, all pens are present, have @var{foreground} color
 (typically @var{black}), and their tip thicknesses are one unit
 (here: 1/10 @code{mm} for vector modes, 1 pixel for raster modes).
+HPGL/2 commands NP,PC,PW may override this for up to 255 freely configurable
+pens.
 
 Pen colors and sizes are represented by digits to allow for a compact
 option list. There are 8 colors including @var{background} (usually white).
 @xref{Appendix B} for a list of all colors. E.g., color 3 is green,
 and color 7 means yellow. Permitted pen sizes are 0 ... 9 units.
-WARNING: In raster modes, all pen sizes larger than 4 units (pixels) will be
-clipped to 4 units!
+WARNING: In raster modes, all pen sizes are approximated by double, triple,
+etc. width, and lines wider than 4 will probably not give useful results.
 
 Options @samp{-c @var{c-string}} and @samp{-s @var{s-string}} tell
 @code{hp2xx} about the pens to be placed in the carousel.
 @var{c-string} and @var{s-string} are strings of 1 to 8 digits,
 corresponding to special choices of pen 1 to 8.
-Defaults are @var{c-string} = @var{s-string} = @samp{11111111}.
+Defaults are @var{c-string} = @var{s-string} = @samp{11111111} unless the
+hpgl file contains corresponding PC and/or PW commands. Specifying @samp{-c}
+or @samp{-s} overrides the equivalent HPGL/2 command.
 If you specify less than 8 pens, the remaining pens keep their defaults.
 
 Examples:
@@ -478,10 +483,10 @@ direction.
 
 There are plenty of raster formats on various platforms, much more
 than @code{hp2xx} will ever handle. The supported raster formats
-IMG, PBM, PCL, PCX and PNG were chosen for their widespread use, their simplicity,
+IMG, PBM/PPM, PCL, PCX, PNG and TIFF were chosen for their widespread use, their simplicity,
 for actual demand, and for accessibility of specifications.
 If your desired format is not supported, look for a converter. E.g., the
-Portable Bitmap (PBM) project and, more recently, the ImageMagick package 
+Portable Bitmap (PBM) project and more recently, the ImageMagick package 
 offer quite a variety of such converters.
 
 Please note that the preview mode (which does not create any output file)
@@ -611,6 +616,7 @@ A4 page, issue a command similar to:
 @example
 hp2xx -m pcl -d 150 -r90 -h270 -w160 landscape.hp
 @end example
+
 
 
 
@@ -767,7 +773,7 @@ are far from convenient.
 The internal rasterization done by @code{hp2xx} is a simple process
 and may someday be replaced by something more efficient: A "draw point"
 command essentially sets a single pel in the internal buffer.
-If line with grows (2 - 4 units), a square of 2 to 4 pels length will
+If line width grows (2 - 4 units), a square of 2 to 4 pels length will
 be set. Vector drawing is broken down to point drawing by the
 Bresenham algorithm. Therefore, there is no notion of controlled
 line caps. The shapes of line ends simply result from plotting these squares.
@@ -1028,8 +1034,7 @@ releases:
 @display
   Box and sector drawing / filling
   Other, more rarely used HP-GL commands
-  Color support in UIS and PBM
-  Improved color support in X11 and PCX
+  Color support in UIS 
   PCL: Better data compression for DJ500, DJ500C, DJ550;
   Loadable fonts, e.g. Hershey fonts, or: more built-in fonts
   Full-screen previewer for OS/2
@@ -1085,6 +1090,7 @@ this:
 
  Example:  code for character @code{'L': "\032\224\324"} translates to:
            @code{moveto(1,10); drawto(1,4); drawto(5,4);}
+
 @tex
 \page
 @end tex
@@ -1344,7 +1350,7 @@ Mode string. Valid: @var{string} =
   @samp{hpgl} (simplified HP-GL, useful for imports),
   @samp{img}  (e.g., GEM's Image format),
   @samp{mf}   (Metafont source),
-  @samp{pbm}  (Portable Bitmap),
+  @samp{pbm}  (Portable Bitmap (monochrome) or Portable Pixmap (color plots)),
   @samp{pcl}  (HP-PCL Level 3),
   @samp{pcx}  (Paintbrush format),
   @samp{png}  (Portable Network Graphics format),
@@ -1531,13 +1537,12 @@ especially your monitor!
 @section Acknowledgement
 
 While @code{hp2xx} was available as binaries on several platforms,
-many people contributed to this project by supplying first HWW and then MK 
+many people contributed to this project by supplying first HWW and then MK
 with valuable suggestions and reports. Many thanks to all of them!
 It is a pleasure to especially thank the following people for their
 outstanding contributions:
 
 Versions up to 3.2.0 (mid-1994):
-
 @table @code
 
 @item Nelson Beebe
@@ -1573,7 +1578,7 @@ AMIGA portation; pbm, ilbm formats
 Many helpful suggestions and improvements, e.g. for pcl format
 
 @item Ian MacPhedran
-Color / binary format for pbm
+Color / binary format for pbm/ppm, xfig format
 
 @item Norbert Meyer
 ATARI portation; img, pic, pac formats; first ATARI previewer
@@ -1599,21 +1604,20 @@ OS/2 support, OS/2 full-screen previewer & help
 
 @item Alois Treindl
 Code for UC support
-@end table
 
-Versions since 3.3 (mid-1999):
-
-@table @code
 @item Heinz W. Werntges 
 for the original versions up to 3.2.0
+
+
+Versions since 3.3.0 (mid-1999):
+
+@item Emmanuel Bigler
+xfig and gnuplot ascii support
 
 @item Ian MacPhedran
 XFig output
 
-@item Emmanuel Bigler
-Gnuplot ascii output
-
-@item Michael Schmitz
+Michael Schmitz
 PNG output
 
 @item Eugene Doudine
@@ -1621,6 +1625,15 @@ PE command support
 
 @item Georgy Salnikov 
 Improvements for character commands (LB,DI,DR)
+
+@item Michele Liberi
+TIFF output
+
+@item Lars Erikson
+EPS plotsize bug fixes
+
+@item Gerhard Buergmann
+bug fixes for plot scaling and PE support
 @end table
 
 

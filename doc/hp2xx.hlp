@@ -76,17 +76,19 @@
  to select the program mode, i.e. the output format. Currently supported:
  mode = "mf" (Metafont), "em" (emTeX \special{} commands), "epic"
  (line drawing using TeX macros within epic.sty), "eps" (PostScript),
- "fig" (XFig version 3.2 format), "gpt" (Gnuplot ASCII format), "hpgl"
+ "fig" (XFig version 3.1 format), "gpt" (Gnuplot ASCII format), "hpgl"
  (simplified HP-GL, e.g. for import tasks), "pcl" (HP-PCL Level 3 format 
 (suitable for printing on a HP Laserjet II,  DeskJet, or compatible printer), 
- "img" (GEMs IMG format), "pbm" (Portable Bit Map), "pcx" (PC-Paintbrush 
- format, also accepted by  MS-Paintbrush / Windows 3.0 and many other PC 
- based pixel renderers), "png" (Portable Network Graphics format), or
- "rgip" (Uniplex RGIP). 
+ "img" (GEMs IMG format), "pbm" (Portable Bit Map / Portable Pix Map), 
+ "pcx" (PC-Paintbrush format, also accepted by  MS-Paintbrush 
+ and many other PC based pixel renderers), "png" (Portable Network Graphics 
+ format), or "rgip" (Uniplex RGIP). 
+ If the plot contains colors, hp2xx will automatically create a PPM file
+ instead of a PBM file when pbm mode is selected.
  There is also a preview option "pre" which supports VGA cards (DOS), 
  ATARI, AMIGA, X11 servers, Sunview and VWS. Default mode is "pre".
 4 RASTER_FORMATS
- The following formats are supported: HP-PCL, PCX, PIC, IMG, PBM, PNG, 
+ The following formats are supported: HP-PCL, PCX, PIC, IMG, PBM/PPM, PNG, 
  and  previews. However, generation of other formats is made easy for 
  programmers because of hp2xx's modular structure. The program
  allocates a bitmap on a line-by-line basis, swapping lines to disk
@@ -138,7 +140,7 @@
 5 IMG
  GEM image format; see PCX.
 5 PBM
- Portable bit map; see PCX.
+ Portable bit map (or PPM, portable pixmap for color plots); see PCX.
 5 PIC_and_PAC
  (Unsupported options)
  ATARI ST screens (640x400 pixels) can easily be dumped to files.
@@ -330,11 +332,12 @@
  Heinz W. Werntges, Physikal. Biologie, Geb. 26.12,
  Heinrich-Heine-Universitaet,
  D-40225 Duesseldorf, Germany.
+ Internet: werntges@convex.rz.uni-duesseldorf.de
 
   Maintainer/author since version 3.3.0
- Martin Kroeker, Daveg GmbH,
- Schottener Weg 2,
- D-64289 Darmstadt, Germany.
+  Martin Kroeker, Daveg GmbH,
+  Schottener Weg 2,
+  D-64289 Darmstadt, Germany.
  mk@daveg.com OR martin@ruby.chemie.uni-freiburg.de
 
  ATARI features & PIC, PAC, IMG modes are due to Norbert Meyer, Duesseldorf.

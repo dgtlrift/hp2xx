@@ -196,7 +196,7 @@ win_open(const GEN_PAR *pg, int x, int y, int w, int h )
   }
   else
   {
-	XParseColor( XDisplay, def_cmap, "gray",&Xcol );
+	XParseColor( XDisplay, def_cmap, "gray10",&Xcol );
 	XAllocColor( XDisplay, def_cmap, &Xcol );
 	col_table[GRAY] = Xcol.pixel;
 

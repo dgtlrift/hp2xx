@@ -215,6 +215,7 @@ char	*p, cdummy;
 			pg->pencolor[j] != xxForeground)
 				pg->is_color = TRUE;
 		}
+		pi->hwcolor=TRUE;
 		break;
 
 	  case 'C':
@@ -343,6 +344,7 @@ char	*p, cdummy;
 			if (pg->maxpensize < pg->pensize[j])
 				pg->maxpensize = pg->pensize[j];
 		}
+		pi->hwsize=TRUE;
 		break;
 
 	  case 'P':

@@ -188,7 +188,7 @@ typedef	enum{
 	XX_CAD, XX_CS, XX_EM, XX_EPIC, XX_EPS, XX_FIG, XX_GPT, XX_HPGL, 
         XX_ILBM, XX_IMG,
 	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PIC, XX_PNG, XX_PRE, 
-	XX_RGIP, XX_TERM	/* Dummy: terminator	*/
+	XX_RGIP, XX_TIFF, XX_TERM	/* Dummy: terminator	*/
 } hp2xx_mode;
 
 
@@ -278,6 +278,8 @@ typedef struct			/* Corresponding option(s)	*/
    int	first_page, last_page;	/* -P first_page:last_page	*/
    int	center_mode;		/* -C				*/
    int	truesize;		/* -t				*/
+   int  hwcolor;		/* -c				*/
+   int  hwsize;			/* -p				*/
    double  width, height;	/* -w width -h height		*/
    double  aspectfactor;	/* -a aspectfactor		*/
    double  rotation;		/* -r rotation			*/
@@ -392,7 +394,7 @@ void	HPGL_Pt_from_tmpfile	(HPGL_Pt *);
 void	Pen_action_to_tmpfile	(PlotCmd, const HPGL_Pt*, int);
 int	read_float		(float*, FILE*);
 int read_PE_coord(int ,FILE* ,PE_flags* ,float* );
-int decode_PE_char(int , PE_flags *); 
+int decode_PE_char(int , PE_flags *) ;
 void	to_ATARI	(GEN_PAR*, FILE *);
 int	to_mftex	(const GEN_PAR*, const OUT_PAR*, int);
 int	to_eps		(const GEN_PAR*, const OUT_PAR*);
@@ -410,6 +412,7 @@ RowBuf	*get_RowBuf	(const PicBuf*, int);
 int	PicBuf_to_PCL	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_PCX	(const GEN_PAR*, const OUT_PAR*);
 int     PicBuf_to_PNG   (const GEN_PAR*, const OUT_PAR*);
+int     PicBuf_to_TIF   (const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_IMG	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_PBM	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_ILBM	(const GEN_PAR*, const OUT_PAR*);

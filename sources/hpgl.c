@@ -77,6 +77,9 @@ copies.
  ** 99/05/10          MK   RO command added (code by rs@daveg.com) 
  ** 99/05/18          MK   partial PE support (by Eugene Doudine)
  ** 99/06/05          MK   PC improvements and fixes
+ ** 99/11/30          MK   support for fractional PE; PS/RO fixes
+ ** 00/02/06          MK   allow commandline overrides for PC/PW
+ ** 00/02/13          MK   DV support (backport from delayed 3.4.prealpha)
  **/
 
 #include <stdio.h>
@@ -115,6 +118,7 @@ HPGL_Pt		HP_pos	= {0};		/* Actual plotter pen position 	*/
 HPGL_Pt		P1	= {P1X_default, P1Y_default}; /* Scaling points	*/
 HPGL_Pt		P2	= {P2X_default, P2Y_default};
 int iwflag=0; /*MK*/
+int mode_vert=0;
 HPGL_Pt		C1	= {P1X_default, P1Y_default}; /* Clipping points	*/
 HPGL_Pt		C2	= {P2X_default, P2Y_default};
 HPGL_Pt	S1	= {P1X_default, P1Y_default};	/* Scaled 	*/
@@ -145,6 +149,8 @@ extern	short silent_mode	= FALSE;	/* Don't clobber ATARI preview!	*/
 #else
 static	short silent_mode	= FALSE;
 #endif
+static  short fixedcolor	= FALSE;
+static  short fixedwidth	= FALSE;
 static	short record_off	= FALSE;
 static	short first_page	= 0;
 static	int last_page	= 0;
@@ -181,6 +187,7 @@ static	FILE	*td;
 #define DI	0x4449
 #define DR	0x4452
 #define DT	0x4454
+#define DV      0x4456
 #define EA	0x4541
 #define ES	0x4553
 #define EW      0x4557 /*MK*/
@@ -304,6 +311,8 @@ init_HPGL (const GEN_PAR *pg, const IN_PAR* pi)
   ymin		= pi->y0;
   xmax		= pi->x1;
   ymax		= pi->y1;
+  fixedcolor	= pi->hwcolor;
+  fixedwidth	= pi->hwsize;
 
 /*  pens_in_use	= 0;*/
 
@@ -634,7 +643,7 @@ int read_PE_flags(const GEN_PAR *pg, int c,FILE *hd,PE_flags *fl) {
 	   par_err_exit(98,PE); 
 	}
           old_pen=pen;
-    read_PE_coord(c,hd,fl,&ftmp);
+    read_PE_coord(fl->pen,hd,fl,&ftmp);
             pen=ftmp;
 	if (pen < 0 || pen > pg->maxpens)
 	{
@@ -1605,7 +1614,7 @@ float csfont;
 	tp->CR_point = HP_pos;
 	break;
     case PC:            /* Pen Color                    */
-    	if (read_float (&ftmp, hd) || ftmp >pg->maxpens) { /* invalid or missing */
+    	if (read_float (&ftmp, hd) || fixedcolor ||ftmp >pg->maxpens) { /* invalid or missing */
     	break;
     	} else  {  
     	  mypen=ftmp;
@@ -1699,6 +1708,10 @@ float csfont;
 	tp->CR_point = HP_pos;
 	break;
     case PW:            /* Pen Width                    */
+	if (fixedwidth) {
+	if (!silent_mode) fprintf(stderr,"PW: ignored (hardware mode)\n");
+	break;
+	}
     	if (read_float (&ftmp, hd) ){  /* no parameters -> set defaults */
         mywidth=0.35;
     	for (i =1;i<=pg->maxpens;++i) pg->pensize[i]=mywidth*10.;
@@ -2048,7 +2061,13 @@ rot_ang+=ftmp;
     case DT:		/* Define string terminator	*/
 	StrTerm = getc(hd);
 	break;
-    case ES:		/* Extra Space			*/
+    case DV:           /* Text direction vertical      */
+        if (read_float(&ftmp,hd) || ftmp==0) 
+        mode_vert=0;
+        else
+        mode_vert=1;
+        break;
+     case ES:		/* Extra Space			*/
 	if (read_float (&tp->espace, hd))/* No number found*/
 	{
 		tp->espace = 0.0;
@@ -2242,7 +2261,7 @@ char	*dir_str;
 
   /* Width  assuming given height:	*/
   tmp_w     = pi->height * Dx / Dy * pi->aspectfactor;
-  tmp_w     = pi->height * Dx / Dx / pi->aspectfactor;
+/*  tmp_w     = pi->height * Dx / Dx / pi->aspectfactor;*/
   /* Height assuming given width:	*/
   tmp_h     = pi->width  * Dy / Dx / pi->aspectfactor;
 
@@ -2269,7 +2288,8 @@ if (po->height < tmp_h) po->yoff += (tmp_h - po->height)/2.0;
   }
   else
   {
-    if (po->width > tmp_w)
+/*    if (po->width > tmp_w)*/
+    if (Dy > Dx)
     {
 	po->HP_to_ydots = (float) (po->dpi_y * po->height)/ Dy / 25.4;
 	po->HP_to_xdots = po->HP_to_ydots * pi->aspectfactor  / dot_ratio;

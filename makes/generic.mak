@@ -70,11 +70,10 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 # PREVIEWER = no_prev
 # ALL_LIBS  = -lm
 #
-# HP-UX, CC compiler 
+# HP-UX, CC compiler
 #
 # CC = cc
-# CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X1
-1R4 $(DEFINES)
+# CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES)
 # DEFINES = -DUNIX -DHAS_UNIX_X11
 # PREVIEWER = to_x11
 #
@@ -181,6 +180,16 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 EX_SRC	=
 EX_OBJ	=
 EX_DEFS	=
+#
+# PNG support (requires -lpng and -lz on the ALL_LIBS line)
+#EX_SRC	= png.c to_png.c
+#EX_OBJ	= png.o to_png.o 
+#EX_DEFS= -DPNG
+#
+# TIFF support (requires -ltiff and possibly -lz on the ALL_LIBS line)
+#EX_SRC	= to_tif.c
+#EX_OBJ	= to_tif.o
+#EX_DEFS	= -DTIF
 #
 # Include extras:
 # EX_SRC	= to_pic.c to_pac.c

@@ -1,6 +1,6 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
-   Parts Copyright (c) 1999  Martin Kroeker  All rights reserved.
+   Parts Copyright (c) 1998-2000 Martin Kroeker  All rights reserved.
    
    Distributed by Free Software Foundation, Inc.
 
@@ -136,15 +136,17 @@ copies.
  ** 94/03/23          EB   Mode "gpt", Gnuplot, added by Emmanuel Bigler
  ** 94/08/08          IMP  Mode "xfig" added by Ian MacPhedran
  ** 97/11/29          MS   Mode "png" added by Michael Schmitz
- ** ------------------------------------------------------------------------
  ** 99/09/01  V 3.30a MK   CA,CS,IW,SA,SS,NP,PC,PW,PE and charsets1-8 added
  ** 99/09/12  V3.30a2 MK   RO,PS,EW added, bugfixes for IW,PC,PW,EA
  ** 99/10/01  V 3.30  MK   RO/PS changes
  ** 99/12/01  V 3.31  MK   fixes for RO,PS,LB,DI,DR, completed PE 
+ ** 00/02/06          MK   fixes for scaling and PE; allow overriding of PC/PW
+ ** 00/02/12  V 3.32  MK   Mode "tiff" added by M.Liberi (changed to use ZIP
+ **                        instead of patented LZW compression; needs libtiff)
  **/
 
-char	*VERS_NO = "3.31";
-char	*VERS_DATE = "99/12/01";
+char	*VERS_NO = "3.32";
+char	*VERS_DATE = "00/02/12";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -153,7 +155,7 @@ char	*VERS_ADDITIONS =
 char	*VERS_ADDITIONS =
 	"\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n";
 #else
-char	*VERS_ADDITIONS = "                             (c) 1999 Martin Kroeker\n";
+char	*VERS_ADDITIONS = "                              (c) 1999 - 2000 Martin Kroeker\n";
 #endif
 
 
@@ -201,6 +203,9 @@ mode_list  ModeList[] =
         {XX_PNG,        "png"}, /* Portable Network Graphics            */
 #endif
 	{XX_PRE,	"pre"},	/* DEFAULT: Preview on screen		*/
+#ifdef TIF
+        {XX_TIFF,        "tiff"}, /* Tagged image file format            */
+#endif
 	{XX_TERM,	""},	/* Dummy: List terminator		*/
 };
 
@@ -369,6 +374,8 @@ int	i;
   pi->xoff	= 0.0;
   pi->yoff	= 0.0;
   pi->truesize	= FALSE;
+  pi->hwcolor	= FALSE;
+  pi->hwsize	= FALSE;
   pi->rotation	= 0.0;
   pi->in_file	= "";
   pi->hd	= NULL;
@@ -810,6 +817,11 @@ int	BUF_to_RAS (const GEN_PAR *pg, const OUT_PAR *po)
 #ifdef PNG
         case XX_PNG:            /* Portable Network fmt */
                return PicBuf_to_PNG (pg, po);
+#endif
+
+#ifdef TIF
+        case XX_TIFF:            /* Tagged image file fmt */
+               return PicBuf_to_TIF (pg, po);
 #endif
 
 /**

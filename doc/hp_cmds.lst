@@ -89,7 +89,7 @@ Cmd  | i |
  DR  |+  | Relative direction
  DS  | - | Designate character into slot
  DT  |+  | Define label terminator
- DV  | - | Define Variable textpath
+ DV  |+  | text Direction Vertical 
      |   |
  EA  |+  | Edge rectangle absolute
  EC  |  .| Enable paper Cutter
@@ -197,5 +197,5 @@ Cmd  | i |
      |   |
  YT  |+  | Y-Tick
 
-Useless statistics : this makes currently (3.3.1) 
-50 fully supported, 23 not-applicable and 44 unsupported commands.
+Useless statistics : this makes currently (3.3.2) 
+51 fully supported, 23 not-applicable and 44 unsupported commands.

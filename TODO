@@ -12,4 +12,5 @@
   (contributions from MS DOS/Windows, OS/2, Atari and Sun users needed).
 - Automatic selection of paper size has not been tested beyond A3 format.
 - This version has only been tested on various Unix systems 
-  
+- Maybe add a direct esc/p2 output mode to drive the Epson Stylus series
+  of printers (use EPS output and ghostscript for now if you have one)   
