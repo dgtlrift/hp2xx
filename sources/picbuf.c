@@ -44,6 +44,7 @@ copies.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <math.h>
 #include "bresnham.h"

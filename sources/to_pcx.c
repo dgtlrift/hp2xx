@@ -96,7 +96,7 @@ RLEcode_to_file (int c, int repeat, FILE *fd)
 static void
 byte_to_PCX (Byte b, PCXmode mode, FILE *fd)
 {
-static  last_b, rept;
+static int last_b, rept;
 
   switch (mode)
   {

@@ -334,6 +334,15 @@ typedef struct			/* Corresponding option(s)	*/
 }	GEN_PAR;
 
 
+typedef struct {
+    int abs;
+    int up;
+    int sbmode;
+    int fract;
+    int pen;
+} PE_flags;
+                    
+
 #define	DEFAULT_PEN_NO		1
 
 #define	FLAGSTATE(flag)		(flag) ? "ON" : "off"
@@ -382,11 +391,13 @@ PlotCmd	PlotCmd_from_tmpfile	(void);
 void	HPGL_Pt_from_tmpfile	(HPGL_Pt *);
 void	Pen_action_to_tmpfile	(PlotCmd, const HPGL_Pt*, int);
 int	read_float		(float*, FILE*);
-
+int read_PE_coord(int ,FILE* ,PE_flags* ,float* );
+int decode_PE_char(int , PE_flags *); 
 void	to_ATARI	(GEN_PAR*, FILE *);
 int	to_mftex	(const GEN_PAR*, const OUT_PAR*, int);
 int	to_eps		(const GEN_PAR*, const OUT_PAR*);
 int	to_rgip		(const GEN_PAR*, const OUT_PAR*);
+int	to_fig		(const GEN_PAR*, const OUT_PAR*);
 
 void	size_PicBuf	(const GEN_PAR*, const OUT_PAR*, int*, int*);
 PicBuf	*allocate_PicBuf(const GEN_PAR*, int, int);

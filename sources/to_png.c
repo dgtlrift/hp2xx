@@ -1,6 +1,6 @@
 /**
  ** to_png.c: Portable Network Graphics (PNG) converter part of project "hp2xx"
- **
+ ** Michael Schmitz, schmitz@simul.biophys.uni-duesseldorf.de
  ** Derived from: to_gif.c (GIF module; no longer supported due to copyright 
  **                         problems with the GIF-internal LZW compression)
  ** 94/08/22 V 1.00  MS   started from scratch, using to_pbm.c and Tom Boutells

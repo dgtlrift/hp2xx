@@ -67,6 +67,8 @@ EXE_dependencies =  \
  to_vec.obj \
  to_vga.obj \
  std_main.obj \
+ to_fig.obj \
+ clip.obj \
 # to_pac.obj \
 # to_pic.obj
 
@@ -91,6 +93,8 @@ to_pcx.obj+
 to_rgip.obj+
 to_vec.obj+
 to_vga.obj+
+to_fig.obj+
+clip.obj+
 std_main.obj
 hp2xx
 		# no map file
@@ -137,6 +141,10 @@ to_vec.obj: hp2xx.cfg to_vec.c
 to_vga.obj: hp2xx.cfg to_vga.c
 
 std_main.obj: hp2xx.cfg std_main.c
+
+to_fig.obj: hp2xx.cfg to_fig.c
+
+clip.obj: hp2xx.cfg clip.c
 
 #		*Compiler Configuration File*
 hp2xx.cfg: borland.mak

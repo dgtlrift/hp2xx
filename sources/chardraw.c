@@ -316,7 +316,7 @@ double	cdir,sdir;
 
 
 
-#define	HEIGHT_FAC	0.5
+#define	HEIGHT_FAC	0.666666666
 #define	WIDTH_FAC	0.666666666
 
 

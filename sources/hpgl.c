@@ -87,7 +87,7 @@ copies.
 #include "bresnham.h"
 #include "hp2xx.h"
 #include "chardraw.h"
-
+#include "clip.h"
 
 #define	ETX		'\003'
 
@@ -120,7 +120,7 @@ HPGL_Pt		C2	= {P2X_default, P2Y_default};
 HPGL_Pt	S1	= {P1X_default, P1Y_default};	/* Scaled 	*/
 HPGL_Pt	S2	= {P2X_default, P2Y_default};	/* points	*/
 HPGL_Pt	Q;	/* Delta-P/Delta-S: Initialized with first SC 	*/
-
+HPGL_Pt M; /* maximum coordinates set by PS instruction */
 /**
  ** Global from chardraw.c:
  **/
@@ -135,30 +135,31 @@ static	HPGL_Pt	p_last	= {M_PI, M_PI};	/* Init. to "impossible" values */
 
 static	float	rot_cos, rot_sin;
 
-static	rotate_flag	= FALSE;	/* Flags tec external to HP-GL	*/
-static  ps_flag		= FALSE;
+static	short rotate_flag	= FALSE;	/* Flags tec external to HP-GL	*/
+static  short ps_flag		= FALSE;
 static  double  rot_ang = 0.;
-static	scale_flag	= FALSE;
-static	mv_flag 	= FALSE;
+static	short scale_flag	= FALSE;
+static	short mv_flag 	= FALSE;
 #ifdef	ATARI
-extern	silent_mode	= FALSE;	/* Don't clobber ATARI preview!	*/
+extern	short silent_mode	= FALSE;	/* Don't clobber ATARI preview!	*/
 #else
-static	silent_mode	= FALSE;
+static	short silent_mode	= FALSE;
 #endif
-static	record_off	= FALSE;
-static	first_page	= 0;
-static	last_page	= 0;
-static	n_unexpected	= 0;
-static	n_unknown	= 0;
-static	page_number	= 1;
+static	short record_off	= FALSE;
+static	short first_page	= 0;
+static	int last_page	= 0;
+static	int n_unexpected	= 0;
+static	int n_unknown	= 0;
+static	int page_number	= 1;
 static	long vec_cntr_r	= 0L;
 static	long vec_cntr_w	= 0L;
 static	short	pen	= -1;
 static	short pens_in_use[NUMPENS];
-static	pen_down	= FALSE;	/* Internal HP-GL book-keeping:	*/
-static	plot_rel	= FALSE;
+static	short pen_down	= FALSE;	/* Internal HP-GL book-keeping:	*/
+static	short plot_rel	= FALSE;
 static	char	StrTerm	= ETX;		/* String terminator char	*/
-static	char	strbuf[MAX_LB_LEN+1] = {0};
+static	char	*strbuf = NULL;
+static	int	strbufsize = MAX_LB_LEN+1;
 static	char	symbol_char = '\0';	/* Char	in Symbol Mode (0=off)	*/
 
 static	FILE	*td;
@@ -258,6 +259,15 @@ reset_HPGL (void)
   GlobalLineType= CurrentLineType = LT_default;
 
   StrTerm	= ETX;
+  if (strbuf == NULL)
+  {
+    strbuf = malloc (strbufsize);
+    if (strbuf == NULL)
+    {
+      fprintf (stderr, "\nNo memory !\n");
+      exit (ERROR);
+    }
+  }
   strbuf[0]	= '\0';
 
   P1.x		= P1X_default;
@@ -597,7 +607,7 @@ static	double	*p_cur_pat,
 	    }
 	}
 }
-
+/*
 struct PE_flags{
     int abs;
     int up;
@@ -605,11 +615,11 @@ struct PE_flags{
     int fract;
     int pen;
 } ;
-
-int read_PE_flags(int c,FILE *hd,struct PE_flags *fl) {
+*/
+int read_PE_flags(const GEN_PAR *pg, int c,FILE *hd,PE_flags *fl) {
 	short old_pen;
-	const GEN_PAR *pg;
-
+        float ftmp;
+	int ctmp;
     switch(c) {
     case 183:
     case '7':
@@ -623,10 +633,9 @@ int read_PE_flags(int c,FILE *hd,struct PE_flags *fl) {
 	if (EOF==(fl->pen=getc(hd))) {
 	   par_err_exit(98,PE); 
 	}
-/*MK*/
           old_pen=pen;
-    read_PE_coord(c,hd,fl,&pen);
-/*          pen=decode_PE_char(fl->pen,fl);*/
+    read_PE_coord(c,hd,fl,&ftmp);
+            pen=ftmp;
 	if (pen < 0 || pen > pg->maxpens)
 	{
 		Eprintf (
@@ -647,16 +656,18 @@ int read_PE_flags(int c,FILE *hd,struct PE_flags *fl) {
 	if (pen)    pens_in_use[pen]=1;
              /*		pens_in_use |= (1 << (pen-1)); */
 /*MK*/
-/*	fprintf(stderr,"PE : flag not implemented ");*/
 	break;
 	
     case 190:
     case '>':
 	/* fractional data */
-	if (EOF==(fl->fract=getc(hd))) {
+
+	if (EOF==(ctmp=getc(hd))){ 
 	    par_err_exit(98,PE); 
-	}
-	fprintf(stderr,"PE > flag not implemented ");
+	}	
+	fl->fract=decode_PE_char(ctmp,fl);
+        fl->fract=((fl->fract>>1)*((fl->fract&0x01)?-1:1));
+/*    	fprintf(stderr,"PE > flag, fract =%d (%d decimals) ",fl->fract, fl->fract/3);*/
 	break;
 
     case 188:
@@ -705,14 +716,14 @@ void	PE_line (int abs,HPGL_Pt p)
 
 
 
-int isPEterm(int c,struct PE_flags *fl) {
+int isPEterm(int c, PE_flags *fl) {
     if ((fl->sbmode) && ((c>94)||(c<63))) return 1;
     if ((! fl->sbmode) && ((c>190)||(c<63))) return 1;
     return (0);
 }
 
 
-int decode_PE_char(int c,struct PE_flags *fl) 
+int decode_PE_char(int c, PE_flags *fl) 
 {
   if (fl->sbmode) {
     c&=0x7f;
@@ -722,7 +733,7 @@ int decode_PE_char(int c,struct PE_flags *fl)
   }
 }
 
-int read_PE_coord(int c,FILE* hd,struct PE_flags *fl,float *fv) {
+int read_PE_coord(int c,FILE* hd, PE_flags *fl,float *fv) {
   long lv=0;
   int i=0;
   int shft=(fl->sbmode)?5:6;
@@ -741,12 +752,12 @@ int read_PE_coord(int c,FILE* hd,struct PE_flags *fl,float *fv) {
 	par_err_exit(98,PE);
     }
   } 
-  *fv=(float)((lv>>1)*((lv&0x01)?-1:1));
+  *fv=(float)(((lv>>1)*((lv&0x01)?-1:1))<<fl->fract);
   return(1);
 }
 
 
-int read_PE_pair(int c,FILE *hd,struct PE_flags *fl,HPGL_Pt *p) 
+int read_PE_pair(int c,FILE *hd, PE_flags *fl,HPGL_Pt *p) 
 {
     read_PE_coord(c,hd,fl,&(p->x));
     if (EOF==(c=getc(hd))) {
@@ -759,12 +770,12 @@ int read_PE_pair(int c,FILE *hd,struct PE_flags *fl,HPGL_Pt *p)
 
 
 
-void read_PE(FILE *hd) 
+void read_PE(const GEN_PAR *pg,FILE *hd) 
 {
     int	c;
 
     HPGL_Pt p;
-    struct PE_flags fl;
+    PE_flags fl;
     
     fl.fract=0;
     fl.sbmode=0;
@@ -773,7 +784,7 @@ void read_PE(FILE *hd)
     fl.pen=0;
 
     for (c = getc(hd); (c!=EOF) && (c!=';'); c = getc(hd)) {
-	if (!read_PE_flags(c,hd,&fl)) {
+	if (!read_PE_flags(pg,c,hd,&fl)) {
 	    read_PE_pair(c,hd,&fl,&p);
 	    pen_down=(fl.up)?FALSE:TRUE;
 	    PE_line(fl.abs,p);
@@ -967,8 +978,21 @@ read_string (char *buf, FILE *hd)
 int	c, n;
 
   for (n=0,c = getc(hd); (c!=EOF) && (c!=StrTerm); c = getc(hd))
-	if (n++ <MAX_LB_LEN)
+  {
+	if (n > strbufsize/2)
+	{
+		strbufsize *= 2;
+		strbuf = realloc (strbuf, strbufsize);
+		if (strbuf == NULL)
+		{
+			fprintf (stderr, "\nNo memory !\n");
+			exit (ERROR);
+		}
+		buf = strbuf+n;
+	}
+	if (n++ <strbufsize)
 		*buf++ = c;
+  }
   if (c==StrTerm && c!=ETX)
 	*buf++ = c;
   *buf = '\0';
@@ -1524,7 +1548,7 @@ short	cmd, old_pen;
 HPGL_Pt	p1, p2;
 float	ftmp;
 float csfont;
-        int mypen,myred,mygreen,myblue,mycolor,i;
+        int mypen,myred,mygreen,myblue,i;
         float mywidth,myheight;
 /**
  ** Each command consists of 2 characters. We unite them here to a single int
@@ -1611,7 +1635,7 @@ float csfont;
 	tp->CR_point = HP_pos;
 	break;
     case PE:
-	read_PE(hd);
+	read_PE(pg,hd);
 	tp->CR_point = HP_pos;
 	break;
     case PR:		/* Plot Relative		*/
@@ -1622,30 +1646,53 @@ float csfont;
     	if (read_float (&ftmp, hd) ){  /* no parameters */
         break;
         } else {
-        mywidth=ftmp;
-        } 
-    	if (read_float (&ftmp, hd) ){  /* no parameters */
-        break;
-        } else {
         myheight=ftmp;
         } 
-/*        	xmin=MIN(xmin,(0.-P1.x)/Q.x+S1.x);
-		ymin=MIN(ymin,(0.-P1.y)/Q.y+S1.y);
-*/
-fprintf(stderr,"PS: old xmin,ymin,xmax,ymax: %f %f %f %f\n",xmin,ymin,xmax,ymax);
-                xmin=MIN(xmin,P1.x + (0.-S1.x)*Q.x);
-                ymin=MIN(ymin,P1.y + (0.-S1.y)*Q.y);
-                xmax=MAX(xmax,P1.x + (mywidth-S2.x)*Q.x);
-                ymax=MAX(ymax,P1.y + (myheight-S2.y)*Q.y);
-/*        	xmin=MIN(xmin,(-mywidth-P2.x)/Q.x+S2.x);
-		ymin=MIN(ymin,(-myheight-P2.y)/Q.y+S2.y);
-	        xmax=MAX(xmax,(mywidth-P2.x)/Q.x+S2.x);
-		ymax=MAX(ymax,(myheight-P2.y)/Q.y+S2.y);
-*/
-fprintf(stderr,"PS: new xmin,ymin,xmax,ymax: %f %f %f %f\n",xmin,ymin,xmax,ymax);
+    	if (read_float (&ftmp, hd) ){  /* no parameters */
+        mywidth=xmax;
+        } else {
+        mywidth=ftmp;
+        } 
+        ps_flag=1;
+        M.x=myheight;
+        M.y=mywidth;
+        p1.x=0;p1.y=0;
+  if (scale_flag)		/* Rescaling	*/
+	User_to_Plotter_coord (&p1, &p2);
+  else
+	p2 = p1;		/* Local copy	*/
 
-ps_flag=TRUE;
-         break;
+
+  if (rotate_flag)	/* hp2xx-specific global rotation	*/
+  {
+	ftmp = rot_cos * p2.x - rot_sin * p2.y;
+	p2.y = rot_sin * p2.x + rot_cos * p2.y;
+	p2.x = ftmp;
+  }
+  xmin = MIN (p2.x, xmin);
+  ymin = MIN (p2.y, ymin);
+  xmax = MAX (p2.x, xmax);
+  ymax = MAX (p2.y, ymax);
+	p1.x=myheight;
+	p1.y=mywidth;
+
+  if (scale_flag)		/* Rescaling	*/
+	User_to_Plotter_coord (&p1, &p2);
+  else
+	p2 = p1;		/* Local copy	*/
+
+
+  if (rotate_flag)	/* hp2xx-specific global rotation	*/
+  {
+	ftmp = rot_cos * p2.x - rot_sin * p2.y;
+	p2.y = rot_sin * p2.x + rot_cos * p2.y;
+	p2.x = ftmp;
+  }
+  xmin = MIN (p2.x, xmin);
+  ymin = MIN (p2.y, ymin);
+  xmax = MAX (p2.x, xmax);
+  ymax = MAX (p2.y, ymax);
+	break;
     case PU:		/* Pen  Up			*/
 	pen_down = FALSE;
 	lines (plot_rel,  hd);
@@ -1891,21 +1938,62 @@ ps_flag=TRUE;
     case RO:
 	if (read_float (&ftmp, hd)) /* No number found	*/
 	{
-		rot_ang += 0;
+		break;
 	} else {
-		rot_ang += ftmp;
+	fprintf(stderr,"RO encountered, rotating P1,P2 by %f\n",ftmp);
+
+        rotate_flag=1;
+rot_ang+=ftmp;
+
+	switch ((int)ftmp) {
+		case 90: 
+		case 270:
+			 ftmp=M.x;M.x=M.y;M.y=ftmp;
+			 break;
+		case 180: 
+		default :
+			break;  
+		}
+	fprintf(stderr,"cumulative rot_ang now %f\n",rot_ang);
+	rot_cos =cos (M_PI * rot_ang / 180.0);
+	rot_sin =sin (M_PI * rot_ang / 180.0);
+        rotate_flag=1;
+
+	if (ps_flag){ /* transform extents from previous PS statement */
+
+  xmin		= 1e10;
+  ymin		= 1e10;
+  xmax		= 1e-10;
+  ymax		= 1e-10;
+
+	p1.x=0;p1.y=0;
+	  if (scale_flag)		/* Rescaling	*/
+	User_to_Plotter_coord (&p1, &p2);
+  else
+	p2 = p1;		/* Local copy	*/
+  HP_pos = p2;		/* Actual plotter pos. in plotter coord	*/
+	ftmp = rot_cos * p2.x - rot_sin * p2.y;
+	p2.y = rot_sin * p2.x + rot_cos * p2.y;
+	p2.x = ftmp;
+	  xmin = MIN (p2.x, xmin);
+  ymin = MIN (p2.y, ymin);
+  xmax = MAX (p2.x, xmax);
+  ymax = MAX (p2.y, ymax);
+	p1.x=M.x;
+	p1.y=M.y;
+  if (scale_flag)		/* Rescaling	*/
+	User_to_Plotter_coord (&p1, &p2);
+  else
+	p2 = p1;		/* Local copy	*/
+  HP_pos = p2;		/* Actual plotter pos. in plotter coord	*/
+	ftmp = rot_cos * p2.x - rot_sin * p2.y;
+	p2.y = rot_sin * p2.x + rot_cos * p2.y;
+	p2.x = ftmp;
+  xmin = MIN (p2.x, xmin);
+  ymin = MIN (p2.y, ymin);
+  xmax = MAX (p2.x, xmax);
+  ymax = MAX (p2.y, ymax);
 	}
-	fprintf(stderr,"RO encountered, rot_ang now %f\n",rot_ang);
-	rotate_flag	= (rot_ang != 0.0) ? TRUE : FALSE;
-	if (rotate_flag)
-	{
-	if (ps_flag){
-       	mywidth = cos(ftmp*M_PI/180.) * xmax - sin(ftmp*M_PI/180.) *ymax;
-	ymax = sin(ftmp*M_PI/180.0) * xmax + cos (ftmp*M_PI/180.)*ymax;
-	xmax = mywidth;
-	}
-		rot_cos = cos (M_PI * rot_ang / 180.0);
-		rot_sin = sin (M_PI * rot_ang / 180.0);
 	}
 	break;
     case BL:		/* Buffer label string		*/
@@ -1929,7 +2017,9 @@ ps_flag=TRUE;
 	if (read_float (&p1.x, hd)) /* No number found	*/
 	{
 		tp->dir = 0.0;
-		return;
+		tp->CR_point = HP_pos;
+		adjust_text_par();
+		break;
 	}
 	if (read_float (&p1.y, hd))	/* x, but not y	*/
 		par_err_exit (2,cmd);
@@ -1943,7 +2033,9 @@ ps_flag=TRUE;
 	if (read_float (&p1.x, hd)) /* No number found	*/
 	{
 		tp->dir = 0.0;
-		return;
+		tp->CR_point = HP_pos;
+		adjust_text_par();
+		break;
 	}
 	if (read_float (&p1.y, hd))
 		par_err_exit (2,cmd);	/* x, but not y	*/

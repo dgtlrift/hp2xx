@@ -4,7 +4,6 @@
 - Polygon commands are missing (every polygon command acts like PM...EP now,
   as the pen movements are immediately interpreted)
 - Fill commands (FT, FP, RA,RR, WG) are unsupported
-- Polyline Encoded does not yet understand fractional coordinates
 - [full] color support may be buggy in some modes, and is not implemented
   in the Sun, OS/2 and MS Windows modules
 - The OS/2 PM and other modules that H.Werntges had already marked as

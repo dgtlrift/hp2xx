@@ -14,7 +14,7 @@
 
 @tex
 % \def\$#1${{#1}}  % Kludge: collect RCS revision info without $...$
-\xdef\manvers{$Revision: 1.1.0 $}  % For use in headers, footers too
+\xdef\manvers{$Revision: 1.1.1 $}  % For use in headers, footers too
 @end tex
 
 @c HP2XX CHANGE LOG:
@@ -29,6 +29,7 @@
 @c 93/11/23  V 1.04a HWW  Typos fixed
 @c 94/02/15  V 1.04b HWW  Option -C added
 @c 99/08/01  V 1.10  MK   Updated for 3.30 (new options, new HPGL commands)
+@c 99/12/01  V 1.11  MK   Updated for 3.31 (HPGL commands,acknowledgements)
 
 @c THIS MANUAL REQUIRES TEXINFO-2 macros and info-makers to format properly.
 
@@ -45,7 +46,7 @@ END-INFO-DIR-ENTRY
 This file documents the HP-GL converter HP2XX
 
 @c !!set edition, date, version
-This is Edition 1.1.0, August 1999,
+This is Edition 1.1.1, December 1999,
 of @cite{Using HP2XX: A HP-GL Converter}.
 
 Copyright (C) 1998 - 1999 Martin Kroeker
@@ -82,8 +83,8 @@ by the Free Software Foundation instead of in the original English.
 @c @subtitle on XXXX Systems
 @sp 1
 @c !!set edition, date, version
-@subtitle Edition 1.1.0, for HP2XX version 3.3.x
-@subtitle August 1999
+@subtitle Edition 1.1.1, for HP2XX version 3.3.1
+@subtitle December 1999
 @author by Martin Kroeker (previously by Heinz W. Werntges)
 @page
 @tex
@@ -126,7 +127,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 
 @c !!set edition, date, version
-This is Edition 1.1.0, August 1999, for HP2XX Version 3.3.x
+This is Edition 1.1.1, December 1999, for HP2XX Version 3.3.1
 @end ifinfo
 
 
@@ -440,11 +441,15 @@ move and draw commands. Selecting a vector mode essentially defines the
 conversion rules of such commands into specific formats.
 
 The most popular and versatile vector format currently is
-Encapsulated PostScript (EPS). (In fact, it's much more than just a
+Encapsulated PostScript (EPS). (In fact, it is much more than just a
 vector graphics format, but @code{hp2xx} uses only EPS's line drawing
 features.) Many programs allow importation of EPS files, and PostScript
 gives excellent printing results, so @samp{-m @code{eps}} is highly
 recommended.
+
+Unix users may also want to use either @code{Gnuplot} or especially @code{XFig}
+to annotate their plots. The native formats of these programs are directly
+supported via the @samp{-m @code{gpt}} and @samp{-m @code{fig}} options.
 
 Currently, all other supported vector formats represent various compromises
 to persuade @TeX{}@ or La@TeX{}@ into the generation of graphics.
@@ -476,7 +481,8 @@ than @code{hp2xx} will ever handle. The supported raster formats
 IMG, PBM, PCL, PCX and PNG were chosen for their widespread use, their simplicity,
 for actual demand, and for accessibility of specifications.
 If your desired format is not supported, look for a converter. E.g., the
-Portable Bitmap (PBM) project offers quite a variety of such converters.
+Portable Bitmap (PBM) project and, more recently, the ImageMagick package 
+offer quite a variety of such converters.
 
 Please note that the preview mode (which does not create any output file)
 is a special raster mode. Instead of going into some output file,
@@ -498,8 +504,11 @@ It prints on HP Laserjet and HP Deskjet series printers and compatibles.
 
 The restriction concerns the resolution (DPI) during rasterization. Due to
 printer hardware limitations, only @samp{-d 75}, @samp{-d 100}, @samp{-d 150},
-and @samp{-d 300} are permitted; option @samp{-D} must not be used.
-
+and @samp{-d 300} are recommended (@code{hp2xx} will emit a warning for other
+values, but will try to create the desired output); option @samp{-D} must not 
+be used. Some recent printer models do support 600, 720 or even higher
+resolutions, but even for those the requirements both in terms of cpu load
+and file size may be prohibitive.
 
 There are two flags which may be useful if the output goes directly
 to a printer: Option @samp{-i} initializes the printer and tries to select
@@ -602,7 +611,6 @@ A4 page, issue a command similar to:
 @example
 hp2xx -m pcl -d 150 -r90 -h270 -w160 landscape.hp
 @end example
-
 
 
 
@@ -1028,6 +1036,9 @@ releases:
   Easy installation on various platforms, e.g. via a configure script
 @end display
 
+@tex
+\page
+@end tex
 
 @node Font coding, , Future improvements, Installation and modification notes
 @comment  node-name,  next,  previous,  up
@@ -1074,6 +1085,9 @@ this:
 
  Example:  code for character @code{'L': "\032\224\324"} translates to:
            @code{moveto(1,10); drawto(1,4); drawto(5,4);}
+@tex
+\page
+@end tex
 
  From the example you can conclude that the font below essentially is
  defined on a 5x7 grid:
@@ -1193,7 +1207,7 @@ that @code{hp2xx} will give you the picture you want!
 @code{EP   | - | Edge polygon}
 @code{ER   | - | Edge rectangle relative}
 @code{ES   |+  | Extra space}
-@code{EW   | - | Edge wedge}
+@code{EW   |+  | Edge wedge}
 @code{-----|---|--------------------------------------------------------}
 @code{FP   | - | Fill polygon}
 @code{FS   |  .| Force select}
@@ -1269,8 +1283,9 @@ that @code{hp2xx} will give you the picture you want!
 @code{YT   |+  | Y-Tick}
 @code{-------------------HPGL/2 commands--------------------------------}
 @code{PC   |+  | Pen color}
-@code{PE   |+  | Polygon encoded}
+@code{PE   |+  | Polyline encoded}
 @code{PW   |+  | Pen width}
+@code{PS   |+  | Plot Size}
 @end display
 
 
@@ -1516,10 +1531,13 @@ especially your monitor!
 @section Acknowledgement
 
 While @code{hp2xx} was available as binaries on several platforms,
-many people contributed to this project by supplying me with
-valuable suggestions and reports. Many thanks to all of them!
-It is my pleasure to especially thank the following people for their
+many people contributed to this project by supplying first HWW and then MK 
+with valuable suggestions and reports. Many thanks to all of them!
+It is a pleasure to especially thank the following people for their
 outstanding contributions:
+
+Versions up to 3.2.0 (mid-1994):
+
 @table @code
 
 @item Nelson Beebe
@@ -1528,7 +1546,7 @@ clean selection mechanism for previewer suggested;
 suggestions for an improved X.11 previewer
 
 @item Elisabeth Dregger-Cappel
-Network and host resources for @code{hp2xx} distribution
+Network and host resources for original @code{hp2xx} distribution
 
 @item Joern Eggers
 New ATARI format "cs" for CS-TeX; bug fixes for arcs / circles
@@ -1555,7 +1573,7 @@ AMIGA portation; pbm, ilbm formats
 Many helpful suggestions and improvements, e.g. for pcl format
 
 @item Ian MacPhedran
-Color / binary format for pbm, xfig format
+Color / binary format for pbm
 
 @item Norbert Meyer
 ATARI portation; img, pic, pac formats; first ATARI previewer
@@ -1579,17 +1597,30 @@ Many VAX tests; VAX scripts; access to MicroVAX platforms
 @item Horst Szillat
 OS/2 support, OS/2 full-screen previewer & help
 
-@item A. Treindl
+@item Alois Treindl
 Code for UC support
+@end table
 
+Versions since 3.3 (mid-1999):
+
+@table @code
 @item Heinz W. Werntges 
 for the original versions up to 3.2.0
 
+@item Ian MacPhedran
+XFig output
+
 @item Emmanuel Bigler
-xfig and gnuplot ascii support
+Gnuplot ascii output
+
+@item Michael Schmitz
+PNG output
 
 @item Eugene Doudine
 PE command support
+
+@item Georgy Salnikov 
+Improvements for character commands (LB,DI,DR)
 @end table
 
 

@@ -55,7 +55,7 @@ copies.
 
 
 
-static		linecount = 0;
+static	int	linecount = 0;
 static	float	xcoord2mm, ycoord2mm;
 static	float	xmin, ymin;
 

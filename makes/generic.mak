@@ -70,6 +70,14 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 # PREVIEWER = no_prev
 # ALL_LIBS  = -lm
 #
+# HP-UX, CC compiler 
+#
+# CC = cc
+# CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X1
+1R4 $(DEFINES)
+# DEFINES = -DUNIX -DHAS_UNIX_X11
+# PREVIEWER = to_x11
+#
 # Convex-OS
 #
 # DEFINES   = -DUNIX -DHAS_UNIX_X11
@@ -78,13 +86,20 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 # CC        = cc
 # CFLAGS    = -O
 #
-# SunOS + X11 previewer
+# Solaris /SunOS >5.x
+# LFLAGS    = -L$(OPENWINHOME)/lib -R$(OPENWINHOME)/lib
+# CPPFLAGS  = -I$OPENWINHOME)/include
+# DEFINES   = -DUNIX -DHAS_UNIX_X11
+# PREVIEWER = to_x11
+# ALL_LIBS  = -lX11 -lm -lnsl -lsocket
+#
+# older SunOS + X11 previewer
 #
 # LFLAGS    = -L$(OPENWINHOME)/lib
 # CPPFLAGS  = -I$(OPENWINHOME)/include
 # DEFINES   = -DUNIX -DHAS_UNIX_X11
 # PREVIEWER = to_x11
-# ALL_LIBS  = -lX -lm
+# ALL_LIBS  = -lX11 -lm
 #
 # SunOS + Sunview previewer
 #
@@ -185,11 +200,11 @@ ALL_CFLAGS	= -c $(CFLAGS)
 SRCS	= hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c getopt1.c \
 	  $(ALL_INCS)\
 	  to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c to_pbm.c to_rgip.c \
-	  std_main.c $(PREVIEWER).c $(EX_SRC)
+	  std_main.c to_fig.c clip.c $(PREVIEWER).c $(EX_SRC)
 
 OBJS	= hp2xx.o hpgl.o picbuf.o bresnham.o chardraw.o getopt.o getopt1.o \
 	  to_vec.o to_pcx.o to_pcl.o to_eps.o to_img.o to_pbm.o to_rgip.o \
-	  std_main.o $(PREVIEWER).o $(EX_OBJ)
+	  std_main.o to_fig.o clip.o $(PREVIEWER).o $(EX_OBJ)
 
 PROGRAM	= hp2xx
 

@@ -149,7 +149,7 @@ Cmd  | i |
  PB  |+  | Print buffered label
  PC  |+  | Pen color
  PD  |+  | Pen down
- PE  |*  | Polyline Encoded (fractional coordinates unsupported)
+ PE  |+  | Polyline Encoded 
  PG  |+  | Page feed
  PR  |+  | Plot relative
  PS  |+  | Plot Size
@@ -197,6 +197,5 @@ Cmd  | i |
      |   |
  YT  |+  | Y-Tick
 
-Useless statistics : this makes currently (3.3.0) 
-49 fully supported, 1 partially supported, 23 not-applicable
-and 44 unsupported commands.
+Useless statistics : this makes currently (3.3.1) 
+50 fully supported, 23 not-applicable and 44 unsupported commands.

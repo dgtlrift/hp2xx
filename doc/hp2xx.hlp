@@ -3,8 +3,8 @@
 
  HP2XX reads HPGL ASCII source files, interprets them, and converts them
  into either another vector-oriented  format or one of several rasterfile
- formats. Currently, its HPGL parser recognizes a subset of the HP 7550A
- command set. Some high-level functions like filled polygons are missing.
+ formats. Currently, its HPGL parser recognizes only a subset of HPGL/2.
+ Some high-level functions like polygon mode and fill patterns are missing.
  Also, only some of the fixed space vector fonts and none of the variable
  space arc fonts are supported. Beside these limitations, hp2xx has proven 
  to work with many HP-GL sources without any trouble.
@@ -76,7 +76,7 @@
  to select the program mode, i.e. the output format. Currently supported:
  mode = "mf" (Metafont), "em" (emTeX \special{} commands), "epic"
  (line drawing using TeX macros within epic.sty), "eps" (PostScript),
- "fig" (XFig version 3.1 format), "gpt" (Gnuplot ASCII format), "hpgl"
+ "fig" (XFig version 3.2 format), "gpt" (Gnuplot ASCII format), "hpgl"
  (simplified HP-GL, e.g. for import tasks), "pcl" (HP-PCL Level 3 format 
 (suitable for printing on a HP Laserjet II,  DeskJet, or compatible printer), 
  "img" (GEMs IMG format), "pbm" (Portable Bit Map), "pcx" (PC-Paintbrush 
@@ -164,7 +164,7 @@
         emTex-specials,
         TeX/epic-Macros,
         Simplified HP-GL,
-        XFig 3.1,
+        XFig 3.2,
         Gnuplot ASCII,
  as well as
         Uniplex RGIP, and
@@ -326,11 +326,16 @@
  % hp2xx my_input.hp
 
    Preview on screen or into window.
-2 Author
+2 Original Author (maintainer until 3.2.0)
  Heinz W. Werntges, Physikal. Biologie, Geb. 26.12,
  Heinrich-Heine-Universitaet,
  D-40225 Duesseldorf, Germany.
- Internet: werntges@convex.rz.uni-duesseldorf.de
+
+  Maintainer/author since version 3.3.0
+ Martin Kroeker, Daveg GmbH,
+ Schottener Weg 2,
+ D-64289 Darmstadt, Germany.
+ mk@daveg.com OR martin@ruby.chemie.uni-freiburg.de
 
  ATARI features & PIC, PAC, IMG modes are due to Norbert Meyer, Duesseldorf.
 

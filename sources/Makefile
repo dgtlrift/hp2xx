@@ -36,7 +36,7 @@ STRIP    = strip
 # Installation sites (GNU conventions):
 #
 prefix   = /usr/local
-bindir   = /usr/remote/bin
+bindir   = $(prefix)/bin
 includedir = $(prefix)/include
 mandir   = $(prefix)/man
 man1dir  = $(mandir)/man1
@@ -45,8 +45,8 @@ infodir  = /usr/local/lib/info
 # CC and CFLAGS set for gcc, but any ANSI-C compiler should work.
 # For non-gcc compilers, simply set CFLAGS = -O (to start with)
 #
-CC       = cc
-CFLAGS	= -O2 -I/usr/X11R6/include $(DEFINES) $(EX_DEFS)
+CC       = gcc
+CFLAGS	= -O2 -I/usr/X11R6/include $(DEFINES) $(EX_DEFS) -Wall
 #CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES)
 
 LFLAGS   = -L/usr/X11R6/lib            # only sometimes needed; see below for examples

@@ -136,11 +136,15 @@ copies.
  ** 94/03/23          EB   Mode "gpt", Gnuplot, added by Emmanuel Bigler
  ** 94/08/08          IMP  Mode "xfig" added by Ian MacPhedran
  ** 97/11/29          MS   Mode "png" added by Michael Schmitz
- ** 99/03/01  V 3.30  MK   HPGL commands CA,CS,IW,SA,SS and charsets1-8 added
+ ** ------------------------------------------------------------------------
+ ** 99/09/01  V 3.30a MK   CA,CS,IW,SA,SS,NP,PC,PW,PE and charsets1-8 added
+ ** 99/09/12  V3.30a2 MK   RO,PS,EW added, bugfixes for IW,PC,PW,EA
+ ** 99/10/01  V 3.30  MK   RO/PS changes
+ ** 99/12/01  V 3.31  MK   fixes for RO,PS,LB,DI,DR, completed PE 
  **/
 
-char	*VERS_NO = "3.30";
-char	*VERS_DATE = "99/10/01";
+char	*VERS_NO = "3.31";
+char	*VERS_DATE = "99/12/01";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -835,6 +839,8 @@ int	BUF_to_RAS (const GEN_PAR *pg, const OUT_PAR *po)
 #else
 		return PicBuf_to_Dummy	();
 #endif	/* defined(...)	*/
+default:
+	return 1;
   }
   return 1;
 }

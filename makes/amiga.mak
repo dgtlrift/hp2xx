@@ -20,7 +20,8 @@ LINKEROPTIONS 		= -v
 OBJFILES		= hp2xx.o std_main.o hpgl.o chardraw.o picbuf.o  \
  			  bresnham.o to_vec.o to_pcx.o to_pcl.o  \
  			  to_eps.o  to_amiga.o to_pbm.o to_ilbm.o \
- 			  to_img.o to_rgip.o getopt.o getopt1.o
+ 			  to_img.o to_rgip.o getopt.o getopt1.o \
+			  to_fig.o clip.o
 
 
 $(PROGRAMM)		:  $(OBJFILES)
@@ -99,3 +100,8 @@ getopt.o		: getopt.c getopt.h
 getopt1.o		: getopt1.c getopt.h
 			$(COMPILER) $(CFLAGS) getopt1.c
 
+to_fig.o		: to_fig.c 
+			$(COMPILER) $(CFLAGS) to_fig.c
+
+clip.o			: clip.c
+			$(COMPILER) $(CFLAGS) clip.c

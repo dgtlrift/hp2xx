@@ -36,7 +36,7 @@ copies.
 
 
 static	DevPt	p_act;
-static		dx, dy, s1, s2, swapdir, err, i;
+static	int	dx, dy, s1, s2, swapdir, err, i;
 
 
 DevPt	*bresenham_init (DevPt *pp1, DevPt *pp2)

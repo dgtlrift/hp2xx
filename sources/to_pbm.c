@@ -175,7 +175,7 @@ int		colour;
 
 ERROR_EXIT:
   PError ("write_PBM");
-ERROR_EXIT_2:
+/*ERROR_EXIT_2:*/
   return ERROR;
 }
 

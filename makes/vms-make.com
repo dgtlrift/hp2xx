@@ -55,10 +55,13 @@ $       'CC'/NOLIST/OBJECT=TO_PBM.OBJ  /DEFINE=("VAX") TO_PBM.C
 $       'CC'/NOLIST/OBJECT=TO_RGIP.OBJ /DEFINE=("VAX") TO_RGIP.C
 $       'CC'/NOLIST/OBJECT=TO_VEC.OBJ  /DEFINE=("VAX") TO_VEC.C
 $       'CC'/NOLIST/OBJECT=TO_UIS.OBJ  /DEFINE=("VAX") TO_UIS.C
+$       'CC'/NOLIST/OBJECT=TO_FIG.OBJ  /DEFINE=("VAX") TO_FIG.C
+$       'CC'/NOLIST/OBJECT=CLIP.OBJ  /DEFINE=("VAX") CLIP.C
 $       LINK /TRACE/NOMAP/EXEC=[-]HP2XX.EXE hp2xx.obj,hpgl.obj,picbuf.obj,bresnham.obj, -
                                       chardraw.obj,getopt.obj,getopt1.obj,std_main.obj, -
                                       to_pcx.obj,to_pcl.obj,to_eps.obj,                 -
-                                      to_img.obj,to_pbm.obj,to_rgip.obj,                -
+                                      to_img.obj,to_pbm.obj,to_rgip.obj,
+                                      to_fig.obj,clip.obj,
                                       to_vec.obj,to_uis.obj,'Option'/opt
 $       WRITE SYS$OUTPUT "      Hp2xx complete"
 $       IF ( F$EDIT(P1,"UPCASE") .EQS. "INSTALL" ) THEN GOTO Install_Help

@@ -48,12 +48,15 @@ EX_OBJ	=
 
 SRCS	= hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c $(INCS) \
 	to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c to_dj_gr.c to_pbm.c \
-	to_rgip.c std_main.c $(EX_SRC)
+	to_rgip.c std_main.c to_fig.c clip.c  $(EX_SRC)
 
 OBJS	= hp2xx.o hpgl.o pbuf.o bham.o cdrw.o opt.o rgip.o opt1.o \
-	vec.o pcx.o pcl.o eps.o img.o djgr.o pbm.o std.o $(EX_OBJS)
+	vec.o pcx.o pcl.o eps.o img.o djgr.o pbm.o std.o to_fig.o clip.o \
+	$(EX_OBJS)
 
-INCS	= hp2xx.h bresnham.h chardraw.h charset0.h getopt.h
+INCS	= hp2xx.h bresnham.h chardraw.h charset0.h charset1.h charset2.h \
+	charset3.h charset4.h charset5.h charset6.h charset7.h clip.h \
+	 getopt.h
 
 PROGRAM	= hp2xx
 

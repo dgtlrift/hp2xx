@@ -1,3 +1,19 @@
+Changes from 3.3.0 to 3.3.1
+
+New features:
+- PE with fractional coordinates (completes PE support)
+- unlimited label lengths through dynamic reallocation of LB memory
+  (Georgy Salnikov)
+Bug fixes:
+- PS/RO handling was still broken, should be fixed now
+- xfig file headers had erroneously claimed 3.2 compliance, but the files
+  still had 3.1 format - should be valid FIG 3.2 now.
+- Makefiles in ~/makes updated 
+- DR and DI did not initialize character properties when called without
+  parameters (Georgy Salnikov)
+- Current address of Michael Schmitz added to to_png.c
+- removed junk files hp-tests/acad.pcl and sources/rgb2cmyk.c  
+
 Changes from 3.3.ALPHA2 to 3.3.0
 
 New features:

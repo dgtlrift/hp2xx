@@ -101,6 +101,7 @@ OBJS            =       hp2xx.obj,hpgl.obj,picbuf.obj,bresnham.obj,     -
                         chardraw.obj,getopt.obj,getopt1.obj,            -
                         to_vec.obj,to_pcx.obj,to_pcl.obj,to_eps.obj,    -
                         to_img.obj,to_pbm.obj,to_rgip.obj,std_main.obj  -
+			to_fig.obj clip.obj -
                         $(PREVIEWER)
 
 HP2XX           =       [-]HP2XX.EXE
@@ -145,6 +146,10 @@ to_pbm.obj      :       to_pbm.c,       $(COMMON_INCS)
 to_rgip.obj     :       to_rgip.c,      $(COMMON_INCS)
 
 to_uis.obj      :       to_uis.c,       $(COMMON_INCS)
+
+to_fig.obj      :       to_fig.c,       $(COMMON_INCS)
+
+clip.obj        :       clip.c,       $(COMMON_INCS)
 
 $(HelpLib)      :       [-.DOC]hp2xx.HLP
 

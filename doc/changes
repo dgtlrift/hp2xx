@@ -1,5 +1,19 @@
 Changes to hp2xx:
 =================
+
+V 3.3.1     , 99/11/20:
+
+Changed handling of PS/RO to finally(?) eliminate the scaling problems.
+Corrected xfig file header (had FIG3.2 title but 3.1-style parameters). 
+Added Solaris/SunOS 5.x options for generic.mak (suggested by Wolfram Wagner),
+fixed all files in generic.mak that did not yet include to_fig.c and clip.c.
+Fixed DR/DI implementation to do correct initialization when called without 
+parameters, changed text height factor to better resemble plotter output, 
+(re)allocate LB strings dynamically instead of imposing arbitrary limit on 
+label length (patches supplied by Georgy Salnikov). Completed PE support.
+Cosmetic changes to compile without warnings with gcc -Wall. 
+Added Michael Schmitz' current email address in to_png.c.
+
 V 3.3.0     , 99/09/30:
 
 Corrected scaling of PS with RO and -r. Corrected positioning and scaling
@@ -19,7 +33,7 @@ pen position after an EA.
 
 V 3.3 ALPHA,  99/09/01:
 
-Incorporated PNG support (patches by Michael Schmitz(?) as packaged
+Incorporated PNG support (patches by Michael Schmitz as packaged
 by Lars Koeller for FreeBSD) and partial support for the PE command
 (by Eugene Doudine). Added more character sets, so that 0-7 are now
 supported (although some glyphs may be ugly or even wrong, they were

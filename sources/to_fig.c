@@ -73,7 +73,7 @@ long		x[MAX_FIG_POINTS], y[MAX_FIG_POINTS];
 
 /* Start of FIG code */
   fprintf(md,"#FIG 3.2\n");
-  fprintf(md,"Landscape\nCenter\nInches\n");
+  fprintf(md,"Landscape\nCenter\nInches\nA4\n100 100\nSingle\n-1\n");
   fprintf(md,"1200 2\n");
 
 for (i=0;i<8;++i)

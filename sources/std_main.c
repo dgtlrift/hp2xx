@@ -37,7 +37,7 @@ copies.
 
 extern	mode_list	ModeList[];
 
-static	Logfile_flag = FALSE;
+static	short Logfile_flag = FALSE;
 
 
 

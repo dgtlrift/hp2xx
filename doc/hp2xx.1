@@ -1,4 +1,4 @@
-.TH hp2xx 1 "15 February 1994"
+.TH hp2xx 1 "1 December 1999"
 .SH NAME
 hp2xx \- A HPGL converter into some vector- and raster formats
 .SH USAGE
@@ -61,8 +61,8 @@ Preview on PC's (DOS):
 .I hp2xx
 reads HPGL ASCII source files, interprets them, and converts them
 into either another vector-oriented  format or one of several rasterfile
-formats. Currently, its HPGL parser recognizes a subset of the HP 7550A
-command set. Some high-level functions like filled polygons are missing.
+formats. Currently, its HPGL parser recognizes a subset of HPGL/2.
+Some high-level functions like polygon mode and fill patterns are missing.
 Also, only some of the fixed space vector fonts and none of the variable
 space arc fonts are supported. Beside these limitations,
 .I hp2xx
@@ -138,15 +138,15 @@ specifying
 .I -y ymin,
 and
 .I -Y ymax.
-NOTE: Clipping is NOT supported! If any picture coordinate exceeds your
-limits, they will be overwritten.
+NOTE: Clipping is only supported via the IW command ! If any picture 
+coordinate exceeds your limits, they will be overwritten.
 
 Use option
 .I -m mode
 to select the program mode, i.e. the output format. Currently supported:
 mode = "mf" (Metafont), "em" (emTeX \special{} commands), "epic"
 (line drawing using TeX macros within epic.sty), "eps" (PostScript),
-"fig" (XFig 3.1), "gpt" (GnuPlot ascii), "hpgl" (simplified HP-GL, 
+"fig" (XFig 3.2), "gpt" (GnuPlot ascii), "hpgl" (simplified HP-GL, 
 e.g. for import tasks), "pcl" (HP-PCL Level 3 format (suitable for printing 
 on a HP Laserjet II, DeskJet, or compatible printer), "img" (GEMs IMG format), 
 "pbm" (Portable Bit Map), "pcx" (PC-Paintbrush format, also accepted by 
@@ -210,7 +210,7 @@ Supported vector formats are:
 .I TeX/Metafont,
 .I emTex-specials,
 .I TeX/epic-Macros,
-.I XFig 3.1,
+.I XFig 3.2,
 .I GnuPlot ASCII,
 .I Simplified HP_GL,
 .I Uniplex RGIP
@@ -359,7 +359,7 @@ option.
  Martin Kroeker, daVeg GmbH,
  Schottener Weg 2
  D-64289 Darmstadt, Germany.
- mk@daveg.com or martin@tutor.oc.chemie.tu-darmstadt.de
+ mk@daveg.com or martin@ruby.chemie.uni-freiburg.de
 .LP
  ATARI features & PIC, PAC, IMG modes are due to Norbert Meyer, Duesseldorf.
  AMIGA version & PBM mode are due to Claus Langhans, Kelkheim (Ts.)
