@@ -4,13 +4,18 @@ New features:
 
 - Added experimental support for scalable (truetype) fonts based on the
   freetype2 library. To enable this, obtain a suitable fixed-width font
-  and add '-DSTROKED_FONTS=\"/path/to/this/truetype/font.ttf\"' in the
-  DEFINES section of the Makefile) 
+  (such as Bitstream Vera Mono available from www.gnome.org/fonts) and add
+  '-DSTROKED_FONTS=\"/path/to/this/truetype/font.ttf\"' in the DEFINES 
+  section of the Makefile) 
 - The DXF header was improved, and line width and color support added
 - Added support for the rectangle mode within PE mode
 - Added NR as another end-of-image marker in multi-image files
 - hp2xx now tries to print the offending section of the input file when
   it encounters an error.
+- Added a new commandline option, -M <pen> to redirect pen 0 drawing
+  commands to any other, ideally unused pen number. This works around
+  the problem that redefining PC0 also changes the background color of
+  raster images (but not vector files such as eps).
 
 Bug fixes:
 
@@ -33,6 +38,11 @@ Bug fixes:
   the program
 - page counting of multi-image files was not always correct, rendering some
   images inaccessible, or causing the generation of blank image files)
+- color PNG export was broken by a slightly too aggressive code cleanup
+  in 3.4.3
+- SP in PE mode did not update the pen count, potentially resulting in 
+  color loss in the raster modes.
+
  
 Changes from 3.4.2 to 3.4.3
 

@@ -287,6 +287,7 @@ typedef struct {		/* Corresponding option(s)        */
 	FILE *td;		/* (internally needed)          */
 	hp2xx_mode xx_mode;	/* (internally needed)          */
 	int maxpens;		/* (internally needed)          */
+	int mapzero;		/* remapping of pen 0		*/
 } GEN_PAR;
 
 
@@ -350,10 +351,10 @@ void Pen_action_to_tmpfile(PlotCmd, const HPGL_Pt *, int);
 /*int read_float(float *, FILE *);*/
 double ceil_with_tolerance(double, double);
 void line(int relative, HPGL_Pt p);
-int read_PE_flags(const GEN_PAR *, int, FILE *, PE_flags *);
+int read_PE_flags(GEN_PAR *, int, FILE *, PE_flags *);
 int read_PE_coord(int, FILE *, PE_flags *, float *);
 int read_PE_pair(int, FILE *, PE_flags *, HPGL_Pt *);
-void read_PE(const GEN_PAR *, FILE *);
+void read_PE(GEN_PAR *, FILE *);
 int decode_PE_char(int, PE_flags *);
 int isPEterm(int, PE_flags *);
 void to_ATARI(GEN_PAR *, FILE *);

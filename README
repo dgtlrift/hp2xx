@@ -1,4 +1,4 @@
-hp2xx-3.4.4 (to be released sometime in early 2003)
+hp2xx-3.4.4 (probably mid- to end-june 2003)
 
 This is mainly a bugfix release to correct some problems found in 3.4.3.
 In addition, it provides a tentative framework for truetype font support
@@ -37,6 +37,8 @@ New features:
   into DXF group 62 line attributes (Georg Viehoever).
 - The error handler now tries to report the offending HPGL command sequence,
   not just its position in the input stream
+- New option for mapping pen 0 commands to another pen, to avoid changing
+  the background color in raster output modes.
 
 Bug fixes:
 
@@ -53,7 +55,11 @@ Bug fixes:
   notation, which is not allowed by any HPGL standard.
 - DT handling was both incorrect and incomplete
 - pdf and eps modes were using much too large miter limits
-- exporting too raster modes could fail in some circumstances due to 
+- exporting to raster modes could fail in some circumstances due to 
   wrong linewidth corrections being applied in the raster buffer.
 - arcs drawn with 'deviation distance' chord tolerance parameter were
   drawn as acute angles or even crashed hp2xx
+- PNG export of color graphics was broken in 3.4.3
+- SP command in PE mode did not update the internal pencount, potentially
+  leading to use of a reduced color palette in the raster modes.
+

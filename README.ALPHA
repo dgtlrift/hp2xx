@@ -1,3 +1,16 @@
+3.4.4a9
+
+New features:
+
+- added commandline option -M for redirecting pen 0 commands to any other
+  (unused) pen. This works around the dual use of pen 0 as background color
+  in the raster output modes.
+
+Bug fixes:
+
+- corrected PNG export of color images.
+- SP commands in PE mode did not update maximum number of pens in use.
+
 3.4.4a8
 
 Bug fixes:

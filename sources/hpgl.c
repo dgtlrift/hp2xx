@@ -930,7 +930,7 @@ static void rects(int relative, int filled, float cur_pensize, FILE * hd) {
    int pen;
    } ;
  */
-int read_PE_flags(const GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
+int read_PE_flags(GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 {
 	short old_pen;
 	float ftmp;
@@ -965,6 +965,9 @@ int read_PE_flags(const GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 			n_unexpected++;
 			pen = pen % pg->maxpens;
 		}
+#if 1		
+		if (pen == 0 && pg->mapzero >-1) pen=pg->mapzero;
+#endif
 		if (old_pen != pen) {
 			if ((fputc(SET_PEN, td) == EOF)
 			    || (fputc(pen, td) == EOF)) {
@@ -975,7 +978,7 @@ int read_PE_flags(const GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 		}
 		if (pen)
 			pens_in_use[pen] = 1;
-		/*         pens_in_use |= (1 << (pen-1)); */
+		pg->maxcolor = MAX(pg->maxcolor, (int)pen);
 /*MK */
 		break;
 
@@ -1076,7 +1079,7 @@ int read_PE_pair(int c, FILE * hd, PE_flags * fl, HPGL_Pt * p)
 
 
 
-void read_PE(const GEN_PAR * pg, FILE * hd)
+void read_PE(GEN_PAR * pg, FILE * hd)
 {
 	int c;
 
@@ -2836,6 +2839,10 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			break;
 		} else {
 			mypen = (int)ftmp;
+#if 1
+		if (pg->mapzero == mypen) break; 
+	/* this color is remapped for pen 0, ignore original definition */
+#endif		
 			if (read_float(&ftmp, hd))	/* no red component  */
 				myred = 0;
 			else
@@ -2850,6 +2857,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				myblue = 255 * (ftmp - b_base) / b_max;
 			pg->is_color = TRUE;
 			PlotCmd_to_tmpfile(DEF_PC);
+#if 1
+			if (mypen==0 && pg->mapzero >-1) mypen=pg->mapzero;
+#endif			
 			Pen_Color_to_tmpfile(mypen, myred, mygreen,
 					     myblue);
 			break;
@@ -3409,9 +3419,12 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		thickness = 0.;	/* clear any PT setting (should we default to 0.3 here ??) */
 		if (read_float(&p1.x, hd))	/* just SP;     */
 			pen = 0;
-		else
+		else{
 			pen = (short) p1.x;
-
+#if 1			
+			if (pen==0 && pg->mapzero >-1) pen=pg->mapzero;
+#endif
+		}
 		if (pen < 0 || (int)pen > pg->maxpens) {
 			Eprintf
 			    ("\nIllegal pen number %d: replaced by %d\n",

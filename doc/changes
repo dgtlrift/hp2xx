@@ -1,5 +1,16 @@
 Changes to hp2xx:
 =================
+3.4.4a9:
+Changing the to_png.c 'colour' to an unsigned char in 3.4.3 broke color
+PNGs. SP commands in PE mode did not yet update the pen count (important
+for raster palette sizing). Added new commandline option -M <pen number>
+for remapping of pen 0 drawing commands to any other (ideally unused) pen 
+- this is just a workaround for the 8bit palette limitation of the raster 
+buffer, which cannot hold 256 colors plus 'empty' background. (Without 
+this option, HPGL files that use pen 0 for actual plotting change the 
+background color of raster images to its color as a side effect. 
+Vector modes are not affected as they do not use a background color).
+
 3.4.4a8:
 page_number was not incremented correctly, especially it should increase
 at end-of-file to match the multi-page selection algorithm.

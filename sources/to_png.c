@@ -46,7 +46,7 @@ int	       ppm[][3] = { {255, 255, 255}, {0,0,0} };
 /*, {255,0,0}, {0,255,0},
 		{0,0,255},{0,255,255},{255,0,255},{255,255,0}};
 */
-unsigned char		colour;
+int		colour;
 
 /**
  ** gifdraw-parts
@@ -103,7 +103,7 @@ int pdcol;
 
 	for (x = 0; x < pb->nc; x++)
 	{
-	    colour = (unsigned char)index_from_RowBuf(row, x, pb);
+	    colour = index_from_RowBuf(row, x, pb);
             pdImageSetPixel(im, x, row_c, colour);
 	}
 	if ((!pg->quiet) && (row_c % 10 == 0))
@@ -128,7 +128,7 @@ int pdcol;
 
 	for (x = 0; x < pb->nc; x++)
 	{
-	    colour = (unsigned char)index_from_RowBuf(row, x, pb);
+	    colour = index_from_RowBuf(row, x, pb);
             pdImageSetPixel(im, x, row_c, colour);
 	}
 

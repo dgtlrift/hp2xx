@@ -151,7 +151,10 @@ if (strcmp(pg->mode,"pre")) {
 	if (po->outfile != "-" && po->pagecount >0) {
 	sprintf(thepage,"%d",po->pagecount);
 	strcpy(po->outfile,savedname);
-	strcpy(strstr(po->outfile,pg->mode),thepage);
+	if (strstr(po->outfile,pg->mode)) 
+		strcpy(strstr(po->outfile,pg->mode),thepage);
+	else
+		strcat(po->outfile,thepage);	
 	strcat(po->outfile,".");
 	strcat(po->outfile,pg->mode);
 	}
@@ -306,6 +309,10 @@ char	*p, cdummy;
 		break;
 
 	  case 'h':
+	        if (!strncmp(optarg,"elp",3)) {
+		usage_msg (pg, pi, po);
+		exit (ERROR);
+		}
 		pi->height = atof (optarg);
 		if (pi->height < 0.1)
 			Eprintf("Warning: Small height: %g mm\n", pi->height);
@@ -341,6 +348,11 @@ char	*p, cdummy;
 		po->zretract = atof (optarg);
 		break;
 
+	  case 'M':
+	  	pg->mapzero = atof(optarg);
+	  	if (pg->mapzero <0 || pg->mapzero >255) pg->mapzero=-1;
+	  	break;
+	  	
 	  case 'm':
 		pg->mode = optarg;
 		for (i=0; ModeList[i].mode != XX_TERM; i++)
@@ -535,7 +547,7 @@ OUT_PAR	Po;
 int	i;
 char 	outname[128]="";
 
-char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:z:Z:CFH:W:inqtvNI";
+char	*shortopts = "a:c:d:D:e:f:h:l:m:M:o:O:p:P:r:s:S:V:w:x:X:y:Y:z:Z:CFH:W:inqtvNI?";
 struct	option longopts[] =
 {
 	{"mode",	1, NULL,	'm'},
@@ -545,7 +557,8 @@ struct	option longopts[] =
 	{"quiet",	0, NULL,	'q'},
 	{"nofill",	0, NULL,	'n'},
 	{"no_ps",	0, NULL,	'N'},
-
+	{"mapzero",	1, NULL,	'M'},
+	
 	{"DPI",		1, NULL,	'd'},
 	{"DPI_x",	1, NULL,	'd'},
 	{"DPI_y",	1, NULL,	'D'},
@@ -579,7 +592,7 @@ struct	option longopts[] =
 #ifdef DOS
 	{"VGAmodebyte",	1, NULL,	'V'},
 #endif
-	{"help",	0, NULL,	'H'},
+	{"help",	0, NULL,	'?'},
 	{"version",	0, NULL,	'v'},
 	{NULL,		0, NULL,	'\0'}
 };

@@ -150,8 +150,8 @@ copies.
  ** 03/02/26	      GV   Add -S option for DXF mode (pen attribute mapping)
  **/
 
-char *VERS_NO = "3.4.4a8";
-char *VERS_DATE = "03/06/02";
+char *VERS_NO = "3.4.4a9";
+char *VERS_DATE = "03/06/19";
 char *VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char *VERS_ADDITIONS =
@@ -299,9 +299,10 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	    ("-n        %s\t\tno filling of polygons (ignore FP commands)\n",
 	     FLAGSTATE(pg->nofill));
 	Eprintf
-	    ("-N        %s\t\tno honoring of papersize (PS) requests (plotsize calculated from data instead)\n",
+	    ("-N        %s\t\tno honoring of papersize (PS) requests\n\t\t\t (plotsize calculated from data instead)\n",
 	     FLAGSTATE(pg->no_ps));
-
+	Eprintf
+	    ("-M int	\t\tremap all drawing commands using pen 0 to this pen\n");
 	Eprintf
 	    ("-f strg   (auto gen.)\tName of output file ('-' = to stdout)\n");
 	Eprintf("-l strg   (stderr)\tName of log file\n");
@@ -488,7 +489,8 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	pg->maxcolor = 1;	/* max. color index             */
 	pg->maxpens = 8;
 	pg->is_color = FALSE;
-
+	pg->mapzero = -1;
+	
 	pt.width[0] = 0.0;	/* 1/10 mm              */
 	pt.color[0] = xxBackground;
 	for (i = 1; i <= NUMPENS; i++) {
