@@ -58,6 +58,35 @@ copies.
 #include "font205.h"
 #include "font173.h"
 
+#ifdef STROKED_FONTS
+
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_OUTLINE_H
+
+void ASCII_to_font(int);
+int tt_stroke_moveto(FT_Vector *, void *);
+int tt_stroke_lineto(FT_Vector *, void *);
+int tt_bezier1(FT_Vector *, FT_Vector *, void *);
+int tt_bezier2(FT_Vector *, FT_Vector *, FT_Vector *, void *);
+HPGL_Pt polygon[MAXPOLY], oldp;
+int numpoints;
+int ttfont = 0;
+
+FT_Library library;
+FT_Face face;
+FT_Vector tt_refpoint;
+
+static const FT_Outline_Funcs my_tt_functions = {
+	(FT_Outline_MoveTo_Func) tt_stroke_moveto,
+	(FT_Outline_LineTo_Func) tt_stroke_lineto,
+	(FT_Outline_ConicTo_Func) tt_bezier1,
+	(FT_Outline_CubicTo_Func) tt_bezier2,
+	0, 0
+};
+
+#endif
+
 /**
  ** NOTE: There is code here masked off by symbol STROKED_FONTS
  ** In an earlier version it had some meaning but is now inactive.
@@ -777,7 +806,6 @@ static void ASCII_to_char(int c)
 
 
 /**********************************************************************/
-
 void init_text_par(void)
 {
 	tp->width = 0.005 * (P2.x - P1.x);
@@ -829,7 +857,9 @@ void adjust_text_par(void)
 			tp->font);
 		Eprintf("Font 0 used instead!\n");
 		tp->font = 0;
-	}
+		ttfont = 0;
+	} else
+		ttfont = 1;
 #endif
 }
 
@@ -1057,7 +1087,7 @@ void plot_string(char *txt, LB_Mode mode, short current_pen)
 			break;
 		default:
 #ifdef STROKED_FONTS
-			if (tp->font)
+			if (ttfont)
 				ASCII_to_font((int) *txt);
 			else
 #endif
@@ -1251,3 +1281,337 @@ void plot_user_char(FILE * hd, short current_pen)
 		Pen_Width_to_tmpfile(current_pen, savedwidth);
 	}
 }
+
+#ifdef STROKED_FONTS
+
+int init_font(int thefont)
+{
+	int error;
+
+	if (face) return 0; /* font already open */
+	
+	error = FT_Init_FreeType(&library);
+	if (error) {
+		fprintf(stderr, " ! FT_Init_FreeType\n");
+		return -1;
+	}
+	error = FT_New_Face(library,
+/*			    "/usr/X11R6/lib/X11/fonts/truetype/LucidaTypewriterRegular.ttf",*/
+	STROKED_FONTS,
+			    0, &face);
+	if (error) {
+		fprintf(stderr, " ! FT_New_Face \n");
+		return -1;
+	}
+
+/*error = FT_Set_Char_Size (
+	face,
+	0,
+	12*64,
+	100,
+	100);
+*/
+	error = FT_Set_Pixel_Sizes(face, 20, 20);
+	if (error) {
+		fprintf(stderr, " ! FT_Set_Char_Size\n");
+		return -1;
+	}
+#if 0
+	fprintf(stderr, "init_font ok\n");
+#endif
+	return 0;
+}
+
+
+void ASCII_to_font(int c)
+{
+	int error;
+	int dummy;
+	HPGL_Pt boxmin,boxmax;
+	FT_GlyphSlot slot = face->glyph;
+	FT_Outline *theoutline = &slot->outline;
+	int SafeLineType = CurrentLineType;
+	LineEnds SafeLineEnd = CurrentLineEnd;
+
+	CurrentLineType = LT_solid;
+	PlotCmd_to_tmpfile(DEF_LA);
+	Line_Attr_to_tmpfile(LineAttrEnd, LAE_round);
+	if (c < 0)
+		c += 256;
+	if (tp->font == 0 || tp->font == 7)
+	switch(c) { /* HP Roman8 to iso8859 conversion table */
+	case 179:	
+		c=176;
+		break;
+	case 254:
+		c=177;
+		break;
+	case 243:
+		c=181;
+		break;
+	case 216:
+		c=196;
+		break;
+	case 218:
+		c=214;
+		break;
+	case 219:
+		c=220;
+		break;
+	case 222:
+		c=223;
+		break;
+	case 204:
+		c=228;
+		break;
+	case 206:
+		c=246;
+		break;
+	case 214:
+		c=248;
+		break;
+	case 207:
+		c=252;
+		break;
+	default:
+		break;
+	 }												
+	error = FT_Load_Char(face, c, FT_LOAD_NO_SCALE);
+	if (error) {
+		fprintf(stderr, " ! FT_Load_Char %c\n", c);
+		return;
+	}
+#if 0
+	fprintf(stderr, "metrics : width %d, height %d advance %d\n",
+		(int) (slot->metrics.width / 64.),
+		(int) (slot->metrics.height / 64.),
+		(int) (slot->metrics.horiAdvance / 64.));
+	fprintf(stderr, "FT_Outline_Decompose...\n");
+#endif
+
+	numpoints = -1;
+
+	error = FT_Outline_Decompose(theoutline, &my_tt_functions, &dummy);
+	if (error)
+		fprintf(stderr, " ! FT_Outline_Decompose\n");
+#if 0
+	fprintf(stderr, "refpoint %f %f + chardiff %f %f\n",
+		tp->refpoint.x, tp->refpoint.y, tp->chardiff.x,
+		tp->chardiff.y);
+	fprintf(stderr, "numpoints %d\n", numpoints);
+#endif
+	boxmin.x=tp->refpoint.x-5;
+	boxmin.y=tp->refpoint.y-150;
+	boxmax.x=boxmin.x+tp->chardiff.x+5;
+	boxmax.y=boxmin.y+tp->chardiff.y+5;
+	fill(polygon, numpoints, boxmin, boxmax, 0, 2, 1, 0);
+	tp->refpoint.x += tp->chardiff.x;
+	tp->refpoint.y += tp->chardiff.y;
+	tt_refpoint.x = 0;
+	tt_refpoint.y = 0;
+	/* Restore Line Ends */
+	CurrentLineType = SafeLineType;
+	PlotCmd_to_tmpfile(DEF_LA);
+	Line_Attr_to_tmpfile(LineAttrEnd, SafeLineEnd);
+}
+
+
+int tt_stroke_moveto(FT_Vector * to, void *dummy)
+{
+	HPGL_Pt p;
+#if 0
+	fprintf(stderr, "TT move to %ld %ld (oder ists %d %d ??)\n", to->x,
+		to->y, (int) (to->x / 64.), (int) (to->y / 64.));
+#endif
+	p.x = tp->Txx * to->x + tp->Txy * to->y;
+	p.y = tp->Tyx * to->x + tp->Tyy * to->y;
+	p.x = p.x / 200. + tp->refpoint.x + tp->offset.x;
+	p.y = p.y / 200. + tp->refpoint.y + tp->offset.y;
+
+	Pen_action_to_tmpfile(MOVE_TO, &p, FALSE);
+
+	/* Update cursor: to next character origin!   */
+	tt_refpoint.x = to->x;
+	tt_refpoint.y = to->y;
+	oldp = p;
+
+	return 0;
+}
+
+int tt_stroke_lineto(FT_Vector * to, void *dummy)
+{
+	HPGL_Pt p;
+	int outside = 0;
+#if 0
+	fprintf(stderr, "TT line to %ld %ld\n", to->x, to->y);
+#endif
+
+	p.x = tp->Txx * to->x + tp->Txy * to->y;
+	p.y = tp->Tyx * to->x + tp->Tyy * to->y;
+	p.x = p.x / 200. + tp->refpoint.x + tp->offset.x;
+	p.y = p.y / 200. + tp->refpoint.y + tp->offset.y;
+#if 0
+	if (iwflag) {
+		if (scale_flag) {
+			if (P1.x + p.x > C2.x || P1.y + p.y > C2.y) {
+				outside = 1;
+			}
+			if (P1.x + p.x < C1.x || P1.y + p.y < C1.y) {
+				outside = 1;
+			}
+		} else {
+			if (P1.x + (p.x - S1.x) * Q.x > C2.x
+			    || P1.y + (p.y - S1.y) * Q.y > C2.y) {
+				outside = 1;
+			}
+			if (P1.x + (p.x - S1.x) * Q.x < C1.x
+			    || P1.y + (p.y - S1.y) * Q.y < C1.y) {
+				outside = 1;
+			}
+		}
+	}
+#endif
+	if (!outside) {
+		/*      Pen_action_to_tmpfile (DRAW_TO, &p, FALSE); */
+		polygon[++numpoints] = oldp;
+		polygon[++numpoints] = p;
+	} else
+		Pen_action_to_tmpfile(MOVE_TO, &p, FALSE);
+
+	outside = 0;
+
+	/* Update cursor: to next character origin!   */
+	tt_refpoint.x = to->x;
+	tt_refpoint.y = to->y;
+	oldp = p;
+	return 0;
+}
+
+int tt_bezier1(FT_Vector * p1, FT_Vector * p3, void *dummy)
+{
+	HPGL_Pt p,pp;
+	int i, outside;
+	float t;
+	FT_Vector p2;
+
+	p2.x = p1->x;
+	p2.y = p1->y;
+
+/*    
+p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
+*/
+#if 0
+	fprintf(stderr, "TT refpoint %ld %ld\n", tt_refpoint.x,
+		tt_refpoint.y);
+#endif
+	outside = 0;
+
+	for (i = 0; i < 51; i++) {
+		t = (float) i / 50.;
+		p.x =
+		    t * t * t * p3->x + 3 * t * t * (1. - t) * p2.x
+		    + 3 * t * (1. - t) * (1. - t) * p1->x
+		    + (1. - t) * (1. - t) * (1. - t) * tt_refpoint.x;
+		p.y =
+		    t * t * t * p3->y + 3 * t * t * (1. - t) * p2.y
+		    + 3 * t * (1. - t) * (1. - t) * p1->y
+		    + (1. - t) * (1. - t) * (1. - t) * tt_refpoint.y;
+
+		pp.x = tp->Txx * p.x + tp->Txy * p.y;
+		pp.y = tp->Tyx * p.x + tp->Tyy * p.y;
+		pp.x = pp.x / 200. + tp->refpoint.x + tp->offset.x;
+		pp.y = pp.y / 200. + tp->refpoint.y + tp->offset.y;
+/*fprintf(stderr,"bezier point %f %f\n",pp.x,pp.y);*/
+#if 0
+		if (iwflag) {
+			if (P1.x + (pp.x - S1.x) * Q.x > C2.x
+			    || P1.y + (pp.y - S1.y) * Q.y > C2.y) {
+/*fprintf(stderr,"IW set:point %f %f >P2\n",pp.x,pp.y); */
+				outside = 1;
+			}
+			if (P1.x + (pp.x - S1.x) * Q.x < C1.x
+			    || P1.y + (pp.y - S1.y) * Q.y < C1.y) {
+/*fprintf(stderr,"IW set:point  %f %f <P1\n",pp.x,pp.y); */
+				outside = 1;
+			}
+		}
+#endif
+		if (!outside) {
+/*	     Pen_action_to_tmpfile (DRAW_TO, &pp, FALSE);  */
+			polygon[++numpoints] = oldp;
+			polygon[++numpoints] = pp;
+		} else
+			Pen_action_to_tmpfile(MOVE_TO, &pp, FALSE);
+
+		outside = 0;
+	oldp = pp;
+	}
+
+	/* Update cursor: to next character origin!   */
+	tt_refpoint.x = p3->x;
+	tt_refpoint.y = p3->y;
+
+	return 0;
+}
+
+int tt_bezier2(FT_Vector * p1, FT_Vector * p2, FT_Vector * p3, void *dummy)
+{
+	HPGL_Pt p,pp;
+	int i, outside;
+	float t;
+
+/*    
+p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
+*/
+
+	outside = 0;
+
+	for (i = 0; i < 51; i++) {
+		t = (float) i / 50.;
+		p.x =
+		    t * t * t * p3->x + 3 * t * t * (1. - t) * p2->x
+		    + 3 * t * (1. - t) * (1. - t) * p1->x
+		    + (1. - t) * (1. - t) * (1. - t) * tt_refpoint.x;
+		p.y =
+		    t * t * t * p3->y + 3 * t * t * (1. - t) * p2->y
+		    + 3 * t * (1. - t) * (1. - t) * p1->y
+		    + (1. - t) * (1. - t) * (1. - t) * tt_refpoint.y;
+
+		pp.x = tp->Txx * p.x + tp->Txy * p.y;
+		pp.y = tp->Tyx * p.x + tp->Tyy * p.y;
+		pp.x = pp.x / 200. + tp->refpoint.x + tp->offset.x;
+		pp.y = pp.y / 200. + tp->refpoint.y + tp->offset.y;
+/*fprintf(stderr,"bezier point %f %f\n",pp.x,pp.y);*/
+#if 0
+		if (iwflag) {
+			if (P1.x + (pp.x - S1.x) * Q.x > C2.x
+			    || P1.y + (pp.y - S1.y) * Q.y > C2.y) {
+/*fprintf(stderr,"IW set:point %f %f >P2\n",pp.x,pp.y); */
+				outside = 1;
+			}
+			if (P1.x + (pp.x - S1.x) * Q.x < C1.x
+			    || P1.y + (pp.y - S1.y) * Q.y < C1.y) {
+/*fprintf(stderr,"IW set:point  %f %f <P1\n",pp.x,pp.y); */
+				outside = 1;
+			}
+		}
+#endif
+		if (!outside) {
+/*	     Pen_action_to_tmpfile (DRAW_TO, &pp, FALSE);  */
+			polygon[++numpoints] = oldp;
+			polygon[++numpoints] = pp;
+		} else
+			Pen_action_to_tmpfile(MOVE_TO, &pp, FALSE);
+
+		outside = 0;
+	oldp = pp;
+	
+	}
+
+	/* Update cursor: to next character origin!   */
+	tt_refpoint.x = p3->x;
+	tt_refpoint.y = p3->y;
+	return 0;
+}
+
+#endif

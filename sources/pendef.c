@@ -31,14 +31,23 @@ PEN pt;
 
 void Pen_Width_to_tmpfile(int pen, PEN_W width)
 {
+	int i;
 	PEN_N tp;
 	PEN_W tw;
 
-	tp = pen;
+	tp = (PEN_N) pen;
 	tw = width;
 
 	if (record_off)		/* Wrong page!  */
 		return;
+	if (pen <0) return; 	/* Might happen when "current pen" is still
+				undefined */
+	if (tp == 0) {		/* set all pens */
+		for (i = 1; i < NUMPENS; ++i)
+			pt.width[i] = tw;
+	} else {
+		pt.width[tp] = tw;	/* set just the specified one */
+	}
 
 	if (fwrite(&tp, sizeof(tp), 1, td) != 1) {
 		PError("Pen_Width_to_tmpfile - pen");
@@ -57,10 +66,10 @@ void Pen_Color_to_tmpfile(int pen, int red, int green, int blue)
 	PEN_N tp;
 	PEN_C r, g, b;
 
-	tp = pen;
-	r = red;
-	g = green;
-	b = blue;
+	tp = (PEN_N)pen;
+	r = (PEN_C)red;
+	g = (PEN_C)green;
+	b = (PEN_C)blue;
 
 	if (record_off)		/* Wrong page!  */
 		return;
@@ -140,8 +149,8 @@ int load_pen_color_table(FILE * td)
 		return (1);
 	}
 
-	set_color_rgb(tp, r, g, b);
-	return (tp);
+	set_color_rgb(tp, (BYTE)r, (BYTE)g, (BYTE)b);
+	return ((int)tp);
 }
 
 void set_color_rgb(PEN_N index, BYTE r, BYTE g, BYTE b)

@@ -36,11 +36,11 @@ copies.
 
 
 typedef struct {
-	int	x,y;		/* 2d - pseudo device coord	*/
+	int x, y;		/* 2d - pseudo device coord     */
 } DevPt;
 
 
-DevPt	*bresenham_init	(DevPt *, DevPt *);
-int	bresenham_next (void);
+DevPt *bresenham_init(DevPt *, DevPt *);
+int bresenham_next(void);
 
-#endif /* BRESNHAM_H */
+#endif				/* BRESNHAM_H */

@@ -1,3 +1,5 @@
+#ifdef AMIGA
+
 #ifndef IFF_H
 #define IFF_H
 /*----------------------------------------------------------------------*/
@@ -478,3 +480,4 @@ extern IFFP PutCkEnd();
 
 #endif IFF_H
 
+#endif

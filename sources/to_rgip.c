@@ -207,7 +207,9 @@ int to_rgip(const GEN_PAR * pg, const OUT_PAR * po)
 	PlotCmd cmd;
 	HPGL_Pt pt1 = { 0, 0 };
 	FILE *md;
-	int pensize, pencolor, pen_no = 0, err = 0;
+	PEN_W pensize; 
+	PEN_C pencolor;
+	int pen_no = 0, err = 0;
 
 	/* Give some news... */
 	if (!pg->quiet) {
@@ -237,7 +239,7 @@ int to_rgip(const GEN_PAR * pg, const OUT_PAR * po)
 	fprintf(md, "%%RGIP_METAFILE  :1.0a\n");
 	pensize = pt.width[DEFAULT_PEN_NO];
 	if (pensize > 0.05) {
-		rgip_set_linewidth(pensize);
+		rgip_set_linewidth((int)(1+pensize*po->HP_to_xdots/0.025));
 	}
 	rgip_set_linestyle(1);
 	rgip_set_color(1.0, 1.0, 1.0);
@@ -258,7 +260,7 @@ int to_rgip(const GEN_PAR * pg, const OUT_PAR * po)
 			}
 			pensize = pt.width[pen_no];
 			if (pensize > 0.05) {
-				rgip_set_linewidth(pensize);
+			rgip_set_linewidth((int)(1+pensize*po->HP_to_xdots/0.025));
 			}
 			pencolor = pt.color[pen_no];
 			rgip_set_color(pt.clut[pencolor][0] / 255.0,
@@ -266,6 +268,16 @@ int to_rgip(const GEN_PAR * pg, const OUT_PAR * po)
 				       pt.clut[pencolor][2] / 255.0);
 			break;
 
+		case DEF_PC:
+			if (!load_pen_color_table(pg->td)) {
+				PError("Unexpected end of temp. file");
+				exit(ERROR);
+			}
+			pencolor = pt.color[pen_no];
+			rgip_set_color(pt.clut[pencolor][0] / 255.0,
+				       pt.clut[pencolor][1] / 255.0,
+				       pt.clut[pencolor][2] / 255.0);
+			break;
 		case DEF_PW:
 			if (!load_pen_width_table(pg->td)) {
 				PError("Unexpected end of temp. file");
@@ -273,7 +285,7 @@ int to_rgip(const GEN_PAR * pg, const OUT_PAR * po)
 			}
 			pensize = pt.width[pen_no];
 			if (pensize > 0.05) {
-				rgip_set_linewidth(pensize);
+			rgip_set_linewidth((int)(1+pensize*po->HP_to_xdots/0.025));
 			}
 			break;
 

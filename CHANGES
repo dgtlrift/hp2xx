@@ -1,3 +1,23 @@
+Changes from 3.4.3 to 3.4.4a1
+
+New features:
+
+- Added experimental support for scalable (truetype) fonts based on the
+  freetype2 library. To enable this, obtain a suitable fixed-width font
+  and add '-DSTROKED_FONTS=\"/path/to/this/truetype/font.ttf\"' in the
+  DEFINES section of the Makefile) 
+
+Bug fixes:
+
+- penwidth was erroneously set to the default 0.1 mm after drawing a label
+- xfig and rgip output did not yet handle the changed pencolor and width
+  settings
+- polygons sometimes had the wrong sections filled in for some of the 
+  scanlines
+- forcing penwidth via the -p commandline option no longer worked for 
+  the conventional values between 1 and 9 
+
+
 Changes from 3.4.2 to 3.4.3
 
 New features:
@@ -79,8 +99,6 @@ Bug fixes:
 - Text penwidth was always the same as that in use for linedrawing. This is
   now fixed, and the SD option for forcing this behaviour is now honored.
 - Some warning messages were emitted even in quiet mode.
-- EMF export would abort with a spurious error message when pen 0 was 
-  selected (Pascal Haible)
 
 Changes from 3.4.1 to 3.4.2
 

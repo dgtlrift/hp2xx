@@ -25,7 +25,7 @@
 #define ClipSurelyOutside(code1,code2) (code1 & code2)
 #define ClipFullyInside(code1,code2) (! (code1 | code2 ))
 
-static int ClipAreaCode(double x1, double y1,
+static short ClipAreaCode(double x1, double y1,
 			double x2, double y2, double px, double py)
 {
 	short code = CLIP_INSIDE;

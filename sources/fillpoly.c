@@ -9,25 +9,28 @@
 #include "lindef.h"
 #include "pendef.h"
 
-void fill(HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt point1,
+void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	  HPGL_Pt point2, int scale_flag, int filltype, float spacing,
 	  float hatchangle)
 {
+	typedef struct {
+	double x,y;
+	} HPGL_Pt2;
 	double pxmin, pxmax, pymin, pymax;
 	double polyxmin, polyymin, polyxmax, polyymax;
 	double scanx1, scanx2, scany1, scany2;
-	HPGL_Pt segment[MAXPOLY];
+	HPGL_Pt2 segment[MAXPOLY],tmp;
 	double segx, segy;
 	static int i;		/* to please valgrind when debugging memory accesses */
-	int j, k, jj;
+	int j, k, jj,kk;
 	int numlines;
 	double penwidth;
 	HPGL_Pt p;
 	double denominator;
-	double tmp, rot_ang;
+	double rot_ang;
 	double pxdiff = 0., pydiff = 0.;
 	double A1, B1, C1, A2, B2, C2;
-	double tmp2;
+	float avx,avy,bvx,bvy,ax,ay,bx,by,atx,aty,btx,bty,mu;
 	PEN_W SafePenW = pt.width[1];
 	LineEnds SafeLineEnd = CurrentLineEnd;
 	CurrentLineEnd = LAE_butt;
@@ -37,7 +40,10 @@ void fill(HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt point1,
 		penwidth = spacing;
 	PlotCmd_to_tmpfile(DEF_PW);
 	Pen_Width_to_tmpfile(1, penwidth);
-
+        PlotCmd_to_tmpfile(DEF_LA);
+        Line_Attr_to_tmpfile(LineAttrEnd, LAE_round);
+                
+                
 	polyxmin = 100000.;
 	polyymin = 100000.;
 	polyxmax = -100000.;
@@ -85,7 +91,7 @@ void fill(HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt point1,
 		pymin = pymin - rot_ang * pxdiff;
 		pymax = pymax + rot_ang * pxdiff;
 	}
-	numlines = fabs(1. + (pymax - pymin + penwidth) / penwidth);
+	numlines = (int)fabs(1. + (pymax - pymin + penwidth) / penwidth);
 #if 0
 /* debug code to show shade box */
 	p.x = pxmin;
@@ -123,19 +129,24 @@ void fill(HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt point1,
 		if (scany2 < polyymin)
 			continue;
 /* coefficients for current scan line */
-		A1 = scany2 - scany1;
-		B1 = pxmin - pxmax;
-		C1 = pxmin * (scany1 - scany2) + scany1 * (pxmax - pxmin);
+		bx=pxmin;
+		btx=pxmax;
+		by=scany1;
+		bty=scany2;
+		bvx=btx-bx;
+		bvy=bty-by;
 
 		for (j = 0; j <= numpoints; j = j + 2) {	/*for all polygon edges */
+		ax=polygon[j].x;
+		ay=polygon[j].y;
+		atx=polygon[j+1].x;
+		aty=polygon[j+1].y;
+		avx=atx-ax;
+		avy=aty-ay;
 
-/* coefficients for this edge */
-			A2 = polygon[j + 1].y - polygon[j].y;
-			B2 = polygon[j].x - polygon[j + 1].x;
-			C2 = polygon[j].x * (polygon[j].y -
-					     polygon[j + 1].y) +
-			    polygon[j].y * (polygon[j + 1].x -
-					    polygon[j].x);
+		if ( fabs(bvy*avx -avy*bvx) < 1.e-8) continue;
+		mu=(avx * (ay-by) + avy * (bx-ax)) / (bvy*avx - avy*bvx);
+		
 
 #if 0
 /* debug code to show outline */
@@ -148,146 +159,50 @@ void fill(HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt point1,
 #endif
 
 /*determine coordinates of intersection */
-			denominator = A1 * B2 - A2 * B1;
-			if (fabs(denominator) > 1.e-20) {	/* zero means parallel lines */
-
-				segx = (B1 * C2 - B2 * C1) / denominator;	/*x coordinate of intersection */
-				segy = (C1 * A2 - C2 * A1) / denominator;	/*y coordinate of intersection */
-
+		if (mu >=0. && mu <=1.01) {
+				segx = bx + mu *bvx;	/*x coordinate of intersection */
+				segy = by + mu *bvy; 	/*y coordinate of intersection */
+				}else
+				continue;
 
 
 				if ((segy <
-				     MIN(polygon[j].y, polygon[j + 1].y))
+				     MIN((double)polygon[j].y, (double)polygon[j + 1].y))
 				    || (segy >
-					MAX(polygon[j].y,
-					    polygon[j + 1].y))
+					MAX((double)polygon[j].y,
+					    (double)polygon[j + 1].y))
 				    || (segx <
-					MIN(polygon[j].x,
-					    polygon[j + 1].x))
+					MIN((double)polygon[j].x,
+					    (double)polygon[j + 1].x))
 				    || (segx >
-					MAX(polygon[j].x,
-					    polygon[j + 1].x))) {
+					MAX((double)polygon[j].x,
+					    (double)polygon[j + 1].x))) {
 /*fprintf(stderr,"intersection  at %f %f is not within (%f,%f)-(%f,%f)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ) ; */
 				} else {
+					for (kk=0; kk<=k;kk++) {
+					if (fabs(segment[kk].x-segx)<1.e-2 ) goto BARF;
+					}
 					k++;
 					segment[k].x = segx;
 					segment[k].y = segy;
 
 /*fprintf(stderr,"fill: intersection %d with line %d at (%f %f)\n",k,j,segx,segy);*/
-					if (k > 0) {
-#if 0
-						for (jj = 0; jj < k; jj++) {
-							if ((fabs
-							     (segment[jj].
-							      x -
-							      segment[k].
-							      x) < 1.e-5)
-							    &&
-							    (fabs
-							     (segment[jj].
-							      y -
-							      segment[k].
-							      y) <
-							     1.e-5)) {
-								k--;
-								break;
-							}
-						}
-#endif
-						for (jj = 0; jj < k; jj++) {
-							if (segment[k].x <
-							    segment[jj].
-							    x) {
-								tmp =
-								    segment
-								    [jj].x;
-								tmp2 =
-								    segment
-								    [jj].y;
-								segment
-								    [jj].
-								    x =
-								    segment
-								    [k].x;
-								segment
-								    [jj].
-								    y =
-								    segment
-								    [k].y;
-								segment[k].
-								    x =
-								    tmp;
-								segment[k].
-								    y =
-								    tmp2;
-							}
-						}
-					}	/* if not the first intersection */
-				}	/* if crossing withing range */
-			}	/*if not parallel */
-#if 0
-			else if (scany1 == polygon[j].y) {
-				fprintf(stderr, "para\n");
-				segment[++k].x =
-				    MAX(polygon[j].x, polygon[j + 1].x);
-				segment[k].y = polygon[j].y;
-				for (jj = 0; jj < k; jj++) {
-					if ((fabs
-					     (segment[jj].x -
-					      segment[k].x) < 1.e-5)
-					    &&
-					    (fabs
-					     (segment[jj].y -
-					      segment[k].y) < 1.e-5)) {
-						k--;
-						break;
-					}
-				}
-				for (jj = 0; jj < k; jj++) {
-					if (segment[k].x < segment[jj].x) {
-						tmp = segment[jj].x;
-						tmp2 = segment[jj].y;
-						segment[jj].x =
-						    segment[k].x;
-						segment[jj].y =
-						    segment[k].y;
-						segment[k].x = tmp;
-						segment[k].y = tmp2;
-					}
-				}
-				segment[++k].x =
-				    MIN(polygon[j].x, polygon[j + 1].x);
-				segment[k].y = polygon[j].y;
-				for (jj = 0; jj < k; jj++) {
-					if ((fabs
-					     (segment[jj].x -
-					      segment[k].x) < 1.e-5)
-					    &&
-					    (fabs
-					     (segment[jj].y -
-					      segment[k].y) < 1.e-5)) {
-						k--;
-						break;
-					}
-				}
-				for (jj = 0; jj < k; jj++) {
-					if (segment[k].x < segment[jj].x) {
-						tmp = segment[jj].x;
-						tmp2 = segment[jj].y;
-						segment[jj].x =
-						    segment[k].x;
-						segment[jj].y =
-						    segment[k].y;
-						segment[k].x = tmp;
-						segment[k].y = tmp2;
-					}
+		if (k > 0) {
+			for (jj = 0; jj < k; jj++) {
+				if (segment[k].x < segment[jj].x) {
+					tmp = segment[jj];
+					segment[jj] = segment[k];
+					segment[k] = tmp;
 				}
 			}
-#endif
-		}		/*next edge */
+		}	/* if not the first intersection */
+	}	/* if crossing withing range */
+BARF:
+	continue;
+}		/*next edge */
 
 		if (k > 0) {
-/* fprintf(stderr, "%d segments for scanline %d\n",k,i);*/
+/*fprintf(stderr, "%d segments for scanline %d\n",k,i);*/
 			for (j = 0; j < k; j = j + 2) {
 /*fprintf(stderr, "segment (%f,%f)-(%f,%f)\n",segment[j].x,segment[j].y,segment[j+1].x,segment[j+1].y);*/
 				p.x = segment[j].x;
@@ -322,7 +237,7 @@ void fill(HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt point1,
 		return;
 	}
 
-      FILL_VERT:
+FILL_VERT:
 
 
 	pxmin = point1.x;
@@ -343,7 +258,7 @@ void fill(HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt point1,
 	PlotCmd_to_tmpfile(DEF_LA);
 	Line_Attr_to_tmpfile(LineAttrEnd, LAE_butt);
 
-	numlines = fabs(1. + (pxmax - pxmin + penwidth) / penwidth);
+	numlines = (int)fabs(1. + (pxmax - pxmin + penwidth) / penwidth);
 /*fprintf(stderr,"numlines = %d\n",numlines);*/
 
 	pxdiff = 0.;
@@ -393,6 +308,8 @@ void fill(HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt point1,
 					    polygon[j + 1].x))) {
 /*fprintf(stderr,"intersection  at %f %f is not within (%f,%f)-(%f,%f)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ) ; */
 				} else {
+					if (segment[k].x == segx &&
+					    segment[k].y == segy ) continue;
 					k++;
 					segment[k].x = segx;
 					segment[k].y = segy;
@@ -421,28 +338,9 @@ void fill(HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt point1,
 							if (segment[k].y <
 							    segment[jj].
 							    y) {
-								tmp =
-								    segment
-								    [jj].x;
-								tmp2 =
-								    segment
-								    [jj].y;
-								segment
-								    [jj].
-								    x =
-								    segment
-								    [k].x;
-								segment
-								    [jj].
-								    y =
-								    segment
-								    [k].y;
-								segment[k].
-								    x =
-								    tmp;
-								segment[k].
-								    y =
-								    tmp2;
+								tmp = segment[jj];
+								segment[jj]=segment[k];
+								segment[k]=tmp;
 							}
 						}
 					}	/* if not the first intersection */

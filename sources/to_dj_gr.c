@@ -1,3 +1,4 @@
+#ifdef HAS_DOS_DJGR
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
@@ -50,61 +51,63 @@ copies.
 
 
 
-int PicBuf_to_DJ_GR(const GEN_PAR * pg, const OUT_PAR * po)
+int
+PicBuf_to_DJ_GR (const GEN_PAR *pg, const OUT_PAR *po)
 {
-	int row_c, i, x, xoff, y, yoff, color_index;
-	const PicBuf *pb;
-	const RowBuf *row;
+int		row_c, i, x, xoff, y, yoff, color_index;
+const PicBuf	*pb;
+const RowBuf	*row;
 
-	if (!pg->quiet) {
-		Eprintf("\nDJ_GR preview follows.\n");
-		Eprintf("Press <return> to start and end graphics mode\n");
-		SilentWait();
-	}
-	pb = po->picbuf;
-
-	xoff = po->xoff * po->dpi_x / 25.4;
-	yoff = po->yoff * po->dpi_y / 25.4;
-
-	if ((!pg->quiet) &&
-	    (((pb->nb << 3) + xoff > 639) || (pb->nr + yoff > 480))) {
-		Eprintf
-		    ("\n\007WARNING: Picture won't fit on a standard VGA!\n");
-		Eprintf("Current range: (%d..%d) x (%d..%d) pels\n", xoff,
-			(pb->nb << 3) + xoff, yoff, pb->nr + yoff);
-		Eprintf("Continue anyway (y/n)?: ");
-		while (getchar() != '\n');	/* Simple: Chance for ^C */
-	}
-
-	if (pg->is_color)
-		GrSetColor(0, 160, 160, 160);
-	else
-		GrSetColor(0, 180, 180, 180);
-
-	GrSetColor(1, 0, 0, 0);
-	for (i = 2; i < 8; i++)	/* assuming that we indeed get indices 2 ... 7 */
-		if (i !=
-		    GrAllocColor(pt.clut[i][0], pt.clut[i][1],
-				 pt.clut[i][2]))
-			Eprintf
-			    ("WARNING: Color code %d may yield wrong color!\n",
-			     i);
-
-	GrSetMode(GR_default_graphics, 800, 600);
-
-	for (row_c = 0, y = pb->nr + yoff - 1; row_c < pb->nr;
-	     row_c++, y--) {
-		row = get_RowBuf(pb, row_c);
-		if (row == NULL)
-			continue;
-		for (x = 0; x < pb->nc; x++) {
-			color_index = index_from_RowBuf(row, x, pb);
-			if (color_index != xxBackground)
-				GrPlot(x + xoff, y, color_index);
-		}
-	}
-
+  if (!pg->quiet)
+  {
+	Eprintf ("\nDJ_GR preview follows.\n");
+	Eprintf ("Press <return> to start and end graphics mode\n");
 	SilentWait();
-	GrSetMode(GR_80_25_text, 80, 25);
-	return 0;
+  }
+  pb = po->picbuf;
+
+  xoff = po->xoff * po->dpi_x / 25.4;
+  yoff = po->yoff * po->dpi_y / 25.4;
+
+  if ((!pg->quiet) &&
+      (((pb->nb << 3) + xoff > 639) || (pb->nr + yoff > 480)) )
+  {
+	Eprintf ("\n\007WARNING: Picture won't fit on a standard VGA!\n");
+	Eprintf ("Current range: (%d..%d) x (%d..%d) pels\n",
+		xoff, (pb->nb << 3) + xoff, yoff, pb->nr + yoff);
+	Eprintf ("Continue anyway (y/n)?: ");
+	while (getchar() != '\n')
+		;      /* Simple: Chance for ^C */
+  }
+
+  if (pg->is_color)
+	GrSetColor(0, 160, 160, 160);
+  else
+	GrSetColor(0, 180, 180, 180);
+
+  GrSetColor(1, 0, 0, 0);
+  for (i=2; i < 8; i++)  /* assuming that we indeed get indices 2 ... 7 */
+	if (i!=GrAllocColor(pt.clut[i][0], pt.clut[i][1], pt.clut[i][2]))
+		Eprintf ("WARNING: Color code %d may yield wrong color!\n", i);
+
+  GrSetMode (GR_default_graphics, 800, 600);
+
+  for (row_c=0, y=pb->nr+yoff-1; row_c < pb->nr; row_c++, y--)
+  {
+	row = get_RowBuf (pb, row_c);
+	if (row == NULL)
+		continue;
+	for (x=0; x < pb->nc; x++)
+	{
+		color_index = index_from_RowBuf(row, x, pb);
+		if (color_index != xxBackground)
+			GrPlot(x+xoff, y, color_index);
+	}
+  }
+
+  SilentWait();
+  GrSetMode (GR_80_25_text, 80, 25);
+  return 0;
 }
+#endif
+

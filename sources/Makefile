@@ -46,7 +46,9 @@ infodir  = $(prefix)/info
 # For non-gcc compilers, simply set CFLAGS = -O (to start with)
 #
 CC       = gcc
-CFLAGS	=  -O2 -m486 -I/usr/X11R6/include $(DEFINES) $(EX_DEFS) -Wall -pedantic -Wuninitialized -Wunused -Wreturn-type -Wmissing-prototypes -Wstrict-prototypes  
+CFLAGS	=  -O2 -g -I/usr/X11R6/include $(DEFINES) $(EX_DEFS) -Wall -pedantic -Wuninitialized -Wunused -Wreturn-type -Wmissing-prototypes -Wstrict-prototypes  
+LINT	= splint
+LINTFLAGS = -weak -initallelements +posixlib -I/usr/X11R6/include $(DEFINES) $(EX_DEFS)
 
 #CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES) $(EX_DEFS)
 
@@ -64,8 +66,9 @@ BINDCMD  =                # only needed for EMX and DJGPP DOS extenders
 # Generic UNIX + X11 previewer (default)
 #
 DEFINES   = -DUNIX -DHAS_UNIX_X11 
+# -DSTROKED_FONTS=\"/usr/X11R6/lib/X11/fonts/truetype/LucidaTypewriterRegular.ttf\" `freetype-config --cflags`
 PREVIEWER = to_x11
-ALL_LIBS  = -L/usr/lib/X11R6 -lX11 -lm     
+ALL_LIBS  = `freetype-config --libs` -L/usr/lib/X11R6 -lX11 -lm     
 #
 # Generic UNIX, no previewer
 #
@@ -173,15 +176,15 @@ EX_DEFS =
 EX_LIBS =
 #
 # Include PDF support
-#EX_SRC	+= to_pdf.c
-#EX_OBJ += to_pdf.o
-#EX_DEFS += -DUSEPDF
-#EX_LIBS += -lpdf
+EX_SRC	+= to_pdf.c
+EX_OBJ += to_pdf.o
+EX_DEFS += -DUSEPDF
+EX_LIBS += -lpdf
 #
 # Epson Esc/P2 support 
-#EX_SRC	+= to_escp2.c
-#EX_OBJ	+= to_escp2.o
-#EX_DEFS += -DEPSON
+EX_SRC	+= to_escp2.c
+EX_OBJ	+= to_escp2.o
+EX_DEFS += -DEPSON
 #
 # Include PNG support:
 EX_SRC  += png.c to_png.c
@@ -295,6 +298,9 @@ hp2xx.info:	../doc/hp2xxinf.tex
 
 check:
 	./$(PROGRAM) -m pre -c1234567 -h150 -w150 ../hp-tests/colors.hp
+
+lint:
+	$(LINT) $(LINTFLAGS) $(SRCS)
 
 clean:
 	-make mostlyclean

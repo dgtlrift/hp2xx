@@ -145,6 +145,17 @@ int to_fig(const GEN_PAR * pg, const OUT_PAR * po)
 			}
 			pensize = pt.width[pen_no];
 			break;
+		case DEF_PC:
+			if (!load_pen_color_table(pg->td)) {
+				PError("Unexpected end of temp. file");
+				err = ERROR;
+				goto FIG_exit;
+			}
+				if (pg->is_color)
+					colour = 32 + pt.color[pen_no];
+				else
+					colour = -1;
+			break;
 		case DEF_LA:
 			if (load_line_attr(pg->td) < 0) {
 				PError("Unexpected end of temp. file");

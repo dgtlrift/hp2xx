@@ -31,122 +31,128 @@
 #define GGE >>=
 #define MAXOUTPUTROWS 70
 
-#define PDNCOL 256
+#define PDNCOL 256 
 
-int pdImageColorAllocate(pdImagePtr, int, int, int);
+int pdImageColorAllocate(pdImagePtr, int, int , int);
 
-int PicBuf_to_PNG(const GEN_PAR * pg, const OUT_PAR * po)
+int
+PicBuf_to_PNG (const GEN_PAR *pg, const OUT_PAR *po)
 {
-	FILE *fd;
-	int row_c, /*byte_c, */ x;
-	const RowBuf *row;
-	const PicBuf *pb;
-	int ppm[][3] = { {255, 255, 255}, {0, 0, 0} };
+FILE           *fd;
+int             row_c, /*byte_c,*/ x;
+const RowBuf   *row;
+const PicBuf   *pb;
+int	       ppm[][3] = { {255, 255, 255}, {0,0,0} };
 /*, {255,0,0}, {0,255,0},
 		{0,0,255},{0,255,255},{255,0,255},{255,255,0}};
 */
-	int colour;
+unsigned char		colour;
 
 /**
  ** gifdraw-parts
  **/
-	pdImagePtr im;
-	int pdcol;
+pdImagePtr im;
+int pdcol;
 
-	if (pg == NULL || po == NULL)
-		return ERROR;
-	pb = po->picbuf;
-	if (pb == NULL)
-		return ERROR;
+  if (pg == NULL || po == NULL)
+	return ERROR;
+  pb = po->picbuf;
+  if (pb == NULL)
+	return ERROR;
 
-	if (!pg->quiet)
-		Eprintf("\nWriting PNG output: %s\n", po->outfile);
-	if (*po->outfile != '-') {
+  if (!pg->quiet)
+	Eprintf("\nWriting PNG output: %s\n", po->outfile);
+  if (*po->outfile != '-')
+  {
 
 /*
 #ifdef VAX
 	if ((fd = fopen(po->outfile, WRITE_BIN, "rfm=var", "mrs=512")) == NULL)
 #else
 */
-		if ((fd = fopen(po->outfile, WRITE_BIN)) == NULL)
+	if ((fd = fopen(po->outfile, WRITE_BIN)) == NULL)
 /*
 #endif
 */
-			goto ERROR_EXIT;
-	} else
-		fd = stdout;
+		goto ERROR_EXIT;
+  }
+  else
+	fd = stdout;
 
 /**
  ** create image structure
  **/
-	im = pdImageCreate(pb->nc, pb->nr);
+  im = pdImageCreate(pb->nc, pb->nr);
 
-	if (pb->depth > 1) {
+  if (pb->depth > 1)
+  {
 /** 
  ** allocate some colors ( ?? eight colors supported by hp2xx ?? )
  **/
-		for (colour = 0; colour < PDNCOL; colour++)
+  for ( colour = 0; colour < PDNCOL; colour++ ) 
 /*  pdcol = pdImageColorAllocate(im, ppm[colour][0], ppm[colour][1], 
 				    ppm[colour][2]);
 */
-			pdcol =
-			    pdImageColorAllocate(im, pt.clut[colour][0],
-						 pt.clut[colour][1],
-						 pt.clut[colour][2]);
-		for (row_c = 0; row_c < pb->nr; row_c++) {
-			row = get_RowBuf(pb, pb->nr - row_c - 1);
-			if (row == NULL)
-				continue;
+	pdcol = pdImageColorAllocate(im, pt.clut[colour][0],pt.clut[colour][1],
+					pt.clut[colour][2]);
+    for (row_c = 0; row_c < pb->nr; row_c++)
+    {
+	row = get_RowBuf(pb, pb->nr - row_c - 1);
+	if (row == NULL)
+		continue;
 
-			for (x = 0; x < pb->nc; x++) {
-				colour = index_from_RowBuf(row, x, pb);
-				pdImageSetPixel(im, x, row_c, colour);
-			}
-			if ((!pg->quiet) && (row_c % 10 == 0))
-				/* For the impatients among us ...   */
-				Eprintf(".");
-		}
-	} else {
+	for (x = 0; x < pb->nc; x++)
+	{
+	    colour = (unsigned char)index_from_RowBuf(row, x, pb);
+            pdImageSetPixel(im, x, row_c, colour);
+	}
+	if ((!pg->quiet) && (row_c % 10 == 0))
+	    /* For the impatients among us ...	 */
+	    Eprintf(".");
+    }
+  }
+  else
+  {
 /** 
  ** allocate two colors ( ?? eight colors supported by hp2xx ?? )
  **/
-		for (colour = 0; colour < 2; colour++)
-			pdcol =
-			    pdImageColorAllocate(im, ppm[colour][0],
-						 ppm[colour][1],
-						 ppm[colour][2]);
+    for ( colour = 0; colour < 2; colour++ ) 
+    pdcol = pdImageColorAllocate(im, ppm[colour][0], ppm[colour][1], 
+				    ppm[colour][2]);
 
-		for (row_c = 0; row_c < pb->nr; row_c++) {
-			row = get_RowBuf(pb, pb->nr - row_c - 1);
-			if (row == NULL)
-				continue;
+    for (row_c = 0; row_c < pb->nr; row_c++)
+    {
+	row = get_RowBuf(pb, pb->nr - row_c - 1);
+	if (row == NULL)
+		continue;
 
-			for (x = 0; x < pb->nc; x++) {
-				colour = index_from_RowBuf(row, x, pb);
-				pdImageSetPixel(im, x, row_c, colour);
-			}
-
-			if ((!pg->quiet) && (row_c % 10 == 0))
-				/* For the impatients among us ...   */
-				Eprintf(".");
-		}
+	for (x = 0; x < pb->nc; x++)
+	{
+	    colour = (unsigned char)index_from_RowBuf(row, x, pb);
+            pdImageSetPixel(im, x, row_c, colour);
 	}
 
-	pdImagePNG(im, fd);
+	if ((!pg->quiet) && (row_c % 10 == 0))
+	    /* For the impatients among us ...	 */
+	    Eprintf(".");
+    }
+  }
 
-	pdImageDestroy(im);
+  pdImagePNG(im, fd);
 
-	fflush(fd);
+  pdImageDestroy(im);
 
-	if (!pg->quiet)
-		Eprintf("\n");
-	if (fd != stdout)
-		fclose(fd);
-	return 0;
+  fflush(fd);
 
-      ERROR_EXIT:
-	PError("write_PNG");
-	return ERROR;
+  if (!pg->quiet)
+	Eprintf("\n");
+  if (fd != stdout)
+	fclose(fd);
+  return 0;
+
+ERROR_EXIT:
+  PError ("write_PNG");
+  return ERROR;
 }
 
 /**
@@ -167,18 +173,17 @@ int PicBuf_to_PNG(const GEN_PAR * pg, const OUT_PAR * po)
  **/
 
 pdImagePtr pdImageCreate(sx, sy)
-int sx;
-int sy;
+	int sx;
+	int sy;
 {
 	int i;
 	pdImagePtr im;
 	im = (pdImage *) malloc(sizeof(pdImage));
-	im->pixels =
-	    (unsigned char **) malloc(sizeof(unsigned char *) * sy);
-	for (i = 0; (i < sy); i++) {
-		im->pixels[i] =
-		    (unsigned char *) calloc(sx, sizeof(unsigned char));
-	}
+	im->pixels = (unsigned char **) malloc(sizeof(unsigned char *) * sy);
+	for (i=0; (i<sy); i++) {
+		im->pixels[i] = (unsigned char *) calloc(
+			(size_t)sx, sizeof(unsigned char));
+	}	
 	im->sx = sx;
 	im->sy = sy;
 	im->colorsTotal = 0;
@@ -187,30 +192,30 @@ int sy;
 }
 
 void pdImageDestroy(im)
-pdImagePtr im;
+	pdImagePtr im;
 {
 	int i;
-	for (i = 0; (i < im->sy); i++) {
+	for (i=0; (i<im->sy); i++) {
 		free(im->pixels[i]);
-	}
+	}	
 	free(im->pixels);
 	free(im);
 }
 
 int pdImageColorAllocate(im, r, g, b)
-pdImagePtr im;
-int r;
-int g;
-int b;
+	pdImagePtr im;
+	int r;
+	int g;
+	int b; 
 {
 	int i;
 	int ct = (-1);
-	for (i = 0; (i < (im->colorsTotal)); i++) {
+	for (i=0; (i<(im->colorsTotal)); i++) {
 		if (im->open[i]) {
 			ct = i;
 			break;
 		}
-	}
+	}	
 	if (ct == (-1)) {
 		ct = im->colorsTotal;
 		if (ct == pdMaxColors) {
@@ -226,27 +231,27 @@ int b;
 }
 
 void pdImageColorTransparent(im, color)
-pdImagePtr im;
-int color;
+	pdImagePtr im;
+	unsigned char color;
 {
 	im->transparent = color;
 }
 
 void pdImageSetPixel(im, x, y, color)
-pdImagePtr im;
-int x;
-int y;
-int color;
+	pdImagePtr im;
+	int x; 
+	int y;
+	unsigned char color;
 {
 	if (pdImageBoundsSafe(im, x, y)) {
-		im->pixels[y][x] = color;
+		 im->pixels[y][x] = color;
 	}
 }
 
 int pdImageGetPixel(im, x, y)
-pdImagePtr im;
-int x;
-int y;
+	pdImagePtr im; 
+	int x; 
+	int y; 
 {
 	if (pdImageBoundsSafe(im, x, y)) {
 		return im->pixels[y][x];
@@ -256,10 +261,11 @@ int y;
 }
 
 int pdImageBoundsSafe(im, x, y)
-pdImagePtr im;
-int x;
-int y;
+	pdImagePtr im;
+	int x;
+	int y; 
 {
 	return (!(((y < 0) || (y >= im->sy)) ||
-		  ((x < 0) || (x >= im->sx))));
+		((x < 0) || (x >= im->sx))));
 }
+

@@ -1,3 +1,5 @@
+#ifdef AMIGA
+
 #ifndef ILBM_H
 #define ILBM_H
 /*----------------------------------------------------------------------*
@@ -295,3 +297,4 @@ extern IFFP GetBODY();
 
 #endif ILBM_H
 
+#endif

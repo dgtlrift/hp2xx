@@ -152,7 +152,7 @@ long n_commands = 0L;
 short silent_mode = FALSE;
 FILE *td;
 
-HPGL_Pt HP_pos = { 0 };		/* Actual plotter pen position  */
+HPGL_Pt HP_pos = { 0, 0 };		/* Actual plotter pen position  */
 HPGL_Pt P1 = { P1X_default, P1Y_default };	/* Scaling points */
 HPGL_Pt P2 = { P2X_default, P2Y_default };
 int iwflag = 0;			/*MK */
@@ -199,7 +199,7 @@ static short pg_flag = FALSE;
 static short ct_dist = FALSE;
 static short fixedcolor = FALSE;
 static short fixedwidth = FALSE;
-static short first_page = 0;
+static int first_page = 0;
 static int last_page = 0;
 static int n_unexpected = 0;
 static int n_unknown = 0;
@@ -383,7 +383,7 @@ static void reset_HPGL(void)
 	P1.y = P1Y_default;
 	P2.x = P2X_default;
 	P2.y = P2Y_default;
-	Diag_P1_P2 = HYPOT(P2.x - P1.x, P2.y - P1.y);
+	Diag_P1_P2 = /*@-unrecog@*/HYPOT(P2.x - P1.x, P2.y - P1.y);
 	CurrentLinePatLen = 0.04 * Diag_P1_P2;
 	pat_pos = 0.0;
 	scale_flag = FALSE;
@@ -433,13 +433,13 @@ static void init_HPGL(GEN_PAR * pg, const IN_PAR * pi)
  **/
 /*fprintf(stderr,"init_HPGL\n");*/
 	td = pg->td;
-	silent_mode = pg->quiet;
+	silent_mode = (short)pg->quiet;
 	xmin = pi->x0;
 	ymin = pi->y0;
 	xmax = pi->x1;
 	ymax = pi->y1;
-	fixedcolor = pi->hwcolor;
-	fixedwidth = pi->hwsize;
+	fixedcolor = (short)pi->hwcolor;
+	fixedwidth = (short)pi->hwsize;
 	r_base = g_base = b_base = 0;
 	r_max = g_max = b_max = 255;
 
@@ -566,6 +566,18 @@ void PlotCmd_to_tmpfile(PlotCmd cmd)
 			break;
 		case 2000000L:
 			Eprintf("2000k ");
+			break;
+		case 3000000L:
+			Eprintf("3000k ");
+			break;
+		case 4000000L:
+			Eprintf("4000k ");
+			break;
+		case 5000000L:
+			Eprintf("5000k... ");
+			break;
+		case 10000000L:
+			Eprintf("10000k ");
 			break;
 		}
 
@@ -857,8 +869,8 @@ int read_PE_flags(const GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 		}
 		old_pen = pen;
 		read_PE_coord(fl->pen, hd, fl, &ftmp);
-		pen = ftmp;
-		if (pen < 0 || pen > pg->maxpens) {
+		pen = (short)ftmp;
+		if (pen < 0 || (int)pen > pg->maxpens) {
 			Eprintf
 			    ("\nIllegal pen number %d: replaced by %d\n",
 			     pen, pen % pg->maxpens);
@@ -1007,7 +1019,7 @@ double ceil_with_tolerance(double x, double tol)
 	double rounded;
 
 /*    rounded=rint(x);*/
-	rounded = (long) (x + 0.5);
+	rounded = (double) (x + 0.5);
 
 	if (fabs(rounded - x) <= tol)
 		return (rounded);
@@ -1042,7 +1054,7 @@ static void Line_Generator(HPGL_Pt * pa, const HPGL_Pt * pb, int mv_flag)
 		}
 		pat_pos = 0.0;	/* Reset to start-of-pattern    */
 		n_pat =
-		    ceil_with_tolerance(seg_len / CurrentLinePatLen,
+		    (int) ceil_with_tolerance(seg_len / CurrentLinePatLen,
 					CurrentLinePatLen *
 					LT_PATTERN_TOL);
 		if (n_pat == 0) {	/* sanity check for segment << pattern length */
@@ -1209,7 +1221,8 @@ int read_float(float *pnum, FILE * hd)
 
 static void read_string(char *buf, FILE * hd)
 {
-	int c, n;
+	int c;
+	unsigned int n;
 
 	for (n = 0, c = getc(hd); (c != EOF) && (c != StrTerm);
 	     c = getc(hd)) {
@@ -2496,7 +2509,7 @@ static void ax_ticks(int mode)
  **	Process a single HPGL command
  **/
 
-static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
+static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 {
 	short old_pen;
 	HPGL_Pt p1 = { 0., 0. }, p2 = {
@@ -2601,7 +2614,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
 		if (read_float(&csfont, hd))	/* just CA;    */
 			tp->altfont = 0;
 		else
-			tp->altfont = csfont;
+			tp->altfont = (int)csfont;
 		break;
 	case CI:		/* Circle                       */
 		circles(hd);
@@ -2659,8 +2672,8 @@ static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
 		if (read_float(&csfont, hd))	/* just CS;     */
 			tp->font = 0;
 		else
-			tp->font = csfont;
-		tp->stdfont = csfont;
+			tp->font = (int)csfont;
+		tp->stdfont = tp->font;
 		break;
 	case CT:		/* chord tolerance */
 		if (read_float(&ftmp, hd) || ftmp != 1.)
@@ -2728,7 +2741,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
 			filltype = 1;
 			break;
 		} else {
-			filltype = ftmp;
+			filltype = (int)ftmp;
 		}
 		if (filltype < 3)
 			break;
@@ -2768,7 +2781,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
 		if (read_float(&ftmp, hd) || ftmp > NUMPENS)	/* invalid or missing */
 			break;
 		else {
-			pg->maxpens = ftmp;
+			pg->maxpens = (int)ftmp;
 			if (!silent_mode)
 				fprintf(stderr, "NP: %d pens requested\n",
 					pg->maxpens);
@@ -2783,10 +2796,10 @@ static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
 		tp->CR_point = HP_pos;
 		break;
 	case PC:		/* Pen Color                    */
-		if (read_float(&ftmp, hd) || fixedcolor || ftmp > pg->maxpens) {	/* invalid or missing */
+		if (read_float(&ftmp, hd) || fixedcolor || (int)ftmp > pg->maxpens) {	/* invalid or missing */
 			break;
 		} else {
-			mypen = ftmp;
+			mypen = (int)ftmp;
 			if (read_float(&ftmp, hd))	/* no red component  */
 				myred = 0;
 			else
@@ -2982,8 +2995,8 @@ static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
 */
 		} else {	/* second parameter is pen */
 			PlotCmd_to_tmpfile(DEF_PW);
-			Pen_Width_to_tmpfile(ftmp, mywidth);
-			if (ftmp <= pg->maxpens) {
+			Pen_Width_to_tmpfile((int)ftmp, mywidth);
+			if ((int)ftmp <= pg->maxpens) {
 				if (pg->maxpensize < mywidth)
 					pg->maxpensize = mywidth;
 			}
@@ -3234,7 +3247,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
 					(int) p1.x);
 				CurrentLineType = LT_solid;	/* set to something sane */
 			}
-			CurrentLinePattern = p1.x;
+			CurrentLinePattern = (int)p1.x;
 
 			if (!read_float(&p1.y, hd)) {	/* optional pattern length?     */
 				if (p1.y <= 0.0)
@@ -3339,9 +3352,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
 		if (read_float(&p1.x, hd))	/* just SP;     */
 			pen = 0;
 		else
-			pen = (int) p1.x;
+			pen = (short) p1.x;
 
-		if (pen < 0 || pen > pg->maxpens) {
+		if (pen < 0 || (int)pen > pg->maxpens) {
 			Eprintf
 			    ("\nIllegal pen number %d: replaced by %d\n",
 			     pen, pen % pg->maxpens);
@@ -3358,7 +3371,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, short cmd, FILE * hd)
 		}
 		if (pen)
 			pens_in_use[pen] = 1;
-		pg->maxcolor = MAX(pg->maxcolor, pen);
+		pg->maxcolor = MAX(pg->maxcolor, (int)pen);
 /*              pens_in_use |= (1 << (pen-1)); */
 		break;
 
@@ -3709,7 +3722,7 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
  **/
 {
 	int c;
-	short cmd;
+	int cmd;
 
 	vec_cntr_r = 0L;
 	vec_cntr_w = 0L;
@@ -3996,7 +4009,7 @@ PlotCmd PlotCmd_from_tmpfile(void)
 	case DEF_PC:
 	case DEF_LA:
 		return cmd;
-	case EOF:
+	case (unsigned int)EOF:
 	default:
 		return CMD_EOF;
 	}

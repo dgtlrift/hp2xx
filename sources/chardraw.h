@@ -33,13 +33,13 @@ copies.
 
 #define JOFF    4
 
-#define	_BS	'\010'		/* Backspace		*/
-#define	_HT	'\011'		/* Horizontal Tab	*/
-#define	_LF	'\012'		/* Line Feed		*/
-#define	_VT	'\013'		/* Vertical Tab		*/
-#define	_CR	'\015'		/* Carriage Return	*/
-#define	_SO	'\016'		/* Shift Out		*/
-#define	_SI	'\017'		/* Shift In		*/
+#define	_BS	'\010'		/* Backspace            */
+#define	_HT	'\011'		/* Horizontal Tab       */
+#define	_LF	'\012'		/* Line Feed            */
+#define	_VT	'\013'		/* Vertical Tab         */
+#define	_CR	'\015'		/* Carriage Return      */
+#define	_SO	'\016'		/* Shift Out            */
+#define	_SI	'\017'		/* Shift In             */
 
 /**
  ** Description of struct TextPar (used for internal font drawing):
@@ -62,20 +62,19 @@ copies.
  **       plib itself had been inspired by HP-GL.
  **/
 
-typedef struct
-{
-  float width;	/* Width of a char (x dirc.)		*/
-  float height;	/* Height of a char (y dirc.)		*/
-  float space;	/* Distance between characters		*/
-  float line;	/* Distance betw. char. lines		*/
-  float espace;	/* Extra char space rel. to 'space'	*/
-  float eline;	/* Extra line space rel. to 'line'	*/
-  float dir;	/* Direction to x axis (rad)		*/
-  float slant;	/* Character slant (tan angle)		*/
-  int  font;	/* Active Font number                   */
-  int  stdfont; /* Designated tandard font number       */
-  int  altfont; /* Designated alternate font number     */
-  int  orig;	/* Label origin code			*/
+typedef struct {
+	float width;		/* Width of a char (x dirc.)            */
+	float height;		/* Height of a char (y dirc.)           */
+	float space;		/* Distance between characters          */
+	float line;		/* Distance betw. char. lines           */
+	float espace;		/* Extra char space rel. to 'space'     */
+	float eline;		/* Extra line space rel. to 'line'      */
+	float dir;		/* Direction to x axis (rad)            */
+	float slant;		/* Character slant (tan angle)          */
+	int font;		/* Active Font number                   */
+	int stdfont;		/* Designated tandard font number       */
+	int altfont;		/* Designated alternate font number     */
+	int orig;		/* Label origin code                    */
 
 
 /**
@@ -86,23 +85,21 @@ typedef struct
  ** pref is a pointer to the current text reference point (origin):
  **/
 
-  double	Txx,Txy,Tyx,Tyy;	/* Transformation matrix	*/
-  HPGL_Pt	chardiff,	/* Horiz. distance between characters	*/
-		linediff,	/* Vertical distance between characters	*/
-		refpoint,	/* Current reference point	*/
-		CR_point,	/* Returns point after a <CR>	*/
-		offset;	/* Needed for HP-GL command ``LO;''	*/
-  double	strokewidth;	/* current stroke weight (or 9999. for current PW */		
-  double	sstrokewidth;	/* stdfont stroke weight (or 9999. for current PW */		
-  double	astrokewidth;	/* altfont stroke weight (or 9999. for current PW */		
-}
-  TEXTPAR, *TextPar;
+	double Txx, Txy, Tyx, Tyy;	/* Transformation matrix        */
+	HPGL_Pt chardiff,	/* Horiz. distance between characters   */
+	 linediff,		/* Vertical distance between characters */
+	 refpoint,		/* Current reference point      */
+	 CR_point,		/* Returns point after a <CR>   */
+	 offset;		/* Needed for HP-GL command ``LO;''     */
+	double strokewidth;	/* current stroke weight (or 9999. for current PW */
+	double sstrokewidth;	/* stdfont stroke weight (or 9999. for current PW */
+	double astrokewidth;	/* altfont stroke weight (or 9999. for current PW */
+} TEXTPAR, *TextPar;
 
 
 
 
-typedef	enum {LB_direct, LB_buffered, LB_buffered_in_use}
-	LB_Mode;		/* LB and PB work differently !	*/
+typedef enum { LB_direct, LB_buffered, LB_buffered_in_use } LB_Mode;	/* LB and PB work differently ! */
 
 
 /**
@@ -112,16 +109,15 @@ typedef	enum {LB_direct, LB_buffered, LB_buffered_in_use}
 
 #ifdef STROKED_FONTS
 typedef struct {
-  unsigned int    buff[16000];	/* Buffer for font data		*/
-  unsigned int    vector_off;	/* Offset of start of plot data	*/
-  unsigned int    size_off;	/* Offset of size tab		*/
-  unsigned int    first;	/* ASCII code of first character*/
-  unsigned int    num;		/* Number of defined  character	*/
-  unsigned int    height;
-  unsigned int    depth;
-  char           *name;
-}
-  FONT, *Font;
+	unsigned int buff[16000];	/* Buffer for font data         */
+	unsigned int vector_off;	/* Offset of start of plot data */
+	unsigned int size_off;	/* Offset of size tab           */
+	unsigned int first;	/* ASCII code of first character */
+	unsigned int num;	/* Number of defined  character */
+	unsigned int height;
+	unsigned int depth;
+	char *name;
+} FONT, *Font;
 #endif
 
 
@@ -130,21 +126,18 @@ typedef struct {
  **/
 
 #ifdef	__cplusplus
-extern	"C" {
+extern "C" {
 #endif
 
 /* void	code_to_ucoord	(char, HPGL_Pt *); */
 
-int	init_font	(int);
-void	init_text_par	(void);
-void	adjust_text_par	(void);
+	int init_font(int);
+	void init_text_par(void);
+	void adjust_text_par(void);
 /* void	ASCII_to_char	(int);*/
-void	plot_string	(char *, LB_Mode, short);
-void	plot_symbol_char(char);
+	void plot_string(char *, LB_Mode, short);
+	void plot_symbol_char(char);
 
 #ifdef	__cplusplus
 }
 #endif
-
-
-

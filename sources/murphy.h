@@ -24,7 +24,7 @@ copies.
 #include "bresnham.h"
 #include "hp2xx.h"
 
-void murphy_init(PicBuf *pb,int color);
+void murphy_init(PicBuf *pb,PEN_C color);
 
 void murphy_paraline(DevPt p1,int d1);
 

@@ -149,8 +149,8 @@ copies.
  **			   constant, user-defined Z depths (Michael Rooke)
  **/
 
-char *VERS_NO = "3.4.3";
-char *VERS_DATE = "03/01/05";
+char *VERS_NO = "3.4.4a1";
+char *VERS_DATE = "03/02/11";
 char *VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char *VERS_ADDITIONS =
@@ -160,7 +160,7 @@ char *VERS_ADDITIONS =
     "\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n";
 #else
 char *VERS_ADDITIONS =
-    "                              (c) 1999 - 2003 Martin Kroeker\n";
+    "                                 (c) 1999 - 2002 Martin Kroeker\n";
 #endif
 
 
@@ -484,7 +484,13 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 		pt.width[i] = 0.1;	/* 1/10 mm              */
 		pt.color[i] = xxForeground;
 	}
-
+	pt.color[1]=xxForeground;
+	pt.color[2]=xxRed;
+	pt.color[3]=xxGreen;
+	pt.color[4]=xxBlue;
+	pt.color[5]=xxCyan;
+	pt.color[6]=xxMagenta;
+	pt.color[7]=xxYellow;
 	set_color_rgb(xxBackground, 255, 255, 255);
 	set_color_rgb(xxForeground, 0, 0, 0);
 	set_color_rgb(xxRed, 255, 0, 0);
@@ -538,7 +544,7 @@ void autoset_outfile_name(const char *mode, const char *in_name,
 	if (*in_name == '-')	/* If input from stdin                              */
 		len = 0;
 	else
-		len = strlen(in_name);
+		len = (int)strlen(in_name);
 
 	if (len == 0) {		/* If input from stdin:                           *//*    then supply a default file name           */
 		*outfile = "hp2xx.out";

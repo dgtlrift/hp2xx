@@ -1,15 +1,5 @@
-hp2xx-3.4.3 
+hp2xx-3.4.4 (to be released sometime in early 2003)
 
-Besides fixing a number of bugs in 3.4.2 (related to polygon drawing, image
-rotation and some output modes), this version adds support for the HPGL
-commands IR and CR. More importantly, the raster graphics engine has been
-modified to provide true penwidth support, and several varieties of line
-join and cap styles (the LA command) are implemented. hp2xx is now able to
-separate multi-frame files into sets of output files instead of overlaying
-all figures in a single plot. Support for the EMF output file format has been
-extended to non-MS platforms using Allen Barnetts libEMF library, and the
-headers of generated TIFF and DXF files have been made more standard-conforming.
-A new vector mode for driving CNC engraving machines has been added.
 
 I would greatly appreciate receiving bug reports, patches or even sample 
 HPGL files. (In the latter case, please make sure that no copyright or 
@@ -27,82 +17,20 @@ information.
 
 
 
-Changes from 3.4.2 to 3.4.3
+Changes from 3.4.3 to 3.4.4
 
 New features:
 
-- Raster graphics modes now use correctly scaled penwidths (implemented by
-  Andrew J. Bird). Instead of crude approximations we are using a 'wide line 
-  Bresenham' algorithm by Alan Murphy of IBM that was released into the public 
-  domain through an IBM Technical Bulletin
-- Added support for (most of) the LA, line attributes command (Andrew J. Bird)
-  (cap/join types best supported in eps,fig and pdf for now)
-- Added support for the CR (relative color range) command
-- Added support for the IR (input reference points as percentage of current
-  limits) command
-- Added support for the OW (output clipping window) command
-- hp2xx now recognizes (and ignores) the VS command to reduce number of
-  runtime warnings
-- hp2xx now ignores stray Escape characters among HPGL commands
-- EMF export is now also available as an option on non-Windows builds if
-  Allen Barnetts libEMF (http://libemf.sourceforge.net) is installed
-- hp2xx now translates FP commands into EP to show the outlines when the
-  -n, --nofill option is used. (Previously polygon commands were ignored 
-  in that case unless they contained an explicit EP as well. This was
-  particularly unfortunate in the case of polygon-derived text)
-- Added new commandline option -e, --extraclip <unit> for additional margin
-  around clip regions. Some programs apparently miscalculate their frames.
-  (Georgy Salnikov)
-- Input files containing several plots are now rendered as separate images,
-  even if the -P option is not used. Output file names are numbered starting
-  from the second file, i.e. file.plt yields file.png file.1.png file.2.png.
-- TIFF creation on stdout now uses a safer method of generating and accessing
-  its temporary file on Unix.
-- A new output format, G-code for CNC engraving machines (Michael Rooke).
+- Experimental support for truetype fonts (needs a fixed-width truetype
+  font and '-DSTROKED_FONTS=\"/path/to/this/truetype/font.ttf\"' in the
+  DEFINES section of the Makefile) 
 
 Bug fixes:
 
-- hp2xx now ignores SC commands with invalid parameters 
-  (Slavek Banko)
-- AC support in 3.4.2 slowed down the polygon fill code
-- raster mode was allocating a big 8 bit per pixel memory
-  buffer even when the pen data would fit in 4bpp
-- PDF output would fold the image in some cases (Jay Dawes)
-- The RO/IW fix in 3.4.2 broke other cases, fixed again.
-- The DXF header was a bit too minimalistic for some readers
-  (Francisco Doubrawa Filho)
-- Dots drawn for PUPDPU sequences were not clipped by IW
-- Unsupported subtypes 6 and 7 of SD and AD (weight & typeface)
-  caused an error exit instead of simply being ignored
-- extremely short line segments could confuse the pattern state machine,
-  resulting in no or extraneous lines being drawn (J.L. Fernandez Jambrina)
-- BP did not handle kind=5 (autorotation control). This could lead to
-  misinterpretation of further arguments to BP, specifically title strings
-- Escape sequences inside PJL headers (two or more header lines starting
-  with 'Esc-12345X') are now handled gracefully
-- Removed memory leak in the X11 previewers' zoom function
-- PDF output could omit lines in some cases
-- PM2 did not close the current polygon if necessary (Piotr Szwed)
-- Polygon fill range was not always initialized correctly (Bill Marr)
-- Compile fix for HPUX11 ansi compiler (add whitespace to work around
-  what is probably a compiler bug) (Glen Stewart)
-- Vertices of filled polygons were omitted from calculation of actual size
-- added ROWSPERSTRIP header parameter to TIFF files, as some programs rely
-  on its presence 
-- Dots for PUPDPU got drawn for PDPA as well, which made consecutive dashed
-  lines restart the dash pattern for each segment instead of carrying over 
-  the remainder of the pattern from the previous one. 
-- Removed the checks preventing negative or large offsets to be defined with
-  the -o and -O commandline options
-- The viewbox given in the SVG header was too small (Robert Hancock).
-- Closed several memory leaks (mainly important for multi-file operation).
-- The documentation was outdated in several aspects.
-- The SVG output used integral linewidths only roughly corresponding to the 
-  original values.
-- Files that explicitly asked for default arc precision (by providing a zero
-  tolerance value) were not handled correctly (Steve Edmonds).
-- Text penwidth was always the same as that in use for linedrawing. This is
-  now fixed, and the SD option for forcing this behaviour is now honored.
-- Some warning messages were emitted even in quiet mode.
-- EMF output would abort when pencolor 0 was selected (Pascal Haible).
-
+- penwidth was erroneously set to the default 0.1 mm after drawing a label
+- xfig and rgip output did not yet handle the changed pencolor and width
+  settings
+- polygons sometimes had the wrong sections filled in for some of the 
+  scanlines
+- forcing penwidth via the -p commandline option no longer worked for 
+  the conventional values between 1 and 9 

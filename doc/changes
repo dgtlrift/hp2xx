@@ -1,8 +1,28 @@
 Changes to hp2xx:
 =================
-3.4.3: 03-01-06
-Indented sources (indent -kr -i8). Updated documentation. Fixed pencolor=0
-abort in emf output (Pascal Haible).
+3.4.4a1: 11.2.03
+
+Revived the 'STROKED_FONTS' stubs in chardraw.c by attaching a truetype
+font renderer to them. Requires freetype2 and a fixed-width truetype font
+such as the LucidaTypewriterRegular.ttf font included with the Sun Java 
+Runtime Environment (not included here - check licensing conditions).
+Fixed two bugs in the scanline renderer that could cause it to fill the gaps
+in a complex object. Saving and restoring the pen width when drawing characters
+requires the current (parse-time) penwidth to be updated (and not just to 
+place a command to update the penwidth in the temporary file, which will only
+be read at render time) - this is now done by Pen_Width_to_tmpfile(). 
+Both xfig and rgip modes were lacking a handler for the pencolor (DEF_PC) 
+directive (and would fail on colored input). The rgip mode was still using 
+wrong penwidths. Added lots of typecasts and typing fixes suggested by 
+'splint -weak'. Removed the '-m486' compiler switch from my personal Makefile
+(the one in sources), as some people try to use it directly instead of adapting
+the generic one from the makes directory. Added a 'lint' target for code 
+checking to same Makefile. Fixed bug that prevented -p with numeric argument
+instead of the new A-Z range from working.
+
+3.4.3: 02/12/29
+
+Documentation updates and source indentation.
 
 3.4.3a26:
 Silenced the "unknown escape sequence" warnings in quiet mode. Added new
@@ -234,7 +254,32 @@ by default. Fixed stupidity where IW/RO interaction could cause unwanted
 image cutoff on rotation. to_pdf could overflow the y coordinate, inverting
 one half of the image onto the other. Dots for PUPDPU were not clipped by IW.
 to_dxf now writes a more elaborate header. 
-V 3.4.1, hopefully sometime in Jan 02:
+
+V 3.4.2, 02/04/15:
+
+Added support for AC and CT. Added color support to SVG output module, and
+added a new output module for JPEG images, based on libjpeg.
+Bugfixes: 
+- SVG output mode could not be selected on the commandline
+- PDF and EPS modes were not always generating penwidth commands on pen changes
+- Polygon mode was influencing the overall pen up/down state
+- PM1 immediately after PM was not setting the new starting point correctly
+- FT instructions did not store/recall hatch spacing and angle correctly
+- X11 preview always used black for pen 1
+- Polygon fill algorithm did not handle parallel bounding lines correctly,
+  and could draw lines beyond the limits of the polygon in some cases.
+- the commandline interpreter now handles mis-spelled or unknown long
+  options gracefully (Serge Ivanchenko)
+- PDF output was only about 1/3 the intended size
+- handling of RO/IW was broken (again) for the unscaled case (no SC)
+- PNG output was still using a fixed eight pen palette
+- raster modes were limited to 15 pens due to restrictions of the internal
+  picture buffer (higher pen numbers were either mapped to black or scaled
+  to the accessible range, depending on output format)
+- DXF output had leading whitespace in layer numbers (Patrice Pinel)
+- EPS output still had oversized margins
+
+V 3.4.1, 02/01/28:
 
 call line_PicBuf with pt.width scaled by HP_to_xdots/10./0.025 to achieve
 more sensible translation from metric penwidths to integer multiples of a
@@ -264,8 +309,9 @@ previous code would gladly store PC0,255,255,255, but panic with a spurious
 fonts (Ventura math and the related PS math), as they contain greek characters
 and other symbols that might appear in scientific or engineering plots (after
 receiving a sample file from Bengt-Arne Fjellner that used several characters
-from ventura math). I do not claim to be an artist, and Werntges' encoding scheme
-does not simplify matters, but all glyphs should at least be recognizable.
+from ventura math). I do not claim to be an artist, and Werntges' encoding 
+scheme does not simplify matters, but all glyphs should at least be 
+recognizable. Added SVG output. Fixed some polygon-related problems.
 
 V 3.4.0, 01/02/09:
 

@@ -8,9 +8,10 @@
  **/
 
 #include <stdio.h>
-void Eprintf(const char *, ...);
+void    Eprintf (const char*, ...);
 
-void PicBuf_to_Dummy()
+void	PicBuf_to_Dummy()
 {
-	Eprintf("Sorry - preview not supported here\n");
+  Eprintf("Sorry - preview not supported here\n");
 }
+
