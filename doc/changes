@@ -1,5 +1,9 @@
 Changes to hp2xx:
 =================
+3.4.3a20:
+Reduced the default raster mode miter limit. Added preliminary code for 
+triangular and square line ends.
+
 3.4.3a19:
 Revised the 'butt miter' code for wide lines - the implementation in a17 was
 working more by accident than by design. Caught special cases of PS with zero

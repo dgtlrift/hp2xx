@@ -1,5 +1,9 @@
 Recent changes :
 =================
+3.4.3a20:
+Reduced the default raster mode miter limit. Added preliminary code for
+triangular and square line ends.
+
 3.4.3a19:
 Redid the butt miter code for raster output of wide lines. Fixed handling
 of special cases 'PS0;' and 'IN;IW'.

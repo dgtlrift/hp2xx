@@ -298,25 +298,25 @@ if ( (m1.x < ml1b.x && m2.x > ml2b.x) ||
 	m2.x=ftmp1;
 	m2.y=ftmp2;
 }
-
-if ((fabs(m2.x-ml2b.x)< 100) && fabs(m1.x-ml1b.x) <100) {
+ftmp1=(m2.x-ml2b.x)*(m2.x-ml2b.x)+(m2.y-ml2b.y)*(m2.y-ml2b.y);
+if ( ftmp1 >0 && ftmp1 <1200) {
 #if 1
 /*draw outline of miter segment */
        p_act = bresenham_init (&m2, &m1);
       do {                
-	 plot_PicBuf (murphy.pb, p_act, murphy.color+1);
+	 plot_PicBuf (murphy.pb, p_act, murphy.color);
       } while (bresenham_next() != BRESENHAM_ERR);
        p_act = bresenham_init (&m1, &ml1b);
       do {                
-	 plot_PicBuf (murphy.pb, p_act, murphy.color+1);
+	 plot_PicBuf (murphy.pb, p_act, murphy.color);
       } while (bresenham_next() != BRESENHAM_ERR);
        p_act = bresenham_init (&ml1b, &ml2b);
       do {                
-	 plot_PicBuf (murphy.pb, p_act, murphy.color+1);
+	 plot_PicBuf (murphy.pb, p_act, murphy.color);
       } while (bresenham_next() != BRESENHAM_ERR);
        p_act = bresenham_init (&ml2b, &m2);
       do {                
-	 plot_PicBuf (murphy.pb, p_act, murphy.color+1);
+	 plot_PicBuf (murphy.pb, p_act, murphy.color);
       } while (bresenham_next() != BRESENHAM_ERR);
 #endif
 	polygon_PicBuf (m1,m2,ml1b,ml2b);

@@ -590,6 +590,8 @@ static void
 {
    PicBuf *pb = po->picbuf;
    DevPt *p_act;
+   DevPt t0,t1,t2,t3;
+   double len,xoff,yoff;
    int linewidth = ceil(pensize*po->HP_to_xdots/0.025);                                  /* convert to pixel space */
 
 /*   printf("pensize = %0.3f mm, linewidth = %d pixels\n",pensize,linewidth);*/
@@ -618,11 +620,55 @@ static void
 
    if ( pensize > 0.35 ) {
       switch (CurrentLineAttr.End) {
-         case LAE_square:        /* square not implemented yet */
+         case LAE_square:        
+         len=sqrt( (p0->x-p1->x)*(p0->x-p1->x)+(p0->y-p1->y)*(p0->y-p1->y));
+         xoff=0.5*(fabs(p0->x-p1->x)/len);
+         yoff=0.5*(fabs(p0->y-p1->y)/len);
+         t0.x=p0->x-(linewidth-1)*yoff;
+         t0.y=p0->y+(linewidth-1)*xoff;
+         t1.x=t0.x-(linewidth-1)*xoff;
+         t1.y=t0.y+(linewidth-1)*yoff;
+         t3.x=p0->x-(linewidth-1)*yoff;
+         t3.y=p0->y-(linewidth-1)*xoff;
+         t2.x=t3.x-(linewidth-1)*xoff;
+         t2.y=t3.y+(linewidth-1)*yoff;
+         polygon_PicBuf(t0,t1,t3,t2);
+         t0.x=p1->x+(linewidth-1)*yoff;
+         t0.y=p1->y+(linewidth-1)*xoff;
+         t1.x=t0.x+(linewidth-1)*xoff;
+         t1.y=t0.y+(linewidth-1)*yoff;
+         t3.x=p1->x+(linewidth-1)*yoff;
+         t3.y=p1->y-(linewidth-1)*xoff;
+         t2.x=t3.x+(linewidth-1)*xoff;
+         t2.y=t3.y+(linewidth-1)*yoff;
+         polygon_PicBuf(t0,t1,t3,t2);
+         break;
          case LAE_butt:
          default:
             break;
-         case LAE_triangular:    /* triangular not implemented yet */
+         case LAE_triangular:    
+         len=sqrt( (p0->x-p1->x)*(p0->x-p1->x)+(p0->y-p1->y)*(p0->y-p1->y));
+         xoff=0.5*(fabs(p0->x-p1->x)/len);
+         yoff=0.5*(fabs(p0->y-p1->y)/len);
+         t0.x=p0->x-(linewidth-1)*xoff;
+         t0.y=p0->y-(linewidth-1)*yoff;
+         t1.x=p0->x+(linewidth-1)*yoff;
+         t1.y=p0->y-(linewidth-1)*xoff;
+         t2.x=p0->x+(linewidth-1)*xoff;
+         t2.y=p0->y+(linewidth-1)*yoff;
+         t3.x=p0->x-(linewidth-1)*yoff;
+         t3.y=p0->y+(linewidth-1)*xoff;
+         polygon_PicBuf(t0,t1,t3,t2);
+         t0.x=p1->x-(linewidth-1)*xoff;
+         t0.y=p1->y-(linewidth-1)*yoff;
+         t1.x=p1->x+(linewidth-1)*yoff;
+         t1.y=p1->y-(linewidth-1)*xoff;
+         t2.x=p1->x+(linewidth-1)*xoff;
+         t2.y=p1->y+(linewidth-1)*yoff;
+         t3.x=p1->x-(linewidth-1)*yoff;
+         t3.y=p1->y+(linewidth-1)*xoff;
+         polygon_PicBuf(t0,t1,t3,t2);
+         break;
          case LAE_round:
             dot_PicBuf(p0,linewidth,pencolor,pb);
             dot_PicBuf(p1,linewidth,pencolor,pb);
