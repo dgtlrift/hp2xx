@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -25,7 +25,8 @@ copies.
  **    (very loosely derived from "to_eps.c")
  **
  ** By Gilles Gravier (corwin@ensta.fr)
- ** 93/07/19  V 1.00  Derived from to_eps.c
+ ** 93/07/19  V 1.00       Derived from to_eps.c
+ ** 94/02/14  V 1.10a HWW  Adapted to changes in hp2xx.h
  **/
 
 #include <stdio.h>
@@ -36,7 +37,6 @@ copies.
 #include "bresnham.h"
 #include "hp2xx.h"
 
-extern  float  xmin, xmax, ymin, ymax;
 static  float  ax, ay;
 static  int  startx, starty, endx, endy;
 static  int  lwid, lsty, lcol;
@@ -48,12 +48,14 @@ static  int  firstmove;
 /**
  ** Convert HP to RGIP coordinates
  **/
-int rgipx(float x)
+static int
+rgipx(float x)
 {
   return (int)(x*ax);
 }
 
-int rgipy(float y)
+static int
+rgipy(float y)
 {
   return (int)(y*ay);
 }
@@ -61,7 +63,8 @@ int rgipy(float y)
 /**
  ** Set line width
  **/
-void  rgip_set_linewidth (int width)
+static void
+rgip_set_linewidth (int width)
 {
   lwid=width;
 }
@@ -69,7 +72,8 @@ void  rgip_set_linewidth (int width)
 /**
  ** Set line style
  **/
-void  rgip_set_linestyle (int style)
+static void
+rgip_set_linestyle (int style)
 {
   lsty=style;
 }
@@ -77,7 +81,8 @@ void  rgip_set_linestyle (int style)
 /**
  ** Set RGB color
  **/
-void  rgip_set_color (double red, double green, double blue)
+static void
+rgip_set_color (double red, double green, double blue)
 {
   float max,min,delta,r,g,b,h,s,v;
   /**
@@ -189,28 +194,29 @@ void  rgip_set_color (double red, double green, double blue)
  ** Higher-level interface: Output Uniplex RGIP format
  **/
 
-void  to_rgip (PAR *p, FILE *td)
+int
+to_rgip (const GEN_PAR* pg, const OUT_PAR* po)
 {
 PlotCmd  cmd;
 HPGL_Pt  pt1 = {0};
 FILE  *md;
-int  pensize, pencolor;
+int  pensize, pencolor, pen_no, err = 0;
 
   /* Give some news... */
-  if (!p->quiet)
+  if (!pg->quiet)
   {
-    fprintf(stderr,
-            "\n\n- Writing RGIP code to \"%s\"\n",
-            *p->outfile == '-' ? "stdout" : p->outfile);
+    Eprintf ("\n\n- Writing RGIP code to \"%s\"\n",
+	    *po->outfile == '-' ? "stdout" : po->outfile);
   }
 
   /* Init. of RGIP file: */
-  if (*p->outfile != '-')
+  if (*po->outfile != '-')
   {
-    if ((md = fopen(p->outfile, "w")) == NULL)
+    if ((md = fopen(po->outfile, "w")) == NULL)
     {
-      perror("hp2xx (rgip)");
-      exit(ERROR);
+      PError("hp2xx (rgip)");
+      err = ERROR;
+      goto RGIP_exit;
     }
   }
   else
@@ -222,12 +228,12 @@ int  pensize, pencolor;
   firstmove=1;
 
   /* Factor for transformation of HP coordinates to RGIP */
-  ax=RGIPXMAX/(xmax-xmin);
-  ay=RGIPYMAX/(ymax-ymin);
+  ax=RGIPXMAX/(po->xmax - po->xmin);
+  ay=RGIPYMAX/(po->ymax - po->ymin);
 
   /* RGIP header */
   fprintf(md,"%%RGIP_METAFILE  :1.0a\n");
-  pensize = p->pensize[p->pen];
+  pensize = pg->pensize[DEFAULT_PEN_NO];
   if (pensize != 0)
   {
     rgip_set_linewidth (pensize);
@@ -239,78 +245,87 @@ int  pensize, pencolor;
  ** Command loop: While temporary file not empty process command.
  **/
 
-  while ((cmd = PlotCmd_from_tmpfile()) != EOF)
+  while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
   {
     switch (cmd)
     {
       case NOP:
-        break;
-      case SET_PEN:
-        if ((p->pen = fgetc(td)) == EOF)
-        {
-          perror("Unexpected end of temp. file: ");
-          exit (ERROR);
-        }
-        pensize = p->pensize[p->pen];
-        if (pensize != 0)
-        {
-          rgip_set_linewidth (pensize);
-        }
-        pencolor = p->pencolor[p->pen];
-        rgip_set_color (p->Clut[pencolor][0]/255.0,
-                        p->Clut[pencolor][1]/255.0,
-                        p->Clut[pencolor][2]/255.0);
-        break;
-      case MOVE_TO:
-        HPGL_Pt_from_tmpfile (&pt1);
-        if (firstmove==1)
-        {
-          firstmove=0;
-        }
-        else
-        {
-          fprintf(md,"%%%%RI_GROUPEND\n");
-        }
-        startx=rgipx(((&pt1)->x)-xmin);
-        starty=rgipy(((&pt1)->y)-ymin);
-        fprintf(md,"%%%%RI_GROUPSTART\n");
-        break;
-      case DRAW_TO:
-        HPGL_Pt_from_tmpfile (&pt1);
-        if (pensize != 0)
-          {
-            endx=rgipx(((&pt1)->x)-xmin);
-            endy=rgipy(((&pt1)->y)-ymin);
-            fprintf(md,
-                    "%d %d %d %d %d %d %d LINE\n",
-                    startx, starty, endx, endy, lwid, lsty, lcol);
-            startx=endx;
-            starty=endy;
-          }
-        break;
-      case PLOT_AT:
-        HPGL_Pt_from_tmpfile (&pt1);
-        if (pensize != 0)
-        {
-          startx=rgipx(((&pt1)->x)-xmin);
-          starty=rgipy(((&pt1)->y)-ymin);
-          fprintf(md,
-                  "[ %d %d ] %d DOTS\n",
-                  startx, starty, lcol);
+	break;
 
-        }
-        break;
+      case SET_PEN:
+	if ((pen_no = fgetc(pg->td)) == EOF)
+	{
+	  PError("Unexpected end of temp. file: ");
+	  exit (ERROR);
+	}
+	pensize = pg->pensize[pen_no];
+	if (pensize != 0)
+	{
+	  rgip_set_linewidth (pensize);
+	}
+	pencolor = pg->pencolor[pen_no];
+	rgip_set_color (pg->Clut[pencolor][0]/255.0,
+			pg->Clut[pencolor][1]/255.0,
+			pg->Clut[pencolor][2]/255.0);
+	break;
+
+      case MOVE_TO:
+	HPGL_Pt_from_tmpfile (&pt1);
+	if (firstmove==1)
+	{
+	  firstmove=0;
+	}
+	else
+	{
+	  fprintf(md,"%%%%RI_GROUPEND\n");
+	}
+	startx=rgipx(((&pt1)->x) - po->xmin);
+	starty=rgipy(((&pt1)->y) - po->ymin);
+	fprintf(md,"%%%%RI_GROUPSTART\n");
+	break;
+
+      case DRAW_TO:
+	HPGL_Pt_from_tmpfile (&pt1);
+	if (pensize != 0)
+	  {
+	    endx=rgipx(((&pt1)->x) - po->xmin);
+	    endy=rgipy(((&pt1)->y) - po->ymin);
+	    fprintf(md,
+		    "%d %d %d %d %d %d %d LINE\n",
+		    startx, starty, endx, endy, lwid, lsty, lcol);
+	    startx=endx;
+	    starty=endy;
+	  }
+	break;
+
+      case PLOT_AT:
+	HPGL_Pt_from_tmpfile (&pt1);
+	if (pensize != 0)
+	{
+	  startx=rgipx(((&pt1)->x) - po->xmin);
+	  starty=rgipy(((&pt1)->y) - po->ymin);
+	  fprintf(md,
+		  "[ %d %d ] %d DOTS\n",
+		  startx, starty, lcol);
+
+	}
+	break;
+
       default:
-        fprintf(stderr,"Illegal cmd in temp. file!");
-        exit (ERROR);
+	Eprintf ("Illegal cmd in temp. file!");
+	err = ERROR;
+	goto RGIP_exit;
     }
   }
 
     /* Finish up */
   fprintf(md,"%%%%RI_GROUPEND\n");
-  if (md != stdout)
-  fclose (md);
-  if (!p->quiet)
-  fputc ('\n', stderr);
+
+RGIP_exit:
+  if (md != NULL && md != stdout)
+	fclose (md);
+  if (!pg->quiet)
+	Eprintf ("\n");
+  return err;
 }
 

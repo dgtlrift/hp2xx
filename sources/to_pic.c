@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -30,6 +30,7 @@ copies.
  ** 91/10/21  V 1.03d HWW  Plain "pic", packing done by pic2pac; VAX_C active
  ** 91/03/01  V 1.03e NM   Bug fixed: numbering of files was incorrect
  ** 91/05/19  V 1.03f HWW  Abort if color mode
+ ** 94/02/14  V 1.10a HWW  Adapted to changes in hp2xx.h
  **
  **	      NOTE:   This code is not part of the supported modules
  **		      of hp2xx. Include it if needed only.
@@ -53,7 +54,8 @@ copies.
 
 
 
-int	Init_PIC_files (char *basename, FILE **fd, int nb, int nr, int yb)
+static int
+Init_PIC_files (const char *basename, FILE **fd, int nb, int nr, int yb)
 {
 #define	FNAME_LEN	80
 char	fname[FNAME_LEN], ext[8];
@@ -77,7 +79,7 @@ int	hd;
 	n = yb + i * yb_tot;
 	if (n > 99)
 	{
-		fprintf (stderr,"ERROR: Too many PIC files per column!\n");
+		Eprintf ("ERROR: Too many PIC files per column!\n");
 		for (; i > -1; i--)
 			if (fd[i])
 			{
@@ -99,7 +101,7 @@ int	hd;
 	if ((fd[i] = fopen(fname, WRITE_BIN)) == NULL)
 	{
 #endif
-		perror ("hp2xx -- opening PIC file(s)");
+		PError ("hp2xx -- opening PIC file(s)");
 		return ERROR;
 	}
   }
@@ -109,84 +111,8 @@ int	hd;
 
 
 
-
-void	PicBuf_to_PIC (PicBuf *picbuf, PAR *p)
-{
-#define	N_BLOCKS 10
-
-FILE	*fd[N_BLOCKS];
-int	row_c, i, nb, nr, yb;
-
-  if (picbuf->depth > 1)
-  {
-	fprintf(stderr, "\nPIC mode does not support colors yet -- sorry\n");
-	free_PicBuf (picbuf, p->swapfile);
-	exit (ERROR);
-  }
-
-  if (picbuf->nb > (ATARI_XRES * N_BLOCKS) / 8)
-  {
-	fprintf (stderr, "hp2xx -- Too many PIC files per row");
-	free_PicBuf (picbuf, p->swapfile);
-	exit (ERROR);
-  }
-
-  if (! p->quiet)
-	fprintf(stderr, "\nWriting PIC output: %d rows of %d bytes\n",
-		picbuf->nr, picbuf->nb);
-
-  if (! *p->outfile)
-	p->outfile = "bitmap";		/* Default name	*/
-
-  for (i=0, nb = picbuf->nb; nb > 0; i++, nb -= BYTES_PER_LINE)
-	fd[i] = NULL;
-
-
-  /* Backward since highest index is lowest line on screen! */
-
-  for (yb=nr=0, row_c = picbuf->nr - 1; row_c >= 0; nr++, row_c--)
-  {
-	if (nr % ATARI_YRES == 0)
-	{
-		if (Init_PIC_files (p->outfile, fd,
-				picbuf->nb, picbuf->nr, yb))
-		{
-			free_PicBuf (picbuf, p->swapfile);
-			exit (ERROR);
-		}
-		yb++;
-	}
-	if ((!p->quiet) && (row_c % 10 == 0))
-		  /* For the impatients among us ...	*/
-		putc('.',stderr);
-	RowBuf_to_PIC (get_RowBuf(picbuf, row_c), picbuf->nb, fd);
-  }
-
-  get_RowBuf(picbuf, 0);		/* Use row 0 for padding */
-  for (i=0; i < picbuf->nb; i++)	/* Clear it		 */
-	picbuf->row[0].buf[i] = '\0';
-
-  while (nr % ATARI_YRES != 0)
-  {
-	RowBuf_to_PIC (&picbuf->row[0], picbuf->nb, fd);
-	nr++;
-  }
-
-
-  if (!p->quiet)
-	fputc ('\n', stderr);
-
-  for (i=0, nb = picbuf->nb; nb > 0; i++, nb -= BYTES_PER_LINE)
-  {
-	fclose (fd[i]);
-	fd[i] = NULL;
-  }
-}
-
-
-
-
-void	RowBuf_to_PIC (RowBuf *row, int nb, FILE **fd)
+static void
+RowBuf_to_PIC (RowBuf *row, int nb, FILE **fd)
 {
 int	i,j, n_pad=0, n_wr=BYTES_PER_LINE;
 
@@ -203,3 +129,81 @@ int	i,j, n_pad=0, n_wr=BYTES_PER_LINE;
 	fputc ('\0', fd[i]);
 }
 
+
+
+
+
+int
+PicBuf_to_PIC (const GEN_PAR *pg, const OUT_PAR *po)
+{
+#define	N_BLOCKS 10
+
+FILE		*fd[N_BLOCKS];
+int		row_c, i, nb, nr, yb;
+const PicBuf	*pb;
+
+  if (pg == NULL || po == NULL)
+	return ERROR;
+  pb = po->picbuf;
+  if (pb == NULL)
+	return ERROR;
+
+  if (pb->depth > 1)
+  {
+	Eprintf ("\nPIC mode does not support colors yet -- sorry\n");
+	return ERROR;
+  }
+
+  if (pb->nb > (ATARI_XRES * N_BLOCKS) / 8)
+  {
+	Eprintf ("hp2xx -- Too many PIC files per row");
+	return ERROR;
+  }
+
+  if (!pg->quiet)
+	Eprintf ("\nWriting PIC output: %d rows of %d bytes\n",
+		pb->nr, pb->nb);
+
+  for (i=0, nb = pb->nb; nb > 0; i++, nb -= BYTES_PER_LINE)
+	fd[i] = NULL;
+
+
+  /* Backward since highest index is lowest line on screen! */
+
+  for (yb=nr=0, row_c = pb->nr - 1; row_c >= 0; nr++, row_c--)
+  {
+	if (nr % ATARI_YRES == 0)
+	{
+		if (Init_PIC_files (		/* Default name	*/
+			(*po->outfile != '-') ? po->outfile : "bitmap",
+			fd, pb->nb, pb->nr, yb))
+				return ERROR;
+		yb++;
+	}
+	if ((!pg->quiet) && (row_c % 10 == 0))
+		  /* For the impatients among us ...	*/
+		Eprintf (".");
+	RowBuf_to_PIC (get_RowBuf(pb, row_c), pb->nb, fd);
+  }
+
+  get_RowBuf(pb, 0);		/* Use row 0 for padding */
+  for (i=0; i < pb->nb; i++)	/* Clear it		 */
+	pb->row[0].buf[i] = '\0';
+
+  while (nr % ATARI_YRES != 0)
+  {
+	RowBuf_to_PIC (&pb->row[0], pb->nb, fd);
+	nr++;
+  }
+
+
+  if (!pg->quiet)
+	Eprintf ("\n");
+
+  for (i=0, nb = pb->nb; nb > 0; i++, nb -= BYTES_PER_LINE)
+  {
+	fclose (fd[i]);
+	fd[i] = NULL;
+  }
+  return 0;
+}

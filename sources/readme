@@ -1,4 +1,4 @@
-(c) 1992, 1993 H. Werntges      HP2XX release 3.1.4                 93/11/15
+(c) 1992 - 1994  H. Werntges    HP2XX release 3.2.x                 94/02/14
                                 ===================
 
 Files in ./sources:
@@ -16,6 +16,7 @@ hp2xx.c      High-level routines for hp2xx
 hpgl.c       HP-GL parser etc.
 no_prev.c    A dummy previewer
 picbuf.c     Code for raster ops (vector-to-internal-bitmap)
+std_main.c   Traditional command line interface including "main()"
 to_amiga.c   AMIGA previewer
 to_atari.c   ATARI previewer
 to_dj_gr.c   DOS full-screen (S)VGA previewer, based on DJ Delorie's gr lib

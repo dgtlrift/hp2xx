@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -21,7 +21,8 @@ copies.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 
-/** to_mf.c:    Converter to Metafont, misc. TeX formats, and simple HP-GL
+/** to_tvec.c:    Converter to misc. TeX-oriented vector formats:
+ **              Metafont, several TeX formats, simple HP-GL
  **
  ** 91/01/19  V 1.00  HWW  Derived from HPtoGF.c
  ** 91/02/10  V 1.01  HWW  "zaehler" removed
@@ -38,6 +39,8 @@ copies.
  ** 92/12/12  V 1.08b HWW  Info line now interprets outfile=='-' as "stdout"
  ** 93/04/12  V 1.08c HWW  Fix for J. Post's report re: \emline
  ** 93/09/01  V 1.09a HWW  Mode 5 (Simple HP-GL) added
+ ** 93/12/30  V 1.09b HWW  Mode 5: Pen number preserved
+ ** 94/02/14  V 1.10a HWW  Adapted to changes in hp2xx.h
  **/
 
 #include <stdio.h>
@@ -53,20 +56,19 @@ copies.
 
 
 
-extern  float   xmin, xmax, ymin, ymax;
 
-
-
-void    to_mftex (PAR *p, FILE *td, int mode)
+int
+to_mftex (const GEN_PAR *pg, const OUT_PAR *po, int mode)
 {
 
 PlotCmd         cmd;
 HPGL_Pt         pt1;
-float           coord2mm;
-FILE            *md;
-int             pensize, chars_out = 0, max_chars_out = 210, np = 1;
+float           xcoord2mm, ycoord2mm;
+FILE            *md = NULL;
+int             pensize, pen_no, chars_out = 0, max_chars_out = 210;
+int		np = 1, err = 0;
 char            *ftype="", *scale_cmd="", *pen_cmd="",
-                *poly_start="", *poly_next="", *poly_last="", *poly_end="",
+		*poly_start="", *poly_next="", *poly_last="", *poly_end="",
 		*draw_dot="", *exit_cmd="";
 #ifdef ATARI
 int             i;
@@ -85,40 +87,40 @@ HPGL_Pt         old_pt;
 	poly_start      = "draw(%4.3fmm,%4.3fmm)";
 	poly_next       = "--(%4.3fmm,%4.3fmm)";
 	poly_last       = "--(%4.3fmm,%4.3fmm);\n";
-        poly_end        = ";\n";
+	poly_end        = ";\n";
 	draw_dot        = "drawdot(%4.3fmm,%4.3fmm);\n";
-        exit_cmd        = "endchar;\nend;\n";
-        break;
+	exit_cmd        = "endchar;\nend;\n";
+	break;
     case 1:     /* TeX (em-Specials) mode       */
-        ftype           = "emTeX-specials";
-        scale_cmd       = "\\unitlength1mm\n\\begin{picture}(%4.3f,%4.3f)\n";
+	ftype           = "emTeX-specials";
+	scale_cmd       = "\\unitlength1mm\n\\begin{picture}(%4.3f,%4.3f)\n";
 	pen_cmd         = "\\special{em:linewidth 0.%1dmm}\n";
-        poly_start      = "\\put(%4.3f,%4.3f){\\special{em:moveto}}\n";
-        poly_next       = "\\put(%4.3f,%4.3f){\\special{em:lineto}}\n";
-        poly_last       = poly_next;
-        poly_end        = "";
+	poly_start      = "\\put(%4.3f,%4.3f){\\special{em:moveto}}\n";
+	poly_next       = "\\put(%4.3f,%4.3f){\\special{em:lineto}}\n";
+	poly_last       = poly_next;
+	poly_end        = "";
 	draw_dot        = "\\put(%4.3f,%4.3f){\\makebox(0,0)[cc]{.}}\n";
-        exit_cmd        = "\\end{picture}\n";
-        break;
+	exit_cmd        = "\\end{picture}\n";
+	break;
     case 2:     /* TeX (epic) mode      */
-        ftype           = "TeX (epic)";
-        scale_cmd       = "\\unitlength1mm\n\\begin{picture}(%4.3f,%4.3f)\n";
+	ftype           = "TeX (epic)";
+	scale_cmd       = "\\unitlength1mm\n\\begin{picture}(%4.3f,%4.3f)\n";
 	pen_cmd         = "\\linethickness{0.%1dmm}\n";
-        poly_start      = "\\drawline(%4.3f,%4.3f)";
-        poly_next       = "(%4.3f,%4.3f)";
+	poly_start      = "\\drawline(%4.3f,%4.3f)";
+	poly_next       = "(%4.3f,%4.3f)";
 	poly_last       = "(%4.3f,%4.3f)\n";
-        poly_end        = "\n";
+	poly_end        = "\n";
 	draw_dot        = "\\put(%4.3f,%4.3f){\\picsquare}\n";
 	exit_cmd        = "\\end{picture}\n";
-        break;
+	break;
     case 3:     /* TeXcad (\emline-Macros) mode */
 	ftype           = "TeXcad compatible";
-        scale_cmd       = "\\unitlength=1mm\n\\begin{picture}(%4.3f,%4.3f)\n";
+	scale_cmd       = "\\unitlength=1mm\n\\begin{picture}(%4.3f,%4.3f)\n";
 	pen_cmd         = "\\special{em:linewidth 0.%1dmm}\n\\linethickness{ 0.%1dmm}\n";
-        poly_start      = "\\emline{%4.3f}{%4.3f}{%d}";
-        poly_next       = "{%4.3f}{%4.3f}{%d}%%\n";
+	poly_start      = "\\emline{%4.3f}{%4.3f}{%d}";
+	poly_next       = "{%4.3f}{%4.3f}{%d}%%\n";
 		/* %% = Fix for John Post's bug report	*/
-        poly_last       = poly_next;
+	poly_last       = poly_next;
 	poly_end        = "";
 	draw_dot        = "\\put(%4.3f,%4.3f){\\makebox(0,0)[cc]{.}}\n";
 	exit_cmd        = "\\end{picture}\n";
@@ -140,7 +142,7 @@ HPGL_Pt         old_pt;
     case 5:     /* HP-GL mode */
 	ftype           = "Simple HP-GL";
 	scale_cmd       = "";
-	pen_cmd         = "SP1;";	/* Not fully implemented!! */
+	pen_cmd         = "SP%1d;";
 	poly_start      = "PA;PU%g,%g;";
 	poly_next       = "PD%g,%g;";
 	poly_last       = poly_next;
@@ -165,7 +167,7 @@ HPGL_Pt         old_pt;
 #endif
 
 
-  if (*p->outfile != '-')
+  if (*po->outfile != '-')
   {
 
 #ifdef ATARI
@@ -189,9 +191,11 @@ HPGL_Pt         old_pt;
 		if ((csfile = fopen(csname, "a")) == NULL ||
 		    (md     = fopen(tempch, "w")) == NULL)
 		{
-			free(csname); free(tempch);
-			perror("hp2xx mf/tex");
-			exit(ERROR);
+			free(csname);
+			free(tempch);
+			PError("hp2xx mf/tex");
+			err = ERROR;
+			goto MF_exit;
 		}
 
 	}
@@ -200,10 +204,11 @@ HPGL_Pt         old_pt;
 		csfile = stdout;
 
 #endif
-		if ((md = fopen(p->outfile, "w")) == NULL)
+		if ((md = fopen(po->outfile, "w")) == NULL)
 		{
-			perror("hp2xx (mf/tex)");
-			exit(ERROR);
+			PError("hp2xx (mf/tex)");
+			err = ERROR;
+			goto MF_exit;
 		}
 #ifdef ATARI
 	}
@@ -219,27 +224,27 @@ HPGL_Pt         old_pt;
   }
 
 #ifdef ATARI
-  if (!p->quiet)
+  if (!pg->quiet)
 	if (mode == 4)
-		fprintf(stderr,"\n\n- Writing %s code to \"%s\"\n", ftype,
-			*p->outfile == '-' ? "stdout" : tempch);
+		Eprintf ("\n\n- Writing %s code to \"%s\"\n", ftype,
+			*po->outfile == '-' ? "stdout" : tempch);
 	else
-		fprintf(stderr,"\n\n- Writing %s code to \"%s\"\n", ftype,
-			*p->outfile == '-' ? "stdout" : p->outfile);
+		Eprintf ("\n\n- Writing %s code to \"%s\"\n", ftype,
+			*po->outfile == '-' ? "stdout" : po->outfile);
 #else
-  if (!p->quiet)
-	fprintf(stderr,"\n\n- Writing %s code to \"%s\"\n", ftype,
-		*p->outfile == '-' ? "stdout" : p->outfile);
+  if (!pg->quiet)
+	Eprintf ("\n\n- Writing %s code to \"%s\"\n", ftype,
+		*po->outfile == '-' ? "stdout" : po->outfile);
 #endif
 
-  if (p->is_color)
-	fprintf(stderr, "\nWARNING: MF/TeX modes ignore colors!\n");
+  if (pg->is_color)
+	Eprintf ( "\nWARNING: MF/TeX modes ignore colors!\n");
 
 #ifdef ATARI
   if (mode == 4)
   {
-	if (!p->quiet)
-	  fprintf(stderr, "- TEX-Input file is \"%s\"\n", csname);
+	if (!pg->quiet)
+	  Eprintf ( "- TEX-Input file is \"%s\"\n", csname);
 
 	pos1 = strchr(tempch, 92);
 	while (pos1 != NULL)
@@ -249,10 +254,11 @@ HPGL_Pt         old_pt;
 
 	fprintf(csfile,"%% %s code in %s, created by hp2xx\n",
 		ftype, tempch);
-	fprintf(csfile, scale_cmd, p->width, p->height, tempch);
+	fprintf(csfile, scale_cmd, po->width, po->height, tempch);
 	fprintf(csfile, special_cmd, tempch);
 	fprintf(md, "CS-Graphics V 1\nr\nu 1mm\n");
-	free(csname); free(tempch);
+	free(csname);
+	free(tempch);
   }
   else
   {
@@ -260,42 +266,55 @@ HPGL_Pt         old_pt;
 	if (mode != 5)
 	{
 		fprintf(md,"%% %s code in %s, created by hp2xx\n",
-			ftype, p->outfile);
-		fprintf(md, scale_cmd, p->width, p->height);
+			ftype, po->outfile);
+		fprintf(md, scale_cmd, po->width, po->height);
 	}
 #ifdef ATARI
   }
 #endif
 
-  pensize = p->pensize[p->pen];
+  pen_no  = DEFAULT_PEN_NO;
+  pensize = pg->pensize[pen_no];
   if (pensize != 0)
-	if (mode == 3)
+	switch (mode) {
+	   case 3:
 		fprintf(md, pen_cmd, pensize, pensize);
-	else
+		break;
+	   case 5:
+		fprintf(md, pen_cmd, pen_no);
+		break;
+	   default:
 		fprintf(md, pen_cmd, pensize);
+		break;
+	}
 
   if (mode == 5)
-	coord2mm = 1.0;
+  {
+	xcoord2mm = 1.0;
+	ycoord2mm = 1.0;
+  }
   else
   {
 	  /* Factor transforming the coordinate values into millimeters: */
-	  coord2mm = p->height / (ymax-ymin);
+	  xcoord2mm = po->width  / (po->xmax - po->xmin);
+	  ycoord2mm = po->height / ( po->ymax - po->ymin);
   }
 
 
-  while ((cmd = PlotCmd_from_tmpfile()) != EOF)
+  while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
 	switch (cmd)
 	{
 	  case NOP:
 		break;
 
 	  case SET_PEN:
-		if ((p->pen = fgetc(td)) == EOF)
+		if ((pen_no = fgetc(pg->td)) == EOF)
 		{
-			perror("Unexpected end of temp. file: ");
-			exit (ERROR);
+			PError("Unexpected end of temp. file: ");
+			err = ERROR;
+			goto MF_exit;
 		}
-		pensize = p->pensize[p->pen];
+		pensize = pg->pensize[pen_no];
 		if (pensize != 0)
 		{
 			if (chars_out)  /* Finish up old polygon */
@@ -303,10 +322,17 @@ HPGL_Pt         old_pt;
 				fprintf(md, poly_end);
 				chars_out = 0;
 			}
-			if (mode == 3)
+			switch (mode) {
+			   case 3:
 				fprintf(md, pen_cmd, pensize, pensize);
-			else
+				break;
+			   case 5:
+				fprintf(md, pen_cmd, pen_no);
+				break;
+			   default:
 				fprintf(md, pen_cmd, pensize);
+				break;
+			}
 		}
 		break;
 
@@ -317,17 +343,20 @@ HPGL_Pt         old_pt;
 		if (chars_out)          /* Finish up old polygon */
 			fprintf(md, poly_end);
 		chars_out =  fprintf(md, poly_start,
-			(pt1.x-xmin) * coord2mm, (pt1.y-ymin) * coord2mm);
+			(pt1.x - po->xmin) * xcoord2mm,
+			(pt1.y - po->ymin) * ycoord2mm);
 		break;
 
 	  case DRAW_TO:
 		if (mode == 3)  /* Needs special treatment: no polygons!        */
 		{
 			chars_out =  fprintf(md, poly_start,
-			  (pt1.x-xmin) * coord2mm, (pt1.y-ymin) * coord2mm, np++);
+			  (pt1.x - po->xmin) * xcoord2mm,
+			  (pt1.y - po->ymin) * ycoord2mm, np++);
 			HPGL_Pt_from_tmpfile (&pt1);
 			chars_out += fprintf(md, poly_next,
-			  (pt1.x-xmin) * coord2mm, (pt1.y-ymin) * coord2mm, np++);
+			  (pt1.x - po->xmin) * xcoord2mm,
+			  (pt1.y - po->ymin) * ycoord2mm, np++);
 			break;
 		}
 #ifdef ATARI
@@ -335,87 +364,96 @@ HPGL_Pt         old_pt;
 		{
 			old_pt = pt1;
 			chars_out = fprintf(md, poly_start,
-			  (old_pt.x-xmin) * coord2mm, (old_pt.y-ymin) * coord2mm, np++);
-                        HPGL_Pt_from_tmpfile (&pt1);
-                        chars_out += fprintf(md, poly_next,
-                          (pt1.x-old_pt.x) * coord2mm, (pt1.y-old_pt.y) * coord2mm, np++);
-                        old_pt = pt1;
-                        break;
-                }
+			  (old_pt.x - po->xmin) * xcoord2mm,
+			  (old_pt.y - po->ymin) * ycoord2mm, np++);
+			HPGL_Pt_from_tmpfile (&pt1);
+			chars_out += fprintf(md, poly_next,
+			  (pt1.x - old_pt.x) * xcoord2mm,
+			  (pt1.y - old_pt.y) * ycoord2mm, np++);
+			old_pt = pt1;
+			break;
+		}
 #endif
 
-                HPGL_Pt_from_tmpfile (&pt1);
+		HPGL_Pt_from_tmpfile (&pt1);
 		if (pensize == 0)
 			break;
-                if (chars_out > max_chars_out)
+		if (chars_out > max_chars_out)
 					/* prevent overlong lines */
-                {
-                        fprintf(md, poly_last,
-			  (pt1.x-xmin) * coord2mm, (pt1.y-ymin) * coord2mm);
+		{
+			fprintf(md, poly_last,
+			  (pt1.x - po->xmin) * xcoord2mm,
+			  (pt1.y - po->ymin) * ycoord2mm);
 			chars_out =  fprintf(md, poly_start,
-			  (pt1.x-xmin) * coord2mm, (pt1.y-ymin) * coord2mm);
-                } else
-                        chars_out += fprintf(md, poly_next,
-			  (pt1.x-xmin) * coord2mm, (pt1.y-ymin) * coord2mm);
-                break;
+			  (pt1.x - po->xmin) * xcoord2mm,
+			  (pt1.y - po->ymin) * ycoord2mm);
+		} else
+			chars_out += fprintf(md, poly_next,
+			  (pt1.x - po->xmin) * xcoord2mm,
+			  (pt1.y - po->ymin) * ycoord2mm);
+		break;
 
-          case PLOT_AT:
-                HPGL_Pt_from_tmpfile (&pt1);
-                if (chars_out)          /* Finish up old polygon */
-                {
-                        fprintf(md, poly_end);
-                        chars_out = 0;
-                }
-                if (pensize == 0)
-                        break;
+	  case PLOT_AT:
+		HPGL_Pt_from_tmpfile (&pt1);
+		if (chars_out)          /* Finish up old polygon */
+		{
+			fprintf(md, poly_end);
+			chars_out = 0;
+		}
+		if (pensize == 0)
+			break;
 
 #ifdef ATARI
-                if (mode == 4)
+		if (mode == 4)
 			fprintf(csfile, draw_dot,
-				(pt1.x-xmin) * coord2mm, (pt1.y-ymin) * coord2mm);
+				(pt1.x - po->xmin) * xcoord2mm,
+				(pt1.y - po->ymin) * ycoord2mm);
 
-                else
+		else
 #endif
 			if (mode == 5)
 				fprintf(md, draw_dot,
-					(pt1.x-xmin) * coord2mm,
-					(pt1.y-ymin) * coord2mm,
-					(pt1.x+1.0-xmin) * coord2mm,
-					(pt1.y-ymin) * coord2mm);
+					(pt1.x - po->xmin) * xcoord2mm,
+					(pt1.y - po->ymin) * ycoord2mm,
+					(pt1.x + 1.0 - po->xmin) * xcoord2mm,
+					(pt1.y - po->ymin) * ycoord2mm);
 			else
 				fprintf(md, draw_dot,
-					(pt1.x-xmin) * coord2mm,
-					(pt1.y-ymin) * coord2mm);
+					(pt1.x - po->xmin) * xcoord2mm,
+					(pt1.y - po->ymin) * ycoord2mm);
 		break;
 
 	  default:
-		fprintf(stderr,"Illegal cmd in temp. file!");
-                exit (ERROR);
-        }
+		Eprintf ("Illegal cmd in temp. file!");
+		err = ERROR;
+		goto MF_exit;
+	}
 
 
-  if (chars_out)                        /* Finish up old polygon */
+  if (chars_out)			/* Finish up old polygon */
   {
-        fprintf(md, poly_end);
-        chars_out = 0;
+	fprintf(md, poly_end);
+	chars_out = 0;
   }
 
 #ifdef ATARI
   if (mode == 4)
-  {
-    fprintf(csfile, exit_cmd);
-
-    if (csfile != stdout)
-        fclose(csfile);        
-  }
+	fprintf(csfile, exit_cmd);
   else
 #endif
-    fprintf(md, exit_cmd);                /* Add file trailer     */
+	fprintf(md, exit_cmd);		/* Add file trailer     */
 
-  if (md != stdout)
-        fclose(md);
 
-  if (!p->quiet)
-        fputc ('\n', stderr);
+MF_exit:
 
+  if (md != stdout && md != NULL)
+	fclose(md);
+#ifdef ATARI
+  if (csfile != stdout && csfile != NULL)
+	fclose(csfile);
+#endif
+
+  if (!pg->quiet)
+	Eprintf ("\n");
+  return err;
 }

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -37,6 +37,8 @@ copies.
  ** 92/12/24  V 2.00e HWW  plot_RowBuf() augmented to bit REsetting
  ** 93/04/02  V 2.01a HWW  Always use four bit planes in color mode!
  **			   Out-dated "DotBlock" concept replaced by "char".
+ ** 94/02/14  V 2.10  HWW  New parameter structs; restructured
+ **			   Improved cleanup & error handling
  **/
 
 
@@ -59,36 +61,38 @@ static	RowBuf	*first_buf = NULL, *last_buf = NULL;
 
 
 
-void	swapout_RowBuf (RowBuf *row, PicBuf *picbuf)
+static void
+swapout_RowBuf (RowBuf *row, const PicBuf *picbuf)
 {
   if (fseek (picbuf->sd, (long) row->index*picbuf->nb*picbuf->depth, SEEK_SET))
   {
-	perror	("swapout_RowBuf (on seek)");
+	PError	("swapout_RowBuf (on seek)");
 	exit	(ERROR);
   }
 
   if (fwrite((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
 	!= picbuf->depth)
   {
-	perror	("swapout_RowBuf (on write)");
+	PError	("swapout_RowBuf (on write)");
 	exit	(ERROR);
   }
 }
 
 
 
-void	swapin_RowBuf (RowBuf *row, PicBuf *picbuf)
+static void
+swapin_RowBuf (RowBuf *row, const PicBuf *picbuf)
 {
   if (fseek (picbuf->sd, (long) row->index*picbuf->nb*picbuf->depth, SEEK_SET))
   {
-	perror	("swapin_RowBuf (on seek)");
+	PError	("swapin_RowBuf (on seek)");
 	exit	(ERROR);
   }
 
   if (fread ((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
 	!= picbuf->depth)
   {
-	perror	("swapin_RowBuf (on read)");
+	PError	("swapin_RowBuf (on read)");
 	exit	(ERROR);
   }
 }
@@ -97,7 +101,8 @@ void	swapin_RowBuf (RowBuf *row, PicBuf *picbuf)
 
 
 
-void	link_RowBuf (RowBuf *act, RowBuf *prev)
+static void
+link_RowBuf (RowBuf *act, RowBuf *prev)
 {
   if (prev == NULL)			/* Make act the new "first_buf"	*/
   {
@@ -125,7 +130,8 @@ void	link_RowBuf (RowBuf *act, RowBuf *prev)
 
 
 
-void	unlink_RowBuf (RowBuf *act)
+static void
+unlink_RowBuf (RowBuf *act)
 {
   if ((act->prev==NULL) && (act->next==NULL))
 	return;
@@ -146,20 +152,30 @@ void	unlink_RowBuf (RowBuf *act)
 
 
 
-RowBuf	*get_RowBuf (PicBuf *picbuf, int index)
+RowBuf
+*get_RowBuf (const PicBuf *pb, int index)
 {
 RowBuf	*row;
 
-  row = picbuf->row + index;
+  if (pb == NULL)
+	return NULL;
+  if (index < 0 || index >= pb->nr)
+  {
+	Eprintf("get_RowBuf: Illegal y (%d not in [0, %d])\n", index, pb->nr);
+	return NULL;
+  }
+
+  row = pb->row + index;
+
 /**
  ** If swapped, load first. Put into first position, if not already there:
  **/
   if ((row->prev == NULL) && (row->next == NULL))
   {
-	swapout_RowBuf	(last_buf, picbuf);
+	swapout_RowBuf	(last_buf, pb);
 	row->buf = last_buf->buf;
 	unlink_RowBuf	(last_buf);		/* Mark as swapped	 */
-	swapin_RowBuf	(row, picbuf);
+	swapin_RowBuf	(row, pb);
 	link_RowBuf	(row, NULL);		/* Put in first position */
   }
   else
@@ -177,7 +193,8 @@ RowBuf	*row;
 
 
 
-void	plot_RowBuf (RowBuf *rowbuf, int x, PicBuf *pb, int color_index)
+static void
+plot_RowBuf (RowBuf *rowbuf, int x, int depth, int color_index)
 /**
  ** Write color index into pixel x of given row buffer
  **/
@@ -185,8 +202,10 @@ void	plot_RowBuf (RowBuf *rowbuf, int x, PicBuf *pb, int color_index)
 int	i, Mask;
 Byte	*addr;
 
+  if (rowbuf == NULL)
+	return;
 /**
- ** color_index is either the low bit (b/w) or the low nybble (color)
+ ** Color_index is either the low bit (b/w) or the low nybble (color)
  ** rowbuf->buf is either a sequence of such bits or nybbles.
  ** High bits show left, low bits show right.
  **
@@ -194,7 +213,7 @@ Byte	*addr;
  ** but not easily readable...
  **/
 
-  if (pb->depth == 1)
+  if (depth == 1)
   {
 	Mask = 0x80;
 	if ((i = x & 0x07) != 0)
@@ -225,7 +244,8 @@ Byte	*addr;
 
 
 
-int	index_from_RowBuf (RowBuf *rowbuf, int x, PicBuf *pb)
+int
+index_from_RowBuf (const RowBuf *rowbuf, int x, const PicBuf *pb)
 /**
  ** Return color index of pixel x in given row
  **/
@@ -257,13 +277,37 @@ Byte	*addr;
 
 
 
-PicBuf	*allocate_PicBuf (DevPt *maxdotcoord, PAR *p)
+static void
+HPcoord_to_dotcoord (const HPGL_Pt *HP_P, DevPt *DevP, const OUT_PAR* po)
+{
+  DevP->x = (int) ((HP_P->x - po->xmin) * po->HP_to_xdots);
+  DevP->y = (int) ((HP_P->y - po->ymin) * po->HP_to_ydots);
+}
+
+
+
+void
+size_PicBuf (const GEN_PAR* pg, const OUT_PAR* po, int *p_rows, int *p_cols)
+{
+HPGL_Pt	HP_Pt;
+DevPt	D_Pt;
+
+  HP_Pt.x  = po->xmax;
+  HP_Pt.y  = po->ymax;
+  HPcoord_to_dotcoord (&HP_Pt, &D_Pt, po);
+  *p_cols  = D_Pt.x + pg->maxpensize;	/* Pensize correction	*/
+  *p_rows  = D_Pt.y + pg->maxpensize;
+}
+
+
+PicBuf
+*allocate_PicBuf (const GEN_PAR* pg, int n_rows, int n_cols)
 /**
- ** Here we allocated the picture buffer. This memory is used by all raster
+ ** Here we allocate the picture buffer. This memory is used by all raster
  ** modes. It is organized in rows (scan lines). Rows which do not
  ** end on a byte boundary will be right-padded with "background" bits.
  **
- ** If colors are active, there will always be four bit layers per row,
+ ** If colors are active, there will always be "four bit" layers per row,
  ** even if you need only three colors.
  ** These layers are implemented by allocating longer rows
  ** (regular length times number of bit planes per pel (depth)).
@@ -281,13 +325,15 @@ int	nr, not_allocated;
 
   if ((pb = (PicBuf *) malloc(sizeof(*pb))) == NULL)
   {
-	fprintf(stderr,"cannot malloc() PicBuf structure\n");
+	Eprintf ("Cannot malloc() PicBuf structure\n");
 	return NULL;
   }
-  pb->nr = maxdotcoord->y + 1;	/* Number of rows    to buffer	*/
-  pb->nc = maxdotcoord->x + 1;	/* Number of columns to buffer	*/
-  pb->sd = NULL;
 
+  pb->nr	= n_rows;
+  pb->nc	= n_cols;
+  pb->sd	= NULL;
+  pb->sf_name	= NULL;
+  pb->row	= NULL;
   first_buf	= NULL;		/* Re-init for multiple-file	*/
   last_buf	= NULL;		/* applications			*/
 
@@ -312,7 +358,7 @@ int	nr, not_allocated;
  ** or color mode (4 bits per pel)
  **/
 
-  pb->depth = (p->is_color) ? 4 : 1;
+  pb->depth = (pg->is_color) ? 4 : 1;
 
 /**
  ** Allocate a (large) array of RowBuf structures: One for each scan line.
@@ -322,7 +368,8 @@ int	nr, not_allocated;
   if ((pb->row = (RowBuf *) calloc((unsigned) pb->nr, sizeof(RowBuf)))
 		== NULL)
   {
-	fprintf(stderr,"cannot calloc() %d RowBuf structures\n", pb->nr);
+	Eprintf ("Cannot calloc() %d RowBuf structures\n", pb->nr);
+	free_PicBuf (pb);
 	return NULL;
   }
 
@@ -357,23 +404,27 @@ int	nr, not_allocated;
   {
 	if (last_buf->index > GIVE_BACK) for (nr = 0; nr < GIVE_BACK; nr++)
 	{
-			/* Return some memory for internal use */
+		/* Return some memory for internal use */
 		free ((char *) last_buf->buf);
 		unlink_RowBuf (last_buf);
 		not_allocated++;
 	}
 	else
 	{
-		fprintf(stderr,"\nNot enough memory for swapping -- sorry!\n");
-		exit (ERROR);
+		Eprintf ("\nNot enough memory for swapping -- sorry!\n");
+		free_PicBuf (pb);
+		return NULL;
 	}
 
-	fprintf(stderr,"\nCouldn't allocate %d row buffers: swapping to disk\n",
-		not_allocated);
-	if ((pb->sd = fopen (p->swapfile, WRITE_BIN)) == NULL)
+	Eprintf ("\nCouldn't allocate %d out of %d row buffers.\n",
+		not_allocated, pb->nr);
+	Eprintf ("Swapping to disk...\n");
+	pb->sf_name = pg->swapfile;
+	if ((pb->sd = fopen (pb->sf_name, WRITE_BIN)) == NULL)
 	{
-		fprintf(stderr,"Couldn't open swap file: %s\n", p->swapfile);
-		perror ("hp2xx");
+		Eprintf ("Couldn't open swap file '%s'\n", pb->sf_name);
+		PError ("hp2xx");
+		free_PicBuf (pb);
 		return NULL;
 	}
 
@@ -388,118 +439,133 @@ int	nr, not_allocated;
 	    if (fwrite((char *) pb->row[0].buf, pb->nb, pb->depth, pb->sd)
 		!= pb->depth)
 	    {
-			fprintf(stderr,"Couldn't clear swap file!\n");
-			perror ("hp2xx");
-			fclose (pb->sd);
+			Eprintf ("Couldn't clear swap file!\n");
+			PError ("hp2xx");
+			free_PicBuf (pb);
 			return NULL;
 	    }
   }
-
   return pb;
 }
 
 
 
 
-void	free_PicBuf (PicBuf *picbuf, char *swapfilename)
+void
+free_PicBuf (PicBuf* pb)
 /**
- ** De-allocate all row buffersand the picture puffer struct,
+ ** De-allocate all row buffers and the picture puffer struct,
  ** remove the swap file (if any).
  **/
 {
 RowBuf	*row;
 int	i;
 
-  if (picbuf->sd)
+  if (pb == NULL)
+	return;
+
+  if (pb->sd)
   {
-	fclose (picbuf->sd);
-	picbuf->sd = NULL;
+	fclose (pb->sd);
+	pb->sd = NULL;
 #ifdef VAX
-	delete (swapfilename);
+	delete (pb->sf_name);
 #else
-	unlink (swapfilename);
+	unlink (pb->sf_name);
 #endif
   }
-  for (i=0; i< picbuf->nr; i++)
+  for (i=0; i< pb->nr; i++)
   {
-	row = &(picbuf->row[i]);
-	if ((row->prev != NULL) || (row->next != NULL))
+	row = &(pb->row[i]);
+	if (row != NULL && (row->prev != NULL || row->next != NULL))
 		free ((char *) row->buf);
   }
-  free((char *) picbuf->row);
-  free((char *) picbuf);
+  free((char *) pb->row);
+  free((char *) pb);
 }
 
 
 
 
 
-void	plot_PicBuf(PicBuf *picbuf, DevPt *pt, int color_index)
+static void
+plot_PicBuf(PicBuf *pb, DevPt *pt, int color_index)
 {
-  plot_RowBuf(get_RowBuf(picbuf, pt->y), pt->x, picbuf, color_index);
+  if (pt->x < 0 || pt->x > pb->nc)
+  {
+	Eprintf("plot_PicBuf: Illegal x (%d not in [0, %d])\n",
+		pt->x, pb->nc);
+	return;
+  }
+  plot_RowBuf(get_RowBuf(pb, pt->y), pt->x, pb->depth, color_index);
 }
 
 
 
 
-int	index_from_PicBuf(PicBuf *picbuf, DevPt *pt)
+int
+index_from_PicBuf (const PicBuf *pb, const DevPt *pt)
 {
-  return index_from_RowBuf(get_RowBuf(picbuf, pt->y), pt->x, picbuf);
+  if (pt->x < 0 || pt->x > pb->nc)
+  {
+	Eprintf("index_from_PicBuf: Illegal x (%d not in [0, %d])\n",
+		pt->x, pb->nc);
+	return 0;
+  }
+  return index_from_RowBuf(get_RowBuf(pb, pt->y), pt->x, pb);
 }
 
 
 
 
-void	line_PicBuf (PicBuf *picbuf, DevPt *p0, DevPt *p1, PAR *p)
+static void
+line_PicBuf (DevPt *p0, DevPt *p1, int pensize, int pencolor, PicBuf* pb)
 /**
  ** Rasterize a vector (draw a line in the picture buffer), using the
  ** Bresenham algorithm.
  **/
 {
 DevPt	pt, *p_act;
-int	pensize, pencolor;
 
-  pensize = p->pensize[p->pen];
   if (pensize == 0)		/* No pen selected!	*/
 	return;
 
-  pencolor = p->pencolor[p->pen];
   if (pencolor == xxBackground)	/* No drawable color!	*/
 	return;
 
   p_act = bresenham_init (p0, p1);
   if (pensize == 1) do
   {
-	plot_PicBuf (picbuf, p_act, pencolor);
+	plot_PicBuf (pb, p_act, pencolor);
   } while (bresenham_next() != BRESENHAM_ERR);
   else do
   {
-	plot_PicBuf (picbuf, p_act, pencolor);
+	plot_PicBuf (pb, p_act, pencolor);
 
 	pt = *p_act;
-	pt.x++;	plot_PicBuf (picbuf, &pt, pencolor);
-	pt.y++; plot_PicBuf (picbuf, &pt, pencolor);
-	pt.x--; plot_PicBuf (picbuf, &pt, pencolor);
+	pt.x++;	plot_PicBuf (pb, &pt, pencolor);
+	pt.y++; plot_PicBuf (pb, &pt, pencolor);
+	pt.x--; plot_PicBuf (pb, &pt, pencolor);
 
 	if (pensize > 2)
 	{
 		pt = *p_act;
-		pt.x += 2;	plot_PicBuf (picbuf, &pt, pencolor);
-		pt.y++;		plot_PicBuf (picbuf, &pt, pencolor);
-		pt.y++;		plot_PicBuf (picbuf, &pt, pencolor);
-		pt.x--;		plot_PicBuf (picbuf, &pt, pencolor);
-		pt.x--;		plot_PicBuf (picbuf, &pt, pencolor);
+		pt.x += 2;	plot_PicBuf (pb, &pt, pencolor);
+		pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+		pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+		pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+		pt.x--;		plot_PicBuf (pb, &pt, pencolor);
 
 		if (pensize > 3)	/* expecting 4 ... 9	*/
 		{
 			pt = *p_act;
-			pt.x += 3;	plot_PicBuf (picbuf, &pt, pencolor);
-			pt.y++;		plot_PicBuf (picbuf, &pt, pencolor);
-			pt.y++;		plot_PicBuf (picbuf, &pt, pencolor);
-			pt.y++;		plot_PicBuf (picbuf, &pt, pencolor);
-			pt.x--;		plot_PicBuf (picbuf, &pt, pencolor);
-			pt.x--;		plot_PicBuf (picbuf, &pt, pencolor);
-			pt.x--;		plot_PicBuf (picbuf, &pt, pencolor);
+			pt.x += 3;	plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
+			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
 		}
 	}
   } while (bresenham_next() != BRESENHAM_ERR);
@@ -509,7 +575,8 @@ int	pensize, pencolor;
 
 
 
-void	tmpfile_to_PicBuf (PicBuf *picbuf, PAR *p, FILE *td)
+void
+tmpfile_to_PicBuf (const GEN_PAR* pg, const OUT_PAR* po)
 /**
  ** Interface to higher-level routines:
  **   Assuming a valid picture buffer, read the drawing commands from
@@ -521,40 +588,45 @@ HPGL_Pt		pt1;
 static	DevPt	ref = {0};
 DevPt		next;
 PlotCmd		cmd;
+int		pen_no = 1;
 
-  if (!p->quiet)
-	fprintf(stderr, "\nPlotting in buffer\n");
-  rewind (td);
-  while ((cmd = PlotCmd_from_tmpfile()) != EOF)
+  if (!pg->quiet)
+	Eprintf ( "\nPlotting in buffer\n");
+  rewind (pg->td);
+  while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
 	switch (cmd)
 	{
 	  case NOP:
 		break;
 	  case SET_PEN:
-		if ((p->pen = fgetc(td)) == EOF)
+		if ((pen_no = fgetc(pg->td)) == EOF)
 		{
-			perror("Unexpected end of temp. file");
+			PError("Unexpected end of temp. file");
 			exit (ERROR);
 		}
 		break;
 	  case MOVE_TO:
 		HPGL_Pt_from_tmpfile(&pt1);
-		HPcoord_to_dotcoord (&pt1, &ref);
+		HPcoord_to_dotcoord (&pt1, &ref, po);
 		break;
 	  case DRAW_TO:
 		HPGL_Pt_from_tmpfile(&pt1);
-		HPcoord_to_dotcoord (&pt1, &next);
-		line_PicBuf (picbuf, &ref, &next, p);
+		HPcoord_to_dotcoord (&pt1, &next, po);
+		line_PicBuf (&ref, &next,
+			pg->pensize[pen_no], pg->pencolor[pen_no],
+			po->picbuf);
 		memcpy (&ref, &next, sizeof(ref));
 		break;
 	  case PLOT_AT:
 		HPGL_Pt_from_tmpfile(&pt1);
-		HPcoord_to_dotcoord (&pt1, &ref);
-		line_PicBuf (picbuf, &ref, &ref, p);
+		HPcoord_to_dotcoord (&pt1, &ref, po);
+		line_PicBuf (&ref, &ref,
+			pg->pensize[pen_no], pg->pencolor[pen_no],
+			po->picbuf);
 		break;
 
 	  default:
-		fprintf(stderr,"Illegal cmd in temp. file!\n");
+		Eprintf ("Illegal cmd in temp. file!\n");
 		exit (ERROR);
 	}
 }

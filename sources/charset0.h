@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1992, 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1992 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1992  Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1992 - 1994  Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -30,6 +30,7 @@ copies.
  ** 92/05/25  V 1.02b HWW  Abort if color mode (due to lack of
  **			   test facilities) -- Color support desired!
  ** 93/09/01  V 1.02c HWW  Minor fixes (courtesy G. Steger)
+ ** 94/02/14  V 1.10a HWW  Adapted to changes in hp2xx.h
  **
  ** NOTE: Due to lack of testing facilities, I will not be able to maintain
  **       this file any longer. Volunteers are welcome!
@@ -47,11 +48,13 @@ copies.
 
 
 
-void	PicBuf_to_UIS (PicBuf *picbuf, PAR *p)
+int
+PicBuf_to_UIS (const GEN_PAR *pg, const OUT_PAR *po)
 {
 int		byte_c, xoff, yoff;
 unsigned long	row_c, x1, x2, rw, rh, bpp, zero=0, two=2;
-RowBuf		*row;
+const RowBuf	*row;
+const PicBuf	*pb;
 
 float		x0f, y0f, x1f, y1f, w, h;
 int		c_old, c_new, i;
@@ -62,39 +65,43 @@ static unsigned	atb	= 1;
 
 struct dsc$descriptor_s	s_desc;
 
+  if (pg == NULL || po == NULL)
+	return ERROR;
+  pb = po->picbuf;
+  if (pb == NULL)
+	return ERROR;
 
-  if (picbuf->depth > 1)
+  if (pb->depth > 1)
   {
-	fprintf(stderr, "\nUIS preview does not support colors yet -- sorry\n");
-	free_PicBuf (picbuf, p->swapfile);
-	exit (ERROR);
+	Eprintf ("\nUIS preview does not support colors yet -- sorry\n");
+	return ERROR;
   }
 
-  if (!p->quiet)
+  if (!pg->quiet)
   {
-	fprintf(stderr, "\nUIS preview follows\n");
-	fprintf(stderr, "Press <return> to end\n");
+	Eprintf ("\nUIS preview follows\n");
+	Eprintf ("Press <return> to end\n");
   }
 
-  xoff = p->xoff * p->dpi_x / 25.4;
-  yoff = p->yoff * p->dpi_y / 25.4;
+  xoff = po->xoff * po->dpi_x / 25.4;
+  yoff = po->yoff * po->dpi_y / 25.4;
 
-  if ((!p->quiet) &&
-      (((picbuf->nb << 3) + xoff > 1024) || (picbuf->nr + yoff > 1024)) )
+  if ((!pg->quiet) &&
+      (((pb->nb << 3) + xoff > 1024) || (pb->nr + yoff > 1024)) )
   {
-	fprintf(stderr, "\n\007WARNING: Picture won't fit!\n");
-	fprintf(stderr, "Current range: (%d..%d) x (%d..%d) pels\n",
-		xoff, (picbuf->nb << 3) + xoff, yoff, picbuf->nr + yoff);
-	fprintf(stderr, "Continue anyway (y/n)?: ");
+	Eprintf ("\n\007WARNING: Picture won't fit!\n");
+	Eprintf ("Current range: (%d..%d) x (%d..%d) pels\n",
+		xoff, (pb->nb << 3) + xoff, yoff, pb->nr + yoff);
+	Eprintf ("Continue anyway (y/n)?: ");
 	if (toupper(getchar()) != 'Y')
 		return;
   }
 
   x0f = y0f = 0.0;			/* No offsets yet	*/
-  x1f = (float) (picbuf->nb << 3);
-  y1f = (float) picbuf->nr;
-  w   = (float) p->width / 10.0;	/* VAX needs cm, not mm */
-  h   = (float) p->height/ 10.0;
+  x1f = (float) (pb->nb << 3);
+  y1f = (float) pb->nr;
+  w   = (float) po->width / 10.0;	/* VAX needs cm, not mm */
+  h   = (float) po->height/ 10.0;
 
   vd_id = uis$create_display (&x0f, &y0f, &x1f, &y1f,&w, &h);
   uis$disable_display_list (&vd_id);
@@ -107,18 +114,20 @@ struct dsc$descriptor_s	s_desc;
   wd_id = uis$create_window (&vd_id,&s_desc);
 
   x1 = 0;
-  x2 = picbuf->nc;
-  rw = picbuf->nc;
+  x2 = pb->nc;
+  rw = pb->nc;
   rh = 1;
   bpp = 1;
 
-  for (row_c = 0; row_c < picbuf->nr; row_c++)	/* for all pixel rows */
+  for (row_c = 0; row_c < pb->nr; row_c++)	/* for all pixel rows */
   {
 /**
  ** Unfortunately, we need a bit reversal in each byte here:
  **/
-	row = get_RowBuf (picbuf, row_c);
-	for (byte_c=0; byte_c < picbuf->nb; byte_c++)
+	row = get_RowBuf (pb, row_c);
+	if (row == NULL)
+		continue;
+	for (byte_c=0; byte_c < pb->nb; byte_c++)
 	{
 		c_old = row->buf[byte_c];
 
@@ -144,5 +153,6 @@ struct dsc$descriptor_s	s_desc;
   }
   getchar();
   uis$delete_display (&vd_id);
+  return 0;
 }
 

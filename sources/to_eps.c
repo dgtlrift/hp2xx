@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -37,6 +37,7 @@ copies.
  **			   BoundingBox calc.: roundinf included (floor, ceil)
  ** 93/04/25  V 1.10e HWW  BoundingBox corrected for (half) max. pen width
  ** 93/11/15  V 1.11a HWW  EPS syntax corrections (courtesy N. H. F. Beebe)
+ ** 94/02/15  V 1.20a HWW  Adapted to changes in hp2xx.h
  **/
 
 #include <stdio.h>
@@ -52,9 +53,9 @@ copies.
 
 
 
-extern	float	xmin, xmax, ymin, ymax;
 static		linecount = 0;
-static	float	coord2mm;
+static	float	xcoord2mm, ycoord2mm;
+static	float	xmin, ymin;
 
 
 
@@ -81,7 +82,7 @@ void	ps_end (FILE *fd)
 void	ps_stroke_and_move_to (HPGL_Pt *ppt, FILE *fd)
 {
   fprintf(fd, " S\n%6.2f %6.2f M",	/* S: Start a new path	*/
-		(ppt->x-xmin) * coord2mm, (ppt->y-ymin) * coord2mm);
+		(ppt->x-xmin) * xcoord2mm, (ppt->y-ymin) * ycoord2mm);
   linecount = 0;
 }
 
@@ -124,7 +125,7 @@ void	ps_line_to (HPGL_Pt *ppt, char mode, FILE *fd)
       putc(' ', fd);
 
   fprintf(fd, "%6.2f %6.2f %c",
-		(ppt->x-xmin) * coord2mm, (ppt->y-ymin) * coord2mm, mode);
+		(ppt->x-xmin) * xcoord2mm, (ppt->y-ymin) * ycoord2mm, mode);
   linecount++;
 }
 
@@ -156,22 +157,21 @@ char *p;
  ** PostScript definitions
  **/
 
-void	ps_init (PAR *p, FILE *fd)
+void	ps_init (const GEN_PAR *pg, const OUT_PAR *po, FILE *fd,
+		 int pensize)
 {
 long	left, right, low, high;
-int	pensize;
 double	hmxpenw;
 
-  pensize = p->pensize[p->pen];
-  hmxpenw = p->maxpensize / 20.0;	/* Half max. pen width, in mm	*/
+  hmxpenw = pg->maxpensize / 20.0;	/* Half max. pen width, in mm	*/
 
 /**
  ** Header comments into PostScript file
  **/
 
   fprintf(fd,"%%!PS-Adobe-2.0 EPSF-2.0\n");
-  fprintf(fd,"%%%%Title: %s\n", p->outfile);
-  fprintf(fd,"%%%%Creator: hp2xx (c) 1991, 1992 by H. Werntges\n");
+  fprintf(fd,"%%%%Title: %s\n", po->outfile);
+  fprintf(fd,"%%%%Creator: hp2xx (c) 1991 - 1994 by  H. Werntges\n");
   fprintf(fd,"%%%%CreationDate: %s\n", Getdate());
   fprintf(fd,"%%%%Pages: 1\n");
 
@@ -181,13 +181,13 @@ double	hmxpenw;
  ** (hmxpenw & floor/ceil corrections suggested by Eric Norum)
  **/
 
-  left  = (long) floor((p->xoff-hmxpenw)		    * 2.834646);
-  low   = (long) floor((A4_height-p->yoff-p->height-hmxpenw)* 2.834646);
-  right = (long) ceil ((p->xoff   + p->width+hmxpenw)	    * 2.834646);
-  high  = (long) ceil ((A4_height - p->yoff+hmxpenw)	    * 2.834646);
+  left  = (long) floor((po->xoff-hmxpenw)		    * 2.834646);
+  low   = (long) floor((A4_height-po->yoff-po->height-hmxpenw)* 2.834646);
+  right = (long) ceil ((po->xoff   + po->width+hmxpenw)	    * 2.834646);
+  high  = (long) ceil ((A4_height - po->yoff+hmxpenw)	    * 2.834646);
   fprintf(fd,"%%%%BoundingBox: %ld %ld %ld %ld\n", left, low, right, high);
-  if (!p->quiet)
-	fprintf(stderr,"Bounding Box: [%ld %ld %ld %ld]\n",
+  if (!pg->quiet)
+	Eprintf ("Bounding Box: [%ld %ld %ld %ld]\n",
 			left, low, right, high);
 
   fprintf(fd,"%%%%EndComments\n\n");
@@ -220,7 +220,7 @@ double	hmxpenw;
 
   fprintf(fd,"/@end\n");      /* - @end -  -- finished */
   fprintf(fd,"   {");
-  if (!p->quiet)
+  if (!pg->quiet)
   {
     fprintf(fd,    "(VM Used: ) print @VMused @pri\n");
     fprintf(fd,"    (. Unused: ) print vmstatus @VMused sub @pri pop pop\n");
@@ -251,8 +251,8 @@ double	hmxpenw;
   fprintf(fd,"/@SetPlot\n");
   fprintf(fd,"   {\n");
   fprintf(fd,"    2.834646 2.834646 scale\n");	/* 1/72"--> mm */
-  fprintf(fd,"    %7.3f %7.3f translate\n", p->xoff,
-			A4_height - p->yoff - p->height);
+  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff,
+			A4_height - po->yoff - po->height);
   fprintf(fd,"    %6.3f setlinewidth\n", pensize/10.0);
   fprintf(fd,"   } def\n");
   fprintf(fd,"/C {setrgbcolor} def\n");
@@ -287,64 +287,70 @@ double	hmxpenw;
  ** Higher-level interface: Output Encapsulated PostScript format
  **/
 
-void	to_eps (PAR *p, FILE *td)
+int
+to_eps (const GEN_PAR *pg, const OUT_PAR *po)
 {
 PlotCmd	cmd;
 HPGL_Pt	pt1 = {0};
 FILE	*md;
-int	pensize, pencolor;
+int	pen_no, pensize, pencolor, err;
 
-  if (!p->quiet)
-	fprintf(stderr,"\n\n- Writing EPS code to \"%s\"\n",
-		*p->outfile == '-' ? "stdout" : p->outfile);
+  err = 0;
+  if (!pg->quiet)
+	Eprintf ("\n\n- Writing EPS code to \"%s\"\n",
+		*po->outfile == '-' ? "stdout" : po->outfile);
 
   /* Init. of PostScript file: */
-  if (*p->outfile != '-')
+  if (*po->outfile != '-')
   {
-	if ((md = fopen(p->outfile, "w")) == NULL)
+	if ((md = fopen(po->outfile, "w")) == NULL)
 	{
-		perror("hp2xx (eps)");
-		exit(ERROR);
+		PError("hp2xx (eps)");
+		return ERROR;
 	}
   }
   else
 	md = stdout;
 
   /* PS header */
-  ps_init (p, md);
 
-  /* Factor for transformation of HP coordinates to mm	*/
+  pensize = pg->pensize[DEFAULT_PEN_NO]; /* Default pen	*/
+  ps_init (pg, po, md, pensize);
 
-  coord2mm = p->height / (ymax-ymin);
-
-
-  pensize = p->pensize[p->pen];
   if (pensize != 0)
 	fprintf(md," %6.3f W\n", pensize/10.0);
 
+  /* Factor for transformation of HP coordinates to mm	*/
+
+  xcoord2mm = po->width  / (po->xmax - po->xmin);
+  ycoord2mm = po->height / (po->ymax - po->ymin);
+  xmin	    = po->xmin;
+  ymin	    = po->ymin;
+
 /**
- ** Command loop: While temporaty file not empty process command.
+ ** Command loop: While temporary file not empty: process command.
  **/
 
-  while ((cmd = PlotCmd_from_tmpfile()) != EOF)
+  while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
   {
 	switch (cmd)
 	{
 	  case NOP:
 		break;
 	  case SET_PEN:
-		if ((p->pen = fgetc(td)) == EOF)
+		if ((pen_no = fgetc(pg->td)) == EOF)
 		{
-			perror("Unexpected end of temp. file: ");
-			exit (ERROR);
+			PError("Unexpected end of temp. file: ");
+			err = ERROR;
+			goto EPS_exit;
 		}
-		pensize = p->pensize[p->pen];
+		pensize = pg->pensize[pen_no];
 		if (pensize != 0)
 			ps_set_linewidth ((double) pensize/10.0, &pt1, md);
-		pencolor = p->pencolor[p->pen];
-		ps_set_color (  p->Clut[pencolor][0]/255.0,
-				p->Clut[pencolor][1]/255.0,
-				p->Clut[pencolor][2]/255.0,
+		pencolor = pg->pencolor[pen_no];
+		ps_set_color (  pg->Clut[pencolor][0]/255.0,
+				pg->Clut[pencolor][1]/255.0,
+				pg->Clut[pencolor][2]/255.0,
 				&pt1, md);
 		break;
 	  case MOVE_TO:
@@ -366,18 +372,22 @@ int	pensize, pencolor;
 		}
 		break;
 	  default:
-		fprintf(stderr,"Illegal cmd in temp. file!");
-		exit (ERROR);
+		Eprintf ("Illegal cmd in temp. file!");
+		err = ERROR;
+		goto EPS_exit;
 	}
   }
 
   /* Finish up */
 
   ps_end (md);
+
+EPS_exit:
   if (md != stdout)
 	fclose (md);
 
-  if (!p->quiet)
-	fputc ('\n', stderr);
+  if (!pg->quiet)
+	Eprintf ("\n");
+  return err;
 }
 

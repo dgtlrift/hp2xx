@@ -1,4 +1,4 @@
-.TH hp2xx 1 "03 September 1993"
+.TH hp2xx 1 "15 February 1994"
 .SH NAME
 hp2xx \- A HPGL converter into some vector- and raster formats
 .SH USAGE
@@ -49,7 +49,8 @@ PCL only:
 EPS, PCL, and some previews:
   -o   double  0.0       x offset [mm] of picture (left  margin)
   -O   double  0.0       y offset [mm] of picture (upper margin)
-
+  -C                     Modify -o -O to center picture within -w -h frame
+ 
 Preview on PC's (DOS):
   -V   int     18        VGA mode byte (decimal)
 -------------------------------------------------------------------------
@@ -300,7 +301,8 @@ add x or y offsets using
 .I -o X_offset
 or
 .I -O Y_offset. E.g., -o 20 -O 30 will give you 30 mm additional top margin
-and 20 mm additional left margin.
+and 20 mm additional left margin. Option -C modifies these offsets to
+center the picture within the frame defined by -w -h.
 
 For DeskJet / DeskJet Plus / DeskJet 500 / Deskjet 550 printers, there are
 some special printer commands. Activate them with option
@@ -309,8 +311,8 @@ n=0 switches them off, n=1 activates black/white mode, n=3 (DJ500C and DJ550
 only) supports CMY color data, n=4 (DJ550C only) supports CMYK color data.
 Any n!=0 activates PLC data compression (TIFF mode: 2).
 
-PRE: Preview on all machines. Use options -h -w -o -O to define the screen
-size and position of your output (-o -O may not always apply).
+PRE: Preview on all machines. Use options -h -w -o -O -C to define the screen
+size and position of your output (-o -O -C may not always apply).
 For VGA cards (DOS), option
 .I -V VGAmode
 gives you a simple way to utilize SVGA modes. Please take
@@ -341,9 +343,9 @@ option.
 .SH AUTHOR
 .LP
 .nf
- Heinz W. Werntges, Biokybernetik, Geb. 26.12,
+ Heinz W. Werntges, Physikal. Biologie, Geb. 26.12,
  Heinrich-Heine-Universitaet,
- D-4000 Duesseldorf 1, Germany.
+ D-40225 Duesseldorf, Germany.
  Internet: werntges@convex.rz.uni-duesseldorf.de
 
  ATARI features & PIC, PAC, IMG modes are due to Norbert Meyer, Duesseldorf.

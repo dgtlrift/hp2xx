@@ -90,8 +90,8 @@
  format, a conversion module is then activated, which can easily be
  replaced by other converters. Add more formats if you like!
 5 PRE
- Preview on all machines. Use options -h -w -o -O to define the screen
- size and position of your output (-o -O may not always apply).
+ Preview on all machines. Use options -h -w -o -O -C to define the screen
+ size and position of your output (-o -O -C may not always apply).
  For VGA cards (DOS), option
          -V VGAmode
  gives you a simple way to utilize SVGA modes. Please take
@@ -117,7 +117,8 @@
  or
         -O Y_offset.
  E.g., -o 20 -O 30 will give you 30 mm additional top margin
- and 20 mm additional left margin.
+ and 20 mm additional left margin. Option -C modifies these offsets to
+ center the picture within the frame defined by -w -h.
 
  For DeskJet / DeskJet Plus / DeskJet 500 / Deskjet 550 printers, there
  are some special printer commands. Activate them with option
@@ -181,7 +182,7 @@
  will be "pensize * 0.1 mm", with pensize = 0 - 9 (0 = no drawing).
  The same applies to PostScript mode
         (-m eps),
- you also need to use options -o and -O (see below) for proper margins
+ you also need to use options -o -O -C (see below) for proper margins
  on paper since hp2xx puts your picture "flush" to the left and upper
  paper limit by default.
  Option
@@ -320,9 +321,9 @@
 
    Preview on screen or into window.
 2 Author
- Heinz W. Werntges, Biokybernetik, Geb. 26.12,
+ Heinz W. Werntges, Physikal. Biologie, Geb. 26.12,
  Heinrich-Heine-Universitaet,
- D-4000 Duesseldorf 1, Germany.
+ D-40225 Duesseldorf, Germany.
  Internet: werntges@convex.rz.uni-duesseldorf.de
 
  ATARI features & PIC, PAC, IMG modes are due to Norbert Meyer, Duesseldorf.

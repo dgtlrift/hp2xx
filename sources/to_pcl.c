@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -42,6 +42,9 @@ copies.
  **			   still compatible with other DJ models.
  **			   Please tell me if not -- I don't have all doc's.
  ** 93/07/18  V 1.10a HWW  TIFF compression
+ ** 94/01/01  V 1.10b HWW  init_printer(), start_graphmode():
+ **			   L. Lowe's modifications
+ ** 94/02/14  V 1.20a HWW  Adapted to changes in hp2xx.h
  **/
 
 #include <stdio.h>
@@ -84,7 +87,8 @@ static	int	n_B;				/* Counter for extra space */
 
 
 
-int	TIFF_n_repeats(Byte *p1, int nb)
+static int
+TIFF_n_repeats(Byte *p1, int nb)
 /**
  **	There are "nb" bytes in buffer "p1"
  **	Return number of identical bytes in a sequence (0, 2 ... nb)
@@ -103,7 +107,8 @@ Byte	*p2;
 
 
 
-int	TIFF_n_irregs (Byte *p1, int nb)
+static int
+TIFF_n_irregs (Byte *p1, int nb)
 /**
  **	There are "nb" bytes in buffer "p1"
  **	Return number of irregular (non-identical) bytes
@@ -123,7 +128,8 @@ Byte	*p2;
 
 
 
-int	TIFF_compress (Byte *src, Byte *dst, int nb)
+static int
+TIFF_compress (Byte *src, Byte *dst, int nb)
 {
   /**
    ** Either there is a block of repetitions or non-repeating bytes
@@ -214,7 +220,8 @@ int	i, l, count=0;
  ** Return -1 if no compression done.
  **/
 
-int	compress_buf_TIFF (Byte *buf, int nb)
+static int
+compress_buf_TIFF (Byte *buf, int nb)
 {
   if (Deskjet_specials == FALSE)
 	return -1;		/* Plain PLC L3 does not support compression! */
@@ -229,7 +236,8 @@ int	compress_buf_TIFF (Byte *buf, int nb)
 
 
 
-void	Buf_to_PCL (Byte *buf, int nb, int mode, FILE *fd)
+static void
+Buf_to_PCL (Byte *buf, int nb, int mode, FILE *fd)
 /**
  ** Output the raw bit stream
  **   (This should be an ideal place for data compression)
@@ -267,7 +275,8 @@ Byte	*p;	/* Buffer pointer		*/
 
 
 
-void	KCMY_Buf_to_PCL (int nb, int is_KCMY, FILE *fd)
+static void
+KCMY_Buf_to_PCL (int nb, int is_KCMY, FILE *fd)
 {
   if (is_KCMY)
   {
@@ -284,7 +293,8 @@ void	KCMY_Buf_to_PCL (int nb, int is_KCMY, FILE *fd)
 
 
 
-void	KCMY_to_K (int nb)
+static void
+KCMY_to_K (int nb)
 /**
  ** Color -> B/W conversion:
  ** Any set bit will show up black
@@ -300,7 +310,8 @@ Byte	*pK = p_K, *pC = p_C, *pM = p_M, *pY = p_Y;
 
 
 
-void	K_to_CMY (int nb)
+static void
+K_to_CMY (int nb)
 /**
  ** CMYK-to-CMY conversion:
  ** Any set bit in the "black" layer sets all C,M,Y bits to emulate "black"
@@ -320,40 +331,42 @@ Byte	*pK = p_K, *pC = p_C, *pM = p_M, *pY = p_Y;
 
 
 
-void	init_printer (FILE *fd)
+static void
+init_printer (FILE *fd)
 {
-  fputc(ESC,fd); fputc('E',fd);	/* Esc-E */
+  fprintf(fd,"%cE%c&a0V", ESC, ESC);
 }
 
 
 
 
-void	start_graphmode (PAR *p, int width, FILE *fd)
+static void
+start_graphmode (const OUT_PAR *po, FILE *fd)
 {
 /**
  ** X & Y offsets: Use "decipoints" as unit to stick to PCL level 3
  **		1 dpt = 0.1 pt = 1/720 in
  **/
-  if (p->yoff != 0.0)
-	fprintf(fd,"\033&a%dV",(int)(p->yoff * 720.0 / 25.4) );
-  if (p->xoff != 0.0)
-	fprintf(fd,"\033&a%dH",(int)(p->xoff * 720.0 / 25.4) );
+  if (po->yoff != 0.0)
+	fprintf(fd,"\033&a+%dV",(int)(po->yoff * 720.0 / 25.4) );
+  if (po->xoff != 0.0)
+	fprintf(fd,"\033&a+%dH",(int)(po->xoff * 720.0 / 25.4) );
 
 /**
  ** Set Graphics Resolution (300 / 150 / 100 / 75):
  ** This is NO PCL level 3 feature, but LaserjetII and compatibles
  ** seem to accept it.
  **/
-  fprintf(fd,"\033*t%dR", p->dpi_x);
+  fprintf(fd,"\033*t%dR", po->dpi_x);
 
 /**
  ** Set Raster Width (in dots)
  **	Deskjet feature, good for saving internal memory!
  **/
-  if (p->specials)
+  if (po->specials)
   {
-	fprintf(fd,"\033*r%dS", width);
-	switch (p->specials)
+	fprintf(fd,"\033*r%dS", po->picbuf->nc);
+	switch (po->specials)
 	{
 	  case 4:	/* KCMY 			*/
 		fprintf(fd,"\033*r-4U");
@@ -378,7 +391,8 @@ void	start_graphmode (PAR *p, int width, FILE *fd)
 
 
 
-void	end_graphmode (FILE *fd)
+static void
+end_graphmode (FILE *fd)
 {
 /**
  ** End Raster Graphics
@@ -390,38 +404,38 @@ void	end_graphmode (FILE *fd)
 
 
 
-void	PicBuf_to_PCL (PicBuf *picbuf, PAR *p)
+int
+PicBuf_to_PCL (const GEN_PAR *pg, const OUT_PAR *po)
 /**
  ** Main interface routine
  **/
 {
 FILE	*fd = stdout;
 RowBuf	*row;
-int	row_c, i, x, color_index, offset;
+int	row_c, i, x, color_index, offset, err;
 Byte	mask;
 
-  if (!p->quiet)
-	fprintf(stderr, "\nWriting PCL output\n");
+  err = 0;
+  if (!pg->quiet)
+	Eprintf ("\nWriting PCL output\n");
 
-  if (picbuf->depth > 1 && p->specials < 3)
-	fprintf(stderr,
-	    "\nWARNING: Monochrome output despite active colors selected!\n");
+  if (po->picbuf->depth > 1 && po->specials < 3)
+	Eprintf ("\nWARNING: Monochrome output despite active colors selected!\n");
 
-  Deskjet_specials = (p->specials != 0) ? TRUE : FALSE;
+  Deskjet_specials = (po->specials != 0) ? TRUE : FALSE;
 
   /**
    ** Allocate buffers for CMYK conversion
    **/
-  if (picbuf->depth > 1)
+  if (po->picbuf->depth > 1)
   {
-	p_K = calloc (picbuf->nb, sizeof(Byte));
-	p_C = calloc (picbuf->nb, sizeof(Byte));
-	p_M = calloc (picbuf->nb, sizeof(Byte));
-	p_Y = calloc (picbuf->nb, sizeof(Byte));
+	p_K = calloc (po->picbuf->nb, sizeof(Byte));
+	p_C = calloc (po->picbuf->nb, sizeof(Byte));
+	p_M = calloc (po->picbuf->nb, sizeof(Byte));
+	p_Y = calloc (po->picbuf->nb, sizeof(Byte));
 	if (p_K == NULL || p_C == NULL || p_M == NULL || p_Y == NULL)
 	{
-		fprintf(stderr,
-			"\nCannot 'calloc' CMYK memory -- sorry, use B/W!\n");
+		Eprintf ("\nCannot 'calloc' CMYK memory -- sorry, use B/W!\n");
 		goto PCL_exit;
 	}
   }
@@ -429,52 +443,51 @@ Byte	mask;
    ** Optional memory; for compression
    **/
   n_B = B_EXTRASPACE;
-  p_B = calloc (picbuf->nb + n_B, sizeof(Byte));
+  p_B = calloc (po->picbuf->nb + n_B, sizeof(Byte));
 
 
-  if (*p->outfile != '-')
+  if (*po->outfile != '-')
   {
 #ifdef VAX
-	if ((fd = fopen(p->outfile, WRITE_BIN, "rfm=var","mrs=512")) == NULL)
+	if ((fd = fopen(po->outfile, WRITE_BIN, "rfm=var","mrs=512")) == NULL)
 	{
 #else
-	if ((fd = fopen(p->outfile, WRITE_BIN)) == NULL)
+	if ((fd = fopen(po->outfile, WRITE_BIN)) == NULL)
 	{
 #endif
-		perror ("hp2xx -- opening output file");
-		free_PicBuf (picbuf, p->swapfile);
-		exit (ERROR);
+		PError ("hp2xx -- opening output file");
+		goto PCL_exit;
 	}
   }
 
-  if (p->init_p)
+  if (po->init_p)
 	init_printer (fd);
 
-  start_graphmode (p, picbuf->nc, fd);
+  start_graphmode (po, fd);
 
   /**
    ** Loop for all rows:
    ** Counting back since highest index is lowest line on paper...
    **/
 
-  for (row_c = picbuf->nr - 1; row_c >= 0; row_c--)
+  for (row_c = po->picbuf->nr - 1; row_c >= 0; row_c--)
   {
-	if ((!p->quiet) && (row_c % 10 == 0))
+	if ((!pg->quiet) && (row_c % 10 == 0))
 		  /* For the impatients among us ...	*/
-		putc('.',stderr);
+		Eprintf(".");
 
-	row = get_RowBuf(picbuf, row_c);
+	row = get_RowBuf(po->picbuf, row_c);
 
-	if (picbuf->depth == 1)
-		Buf_to_PCL (row->buf, picbuf->nb, PCL_FIRST | PCL_LAST, fd);
+	if (po->picbuf->depth == 1)
+		Buf_to_PCL (row->buf, po->picbuf->nb, PCL_FIRST | PCL_LAST, fd);
 	else
 	{
-		for (x=0; x < picbuf->nb; x++)
+		for (x=0; x < po->picbuf->nb; x++)
 			p_K[x] = p_C[x] = p_M[x] = p_Y[x] = 0;
 
-		for (x=offset=0; x < (picbuf->nb << 3); x++, offset = (x >> 3))
+		for (x=offset=0; x < (po->picbuf->nb << 3); x++, offset = (x >> 3))
 		{
-			color_index = index_from_RowBuf(row, x, picbuf);
+			color_index = index_from_RowBuf(row, x, po->picbuf);
 
 			if (color_index == xxBackground)
 				continue;
@@ -515,27 +528,27 @@ Byte	mask;
 			}
 		}
 
-		switch (p->specials)
+		switch (po->specials)
 		{
 		  case 3:
-			K_to_CMY (picbuf->nb);
+			K_to_CMY (po->picbuf->nb);
 			/* drop thru	*/
 		  case 4:
-			KCMY_Buf_to_PCL (picbuf->nb, (p->specials == 4), fd);
+			KCMY_Buf_to_PCL (po->picbuf->nb, (po->specials == 4), fd);
 			break;
 		  default:
-			KCMY_to_K (picbuf->nb);
-			Buf_to_PCL (p_K, picbuf->nb, PCL_FIRST | PCL_LAST, fd);
+			KCMY_to_K (po->picbuf->nb);
+			Buf_to_PCL (p_K, po->picbuf->nb, PCL_FIRST | PCL_LAST, fd);
 			break;
 		}
 	}
   }
 
   end_graphmode (fd);
-  if (p->formfeed)
+  if (po->formfeed)
 	putc (FF, fd);
-  if (!p->quiet)
-	fputc ('\n', stderr);
+  if (!pg->quiet)
+	Eprintf ("\n");
   if (fd != stdout)
 	fclose (fd);
 
@@ -548,4 +561,5 @@ PCL_exit:
   if (p_B != NULL)	free(p_B);
 
   p_K = p_C = p_M = p_Y = NULL;
+  return err;
 }

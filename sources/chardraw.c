@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -30,9 +30,11 @@ copies.
  ** 92/05/28 HWW  V 2.02a plot_symbol_char() added
  ** 92/10/15 HWW  V 2.02b Line types acknowledged
  ** 92/10/17 HWW  V 2.03  RS6000 bug fixed in code_to_ucoord()
- ** 93/02/09 HWW  V 2.03b Comments added; prepared for more fonts; 
+ ** 93/02/09 HWW  V 2.03b Comments added; prepared for more fonts;
  **			  Font OV bug fixed (8-bit codes now checked!)
  ** 93/04/13 HWW  V 2.04a plot_user_char() added (code by A. Treindl)
+ ** 94/01/02 HWW  V 2.05a Symbol plotting: improved centering (L. Lowe)
+ ** 94/02/14 HWW  V 2.05b Adapted to changes in hp2xx.h
  **/
 
 #include <stdio.h>
@@ -60,7 +62,8 @@ TEXTPAR	TEXTP, *tp = &TEXTP;
 
 
 
-void	code_to_ucoord (char c, HPGL_Pt *pp)
+static void
+code_to_ucoord (char c, HPGL_Pt *pp)
 /**
  ** Converts internal one-byte code (in c) for a character vector
  ** into HP-GL coordinates (pointed to by pp)
@@ -83,7 +86,8 @@ double	x,y;
 
 
 
-void	ASCII_to_char (int c)
+static void
+ASCII_to_char (int c)
 /**
  ** Main user interface: Convert ASCII code c into a sequence
  ** of move/draw vectors which draw a corresponding character
@@ -98,16 +102,14 @@ char	*ptr;
     case 0:	/* charset 0, limited to 7 bit ASCII	*/
 	if (c & 0x80)
 	{
-		fprintf (stderr,
-			"Illegal char in string: %c replaced by blank!\n", c);
+		Eprintf ("Illegal char in string: %c replaced by blank!\n", c);
 		c = ' ';
 	}
 	ptr = &charset0[c][0];
 	break;
 
     default:	/* Currently, there is just one charset	*/
-	fprintf (stderr,
-		"Charset %d not supported -- replaced by blank!\n", tp->font);
+	Eprintf ("Charset %d not supported -- replaced by blank!\n", tp->font);
 		c = ' ';
 	ptr = &charset0[c][0];
 	break;
@@ -132,7 +134,8 @@ char	*ptr;
 
 /**********************************************************************/
 
-void	init_text_par (void)
+void
+init_text_par (void)
 {
   tp->width	= 0.005  * (P2.x - P1.x);
   tp->height	= 0.0075 * (P2.y - P1.y);
@@ -150,11 +153,11 @@ void	init_text_par (void)
 
 
 
-void	adjust_text_par (void)
+void
+adjust_text_par (void)
 /**
- ** Width, height, space, line, dir,
- ** slant, as given in
- ** structure declaration
+ ** Width, height, space, line, dir, slant
+ ** as given in structure declaration
  **/
 {
 double	cdir,sdir;
@@ -181,8 +184,8 @@ double	cdir,sdir;
 #ifdef STROKED_FONTS
   if (init_font (tp->font))
   {
-	fprintf (stderr, "\007 init_font() failed for font #%d\n", tp->font);
-	fprintf (stderr, "Font 0 used instead!\n");
+	Eprintf ("\007 init_font() failed for font #%d\n", tp->font);
+	Eprintf ("Font 0 used instead!\n");
 	tp->font = 0;
   }
 #endif
@@ -194,7 +197,8 @@ double	cdir,sdir;
 #define	WIDTH_FAC	0.666666666
 
 
-void	get_label_offset (char *txt, LB_Mode mode)
+static void
+get_label_offset (char *txt, LB_Mode mode)
 /**
  ** Depending on the current HP-GL label mode, a string may have different
  ** x and y offsets. These offsets are accounted for here:
@@ -347,8 +351,8 @@ static	float	nc, nl, nc_max;
 
 
 
-
-void	plot_string (char *txt, LB_Mode mode)
+void
+plot_string (char *txt, LB_Mode mode)
 /**
  ** String txt cannot simply be processed char-by-char. Depending on
  ** the current label mode, its origin must first be calculated properly.
@@ -429,19 +433,82 @@ char	*txt0;
 
 
 
-void	plot_symbol_char (char c)
+static void
+ASCII_set_center (int c)
+/**
+ ** Convert ASCII code c into a sequence of move/draw vectors
+ ** and determine their "center of gravity"
+ **/
+{
+HPGL_Pt	p, center;
+int	cnt;
+char	*ptr;
+
+  switch (tp->font)
+  {
+    case 0:	/* charset 0, limited to 7 bit ASCII	*/
+	if (c & 0x80)
+	{
+		Eprintf ("Illegal symbol char: %c replaced by blank!\n", c);
+		c = ' ';
+	}
+	ptr = &charset0[c][0];
+	break;
+
+    default:	/* Currently, there is just one charset	*/
+	Eprintf ("Charset %d not supported -- replaced by blank!\n", tp->font);
+		c = ' ';
+	ptr = &charset0[c][0];
+	break;
+  }
+
+  center.x = center.y = 0.0;
+  for (cnt=0; *ptr; ptr++, cnt++)	/* Scan this char	*/
+  {
+	code_to_ucoord (*ptr & 0x7f, &p);
+	center.x += p.x;
+	center.y += p.y;
+  }
+  if (cnt)
+  {
+	tp->offset.x = -center.x / cnt;
+	tp->offset.y = -center.y / cnt;
+  }
+  else		/* Should never happen:	*/
+	tp->offset.x = tp->offset.y = 0.0;
+}
+
+
+
+
+static void
+set_symbol_center (char c)
+/**
+ ** Symbol plotting requires a special x and y offset for proper
+ ** symbol-specific centering
+ **/
+{
+  tp->refpoint.x= 0.0;
+  tp->refpoint.y= 0.0;
+  tp->offset.x	= 0.0;
+  tp->offset.y	= 0.0;
+  ASCII_set_center (c);
+  tp->refpoint.x= HP_pos.x;	/*  - tp->chardiff.x / 2.0; */
+  tp->refpoint.y= HP_pos.y;	/*  - tp->chardiff.y / 2.0; */
+}
+
+
+
+
+void
+plot_symbol_char (char c)
 /**
  ** Special case: Symbol plotting. This requires a special
  ** x and y offset (for proper centering) but then simply amounts to
  ** drawing a single character.
  **/
 {
-static	double	dx = 0.5 * (1.0 - WIDTH_FAC), dy = -0.5 * HEIGHT_FAC;
-
-  tp->refpoint.x= HP_pos.x - tp->chardiff.x / 2.0;
-  tp->refpoint.y= HP_pos.y - tp->chardiff.y / 2.0;
-  tp->offset.x	= tp->chardiff.x * dx - tp->linediff.x * dy;
-  tp->offset.y	= tp->chardiff.y * dx - tp->linediff.y * dy;
+  set_symbol_center (c);
 
 #ifdef STROKED_FONTS
   if (tp->font)
@@ -449,6 +516,7 @@ static	double	dx = 0.5 * (1.0 - WIDTH_FAC), dy = -0.5 * HEIGHT_FAC;
   else
 #endif
 	ASCII_to_char ((int) c);
+
 /**
  ** Move to next reference point, e. g. the next character origin
  **/
@@ -458,7 +526,8 @@ static	double	dx = 0.5 * (1.0 - WIDTH_FAC), dy = -0.5 * HEIGHT_FAC;
 
 
 
-void    plot_user_char (FILE *hd)
+void
+plot_user_char (FILE *hd)
 /**
  ** added by Alois Treindl 12-apr-93
  **/

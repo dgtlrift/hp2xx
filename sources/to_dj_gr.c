@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -28,14 +28,15 @@ copies.
  ** 92/05/19  V 1.01  HWW  Abort if color mode
  ** 92/05/25  V 1.02  HWW  B/W mode also if color; index_from_RowBuf() used
  ** 92/06/12  V 1.02c HWW  getchar(), B/W warning ...
+ ** 94/02/14  V 1.10a HWW  Adapted to changes in hp2xx.h
  **
  ** NOTE: This previewer worked fine on my machine. However, I do not intend
  **       to maintain DJ Delorie's go32 DOS extender version of hp2xx in the
- **       future once the extender emx 0.8f (which will support OS/2 as well)
- **       becomes available (which sould be very soon -- 1Q93).
+ **       future as I favor E. Mattes' extender "emx" which supports OS/2
+ **	  as well.
  **
- **       For those of you who don't want to wait, or are familiar with go32
- **       and dont need OS/2 support -- this previewer is what you need.
+ **       For those of you who are familiar with go32 and don't need
+ **	  OS/2 support -- this previewer is what you might prefer.
  **/
 
 
@@ -49,50 +50,55 @@ copies.
 
 
 
-void	PicBuf_to_DJ_GR (PicBuf *picbuf, PAR *p)
+int
+PicBuf_to_DJ_GR (const GEN_PAR *pg, const OUT_PAR *po)
 {
-int	row_c, i, x, xoff, y, yoff, color_index;
-RowBuf	*row;
+int		row_c, i, x, xoff, y, yoff, color_index;
+const PicBuf	*pb;
+const RowBuf	*row;
 
-  if (!p->quiet)
+  if (!pg->quiet)
   {
-	fprintf(stderr, "\nDJ_GR preview follows.\n");
-	fprintf(stderr, "Press <return> to start and end graphics mode\n");
+	Eprintf ("\nDJ_GR preview follows.\n");
+	Eprintf ("Press <return> to start and end graphics mode\n");
 	SilentWait();
   }
+  pb = po->picbuf;
 
-  xoff = p->xoff * p->dpi_x / 25.4;
-  yoff = p->yoff * p->dpi_y / 25.4;
+  xoff = po->xoff * po->dpi_x / 25.4;
+  yoff = po->yoff * po->dpi_y / 25.4;
 
-  if ((!p->quiet) &&
-      (((picbuf->nb << 3) + xoff > 639) || (picbuf->nr + yoff > 480)) )
+  if ((!pg->quiet) &&
+      (((pb->nb << 3) + xoff > 639) || (pb->nr + yoff > 480)) )
   {
-	fprintf(stderr, "\n\007WARNING: Picture won't fit on a standard VGA!\n");
-	fprintf(stderr, "Current range: (%d..%d) x (%d..%d) pels\n",
-		xoff, (picbuf->nb << 3) + xoff, yoff, picbuf->nr + yoff);
-	fprintf(stderr, "Continue anyway (y/n)?: ");
+	Eprintf ("\n\007WARNING: Picture won't fit on a standard VGA!\n");
+	Eprintf ("Current range: (%d..%d) x (%d..%d) pels\n",
+		xoff, (pb->nb << 3) + xoff, yoff, pb->nr + yoff);
+	Eprintf ("Continue anyway (y/n)?: ");
 	while (getchar() != '\n')
 		;      /* Simple: Chance for ^C */
   }
 
-  if (p->is_color)
+  if (pg->is_color)
 	GrSetColor(0, 160, 160, 160);
   else
 	GrSetColor(0, 180, 180, 180);
 
   GrSetColor(1, 0, 0, 0);
   for (i=2; i < 8; i++)  /* assuming that we indeed get indices 2 ... 7 */
-	if (i!=GrAllocColor(p->Clut[i][0], p->Clut[i][1], p->Clut[i][2]))
-		fprintf(stderr,"WARNING: Color code %d may yield wrong color!\n", i);
+	if (i!=GrAllocColor(pg->Clut[i][0], pg->Clut[i][1], pg->Clut[i][2]))
+		Eprintf ("WARNING: Color code %d may yield wrong color!\n", i);
 
   GrSetMode (GR_default_graphics, 800, 600);
 
-  for (row_c=0, y=picbuf->nr+yoff-1; row_c < picbuf->nr; row_c++, y--)
+  for (row_c=0, y=pb->nr+yoff-1; row_c < pb->nr; row_c++, y--)
   {
-	row = get_RowBuf (picbuf, row_c);
-	for (x=0; x < picbuf->nc; x++)
+	row = get_RowBuf (pb, row_c);
+	if (row == NULL)
+		continue;
+	for (x=0; x < pb->nc; x++)
 	{
-		color_index = index_from_RowBuf(row, x, picbuf);
+		color_index = index_from_RowBuf(row, x, pb);
 		if (color_index != xxBackground)
 			GrPlot(x+xoff, y, color_index);
 	}
@@ -100,5 +106,6 @@ RowBuf	*row;
 
   SilentWait();
   GrSetMode (GR_80_25_text, 80, 25);
+  return 0;
 }
 

@@ -17,8 +17,8 @@ LIBS 			= -lm -lc -lamiga13
 LINKER 			= $(CC)
 LINKEROPTIONS 		= -v
 
-OBJFILES		= hp2xx.o hpgl.o chardraw.o picbuf.o  \
- 			  bresnham.o to_mf.o to_pcx.o to_pcl.o  \
+OBJFILES		= hp2xx.o std_main.o hpgl.o chardraw.o picbuf.o  \
+ 			  bresnham.o to_vec.o to_pcx.o to_pcl.o  \
  			  to_eps.o  to_amiga.o to_pbm.o to_ilbm.o \
  			  to_img.o to_rgip.o getopt.o getopt1.o
 
@@ -48,6 +48,9 @@ makedist		:  hp2xx
 hp2xx.o			: hp2xx.c bresnham.h hp2xx.h
 			$(COMPILER) $(CFLAGS) hp2xx.c
 
+std_main.o			: std_main.c bresnham.h hp2xx.h
+			$(COMPILER) $(CFLAGS) std_main.c
+
 hpgl.o			: hpgl.c bresnham.h hp2xx.h chardraw.h
 			$(COMPILER) $(CFLAGS) hpgl.c
 
@@ -60,8 +63,8 @@ picbuf.o		: picbuf.c bresnham.h hp2xx.h
 bresnham.o		: bresnham.c bresnham.h
 			$(COMPILER) $(CFLAGS) bresnham.c
 
-to_mf.o			: to_mf.c bresnham.h hp2xx.h
-			$(COMPILER) $(CFLAGS) to_mf.c
+to_vec.o			: to_vec.c bresnham.h hp2xx.h
+			$(COMPILER) $(CFLAGS) to_vec.c
 
 to_pcx.o		: to_pcx.c bresnham.h hp2xx.h
 			$(COMPILER) $(CFLAGS) to_pcx.c

@@ -74,11 +74,5 @@ copies.
  **				  3:	Out of memory
  **/
 
-int  win_open( int x, int y, int w, int h );
-void win_close();
-void win_clear();
-void create_image( char* buf, int line );
-void show_image();
-
 
 #endif

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1992, 1993 Claus Langhans.  All rights reserved.
+   Copyright (c) 1992 - 1994 Claus Langhans.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -22,13 +22,15 @@ copies.
 */
 
 /**
- ** to_amiga2.c: GNU-C++ (AMIGA) preview part of project "hp2xx"
+ ** to_amiga.c: GNU-C++ (AMIGA) preview part of project "hp2xx"
  **
  ** 92/04/10  V 1.00  CHL  Some ideas taken from to_gnu.c and from the RKMs
  ** 92/04/11  V 1.01  CHL  Preview finished
  ** 92/04/12  V 1.02  CHL  Stop ^C
  ** 92/04/13  V 1.03  CHL  Too small windows bug cleaned
  ** 92/12/09  V 2.00  CHL  Added the color preview.
+ ** 94/02/14  V 2.10  HWW  Adapted to changes in hp2xx.h. WARNING:
+ **			   Adaptations done without compile tests
  **/
 
 /* Standard includes */
@@ -50,7 +52,7 @@ copies.
 #include <exec/memory.h>
 #include <intuition/intuition.h>
 
-UBYTE           vers[] = "$VER: hp2xx 2.00 (16.12.92)\0\n";
+UBYTE           vers[] = "$VER: hp2xx 2.10 (14.02.94)\0\n";
 
 WORD            width_super = 800;
 WORD            height_super = 600;
@@ -177,22 +179,22 @@ static struct NewWindow NewPreviewWindow =
 };
 
 
-void
+static void
 brkfunc(int signo)
 {
-    fprintf(stderr, "Don't send a BREAK, click the close gadget!\n");
+    Eprintf ("Don't send a BREAK, click the close gadget!\n");
 }
 
 
 
 /* This function provides a simple interface to ScrollLayer */
-VOID
+static VOID
 Slide_BitMap(struct Window * window, SHORT Dx, SHORT Dy)
 {
     ScrollLayer(0, window->RPort->Layer, Dx, Dy);
 }
 
-VOID
+static VOID
 Do_NewSize(struct Window * window)
 {
     ULONG           tmp;
@@ -222,7 +224,7 @@ Do_NewSize(struct Window * window)
 		  1);
 }
 
-VOID
+static VOID
 Check_Gadget(struct Window * window, USHORT gadgetID)
 {
     ULONG           tmp;
@@ -246,7 +248,7 @@ Check_Gadget(struct Window * window, USHORT gadgetID)
 	Slide_BitMap(window, dX, dY);
 }
 
-VOID
+static VOID
 Do_MainLoop(struct Window * window)
 {
     struct IntuiMessage *msg;
@@ -283,8 +285,8 @@ Do_MainLoop(struct Window * window)
     }
 }
 
-void
-PicBuf_to_AMIGA(PicBuf * picbuf, PAR * p)
+int
+PicBuf_to_AMIGA(const GEN_PAR *pg, const OUT_PAR *po)
 {
     int             row_c, x, y, xoff, yoff, color_index;
     int             NoScreen = FALSE;
@@ -295,42 +297,43 @@ PicBuf_to_AMIGA(PicBuf * picbuf, PAR * p)
     ULONG           RasterSize;
     SHORT           Loop;
     SHORT           Flag;
+    const PicBuf   *pb;
 
-    if (picbuf->depth > 1)
+    pb = po->picbuf;
+    if (pb->depth > 1)
 	NoScreen = TRUE;
 
-    if (!p->quiet)
-	fprintf(stderr, "\nAMIGA preview follows.\n");
+    if (!pg->quiet)
+	Eprintf ("\nAMIGA preview follows.\n");
 
-    xoff = p->xoff * p->dpi_x / 25.4;
-    yoff = p->yoff * p->dpi_y / 25.4;
+    xoff = po->xoff * po->dpi_x / 25.4;
+    yoff = po->yoff * po->dpi_y / 25.4;
 
 
-
-    if (!p->quiet)
-	fprintf(stderr, "Current range: (%d..%d) x (%d..%d) pels\n",
-		xoff, (picbuf->nb << 3) + xoff, yoff, picbuf->nr + yoff);
-    if ((!p->quiet) &&
-	(((picbuf->nb << 3) + xoff > MAXWINWIDTH) || (picbuf->nr + yoff > MAXWINHEIGHT))) {
-	fprintf(stderr, "\n\007WARNING: Picture ist too large!\n");
-	fprintf(stderr, "Continue anyway (^C): ");
+    if (!pg->quiet)
+	Eprintf ("Current range: (%d..%d) x (%d..%d) pels\n",
+		xoff, (pb->nb << 3) + xoff, yoff, pb->nr + yoff);
+    if ((!pg->quiet) &&
+	(((pb->nb << 3) + xoff > MAXWINWIDTH) || (pb->nr + yoff > MAXWINHEIGHT))) {
+	Eprintf ("\n\007WARNING: Picture ist too large!\n");
+	Eprintf ("Continue anyway (^C): ");
 	getchar();		/* Simple: Chance for ^C */
     }
-    width_super = (picbuf->nb << 3) + xoff + LEFTBORDERSIZE + RIGHTBORDERSIZE;
-    height_super = picbuf->nr + yoff + TOPBORDERSIZE + BOTTOMBORDERSIZE;
+    width_super = (pb->nb << 3) + xoff + LEFTBORDERSIZE + RIGHTBORDERSIZE;
+    height_super = pb->nr + yoff + TOPBORDERSIZE + BOTTOMBORDERSIZE;
     if (width_super < MINWINWIDTH)
 	width_super = MINWINWIDTH;
     if (height_super < MINWINHEIGHT)
 	height_super = MINWINHEIGHT;
     if (width_super > MAXWINWIDTH) {
 	width_super = MAXWINWIDTH;
-	fprintf(stderr, "Error: Window width too big:%d\n", width_super);
-	exit(ERROR);
+	Eprintf ("Error: Window width too big:%d\n", width_super);
+	 return ERROR;
     }
     if (height_super > MAXWINHEIGHT) {
 	height_super = MAXWINHEIGHT;
-	fprintf(stderr, "Error: Window height too big:%d\n", height_super);
-	exit(ERROR);
+	Eprintf ("Error: Window height too big:%d\n", height_super);
+	return ERROR;
     }
     NewPreviewWindow.Width = width_super;
     NewPreviewWindow.Height = height_super;
@@ -350,7 +353,7 @@ PicBuf_to_AMIGA(PicBuf * picbuf, PAR * p)
 	NewPreviewWindow.Height = NewPreviewWindow.MinHeight;
 
     /*
-     * We don 't like a BREAK a beyond this point, the window would stay open
+     * We don 't like a BREAK beyond this point - the window would stay open
      * and the memory allocated !
      */
     signal(SIGINT, brkfunc);
@@ -376,28 +379,28 @@ PicBuf_to_AMIGA(PicBuf * picbuf, PAR * p)
 			    NewPreviewWindow.BitMap = BigOne;
 			    NewPreviewWindow.Screen = PreviewScreen;
 			    if (window = (struct Window *) OpenWindow(&NewPreviewWindow)) {
-				for (row_c = 0, y = picbuf->nr + yoff - 1; row_c < picbuf->nr; row_c++, y--) {
-				    if ((!p->quiet) && (row_c % 10 == 0))
-					putc('.', stderr);
+				for (row_c = 0, y = pb->nr + yoff - 1; row_c < pb->nr; row_c++, y--) {
+				    if ((!pg->quiet) && (row_c % 10 == 0))
+					Eprintf(".");
 
-				    row = get_RowBuf(picbuf, picbuf->nr - row_c - 1);
-				    for (x = 0; x < picbuf->nc; x++) {
-					color_index = index_from_RowBuf(row, x, picbuf);
+				    row = get_RowBuf(pb, pb->nr - row_c - 1);
+				    for (x = 0; x < pb->nc; x++) {
+					color_index = index_from_RowBuf(row, x, pb);
 					if (color_index != xxBackground) {
 					    SetAPen(window->RPort, color_index);
 					    WritePixel(window->RPort, x + xoff, row_c + yoff);
 					}
 				    }
 				}
-				if ((!p->quiet))
-				    fprintf(stderr, "\nClick Close Gadget to continue!\n");
+				if ((!pg->quiet))
+				    Eprintf ("\nClick Close Gadget to continue!\n");
 
 				Do_MainLoop(window);
 
 				CloseWindow(window);
 			    }
 			} else {
-			    fprintf(stderr, "Error: Not enough graphics memory to allocate BitPlanes!\n");
+			    Eprintf ("Error: Not enough graphics memory to allocate BitPlanes!\n");
 			}
 			for (Loop = 0; Loop < DEPTH_SUPER; Loop++) {
 			    if (BigOne->Planes[Loop]) {
@@ -406,25 +409,27 @@ PicBuf_to_AMIGA(PicBuf * picbuf, PAR * p)
 			}
 			FreeMem(BigOne, sizeof(struct BitMap));
 		    } else {
-			fprintf(stderr, "Error: Not enough graphics memory to allocate BitPlane Structure!\n");
+			Eprintf ("Error: Not enough graphics memory to allocate BitPlane Structure!\n");
 		    }
 		    CloseScreen(PreviewScreen);
 		} else {
-		    fprintf(stderr, "Oh! Couldn't open Screen!\n");
+		    Eprintf ("Oh! Couldn't open Screen!\n");
 		}
 		CloseLibrary((struct Library *) LayersBase);
 	    } else {
-		fprintf(stderr, "Oh! Couldn't open Layers Library!\n");
+		Eprintf ("Oh! Couldn't open Layers Library!\n");
 	    }
 
 	    CloseLibrary((struct Library *) GfxBase);
 	} else {
-	    fprintf(stderr, "Oh! Couldn't open Graphics Library!\n");
+	    Eprintf ("Oh! Couldn't open Graphics Library!\n");
 	}
 	CloseLibrary((struct Library *) IntuitionBase);
     } else {
-	fprintf(stderr, "Oh! Couldn't open Intuition Library!\n");
+	Eprintf ("Oh! Couldn't open Intuition Library!\n");
     }
     signal(SIGINT, SIG_DFL);
   ERROR_EXIT_2:;
+  return 0;	/* HWW: Error conditions should actually produce	*/
+		/*	non-zero return codes!				*/
 }

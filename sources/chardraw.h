@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -127,12 +127,12 @@ typedef struct {
 extern	"C" {
 #endif
 
-void	code_to_ucoord	(char, HPGL_Pt *);
+/* void	code_to_ucoord	(char, HPGL_Pt *); */
 
 int	init_font	(int);
 void	init_text_par	(void);
 void	adjust_text_par	(void);
-void	ASCII_to_char	(int);
+/* void	ASCII_to_char	(int);*/
 void	plot_string	(char *, LB_Mode);
 void	plot_symbol_char(char);
 

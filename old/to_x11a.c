@@ -30,7 +30,8 @@ copies.
  ** 92/05/19  V 1.02b HWW  Abort if color mode
  ** 92/05/25  V 1.10  HWW  8 Colors supported
  ** 93/01/06  V 1.10b HWW  Improved selection of foreground color
- ** 94/02/14  V 1.20a HWW  Adapted to changes in hp2xx.h
+ ** 94/02/14  V 1.20a HWW  Adapted to changes in hp2xx.h;
+ **		           improvements by Eigil Krogh Sorensen <eks@aar-vki.dk>
  **
  **	      NOTE: Color assignment leaves something to be desired
  **		    with some X11 servers.
@@ -117,8 +118,8 @@ win_open( int x, int y, int w, int h )
 
     if ((XDisplay = (Display *) XOpenDisplay( DisplayName )) == NULL)
 	{
-		Eprintf("No X11 server found !\n" );
-		return NO_SERVER;
+		Eprintf ("No X11 server found !\n" );
+		return( NO_SERVER );
 	}
 
 	XScreen		= DefaultScreen( XDisplay );
@@ -131,7 +132,7 @@ win_open( int x, int y, int w, int h )
 	if (x+w > scr_width || y+h > scr_height)
 	{
 		Eprintf ("Window exceeds screen limits !\n" );
-		return SIZE;
+		return( SIZE );
 	}
 
 	/**
@@ -266,7 +267,9 @@ win_open( int x, int y, int w, int h )
 	 ** Define permitted events for this window
 	 **/
 
-	XSelectInput( XDisplay, XWin, ExposureMask | VisibilityChangeMask);
+/* 23.jan.94 eks */
+	XSelectInput( XDisplay, XWin, ExposureMask | VisibilityChangeMask | StructureNotifyMask);
+/*	XSelectInput( XDisplay, XWin, ExposureMask | VisibilityChangeMask); */
 
 	/**
 	 ** Display window
@@ -310,7 +313,8 @@ PicBuf_to_X11 (const GEN_PAR *pg, const OUT_PAR *po)
  **/
 {
 int		row_c, x, y;
-const RowBuf	*row;
+XEvent		Event;
+const RowBuf	*row = NULL;
 const PicBuf	*pb;
 
   if (pg == NULL || po == NULL)
@@ -322,7 +326,8 @@ const PicBuf	*pb;
   if (!pg->quiet)
   {
 	Eprintf ("\nX11 preview follows.\n");
-	Eprintf ("Press <return> to end graphics mode\n");
+/* 24.jan.94 eks */
+/*	Eprintf ("Press <return> to end graphics mode\n");*/
   }
 
   if (win_open( (int)(po->xoff * po->dpi_x / 25.4),
@@ -335,7 +340,7 @@ const PicBuf	*pb;
   {
 	row = get_RowBuf (pb, row_c);
 	if (row == NULL)
-		return NULL;
+		continue;
 	for (x=0; x < pb->nc; x++)
 	{
 		switch (index_from_RowBuf(row, x, pb))
@@ -355,7 +360,22 @@ const PicBuf	*pb;
   }
 
   XFlush( XDisplay );
-  SilentWait();
-  win_close();
-  return 0;
+
+/*  23.jan.94 eks  */
+
+/* Vent pe destroy event */
+do
+{
+ XWindowEvent( XDisplay, XWin, StructureNotifyMask,&Event );
+ } while (Event.type != DestroyNotify);
+
+/*while (!XCheckTypedWindowEvent( XDisplay, XWin, DestroyNotify, &Event ));*/
+/*  SilentWait();*/
+win_close();
+return 0;
 }
+/*
+	XDestroyWindow( XDisplay, XWin );
+	XCloseDisplay( XDisplay );
+*/
+

@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991, 1992 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -28,10 +28,10 @@ copies.
  ** 92/05/19  V 1.00b HWW  Abort if color mode
  ** 92/05/25  V 1.10a HWW  Colors supported
  ** 93/01/06  V 1.10b HWW  "xx" added in front of color names
+ ** 94/02/14  V 1.20a HWW  Adapted to changes in hp2xx.h
  **
  ** NOTE:     Sunview itself is a dying standard (to be replaced by OpenLook
  **           and/or X11). Therefore, I won't continue to maintain this file.
- **           In hp2xx's next release this file will appear in ../extras.
  **           Please use to_x11.c for future previewing on Suns.
  **/
 
@@ -75,7 +75,8 @@ static	int	my_op;
 
 
 
-void	setcolor (col)
+static void
+setcolor (col)
 int	col;
 {
   if (col == BLACK)
@@ -106,7 +107,8 @@ int	i0,i1, j0,j1;
 #endif
 
 
-void	Init_SunView (int xoff, int yoff, int width, int height)
+static void
+Init_SunView (int xoff, int yoff, int width, int height)
 {
 char	st1 [100];
 Rect    r;
@@ -170,30 +172,38 @@ int	result;
 
 
 
-void	PicBuf_to_Sunview (PicBuf *picbuf, PAR *p)
+int
+PicBuf_to_Sunview (const GEN_PAR *pg, const OUT_PAR* po)
 {
-int	row_c, byte_c, bit, x, xoff, y, yoff;
-RowBuf	*row;
+int		row_c, byte_c, bit, x, xoff, y, yoff;
+const RowBuf	*row;
+const PicBuf	*pb;
 
+  if (pg == NULL || po == NULL)
+	return ERROR;
+  pb = po->picbuf;
+  if (pb == NULL)
+	return ERROR;
 
-  xoff = p->xoff * p->dpi_x / 25.4;
-  yoff = p->yoff * p->dpi_y / 25.4;
-  if (!p->quiet)
+  xoff = po->xoff * po->dpi_x / 25.4;
+  yoff = po->yoff * po->dpi_y / 25.4;
+  if (!pg->quiet)
   {
-	fprintf(stderr,
-		"\nStarting preview. Use menu bar to quit!\n");
+	Eprintf ("\nStarting preview. Use menu bar to quit!\n");
   }
-  Init_SunView (xoff, yoff, picbuf->nc, picbuf->nr);
-  pw_writebackground (pw, 0, 0, picbuf->nc, picbuf->nr, PIX_CLR);
+  Init_SunView (xoff, yoff, pb->nc, pb->nr);
+  pw_writebackground (pw, 0, 0, pb->nc, pb->nr, PIX_CLR);
   setcolor (WHITE);
 
   /* Backward since highest index is lowest line on screen! */
-  for (row_c=0, y=picbuf->nr-1; row_c < picbuf->nr; row_c++, y--)
+  for (row_c=0, y=pb->nr-1; row_c < pb->nr; row_c++, y--)
   {
-	row = get_RowBuf (picbuf, row_c);
-	for (x=0; x < picbuf->nc; x++)
+	row = get_RowBuf (pb, row_c);
+	if (row == NULL)
+		continue;
+	for (x=0; x < pb->nc; x++)
 	{
-		switch (index_from_RowBuf(row, x, picbuf))
+		switch (index_from_RowBuf(row, x, pb))
 		{
 		case xxBackground:break;
 		case xxForeground:pw_put (pw, x, y, WHITE);	break;
@@ -207,5 +217,6 @@ RowBuf	*row;
 	}
   }
   window_main_loop (frame);
+  return 0;
 }
 

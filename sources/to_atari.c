@@ -97,15 +97,18 @@ copies.
  **  V. 1.00  22.05.92 NM erste lauffÑhige Version
  **/
 
-/* V. 2.00
+/**  V. 2.00
    Andreas Schwab (schwab@ls5.informatik.uni-dortmund.de)
 
-   - Ausgaberoutine vîllig umgeschrieben
-   - dadurch wesentlich schneller
+   - Ausgaberoutine vîllig umgeschrieben, dadurch wesentlich schneller
    - FarbunterstÅtzung
    - getestet auf allen Farbauflîsungen des TT (incl. ST Hoch)
    - Bilder werden gestreckt statt gestaucht bei nicht-quadratischen
-     Auflîsungen (wurde wegen der FarbunterstÅtzung nîtig) */
+     Auflîsungen (wurde wegen der FarbunterstÅtzung nîtig)
+ **
+ ** V 2.10 HWW  "Blind" an die Aenderungen in hp2xx.h angepasst,
+ **             denn ich habe keinen ATARI zum Testen zur Verfuegung!
+ **/
 
 /**
  **  Standard-Header fÅr GEM-Programme:
@@ -147,7 +150,7 @@ typedef enum
  *  weitere Definitionen:
  */
 
-#define CLS     fprintf(stderr,"\033E")	/* Bildschirm lîschen   */
+#define CLS     Eprintf("\033E")/* Bildschirm lîschen   */
 
  /* Scancodes:           */
 #define SC_H        35		/* H    \               */
@@ -233,9 +236,6 @@ void close_vwork (void);	/* Schlie·t virt. Workstation   */
  **  HP2xx - Funktionsprototypen:
  **/
 
-void PicBuf_to_ATARI (PicBuf *, PAR *);	/* GEM-Initialisierung und  */
- /* Termination (Hauptprg.)  */
-
 void preview (PicBuf *, PAR *);	/* Vorbelegungen, TastendrÅcke auswerten */
 
 void hilfe (void);		/* Gibt Hilfstext aus       */
@@ -254,7 +254,7 @@ void zeichne_pixelreihe (int);	/* Zeichnet Pixelreihe  */
  **              ab
  **/
 
-boolean
+static boolean
 open_vwork (void)
 {
   int i;
@@ -304,7 +304,7 @@ open_vwork (void)
  **              und die Applikation
  **/
 
-void
+static void
 close_vwork (void)
 {
   graf_mouse (M_ON, NULL);
@@ -319,7 +319,7 @@ static int xx2vdi[8] = {WHITE, BLACK, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW};
 #ifdef __GNUC__
 inline
 #endif
-void
+static void
 set_line_color (int color)
 {
   if (color != last_color)
@@ -335,7 +335,7 @@ set_line_color (int color)
  ** zeichne_pixelreihe:  Gibt eine Pixelreihe auf dem Schirm aus
  **			 mit Beachtung von ry_factor
  **/
-void
+static void
 zeichne_pixelreihe (int ry)
 {
   register int start = rx_min;	/* Beginn des LinienstÅcks      */
@@ -386,7 +386,7 @@ zeichne_pixelreihe (int ry)
  **
  **/
 
-void
+static void
 zeichne (PicBuf *picbuf)
 {
   register int rx_n;		/* ZÑhler zum "Sammeln" von Pixeln      */
@@ -466,7 +466,7 @@ zeichne (PicBuf *picbuf)
  **
  **/
 
-void
+static void
 hilfe (void)
 {
   static char *hilfe80 =
@@ -524,9 +524,9 @@ hilfe (void)
 
   CLS;
   if (w_text < 80)
-    fprintf (stderr, "%s", hilfe40);
+    Eprintf ("%s", hilfe40);
   else
-    fprintf (stderr, "%s", hilfe80);
+    Eprintf ("%s", hilfe80);
   Bconin (CON);
 }
 
@@ -538,36 +538,36 @@ hilfe (void)
  **
  **/
 
-void
+static void
 info (void)
 {
 
   CLS;				/* Bildschirm lîschen   */
 
-  fprintf (stderr, "Bildschirmkenngrîûen-Info\n");
-  fprintf (stderr, "=========================\n\n");
+  Eprintf ("Bildschirmkenngrîûen-Info\n");
+  Eprintf ("=========================\n\n");
 
-  fprintf (stderr, "Bildschirmbreite:  %4d\n", w_screen);
-  fprintf (stderr, "-hîhe [Pixel]:     %4d\n", h_screen);
-  fprintf (stderr, "\n");
-  fprintf (stderr, "Pixelbreite [Êm]:  %4d\n", w_pixel);
-  fprintf (stderr, "Pixelhîhe   [Êm]:  %4d\n", h_pixel);
-  fprintf (stderr, " ( Verh.(x / y) ˜ %4d\n", rx_factor);
-  fprintf (stderr, "   Verh.(y / x) ˜ %4d )\n", ry_factor);
-  fprintf (stderr, "\n");
-  fprintf (stderr, "Buchstabenbreite:  %4d\n", gl_wchar);
-  fprintf (stderr, "- hîhe [Pixel]:    %4d\n", gl_hchar);
-  fprintf (stderr, "\n");
-  fprintf (stderr, "\"Box\"breite:       %4d\n", gl_wbox);
-  fprintf (stderr, "\"Box\"hîhe [Pixel]: %4d\n", gl_hbox);
-  fprintf (stderr, "\n");
-  fprintf (stderr, "Zeichen/Zeile:     %4d\n", w_text);
-  fprintf (stderr, "Zeilen/Bildschirm: %4d\n", h_text);
-  fprintf (stderr, "\n");
-  fprintf (stderr, "Farbenzahl:        %4d\n", color_max);
-  fprintf (stderr, "Farbennuancen:     %4d\n", color_palette);
+  Eprintf ("Bildschirmbreite:  %4d\n", w_screen);
+  Eprintf ("-hîhe [Pixel]:     %4d\n", h_screen);
+  Eprintf ("\n");
+  Eprintf ("Pixelbreite [Êm]:  %4d\n", w_pixel);
+  Eprintf ("Pixelhîhe   [Êm]:  %4d\n", h_pixel);
+  Eprintf (" ( Verh.(x / y) ˜ %4d\n", rx_factor);
+  Eprintf ("   Verh.(y / x) ˜ %4d )\n", ry_factor);
+  Eprintf ("\n");
+  Eprintf ("Buchstabenbreite:  %4d\n", gl_wchar);
+  Eprintf ("- hîhe [Pixel]:    %4d\n", gl_hchar);
+  Eprintf ("\n");
+  Eprintf ("\"Box\"breite:       %4d\n", gl_wbox);
+  Eprintf ("\"Box\"hîhe [Pixel]: %4d\n", gl_hbox);
+  Eprintf ("\n");
+  Eprintf ("Zeichen/Zeile:     %4d\n", w_text);
+  Eprintf ("Zeilen/Bildschirm: %4d\n", h_text);
+  Eprintf ("\n");
+  Eprintf ("Farbenzahl:        %4d\n", color_max);
+  Eprintf ("Farbennuancen:     %4d\n", color_palette);
 
-  fprintf (stderr, "\n>>> Taste drÅcken <<<\n");
+  Eprintf ("\n>>> Taste drÅcken <<<\n");
   Bconin (CON);
 }
 
@@ -580,29 +580,29 @@ info (void)
  **
  **/
 
-void
-preview (PicBuf *picbuf, PAR *par)
+static void
+preview (PicBuf *picbuf, int quiet)
 {
   long scancode;		/* Scancode der gedrÅckten Taste    */
   long kbret = 0;		/* Stellung der Sondertasten        */
   boolean newdraw;		/* Neues Zeichnen nîtig?            */
 
-  if (!par->quiet)
+  if (!quiet)
     {
       /* Ausgabe der BegrÅûungsmeldung    */
-      fprintf (stderr, "\n\n");
-      fprintf (stderr, "ATARI-Preview\n");
-      fprintf (stderr, "=============\n");
-      fprintf (stderr, "\n");
-      fprintf (stderr, "Bitte Taste drÅcken:\n");
-      fprintf (stderr, "\n");
-      fprintf (stderr, "<H>, <F1> oder <Help> fÅr Hilfstext\n");
-      fprintf (stderr, "<Q> oder <Esc>        fÅr Abbruch\n");
-      fprintf (stderr, "<beliebige Taste>     fÅr Preview\n");
-      fprintf (stderr, "\n");
-      fprintf (stderr, "Hinweis:\n");
-      fprintf (stderr, "Die Hilfe-Funktion ist auch wÑhrend\n");
-      fprintf (stderr, "des Previews aktiv\n");
+      Eprintf ("\n\n");
+      Eprintf ("ATARI-Preview\n");
+      Eprintf ("=============\n");
+      Eprintf ("\n");
+      Eprintf ("Bitte Taste drÅcken:\n");
+      Eprintf ("\n");
+      Eprintf ("<H>, <F1> oder <Help> fÅr Hilfstext\n");
+      Eprintf ("<Q> oder <Esc>        fÅr Abbruch\n");
+      Eprintf ("<beliebige Taste>     fÅr Preview\n");
+      Eprintf ("\n");
+      Eprintf ("Hinweis:\n");
+      Eprintf ("Die Hilfe-Funktion ist auch wÑhrend\n");
+      Eprintf ("des Previews aktiv\n");
       scancode = (Bconin (CON) >> 16) & 255;	/* Tastendruck abwarten */
     }
   else
@@ -806,29 +806,32 @@ preview (PicBuf *picbuf, PAR *par)
  **                      - Aufruf der eigentlichen Preview-Funktionen
  **/
 
-void
-PicBuf_to_ATARI (PicBuf *picbuf, PAR *par)
+static int
+PicBuf_to_ATARI (GEN_PAR *pg, OUT_PAR *po)
 {
   if (open_vwork ())
     {
       rx_reihe = (Byte *) malloc (h_screen);
       if (rx_reihe == NULL)
 	{
-	  fprintf (stderr, "\nError: No mem for line buffer!\n");
-	  perror ("PicBuf_to_ATARI");
+	  Eprintf ("\nError: No mem for line buffer!\n");
+	  PError ("PicBuf_to_ATARI");
 	  close_vwork ();
-	  exit (ERROR);
+	  return ERROR;
 	}
 
       (void) Cursconf (0, 1);		/* Cursor aus           */
-      preview (picbuf, par);		/* Previewer aufrufen   */
+      preview (po->picbuf, pg->quiet);	/* Previewer aufrufen   */
       (void) Cursconf (1, 1);		/* Cursor ein           */
       close_vwork ();
     }
   else
     {
-      fprintf (stderr, "HP2xx - ATARI-Previewer\n");
-      fprintf (stderr, "Fehler bei der GEM-Initialisierung!");
-      exit (ERROR);
+      Eprintf ("HP2xx - ATARI-Previewer\n");
+      Eprintf ("Fehler bei der GEM-Initialisierung!");
+      return ERROR;
     }
+  if (rx_reihe != NULL)
+	free (rx_reihe);
+  return 0;
 }

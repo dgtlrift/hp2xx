@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1992, 1993 Claus H. Langhans.  All rights reserved.
+   Copyright (c) 1992 - 1994 Claus H. Langhans.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -28,6 +28,7 @@ copies.
  ** 92/04/14  V 1.00  CHL  Originating: Copied from to_pbm.c
  ** 92/04/15  V 1.01  CHL  I read the IFF-ILBM Manuals! Word alligned, not byte!
  ** 92/04/16  V 1.02  CHL  Better error handling
+ ** 94/02/14  V 1.10a HWW  Adapted to changes in hp2xx.h
  **/
 
 
@@ -71,66 +72,67 @@ typedef long    BPTR;
 #define YES 1L;
 #define NO  0L;
 
-int
+static int
 put_LONG( LONG l, FILE *fd) {
 int retval;
     if((retval=putc ((l >> 24) & 0xFF,fd))==EOF)
-        return(retval);
+	return(retval);
     else
-        if((retval=putc ((l >> 16) & 0xFF,fd))==EOF)
-            return(retval);
-        else
-            if((retval=putc ((l >> 8) & 0xFF,fd))==EOF)
-                  return(retval);
-            else
-                return(putc(l,fd));
+	if((retval=putc ((l >> 16) & 0xFF,fd))==EOF)
+	    return(retval);
+	else
+	    if((retval=putc ((l >> 8) & 0xFF,fd))==EOF)
+		  return(retval);
+	    else
+		return(putc(l,fd));
 }
 
-int
+static int
 put_ULONG( ULONG ul, FILE *fd) {
 int retval;
     if((retval=putc ((ul >> 24) & 0xFF,fd))==EOF)
-        return(retval);
+	return(retval);
     else
-        if((retval=putc ((ul >> 16) & 0xFF,fd))==EOF)
-            return(retval);
-        else
-            if((retval=putc ((ul >> 8) & 0xFF,fd))==EOF)
-                  return(retval);
+	if((retval=putc ((ul >> 16) & 0xFF,fd))==EOF)
+	    return(retval);
+	else
+	    if((retval=putc ((ul >> 8) & 0xFF,fd))==EOF)
+		  return(retval);
             else
                 return(putc(ul,fd));
 }
 
-int
+static int
 put_WORD( WORD w, FILE *fd) {
 int retval;
     if((retval=putc ((w >> 8) & 0xFF,fd))==EOF)
-          return(retval);
+	  return(retval);
     else
-        return(putc(w,fd));
+	return(putc(w,fd));
 }
 
-int
+static int
 put_UWORD( UWORD uw, FILE *fd) {
 int retval;
     if((retval=putc ((uw >> 8) & 0xFF,fd))==EOF)
-          return(retval);
+	  return(retval);
     else
-        return(putc(uw,fd));
+	return(putc(uw,fd));
 }
 
-int
+static int
 put_UBYTE( UBYTE u, FILE *fd) {
     return(putc (u,fd));
 }
 
-void
-PicBuf_to_ILBM(PicBuf * picbuf, PAR * p)
+int
+PicBuf_to_ILBM (const GEN_PAR *pg, const OUT_PAR *po)
 {
     FILE           *fd;
     int             row_count = 0;
     int             row_c, byte_c, bit, x, xoff, yoff;
-    RowBuf         *row;
+    const RowBuf   *row;
+    const PicBuf   *pb;
     int              i;
     unsigned char  *memptr;
     int             BitPlaneSize;
@@ -147,44 +149,51 @@ PicBuf_to_ILBM(PicBuf * picbuf, PAR * p)
 #endif
 #ifdef CMAP
 	ChunkHeader     CMAP_CkHdr;
-        UBYTE           Map0red;
-        UBYTE           Map0green;
-        UBYTE           Map0blue;
-        UBYTE           Map1red;
-        UBYTE           Map1green;
-        UBYTE           Map1blue;
+	UBYTE           Map0red;
+	UBYTE           Map0green;
+	UBYTE           Map0blue;
+	UBYTE           Map1red;
+	UBYTE           Map1green;
+	UBYTE           Map1blue;
 #endif
 	ChunkHeader     BODY_CkHdr;
     }               MyHdr;
 
-    if (picbuf->depth > 1)
+    if (pg == NULL || po == NULL)
+	return ERROR;
+
+    pb = po->picbuf;
+    if (pb == NULL)
+	return ERROR;
+
+    if (pb->depth > 1)
     {
-	fprintf(stderr, "\nILBM mode does not support colors yet -- sorry\n");
+	Eprintf ("\nILBM mode does not support colors yet -- sorry\n");
 	goto ERROR_EXIT_2;
     }
 
-    if ((((picbuf->nb) % 2 ) == 1) ){
-        OddBmp=YES;
-        BitPlaneSize = (picbuf->nb) * (picbuf->nr) + (picbuf->nr);
+    if ((((pb->nb) % 2 ) == 1) ){
+	OddBmp=YES;
+	BitPlaneSize = (pb->nb) * (pb->nr) + (pb->nr);
     }
     else {
-        OddBmp=NO;
-        BitPlaneSize = (picbuf->nb) * (picbuf->nr);
+	OddBmp=NO;
+	BitPlaneSize = (pb->nb) * (pb->nr);
     }
 
     MyHdr.FORM_Hdr.ckID = FORM;
     MyHdr.FORM_Hdr.ckSize =  sizeof(MyHdr)
-                           - sizeof(MyHdr.FORM_Hdr.ckID)
-                           - sizeof(MyHdr.FORM_Hdr.ckSize)
-                           + BitPlaneSize;
+			   - sizeof(MyHdr.FORM_Hdr.ckID)
+			   - sizeof(MyHdr.FORM_Hdr.ckSize)
+			   + BitPlaneSize;
 
     MyHdr.ILBM_Type = ID_ILBM;
 
     MyHdr.BMHD_CkHdr.ckID = ID_BMHD;
     MyHdr.BMHD_CkHdr.ckSize = sizeof(MyHdr.BMHD_Ck);
 
-    MyHdr.BMHD_Ck.w = (picbuf->nb) * 8;    /* raster width & height in pixels */
-    MyHdr.BMHD_Ck.h = picbuf->nr;
+    MyHdr.BMHD_Ck.w = (pb->nb) * 8;        /* raster width & height in pixels */
+    MyHdr.BMHD_Ck.h = pb->nr;
     MyHdr.BMHD_Ck.x = 0L;                  /* position for this image */
     MyHdr.BMHD_Ck.y = 0L;
     MyHdr.BMHD_Ck.nPlanes = 1L;            /* # source bitplanes */
@@ -219,23 +228,22 @@ PicBuf_to_ILBM(PicBuf * picbuf, PAR * p)
     MyHdr.BODY_CkHdr.ckSize = BitPlaneSize;
 
 
-    if (!p->quiet)
-	fprintf(stderr, "\nWriting ILBM output: %s\n",p->outfile);
-    if (*p->outfile) {
+    if (!pg->quiet)
+	Eprintf ("\nWriting ILBM output: %s\n",po->outfile);
+    if (*po->outfile != '-') {
 #ifdef VAX
-	if ((fd = fopen(p->outfile, WRITE_BIN, "rfm=var", "mrs=512")) == NULL) {
+	if ((fd = fopen(po->outfile, WRITE_BIN, "rfm=var", "mrs=512")) == NULL) {
 #else
-	if ((fd = fopen(p->outfile, WRITE_BIN)) == NULL) {
+	if ((fd = fopen(po->outfile, WRITE_BIN)) == NULL) {
 #endif
-	    perror("hp2xx -- opening output file");
-	    free_PicBuf(picbuf, p->swapfile);
-	    exit(ERROR);
+	    PError("hp2xx -- opening output file");
+	    return ERROR;
 	}
     } else
 	fd = stdout;
 
     if (((MyHdr.FORM_Hdr.ckSize) % 2 ) == 1) {
-        MyHdr.FORM_Hdr.ckSize +=1;
+	MyHdr.FORM_Hdr.ckSize +=1;
     }
 
 
@@ -284,33 +292,31 @@ PicBuf_to_ILBM(PicBuf * picbuf, PAR * p)
 /*
     memptr = (unsigned char *) &MyHdr;
     for (i=0; i < sizeof(MyHdr) ; i++)
-             putc(memptr[i],fd);
+	     putc(memptr[i],fd);
 */
-    for (row_c = 0; row_c < picbuf->nr; row_c++) {
+    for (row_c = 0; row_c < pb->nr; row_c++) {
 
-	row = get_RowBuf(picbuf, picbuf->nr - row_c - 1);
+	row = get_RowBuf(pb, pb->nr - row_c - 1);
 
-	for (byte_c = x = 0; byte_c < picbuf->nb; byte_c++)
-             if( putc(row->buf[byte_c],fd) == EOF) goto ERROR_EXIT;
-        if (OddBmp) {
-            putc(0,fd);
-        }
+	for (byte_c = x = 0; byte_c < pb->nb; byte_c++)
+	     if( putc(row->buf[byte_c],fd) == EOF) goto ERROR_EXIT;
+	if (OddBmp) {
+	    putc(0,fd);
+	}
 
-	if ((!p->quiet) && (row_c % 10 == 0))
-	    putc('.', stderr);
+	if ((!pg->quiet) && (row_c % 10 == 0))
+	    Eprintf (".");
     }
-    if (!p->quiet)
-	fputc('\n', stderr);
+    if (!pg->quiet)
+	Eprintf ("\n");
 
     if (fd != stdout)
 	fclose(fd);
 
-  return;
+  return 0;
 
 ERROR_EXIT:
-  perror      ("write_ILBM");
+  PError ("write_ILBM");
 ERROR_EXIT_2:
-  free_PicBuf (picbuf, p->swapfile);
-  exit	      (ERROR);
-
+  return ERROR;
 }

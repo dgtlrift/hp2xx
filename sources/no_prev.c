@@ -11,6 +11,6 @@
 
 void	PicBuf_to_Dummy()
 {
-  fprintf(stderr,"Sorry - preview not supported here\n");
+  Eprintf("Sorry - preview not supported here\n");
 }
 

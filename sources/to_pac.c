@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1992  Norbert Meyer.  All rights reserved.
+   Copyright (c) 1992 - 1994  Norbert Meyer.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -44,6 +44,7 @@ copies.
  ** 92/02/27  V 1.10a NM   errno.h added
  ** 92/04/14  V 1.10b NM   New order for if (...) { ... }
  ** 92/05/19  V 1.10c HWW  Abort if color mode
+ ** 94/02/14  V 1.20a HWW  Adapted to changes in hp2xx.h
  **/
 
 #include <stdio.h>
@@ -72,7 +73,8 @@ copies.
 /* -------------------------------------------------------- */
 
 
-int     Screenpos_PAC (int *scr_x, int *scr_y, int mode)
+static int
+Screenpos_PAC (int *scr_x, int *scr_y, int mode)
 /** *scr_x, *scr_y; position in unpacked screen-dump
  ** mode;           actual compression mode
  ** increases absolute and x/y byte-position in screen or
@@ -121,8 +123,9 @@ int     Screenpos_PAC (int *scr_x, int *scr_y, int mode)
 /* -------------------------------------------------------- */
 
 
-int     Pack_PAC(Byte *screen, Byte packbyte, Byte lablbyte, Byte specbyte,
-                 int mode, FILE *fd)
+static int
+Pack_PAC(Byte *screen, Byte packbyte, Byte lablbyte, Byte specbyte,
+	      int mode, FILE *fd)
 /** *screen;         unpacked 32k-bitmap
  ** packbyte;        most frequent byte in screen
  ** lablbyte;        indicates packbyte
@@ -159,8 +162,8 @@ int     Pack_PAC(Byte *screen, Byte packbyte, Byte lablbyte, Byte specbyte,
 
     char    horimark[4]  = {'p', 'M', '8', '5'};
     char    vertimark[4] = {'p', 'M', '8', '6'};
-                                    /* STAD was written by      */
-                                    /* Peter Melzer in 1985/86  */
+				    /* STAD was written by      */
+				    /* Peter Melzer in 1985/86  */
 
     if (mode != WRITEUNPACKED)
     {
@@ -206,7 +209,7 @@ int     Pack_PAC(Byte *screen, Byte packbyte, Byte lablbyte, Byte specbyte,
         }
         pac_pos += 3;
 
-        do {
+	do {
             actbyte = *(screen + scr_pos);
 
 	    if (actbyte == packbyte)
@@ -251,7 +254,7 @@ int     Pack_PAC(Byte *screen, Byte packbyte, Byte lablbyte, Byte specbyte,
 	    {
                 /*                                              */
                 /* special case: label-byte (needs a special    */
-                /*               representation)                */
+		/*               representation)                */
                 /*                                              */
 		if (mode == WRITEHORI || mode == WRITEVERTI)
 		{
@@ -296,7 +299,7 @@ int     Pack_PAC(Byte *screen, Byte packbyte, Byte lablbyte, Byte specbyte,
 	    {
                 /*                                              */
                 /* special case: special-byte   (needs a        */
-                /*                special representation)       */
+		/*                special representation)       */
                 /*                                              */
 		if (mode == WRITEHORI || mode == WRITEVERTI)
 		{
@@ -386,7 +389,7 @@ int     Pack_PAC(Byte *screen, Byte packbyte, Byte lablbyte, Byte specbyte,
 
 			if (mode == WRITEHORI || mode == WRITEVERTI)
 			{
-                            /* write specbyte   */
+			    /* write specbyte   */
                             if (fwrite((Byte *) &specbyte, (size_t) 1, (size_t) 1, fd) != (size_t) 1)
                                 return ERROR;
                         }
@@ -431,7 +434,7 @@ int     Pack_PAC(Byte *screen, Byte packbyte, Byte lablbyte, Byte specbyte,
 	{
 	    if (mode == WRITEHORI || mode == WRITEVERTI)
 	    {
-                /* write final: specbyte + Ox00 + Ox00  */
+		/* write final: specbyte + Ox00 + Ox00  */
                 if (fwrite((Byte *) &specbyte, (size_t) 1, (size_t) 1, fd) != (size_t) 1)
                     return ERROR;
                 if (fwrite((Byte *) &nullbyte, (size_t) 1, (size_t) 1, fd) != (size_t) 1)
@@ -469,8 +472,8 @@ int     Pack_PAC(Byte *screen, Byte packbyte, Byte lablbyte, Byte specbyte,
 /* -------------------------------------------------------- */
 
 
-void    Analyze_PAC(Byte *screen, Byte *packbyte, Byte *lablbyte,
-                    Byte *specbyte)
+static void
+Analyze_PAC(Byte *screen, Byte *packbyte, Byte *lablbyte, Byte *specbyte)
 /** *screen;         unpacked 32k-bitmap
  ** *packbyte;       most frequent byte in screen
  ** *lablbyte;       indicates packbyte
@@ -520,7 +523,8 @@ void    Analyze_PAC(Byte *screen, Byte *packbyte, Byte *lablbyte,
 /* -------------------------------------------------------- */
 
 
-void    Screen_for_PAC (PicBuf *picbuf, Byte *screen, int x, int y)
+static void
+Screen_for_PAC (const PicBuf *picbuf, Byte *screen, int x, int y)
 /** *picbuf;         structure of hp2xx-bitmap
  ** *screen;         32000 byte buffer (1 screen)
  ** x, y;            actual screen
@@ -554,8 +558,9 @@ void    Screen_for_PAC (PicBuf *picbuf, Byte *screen, int x, int y)
 /* -------------------------------------------------------- */
 
 
-void    Name_PAC (char *filename, char *basename, int y_screens,
-                  int x, int y)
+static void
+Name_PAC (char *filename, const char *basename, int y_screens,
+		  int x, int y)
 /* adds number and extension to basename, giving the complete filename */
 {
   char  ext[9];	/* file-number and extension	*/
@@ -573,15 +578,11 @@ void    Name_PAC (char *filename, char *basename, int y_screens,
 /* -------------------------------------------------------- */
 
 
-void    PicBuf_to_PAC (PicBuf *picbuf, PAR *p)
-/** *picbuf;         structure of hp2xx-bitmap
- ** *p;              all parameters
- ** "main" programm of to_stad.c
- **/
+int
+PicBuf_to_PAC (const GEN_PAR *pg, const OUT_PAR *po)
 {
 
 #define BLOCKS 100       /* max. 100 files        */
-
 
 FILE    *fd;                    /* stream handle                */
 int     x_screens, y_screens;   /* max. of file-counters        */
@@ -603,47 +604,53 @@ Byte    specbyte;               /* indicates repetitions and    */
 int     horicompr;              /* length horiz. compr. picture */
 int     verticompr;             /* length verti. compr. picture */
 
+const PicBuf *pb;
+
 #ifdef VAX
 int     hd;                     /* file handle                  */
 #endif
 
-  if (picbuf->depth > 1)
+  if (pg == NULL || po == NULL)
+	return ERROR;
+  pb = po->picbuf;
+  if (pb == NULL)
+	return ERROR;
+
+  if (pb->depth > 1)
   {
-	fprintf(stderr, "\nPAC mode does not support colors yet -- sorry\n");
-	free_PicBuf (picbuf, p->swapfile);
-	exit (ERROR);
+	Eprintf ("\nPAC mode does not support colors yet -- sorry\n");
+	return ERROR;
   }
 
  /**
   **  check number of screens (rows * columns)
   **/
-  x_screens = (picbuf->nb - 1) / PAC_BPL;
-  y_screens = (picbuf->nr - 1) / PAC_YRES;
+  x_screens = (pb->nb - 1) / PAC_BPL;
+  y_screens = (pb->nr - 1) / PAC_YRES;
 
   if (((x_screens + 1) * (y_screens + 1)) > BLOCKS)
   {
-	perror("hp2xx -- Too many PAC files necessary");
-	free_PicBuf (picbuf, p->swapfile);
-	exit (ERROR);
+	PError("hp2xx -- Too many PAC files necessary");
+	return ERROR;
   }
 
  /**
   **  action message
   **/
-  if (!p->quiet)
+  if (!pg->quiet)
   {
-      fprintf(stderr, "\n\nWriting PAC output: %d rows of %d bytes\n",
-		      picbuf->nr, picbuf->nb);
-      fprintf(stderr, "corresponding to %d x %d PAC-files\n",
+      Eprintf ("\n\nWriting PAC output: %d rows of %d bytes\n",
+		      pb->nr, pb->nb);
+      Eprintf ("corresponding to %d x %d PAC-files\n",
 		      x_screens + 1, y_screens + 1);
   }
 
  /**
   **  creat basename (filename without extension)
   **/
-  if (*p->outfile)
+  if (*po->outfile != '-')
   {
-	strncpy (basename, p->outfile, 6);
+	strncpy (basename, po->outfile, 6);
 	basename[6] = '\0';
   }
   else
@@ -658,79 +665,75 @@ int     hd;                     /* file handle                  */
     {
 	/* make actual filename */
 	Name_PAC (filename, basename, y_screens, x, y);
-	if (!p->quiet)
-	    fprintf(stderr,"%s-> ", filename);
+	if (!pg->quiet)
+	    Eprintf ("%s-> ", filename);
 
 	/* collect data from hp2xx-bitmap   */
-	if (!p->quiet)
-	    fprintf(stderr,"data: fetch, ");
-	Screen_for_PAC (picbuf, screen, x, y);
+	if (!pg->quiet)
+	    Eprintf ("data: fetch, ");
+	Screen_for_PAC (pb, screen, x, y);
 
 	/* determine pack-, label-, special-byte */
-	if (!p->quiet)
-	    fprintf(stderr,"analyse [1");
+	if (!pg->quiet)
+	    Eprintf ("analyse [1");
 	Analyze_PAC(screen, &packbyte, &lablbyte, &specbyte);
-	if (!p->quiet)
-	    fprintf(stderr,"] ");
+	if (!pg->quiet)
+	    Eprintf ("] ");
 
 	/* preset file-descriptor (to give him a defined state) */
 	fd = NULL;
 
 	/* test horizontal compression mode */
-	if (!p->quiet)
-	    fprintf(stderr,"[2");
+	if (!pg->quiet)
+	    Eprintf ("[2");
 	if ((horicompr = Pack_PAC(screen, packbyte, lablbyte, specbyte,
 			 TESTHORI, fd)) == ERROR)
 	{
-	    perror ("\nhp2xx -- test horiz.-PAC file");
-	    free_PicBuf (picbuf, p->swapfile);
-	    exit (ERROR);
+	    PError ("\nhp2xx -- test horiz.-PAC file");
+	    return ERROR;
 	}
-	if (!p->quiet)
-	    fprintf(stderr,"] ");
+	if (!pg->quiet)
+	    Eprintf ("] ");
 
 	/* test vertical compression mode */
-	if (!p->quiet)
-	    fprintf(stderr,"[3");
+	if (!pg->quiet)
+	    Eprintf ("[3");
 	if ((verticompr = Pack_PAC(screen, packbyte, lablbyte, specbyte,
 			  TESTVERTI, fd)) == ERROR)
 	{
-	    perror ("\nhp2xx -- test vert.-PAC file");
-	    free_PicBuf (picbuf, p->swapfile);
-	    exit (ERROR);
+	    PError ("\nhp2xx -- test vert.-PAC file");
+	    return ERROR;
 	}
-	if (!p->quiet)
-	    fprintf(stderr,"] ;");
+	if (!pg->quiet)
+	    Eprintf ("] ;");
 
 	/* open file to write   */
-	if (!p->quiet)
-	    fprintf(stderr,"file: open, ");
+	if (!pg->quiet)
+	    Eprintf ("file: open, ");
 #ifdef VAX
 	if ((hd = creat(filename, 0,"rfm=var","mrs=512")) == -1)
-	    perror ("\nhp2xx -- creating PAC-output file");
+	    PError ("\nhp2xx -- creating PAC-output file");
 	if( (fd = fdopen(hd, WRITE_BIN)) == NULL)
 	{
 #else
 	if ((fd = fopen(filename, WRITE_BIN)) == NULL)
 	{
 #endif
-	    perror ("\nhp2xx -- opening PAC file");
-	    free_PicBuf (picbuf, p->swapfile);
-	    exit (ERROR);
+	    PError ("\nhp2xx -- opening PAC file");
+	    return ERROR;
 	}
 
 	/* decide which file shall be written   */
-	if (!p->quiet)
-	    fprintf(stderr,"write, ");
+	if (!pg->quiet)
+	    Eprintf ("write, ");
 	if (horicompr >= 32000 && verticompr >= 32000)
 	{
 	    /* no compression was sucessfull, write unpacked file   */
 	    if (Pack_PAC(screen, packbyte, lablbyte, specbyte,
 			  WRITEUNPACKED, fd))
 	    {
-		perror ("\nhp2xx -- writing PAC file");
-		free_PicBuf (picbuf, p->swapfile);
-		exit (ERROR);
+		PError ("\nhp2xx -- writing PAC file");
+		return ERROR;
 	    }
 	}
 	else if (horicompr <= verticompr)
@@ -739,9 +742,8 @@ int     hd;                     /* file handle                  */
 	    if (Pack_PAC(screen, packbyte, lablbyte, specbyte,
 			  WRITEHORI, fd))
 	    {
-		perror ("\nhp2xx -- writing PAC file");
-		free_PicBuf (picbuf, p->swapfile);
-		exit (ERROR);
+		PError ("\nhp2xx -- writing PAC file");
+		return ERROR;
 	    }
 	}
 	else
@@ -750,27 +752,26 @@ int     hd;                     /* file handle                  */
 	    if (Pack_PAC(screen, packbyte, lablbyte, specbyte,
 			  WRITEVERTI, fd))
 	    {
-		perror ("\nhp2xx -- writing PAC file");
-		free_PicBuf (picbuf, p->swapfile);
-		exit (ERROR);
+		PError ("\nhp2xx -- writing PAC file");
+		return ERROR;
 	    }
 	}
 
 
 	/* close file   */
-	if (!p->quiet)
-	    fprintf(stderr,"close");
+	if (!pg->quiet)
+	    Eprintf ("close");
 	fclose(fd);
 
 	/* line feed    */
-	if (!p->quiet)
-	    fprintf(stderr,"\n");
+	if (!pg->quiet)
+	    Eprintf ("\n");
 
     }
   }
 
     /* final message    */
-    if (!p->quiet)
-	fprintf(stderr,"(End of PAC)\n");
-
+    if (!pg->quiet)
+	Eprintf ("(End of PAC)\n");
+  return 0;
 }

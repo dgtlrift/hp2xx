@@ -1,5 +1,5 @@
 $!###########################################################################
-$!#    Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+$!#    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
 $!#    Distributed by Free Software Foundation, Inc.
 $!#
 $!# This file is part of HP2xx.
@@ -46,19 +46,20 @@ $       'CC'/NOLIST/OBJECT=BRESNHAM.OBJ/DEFINE=("VAX") BRESNHAM.C
 $       'CC'/NOLIST/OBJECT=CHARDRAW.OBJ/DEFINE=("VAX") CHARDRAW.C
 $       'CC'/NOLIST/OBJECT=GETOPT.OBJ  /DEFINE=("VAX") GETOPT.C
 $       'CC'/NOLIST/OBJECT=GETOPT1.OBJ /DEFINE=("VAX") GETOPT1.C
-$       'CC'/NOLIST/OBJECT=TO_MF.OBJ   /DEFINE=("VAX") TO_MF.C
+$       'CC'/NOLIST/OBJECT=STD_MAIN.OBJ/DEFINE=("VAX") STD_MAIN.C
 $       'CC'/NOLIST/OBJECT=TO_PCX.OBJ  /DEFINE=("VAX") TO_PCX.C
 $       'CC'/NOLIST/OBJECT=TO_PCL.OBJ  /DEFINE=("VAX") TO_PCL.C
 $       'CC'/NOLIST/OBJECT=TO_EPS.OBJ  /DEFINE=("VAX") TO_EPS.C
 $       'CC'/NOLIST/OBJECT=TO_IMG.OBJ  /DEFINE=("VAX") TO_IMG.C
 $       'CC'/NOLIST/OBJECT=TO_PBM.OBJ  /DEFINE=("VAX") TO_PBM.C
 $       'CC'/NOLIST/OBJECT=TO_RGIP.OBJ /DEFINE=("VAX") TO_RGIP.C
+$       'CC'/NOLIST/OBJECT=TO_VEC.OBJ  /DEFINE=("VAX") TO_VEC.C
 $       'CC'/NOLIST/OBJECT=TO_UIS.OBJ  /DEFINE=("VAX") TO_UIS.C
 $       LINK /TRACE/NOMAP/EXEC=[-]HP2XX.EXE hp2xx.obj,hpgl.obj,picbuf.obj,bresnham.obj, -
-                                      chardraw.obj,getopt.obj,getopt1.obj,              -
-                                      to_mf.obj,to_pcx.obj,to_pcl.obj,to_eps.obj,       -
+                                      chardraw.obj,getopt.obj,getopt1.obj,std_main.obj, -
+                                      to_pcx.obj,to_pcl.obj,to_eps.obj,                 -
                                       to_img.obj,to_pbm.obj,to_rgip.obj,                -
-                                      to_uis.obj,'Option'/opt
+                                      to_vec.obj,to_uis.obj,'Option'/opt
 $       WRITE SYS$OUTPUT "      Hp2xx complete"
 $       IF ( F$EDIT(P1,"UPCASE") .EQS. "INSTALL" ) THEN GOTO Install_Help
 $       GOTO End

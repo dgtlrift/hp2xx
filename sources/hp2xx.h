@@ -1,5 +1,7 @@
+#ifndef	__HP2XX_H
+#define	__HP2XX_H
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -58,6 +60,8 @@ copies.
  ** 93/07/25  V 2.10c HWW  Some prototypes added
  ** 93/09/02  V 2.10d HWW  Some #defines added;
  **			   rect(), to_rgip(): prototypes added
+ ** 94/01/02  V 2.11a HWW  PlotCmd_from_tmpfile(): new type; center_mode
+ ** 94/02/10  V 3.00  HWW  New concept: Now three central parameter structs ...
  **/
 
 
@@ -130,7 +134,7 @@ copies.
 #define COPYNOTE 1
 
 #endif
- 
+
 #define	ESC	'\033'
 #define	CR	'\015'
 #define	FF	'\014'
@@ -174,21 +178,15 @@ typedef unsigned char	Byte;
 
 
 /**
- ** A bag for many options and internally needed data to be passed
- ** to various functions.
+ ** When adding your special mode, add a symbol here.
+ ** Please note the alphabetical order (and keep it).
  **/
 
-typedef struct {
-	int	dpi_x, dpi_y, first_page, last_page,
-		pen, pensize[9], maxpensize, is_color, truesize,
-		quiet, init_p, formfeed, specials, vga_width;
-	int	pencolor[9], maxcolor;
-	Byte	Clut[16][3];
-	double	xoff, yoff, x0, x1, y0, y1, width, height,
-		aspectfactor, rotation;
-	char	*outfile, *swapfile, *logfile, *mode;
-	Byte	vga_mode;
-} PAR;
+typedef	enum{
+	XX_CAD, XX_CS, XX_EM, XX_EPIC, XX_EPS, XX_HPGL, XX_ILBM, XX_IMG,
+	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PIC, XX_PRE, XX_RGIP,
+	XX_TERM	/* Dummy: terminator	*/
+} hp2xx_mode;
 
 
 
@@ -207,16 +205,14 @@ typedef	struct Row {
  ** Struct holding the whole raster picture
  **/
 
-typedef	struct {
-			/* Number of rows / columns / bytes per row	*/
-	int	nr, nc, nb;
-			/* Depth: Number of bit planes (1 to 4)		*/
-	int	depth;
-			/* Swapfile handle				*/
-	FILE	*sd;
-			/* Array pointer of all rows			*/
-	RowBuf	*row;
-} PicBuf;
+typedef	struct
+{
+   int	nr, nc, nb;	/* Number of rows / columns / bytes per row	*/
+   int	depth;		/* Depth: Number of bit planes (1 to 4)		*/
+   RowBuf *row;		/* Array pointer of all rows			*/
+   char	*sf_name;	/* Swapfile name				*/
+   FILE	*sd;		/* Swapfile pointer				*/
+}	PicBuf;
 
 
 typedef	struct {
@@ -225,8 +221,14 @@ typedef	struct {
 
 
 typedef enum {
-	NOP, MOVE_TO, DRAW_TO, PLOT_AT, SET_PEN
+	NOP, MOVE_TO, DRAW_TO, PLOT_AT, SET_PEN, CMD_EOF
 } PlotCmd;
+
+
+typedef struct {
+	hp2xx_mode	mode;
+	char		*modestr;
+} mode_list;
 
 
 /**
@@ -264,6 +266,72 @@ typedef	enum
 
 
 
+/**
+ ** Input parameters: Used mainly during input file processing
+ **/
+
+typedef struct			/* Corresponding option(s)	*/
+{
+   int	first_page, last_page;	/* -P first_page:last_page	*/
+   int	center_mode;		/* -C				*/
+   int	truesize;		/* -t				*/
+   double  width, height;	/* -w width -h height		*/
+   double  aspectfactor;	/* -a aspectfactor		*/
+   double  rotation;		/* -r rotation			*/
+   double  x0, x1, y0, y1;	/* -x x0 -X x1 -y y0 -Y y1	*/
+   double  xoff, yoff;		/* -o xoff  -O yoff		*/
+   char	*in_file;		/* Input file name ("-" = stdin)*/
+   FILE	*hd;			/* (internally needed)		*/
+}	IN_PAR;
+
+
+
+/**
+ ** Output parameters: Used mainly during output file generation
+ **/
+
+typedef struct			/* Corresponding option(s)	*/
+{
+   Byte	vga_mode;		/* -V vga_mode			*/
+   int	vga_width;		/* (internally needed)		*/
+   int	dpi_x, dpi_y;		/* -d dpi_x  -y dpi_y		*/
+   int	init_p;			/* -i  (PCL only)		*/
+   int	formfeed;		/* -F  (PCL only)		*/
+   int  specials;		/* -s specials  (PCL only)	*/
+   char	  *outfile;		/* -f outfile ("-" = stdout)	*/
+   double xmin,ymin, xmax,ymax; /* (internally needed)		*/
+   double xoff, yoff;		/* Internal copies from IN_PAR	*/
+   double width, height;	/* Internal copies from IN_PAR	*/
+   double HP_to_xdots;		/* (internally needed)		*/
+   double HP_to_ydots;		/* (internally needed)		*/
+   PicBuf *picbuf;		/* (internally needed)		*/
+}	OUT_PAR;
+
+
+
+/**
+ ** General parameters: Used at various places
+ **/
+
+typedef struct			/* Corresponding option(s)	*/
+{
+   char  *mode;			/* -m mode			*/
+   char  *logfile;		/* -l logfile			*/
+   char	 *swapfile;		/* -s swapfile			*/
+   int	 quiet;			/* -q				*/
+   int	 pensize[9];		/* -p xxxxxxxx			*/
+   int	 pencolor[9];		/* -c xxxxxxxx			*/
+   int	 maxpensize;		/* (internally needed)		*/
+   int	 is_color;		/* (internally needed)		*/
+   int	 maxcolor;		/* (internally needed)		*/
+   Byte	 	Clut[16][3];	/* (internally needed)		*/
+   FILE	 	*td;		/* (internally needed)		*/
+   hp2xx_mode	xx_mode;	/* (internally needed)		*/
+}	GEN_PAR;
+
+
+#define	DEFAULT_PEN_NO		1
+
 #define	FLAGSTATE(flag)		(flag) ? "ON" : "off"
 
 
@@ -280,91 +348,72 @@ typedef	enum
  ** Prototypes:
  **/
 
+void	Send_version	(void);
+void	Send_Copyright	(void);
+void	usage_msg	(const GEN_PAR*, const IN_PAR*, const OUT_PAR*);
+void	print_supported_modes(void);
+void	preset_par	(GEN_PAR*, IN_PAR*, OUT_PAR*);
+void	reset_par	(IN_PAR*);
+void	autoset_outfile_name (const char*, const char*, char**);
+
+int	HPGL_to_TMP	(GEN_PAR*, IN_PAR*);
+int	TMP_to_VEC	(const GEN_PAR*, const OUT_PAR*);
+int	TMP_to_BUF	(const GEN_PAR*, OUT_PAR*);
+int	BUF_to_RAS	(const GEN_PAR*, const OUT_PAR*);
+
+void	cleanup_g	(GEN_PAR*);
+void	cleanup_i	(IN_PAR*);
+void	cleanup_o	(OUT_PAR*);
+void	cleanup		(GEN_PAR*, IN_PAR*, OUT_PAR*);
+
+void	Eprintf		(const char*, ...);
+void	PError		(const char*);
 void	SilentWait	(void);
-/* void	Wait		(void); */
-
-void	HPcoord_to_dotcoord
-			(HPGL_Pt *, DevPt *);
-void	init_HPGL	(FILE *, PAR *);
-void	reset_HPGL	(void);
-void	evaluate_HPGL	(PAR *, DevPt *);
-void	read_HPGL	(PAR *, FILE *, FILE *, DevPt *);
-
-void	read_ESC_cmd	(FILE *);
-int	read_float	(float *, FILE *);
-void	read_HPGL_cmd	(int,	FILE *);
-void	read_string	(char *,FILE *);
-void	read_symbol_char(FILE *);
-
-void	arcs		(int,	FILE *);
-void	lines		(int,	FILE *);
-void	rect		(int,	FILE *);
-void	circles		(FILE *);
-void	ax_ticks	(int);
+void	NormalWait	(void);
 
 void	plot_user_char	(FILE *);
-
-void	Pen_action_to_tmpfile	(PlotCmd, HPGL_Pt *, int);
-void	PlotCmd_to_tmpfile	(PlotCmd);
-void	HPGL_Pt_to_tmpfile	(HPGL_Pt *);
-int	PlotCmd_from_tmpfile	(void);
+void	read_HPGL	(const GEN_PAR*, const IN_PAR*);
+void	adjust_input_transform	(const GEN_PAR*, const IN_PAR*, OUT_PAR*);
+PlotCmd	PlotCmd_from_tmpfile	(void);
 void	HPGL_Pt_from_tmpfile	(HPGL_Pt *);
+void	Pen_action_to_tmpfile	(PlotCmd, const HPGL_Pt*, int);
+int	read_float		(float*, FILE*);
 
-void	to_ATARI	(PAR *, FILE *);
-void	to_mftex	(PAR *, FILE *, int);
-void	to_eps		(PAR *, FILE *);
-void	to_rgip		(PAR *, FILE *);
+void	to_ATARI	(GEN_PAR*, FILE *);
+int	to_mftex	(const GEN_PAR*, const OUT_PAR*, int);
+int	to_eps		(const GEN_PAR*, const OUT_PAR*);
+int	to_rgip		(const GEN_PAR*, const OUT_PAR*);
 
-PicBuf	*allocate_PicBuf(DevPt *, PAR *);
-void	free_PicBuf	(PicBuf *, char *);
-void	tmpfile_to_PicBuf(PicBuf*, PAR *, FILE *);
-void	line_PicBuf	(PicBuf *, DevPt *, DevPt *, PAR *);
-int	index_from_PicBuf(PicBuf*, DevPt *);
-int	index_from_RowBuf(RowBuf*, int, PicBuf *);
-RowBuf	*get_RowBuf	(PicBuf*, int);
+void	size_PicBuf	(const GEN_PAR*, const OUT_PAR*, int*, int*);
+PicBuf	*allocate_PicBuf(const GEN_PAR*, int, int);
+void	free_PicBuf	(PicBuf *);
+void	tmpfile_to_PicBuf(const GEN_PAR*, const OUT_PAR*);
+int	index_from_PicBuf(const PicBuf*, const DevPt *);
+int	index_from_RowBuf(const RowBuf*, int, const PicBuf *);
+RowBuf	*get_RowBuf	(const PicBuf*, int);
 
-void	PicBuf_to_PCL	(PicBuf *, PAR *);
-void	PicBuf_to_PCX	(PicBuf *, PAR *);
+int	PicBuf_to_PCL	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_PCX	(const GEN_PAR*, const OUT_PAR*);
 
-Byte	get_byte_IMG	(int, int, PicBuf *);
-int	vert_rep_IMG	(int, PicBuf *);
-int	empty_SR_IMG	(int, int, PicBuf *);
-int	full_SR_IMG	(int, int, PicBuf *);
-int	PR_IMG		(int, int, PicBuf *);
-void	write_byte_IMG	(Byte, PicBuf *, PAR *, FILE *);
-void	write_VR_IMG	(Byte, PicBuf *, PAR *, FILE *);
-void	write_PR_IMG	(Byte, Byte, Byte, PicBuf *, PAR *, FILE *);
-void	write_empty_SR_IMG	(Byte, PicBuf *, PAR *, FILE *);
-void	write_full_SR_IMG	(Byte, PicBuf *, PAR *, FILE *);
-void	write_BS_IMG	(Byte, PicBuf *, PAR *, FILE *);
-void	PicBuf_to_IMG	(PicBuf *, PAR *);
-
-void	PicBuf_to_PBM	(PicBuf *, PAR *);
-
-void	PicBuf_to_ILBM	(PicBuf *, PAR *);
+int	PicBuf_to_IMG	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_PBM	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_ILBM	(const GEN_PAR*, const OUT_PAR*);
 
 #ifdef PIC_PAC
-int	Init_PIC_files	(char *, FILE **, int, int, int);
-void	PicBuf_to_PIC	(PicBuf *, PAR *);
-void	RowBuf_to_PIC	(RowBuf *, int, FILE **);
-
-int	Screenpos_PAC	(int *, int *, int);
-int	Pack_PAC	(Byte *, Byte, Byte, Byte, int, FILE *);
-void	Analyze_PAC	(Byte *, Byte *, Byte *, Byte *);
-void	Screen_for_PAC	(PicBuf *, Byte *, int, int);
-void	Name_PAC	(char *, char *, int, int, int);
-void	PicBuf_to_PAC	(PicBuf *, PAR *);
+int	PicBuf_to_PIC	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_PAC	(const GEN_PAR*, const OUT_PAR*);
 #endif	/* PIC_PAC */
 
-void	PicBuf_to_AMIGA	(PicBuf *, PAR *);
-void	PicBuf_to_ATARI	(PicBuf *, PAR *);
-void	PicBuf_to_DJ_GR	(PicBuf *, PAR *);
-void	PicBuf_to_Dummy	(void);
-void	PicBuf_to_PM	(PicBuf *, PAR *);
-void	PicBuf_to_OS2	(PicBuf *, PAR *);
-void	PicBuf_to_Sunview(PicBuf *, PAR *);
-void	PicBuf_to_UIS	(PicBuf *, PAR *);
-void	PicBuf_to_HGC	(PicBuf *, PAR *);
-void	PicBuf_to_VGA	(PicBuf *, PAR *);
-void	PicBuf_to_X11	(PicBuf *, PAR *);
+int	PicBuf_to_AMIGA	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_ATARI	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_DJ_GR	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_Dummy	(void);
+int	PicBuf_to_PM	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_OS2	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_Sunview(const GEN_PAR*,const OUT_PAR*);
+int	PicBuf_to_UIS	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_HGC	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_VGA	(const GEN_PAR*, const OUT_PAR*);
+int	PicBuf_to_X11	(const GEN_PAR*, const OUT_PAR*);
 
+#endif	/*	__HP2XX_H	*/

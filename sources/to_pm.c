@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -26,6 +26,7 @@ copies.
  ** 92/10/26  V 1.00  HWW  Originating, based on some code from H. Szillat
  ** 92/12/20  V 1.10  HWW  Considered usable after trial-and-error improvements
  ** 93/09/03  V 1.11  HWW  Adapted to emx 0.8g
+ ** 94/02/14  V 1.20a HWW  Adapted to changes in hp2xx.h
  **
  ** NOTES:
  **   1) This is beta software (actually, my first PM project)
@@ -78,7 +79,8 @@ static int	scr_width;
 static int	scr_height;
 
 
-void repaint(HWND hwnd)
+static void
+repaint (HWND hwnd)
 {
 int	row_c, x;
 POINTL	ptl;
@@ -171,7 +173,8 @@ static ULONG flFrameFlags = FCF_TITLEBAR      | FCF_SYSMENU  |
 
 
 
-void	win_close()
+static void
+win_close()
 {
   WinDestroyWindow   (hwndFrame);
   WinDestroyMsgQueue (hmq);
@@ -180,7 +183,8 @@ void	win_close()
 
 
 
-int	win_open (int x, int y, int w, int h)
+static int
+win_open (int x, int y, int w, int h)
 {
 int	 cx_frame, cy_frame;
 /* emx0.8g: not needed!
@@ -193,8 +197,8 @@ HPOINTER WinQuerySysPointer(HWND, LONG, BOOL);
   WinRegisterClass(hab, szClientClass, (PFNWP) ClientWndProc, 0L, 0);
 
   hwndFrame = WinCreateStdWindow(HWND_DESKTOP,
-                                 WS_VISIBLE | WS_MAXIMIZED,
-                                 (ULONG far *) &flFrameFlags,
+				 WS_VISIBLE | WS_MAXIMIZED,
+				 (ULONG far *) &flFrameFlags,
                                  szClientClass, NULL, 0L,
                                  (HMODULE) NULL, 0, &hwndClient);
 
@@ -208,42 +212,44 @@ HPOINTER WinQuerySysPointer(HWND, LONG, BOOL);
   if (x+w+cx_frame > scr_width || y+h+cy_frame > scr_height)
   {
 	win_close();
-	fprintf( stderr, "Window exceeds screen limits !\n" );
+	Eprintf ("Window exceeds screen limits !\n" );
 	return ERROR;
   }
 
-  WinSetWindowPos(hwndFrame, HWND_TOP, 
+  WinSetWindowPos(hwndFrame, HWND_TOP,
 		x - WinQuerySysValue (HWND_DESKTOP, SV_CXBORDER) + 1,
-		scr_height - h - y - cy_frame, 
+		scr_height - h - y - cy_frame,
 		w + cx_frame, h + cy_frame,
-                SWP_MOVE | SWP_SIZE | SWP_ACTIVATE | SWP_SHOW);
+		SWP_MOVE | SWP_SIZE | SWP_ACTIVATE | SWP_SHOW);
 
   WinSendMsg(hwndFrame, WM_SETICON,
-             WinQuerySysPointer(HWND_DESKTOP, SPTR_APPICON, FALSE),
-             NULL);
+	     WinQuerySysPointer(HWND_DESKTOP, SPTR_APPICON, FALSE),
+	     NULL);
   return 0;
 }
 
 
 
-void	PicBuf_to_PM (PicBuf *picbuf, PAR *p)
+int
+PicBuf_to_PM (const GEN_PAR *pg, const OUT_PAR *po)
 {
-  if (!p->quiet)
+  if (!pg->quiet)
   {
-	fprintf(stderr, "\nPM preview follows.\n");
-	fprintf(stderr, "Close window to end graphics mode\n");
+	Eprintf ("\nPM preview follows.\n");
+	Eprintf ("Close window to end graphics mode\n");
   }
 
-  pbuf = picbuf;
+  pbuf = po->picbuf;
 
-  if (win_open( (int)(p->xoff * p->dpi_x / 25.4),
-		(int)(p->yoff * p->dpi_y / 25.4),
-		picbuf->nb << 3, picbuf->nr ) )
-	return;
+  if (win_open( (int)(po->xoff * po->dpi_x / 25.4),
+		(int)(po->yoff * po->dpi_y / 25.4),
+		po->picbuf->nb << 3, po->picbuf->nr ) )
+	return ERROR;
 
   while(WinGetMsg(hab, (QMSG far *) &qmsg, NULL, 0, 0))
 	WinDispatchMsg(hab, (QMSG far *) &qmsg);
 
   win_close();
+  return 0;
 }
 

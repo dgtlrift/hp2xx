@@ -99,8 +99,8 @@ COMMON_INCS     =       hp2xx.h, bresnham.h
 
 OBJS            =       hp2xx.obj,hpgl.obj,picbuf.obj,bresnham.obj,     -
                         chardraw.obj,getopt.obj,getopt1.obj,            -
-                        to_mf.obj,to_pcx.obj,to_pcl.obj,to_eps.obj,     -
-                        to_img.obj,to_pbm.obj,to_rgip.obj,              -
+                        to_vec.obj,to_pcx.obj,to_pcl.obj,to_eps.obj,    -
+                        to_img.obj,to_pbm.obj,to_rgip.obj,std_main.obj  -
                         $(PREVIEWER)
 
 HP2XX           =       [-]HP2XX.EXE
@@ -114,7 +114,9 @@ $(HP2XX)        :       $(OBJS), $(of)
 #                                                                       #
 #########################################################################
 
-hp2xx.obj       :       hp2xx.c,        $(COMMON_INCS), getopt.h
+hp2xx.obj       :       hp2xx.c,        $(COMMON_INCS)
+
+std_main.obj    :       std_main.c,     $(COMMON_INCS), getopt.h
 
 hpgl.obj        :       hpgl.c,         $(COMMON_INCS), chardraw.h
 
@@ -128,7 +130,7 @@ getopt.obj      :       getopt.c,                       getopt.h
 
 getopt1.obj     :       getopt1.c,                      getopt.h
 
-to_mf.obj       :       to_mf.c,        $(COMMON_INCS)
+to_vec.obj      :       to_vec.c,       $(COMMON_INCS)
 
 to_pcx.obj      :       to_pcx.c,       $(COMMON_INCS)
 

@@ -1,5 +1,5 @@
 ###########################################################################
-#    Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+#    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
 #    Distributed by Free Software Foundation, Inc.
 #
 # This file is part of HP2xx.
@@ -21,42 +21,24 @@
 #
 # Makefile for BORLAND C++ version of hp2xx
 #
-.AUTODEPEND
-
-#		*Translator Definitions*
-
-# There are two versions available which you select by un-commenting
-# three lines and commenting out another three lines just below this
-# text. Remember to EITHER comment out the standard version OR the other.
-
+# Add support of modes PIC and PAC by un-commenting the corresponding
+# lines below.
+#
 # HERCULES (HGC) patches:
 #
 #   o  Replace all HAS_DOS_VGA with HAS_DOS_HGC
 #   o  Replace all to_vga...  with to_hgc...
 
-# Standard version:
+.AUTODEPEND
 
-CC           = bcc +HP2XX.CFG -DDOS -DHAS_DOS_VGA
-OBJ_EXTRAS   =
-EXE_d_extras =
+#		*Translator Definitions*
+CC = bcc +HP2XX.CFG
+TASM = TASM
+TLIB = tlib
+TLINK = tlink
+LIBPATH = C:\BC\LIB;C:\BC\LIB\LOCAL
+INCLUDEPATH = C:\BC\INCLUDE;C:\BC\INCLUDE\SHARE
 
-# Extended version, including modes PIC and PAC:
-#
-# CC           = bcc +HP2XX.CFG -DDOS -DHAS_DOS_VGA -DPIC_PAC
-# OBJ_EXTRAS   = to_pic.obj + to_pac.obj +
-# EXE_d_extras = to_pic.obj to_pac.obj
-
-# No user-serviceable part below!
-#############################################################################
-
-
-
-
-TASM         = tasm
-TLINK        = tlink
-
-
-all:	hp2xx.exe
 
 #		*Implicit Rules*
 .c.obj:
@@ -69,43 +51,50 @@ all:	hp2xx.exe
 
 
 EXE_dependencies =  \
-  hp2xx.obj \
-  hpgl.obj \
-  picbuf.obj \
-  to_pbm.obj \
-  to_img.obj \
-  to_rgip.obj \
-  to_mf.obj \
-  to_pcl.obj \
-  to_pcx.obj \
-  to_eps.obj \
-  to_vga.obj \
-  bresnham.obj \
-  getopt.obj \
-  getopt1.obj \
-  chardraw.obj \
-  $(EXE_d_extras)
+ bresnham.obj \
+ chardraw.obj \
+ getopt.obj \
+ getopt1.obj \
+ hp2xx.obj \
+ hpgl.obj \
+ picbuf.obj \
+ to_eps.obj \
+ to_img.obj \
+ to_pbm.obj \
+ to_pcl.obj \
+ to_pcx.obj \
+ to_rgip.obj \
+ to_vec.obj \
+ to_vga.obj \
+ std_main.obj \
+# to_pac.obj \
+# to_pic.obj
 
 #		*Explicit Rules*
-hp2xx.exe: hp2xx.cfg $(EXE_d_extras) $(EXE_dependencies)
-  $(TLINK) /v/x/c/P-/LC:\BC\LIB;C:\BC\LIB\LOCAL c0l.obj+ hp2xx.obj+ \
-  $(OBJ_EXTRAS) @&&|
-hpgl.obj+
-picbuf.obj+
-to_pbm.obj+
-to_rgip.obj+
-to_img.obj+
-to_mf.obj+
-to_pcl.obj+
-to_pcx.obj+
-to_eps.obj+
-to_vga.obj+
+hp2xx.exe: hp2xx.cfg $(EXE_dependencies)
+  $(TLINK) /v/x/c/P-/L$(LIBPATH) @&&|
+c0l.obj+
 bresnham.obj+
+chardraw.obj+
 getopt.obj+
 getopt1.obj+
-chardraw.obj
+hp2xx.obj+
+hpgl.obj+
+picbuf.obj+
+to_eps.obj+
+to_img.obj+
+to_pbm.obj+
+# to_pac.obj+
+# to_pic.obj+
+to_pcl.obj+
+to_pcx.obj+
+to_rgip.obj+
+to_vec.obj+
+to_vga.obj+
+std_main.obj
 hp2xx
 		# no map file
+graphics.lib+
 emu.lib+
 mathl.lib+
 cl.lib
@@ -113,49 +102,52 @@ cl.lib
 
 
 #		*Individual File Dependencies*
-hp2xx.obj: hp2xx.c
+bresnham.obj: hp2xx.cfg bresnham.c
 
-hpgl.obj: hpgl.c
+chardraw.obj: hp2xx.cfg chardraw.c
 
-picbuf.obj: picbuf.c
+getopt.obj: hp2xx.cfg getopt.c
 
-to_pbm.obj: to_pbm.c
+getopt1.obj: hp2xx.cfg getopt1.c
 
-to_rgip.obj: to_rgip.c
+hp2xx.obj: hp2xx.cfg hp2xx.c
 
-to_img.obj: to_img.c
+hpgl.obj: hp2xx.cfg hpgl.c
 
-to_mf.obj: to_mf.c
+picbuf.obj: hp2xx.cfg picbuf.c
 
-to_pcl.obj: to_pcl.c
+to_eps.obj: hp2xx.cfg to_eps.c
 
-to_pac.obj: to_pac.c
+to_img.obj: hp2xx.cfg to_img.c
 
-to_pic.obj: to_pic.c
+to_pbm.obj: hp2xx.cfg to_pbm.c
 
-to_pcx.obj: to_pcx.c
+# to_pac.obj: hp2xx.cfg to_pac.c
+#
+# to_pic.obj: hp2xx.cfg to_pic.c
 
-to_eps.obj: to_eps.c
+to_pcl.obj: hp2xx.cfg to_pcl.c
 
-to_vga.obj: to_vga.c
+to_pcx.obj: hp2xx.cfg to_pcx.c
 
-bresnham.obj: bresnham.c
+to_rgip.obj: hp2xx.cfg to_rgip.c
 
-getopt.obj: getopt.c
+to_vec.obj: hp2xx.cfg to_vec.c
 
-getopt1.obj: getopt1.c
+to_vga.obj: hp2xx.cfg to_vga.c
 
-chardraw.obj: chardraw.c
+std_main.obj: hp2xx.cfg std_main.c
 
 #		*Compiler Configuration File*
 hp2xx.cfg: borland.mak
   copy &&|
 -ml
 -a
+-A
 -O
 -Z
 -d
--H=HP2XX.SYM
+-vi-
 -wpin
 -wamb
 -wamp
@@ -168,7 +160,13 @@ hp2xx.cfg: borland.mak
 -wstv
 -wucp
 -wuse
--IC:\BC\INCLUDE;C:\BC\INCLUDE\SHARE
--LC:\BC\LIB;C:\BC\LIB\LOCAL
+-weas
+-I$(INCLUDEPATH)
+-L$(LIBPATH)
+-DDOS
+-DHAS_DOS_VGA
+-D_LIBC
+-D__GNU_LIBRARY__
+# -DPIC_PAC
 | hp2xx.cfg
 

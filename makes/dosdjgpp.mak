@@ -1,5 +1,5 @@
 ###########################################################################
-#    Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+#    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
 #    Distributed by Free Software Foundation, Inc.
 #
 # This file is part of HP2xx.
@@ -47,11 +47,11 @@ EX_OBJ	=
 #############################################################################
 
 SRCS	= hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c $(INCS) \
-	to_mf.c to_pcx.c to_pcl.c to_eps.c to_img.c to_dj_gr.c to_pbm.c \
-	to_rgip.o $(EX_SRC)
+	to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c to_dj_gr.c to_pbm.c \
+	to_rgip.c std_main.c $(EX_SRC)
 
 OBJS	= hp2xx.o hpgl.o pbuf.o bham.o cdrw.o opt.o rgip.o opt1.o \
-	mf.o pcx.o pcl.o eps.o img.o djgr.o pbm.o $(EX_OBJS)
+	vec.o pcx.o pcl.o eps.o img.o djgr.o pbm.o std.o $(EX_OBJS)
 
 INCS	= hp2xx.h bresnham.h chardraw.h charset0.h getopt.h
 
@@ -96,8 +96,11 @@ opt.o:	getopt.o
 opt1.o:	getopt1.o
 	copy getopt1.o opt1.o
 
-mf.o:	to_mf.o
-	copy to_mf.o mf.o
+std.o:	std_main.o
+	copy std_main.o std.o
+
+vec.o:	to_vec.o
+	copy to_vec.o vec.o
 
 pcx.o:	to_pcx.o
 	copy to_pcx.o pcx.o

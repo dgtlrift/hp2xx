@@ -1,5 +1,5 @@
 \input texinfo      @c -*-texinfo-*-
-@c Copyright (c) 1992 1993 Heinz W. Werntges
+@c Copyright (c) 1992 - 1994  Heinz W. Werntges
 @c %**start of header
 @setfilename hp2xx.info
 @settitle HP2XX, A HP-GL Converter
@@ -13,7 +13,7 @@
 
 @tex
 % \def\$#1${{#1}}  % Kludge: collect RCS revision info without $...$
-\xdef\manvers{$Revision: 1.0.3 $}  % For use in headers, footers too
+\xdef\manvers{$Revision: 1.0.4 $}  % For use in headers, footers too
 @end tex
 
 @c HP2XX CHANGE LOG:
@@ -25,8 +25,9 @@
 @c 93/01/09  V 1.01  HWW  Option -S; long options; acknowledgement; install
 @c 93/04/14  V 1.02  HWW  Option -S4; UC support
 @c 93/09/02  V 1.03  HWW  EA support; RGIP & HPGL modes; DJ5x0: data compression
-@c 93/11/15  V 1.04  HWW  Typos fixed
- 
+@c 93/11/23  V 1.04a HWW  Typos fixed
+@c 94/02/15  V 1.04b HWW  Option -C added
+
 @c THIS MANUAL REQUIRES TEXINFO-2 macros and info-makers to format properly.
 
 @ifinfo
@@ -42,10 +43,10 @@ END-INFO-DIR-ENTRY
 This file documents the HP-GL converter HP2XX
 
 @c !!set edition, date, version
-This is Edition 1.0.3, September 1993,
+This is Edition 1.0.4, February 1994,
 of @cite{Using HP2XX: A HP-GL Converter}.
 
-Copyright (C) 1992, 1993 Heinz W. Werntges
+Copyright (C) 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -78,8 +79,8 @@ by the Free Software Foundation instead of in the original English.
 @c @subtitle on XXXX Systems
 @sp 1
 @c !!set edition, date, version
-@subtitle Edition 1.0.3, for HP2XX version 3.1.x
-@subtitle September 1993
+@subtitle Edition 1.0.4, for HP2XX version 3.2.x
+@subtitle February 1994
 @author by Heinz W. Werntges
 @page
 @tex
@@ -91,7 +92,7 @@ by the Free Software Foundation instead of in the original English.
 @end tex
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1992, 1993 Heinz W. Werntges
+Copyright @copyright{} 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -121,7 +122,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 
 @c !!set edition, date, version
-This is Edition 1.0.3, September 1993, for HP2XX Version 3.1.x
+This is Edition 1.0.4, February 1994, for HP2XX Version 3.2.x
 @end ifinfo
 
 
@@ -339,6 +340,15 @@ hard margins which cannot be avoided. Currently, these modes are
 with option @samp{-o @var{off_left}}, while the upper margin can be
 controlled via @samp{-O @var{off_upper}}. @var{off_left} and @var{off_upper}
 are specified in mm.
+
+Option @samp{-C} (center the picture) works in combination with options
+@samp{-o -O} by modifying the offsets in such a way that the resulting
+picture is centered within the frame defined by options @samp{-w -h}. Example:
+Assume that the picture is a square, and @samp{-w @var{100} -h @var{40}}
+are specified. A 40 mm square with an additional left margin of
+(100-40)/2 = 30 mm will be produced if option @samp{-C} is given.
+If the actual width/height ration of the picture exactly matches
+the ratio defined by @samp{-w -h}, option @samp{-C} has no effect.
 
 
 
@@ -889,7 +899,7 @@ are familiar with installation of PD software in general.
 * Source-level installation::
 @end menu
 
-@node Installation of run-time versions, Source-level Installation, , Installation procedure
+@node Installation of run-time versions, Source-level installation, , Installation procedure
 @comment  node-name,  next,  previous,  up
 @subsection Installing an executable version
 
@@ -910,7 +920,7 @@ manual will elaborate on the following subsection instead of this one.
 
 
 
-@node Source-level Installation, , Installation of run-time versions, Installation procedure
+@node Source-level installation, , Installation of run-time versions, Installation procedure
 @comment  node-name,  next,  previous,  up
 @subsection Source-level installation
 
@@ -1439,6 +1449,11 @@ Set y resolution (see above). Invalid here!
 
 @table @samp
 
+@item --center (-C)
+Center the picture within the frame defined by options @samp{-w -h} by
+adding to the left or upper margin. Null effect if the width/height
+ratio of the picture matches that of options @samp{-w -h}.
+
 @item --xoffset (-o) @var{float}
 X offset of picture (left  margin) in mm.
 Valid: @var{float} >= 0.0, default: @var{float}=0.0
@@ -1496,7 +1511,8 @@ outstanding contributions:
 
 @item Nelson Beebe
 Help with the new generic makefile (easier configuration);
-clean selection mechanism for reviewer suggested
+clean selection mechanism for previewer suggested;
+suggestions for an improved X.11 previewer
 
 @item Elisabeth Dregger-Cappel
 Network and host resources for @code{hp2xx} distribution
@@ -1506,6 +1522,9 @@ New ATARI format "cs" for CS-TeX; bug fixes for arcs / circles
 
 @item Roland Emmerich
 DOS betatests and suggestions; @code{showit}
+
+@item R. Frahm
+PCX color improvements
 
 @item Jonathan M. Gillian
 DOS betatests and suggestions
@@ -1518,6 +1537,12 @@ Code for EA support
 
 @item Claus H. Langhans
 AMIGA portation; pbm, ilbm formats
+
+@item Lawrence Lowe
+Many helpful suggestions and improvements, e.g. for pcl format
+
+@item Ian MacPhedran
+Color / binary format for pbm
 
 @item Norbert Meyer
 ATARI portation; img, pic, pac formats; first ATARI previewer
@@ -1552,7 +1577,7 @@ Code for UC support
 @section Copyright notice
 
 @display
-Copyright (c) 1991 - 1993  Heinz W. Werntges
+Copyright (c) 1991 - 1994  Heinz W. Werntges
 All rights reserved.
 
 Redistribution and use in source and binary forms are permitted provided that

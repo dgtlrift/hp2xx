@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 1993 Roland Emmerich & Heinz W. Werntges. All rights reserved.
-   Distributed by Free Software Foundation, Inc.
+   Copyright (c) 1993 - 1994  Roland Emmerich & Heinz W. Werntges.
+   All rights reserved. Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
 
@@ -25,6 +25,7 @@ copies.
  **
  ** 93/06/16  V 1.00  RE   Originating
  ** 93/07/25  V 1.01  HWW  Minor adaptations to hp2xx standard
+ ** 94/02/14  V 1.10a HWW  Adapted to changes in hp2xx.h
  **/
 
 /**
@@ -67,7 +68,8 @@ static unsigned int HGCBank[] = {0xB000, 0xB200, 0xB400, 0xB600};
  ** set_pixel_HGC(x, y) set point at x, y
  **/
 
-static void	set_pixel_HGC(int x, int y)
+static void
+set_pixel_HGC (int x, int y)
 {
   unsigned int bank;
   unsigned int pkt_addr;
@@ -100,7 +102,8 @@ static void	set_pixel_HGC(int x, int y)
  ** switch to HGC text mode
  **/
 
-static void	set_HGC_textmode(void)
+static void
+set_HGC_textmode (void)
 {
 unsigned char i;
 unsigned int j;
@@ -130,7 +133,8 @@ unsigned char TextModus[] = {
  ** Switch to HGC graphic mode
  **/
 
-static void	set_HGC_graphmode(void)
+static void
+set_HGC_graphmode (void)
 {
 unsigned char i;
 unsigned int  j,k, bkgrnd;
@@ -171,45 +175,51 @@ unsigned char GrafikModus[] = {
  ** Main entry point
  **/
 
-void	PicBuf_to_HGC(PicBuf *picbuf, PAR *p)
+int
+PicBuf_to_HGC (const GEN_PAR *pg, const OUT_PAR *po)
 {
-int row_c, x, y, xoff, yoff, color_index;
-RowBuf *row;
+int		row_c, x, y, xoff, yoff, color_index;
+const RowBuf	*row;
+const PicBuf	*pb;
 
-  if (!p->quiet)
+  if (!pg->quiet)
   {
-	fprintf(stderr, "\nHGCpreview follows.\n");
-	fprintf(stderr, "Press <return> to start and end graphics mode\n");
+	Eprintf ("\nHGCpreview follows.\n");
+	Eprintf ("Press <return> to start and end graphics mode\n");
 	SilentWait();
   }
 
-  xoff = p->xoff * p->dpi_x / 25.4;
-  yoff = p->yoff * p->dpi_y / 25.4;
+  pb   = po->picbuf;
+  xoff = po->xoff * po->dpi_x / 25.4;
+  yoff = po->yoff * po->dpi_y / 25.4;
 
-  if ((!p->quiet) &&
-      (((picbuf->nb << 3) + xoff >= HGC_XMAX) || (picbuf->nr + yoff >= HGC_YMAX)) )
+  if ((!pg->quiet) &&
+      (((pb->nb << 3) + xoff >= HGC_XMAX) || (pb->nr + yoff >= HGC_YMAX)) )
   {
-	fprintf(stderr, "\n\007WARNING: Picture won't fit on a standard HGC!\n");
-	fprintf(stderr, "Current range: (%d..%d) x (%d..%d) pels\n",
-		xoff, (picbuf->nb << 3) + xoff, yoff, picbuf->nr + yoff);
-	fprintf(stderr, "Continue anyway (y/n)?: ");
+	Eprintf ("\n\007WARNING: Picture won't fit on a standard HGC!\n");
+	Eprintf ("Current range: (%d..%d) x (%d..%d) pels\n",
+		xoff, (pb->nb << 3) + xoff, yoff, pb->nr + yoff);
+	Eprintf ("Continue anyway (y/n)?: ");
 	if (toupper(getchar()) == 'N')
-		return;
+		return 1;
   }
 
   set_HGC_graphmode();
 
-  for (row_c=0, y=picbuf->nr+yoff-1; row_c < picbuf->nr; row_c++, y--)
+  for (row_c=0, y=pb->nr+yoff-1; row_c < pb->nr; row_c++, y--)
   {
-	row = get_RowBuf (picbuf, row_c);
-	for (x=0; x < picbuf->nc; x++)
+	row = get_RowBuf (pb, row_c);
+	if (row == NULL)
+		continue;
+	for (x=0; x < pb->nc; x++)
 	{
-		color_index = index_from_RowBuf(row, x, picbuf);
+		color_index = index_from_RowBuf(row, x, pb);
 		if (color_index != xxBackground)
 			set_pixel_HGC(x+xoff, y);
 	}
   }
   SilentWait();
   set_HGC_textmode();
+  return 0;
 }
 

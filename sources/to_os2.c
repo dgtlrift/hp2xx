@@ -1,6 +1,6 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.
-                 1993        Horst Szillat
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.
+		 1993        Horst Szillat
    All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
@@ -28,14 +28,15 @@ copies.
  ** 93/05/22  V 1.00  HSz, derived from HWW's to_vga v. 2.01a
  ** 93/06/05  V 1.08  HSz, DOS included
  ** 93/07/09  V 1.09  HSz, kbhit works with _int86()-bugfix
-                           KBDCHARIN used in the right way
+			   KBDCHARIN used in the right way
  ** 93/07/11  V 1.10  HWW  dos86 realized as macro;
-                           easier cooperation with to_vga.c;
-                           kbhit() not needed anymore (removed)
-                           some typos fixed
+			   easier cooperation with to_vga.c;
+			   kbhit() not needed anymore (removed)
+			   some typos fixed
+ ** 94/02/14  V 1.20a HWW  Adapted to changes in hp2xx.h
 
 
-          !!! BEFORE COMPILING READ COMMENTS IN kbhit() !!!
+	  !!! BEFORE COMPILING READ COMMENTS IN kbhit() !!!
 
  **
  ** NOTES:
@@ -45,7 +46,7 @@ copies.
  **     continued, so you have two command lines):
  **       gcc -O to_vga.c to_mf.c to_eps.c picbuf.c chardraw.c bresnham.c\
  **       getopt.c getopt1.c to_os2.c to_pcx.c to_pcl.c to_img.c to_pbm.c\
- **       hpgl.c hp2xx.c -o hp2xx.exe -DHAS_OS2_EMX -Wall
+ **       hpgl.c hp2xx.c std_main.c -o hp2xx.exe -DHAS_OS2_EMX -Wall
  **       emxbind -aq hp2xx.exe -acim
  **
  **     Comment by HWW: Use the makefile "generic.mak" if possible
@@ -95,7 +96,8 @@ static VIOMODEINFO graph_mode;
 
 #define put_it(a,b) screen[a] |= (b)
 
-static void set_pixel_os2 (unsigned int x, unsigned int y, Byte b)
+static void
+set_pixel_os2 (unsigned int x, unsigned int y, Byte b)
 {
   if((x<graph_mode.hres)&&(y<graph_mode.vres))
   {
@@ -117,10 +119,12 @@ static void set_pixel_os2 (unsigned int x, unsigned int y, Byte b)
 
 
 
-void    PicBuf_to_OS2 (PicBuf *picbuf, PAR *p)
+int
+PicBuf_to_OS2 (const GEN_PAR *pg, const OUT_PAR* po)
 {
-int     row_c, x, y, xoff, yoff, color_index;
-RowBuf  *row;
+int		row_c, x, y, xoff, yoff, color_index;
+const RowBuf	*row;
+const PicBuf	*pb;
 
 VIOMODEINFO text_mode;
 VIOPHYSBUF  vpb;
@@ -129,39 +133,40 @@ unsigned char rubbish;
 KBDKEYINFO kki;
 
   if(_osmode==DOS_MODE)
+	return PicBuf_to_VGA (pg, po);
+
+  if (pg == NULL || po == NULL)
+	return ERROR;
+  pb = po->picbuf;
+  if (pb == NULL)
+	return ERROR;
+
+  if (!pg->quiet)
   {
-    PicBuf_to_VGA(picbuf,p);
-    return;
+	Eprintf ("\nVGA preview follows.\n");
+	Eprintf ("Press <return> to start and end graphics mode\n");
+	SilentWait();
   }
 
+  xoff = po->xoff * po->dpi_x / 25.4;
+  yoff = po->yoff * po->dpi_y / 25.4;
 
-  if (!p->quiet)
+  if ((!pg->quiet) &&
+      (((pb->nb << 3) + xoff > 639) || (pb->nr + yoff > 480)) )
   {
-        fprintf(stderr, "\nVGA preview follows.\n");
-        fprintf(stderr, "Press <return> to start and end graphics mode\n");
-        SilentWait();
-  }
-
-  xoff = p->xoff * p->dpi_x / 25.4;
-  yoff = p->yoff * p->dpi_y / 25.4;
-
-  if ((!p->quiet) &&
-      (((picbuf->nb << 3) + xoff > 639) || (picbuf->nr + yoff > 480)) )
-  {
-        fprintf(stderr, "\n\007WARNING: Picture won't fit on a standard VGA!\n");
-        fprintf(stderr, "Current range: (%d..%d) x (%d..%d) pels\n",
-                xoff, (picbuf->nb << 3) + xoff, yoff, picbuf->nr + yoff);
-        fprintf(stderr, "Continue anyway (y/n)?: ");
-        if (toupper(getchar()) == 'N')
-                return;
+	Eprintf ("\n\007WARNING: Picture won't fit on a standard VGA!\n");
+	Eprintf ("Current range: (%d..%d) x (%d..%d) pels\n",
+		xoff, (pb->nb << 3) + xoff, yoff, pb->nr + yoff);
+	Eprintf ("Continue anyway (y/n)?: ");
+	if (toupper(getchar()) == 'N')
+		return 1;
   }
 
   status=VIOGETMODE(&text_mode,0);
   if(status!=0){
-    if (!p->quiet){
-      fprintf(stderr,"Sorry, I have trouble with the graphics mode(1)!\n");
-    }
-    return;
+    if (!pg->quiet)
+      Eprintf ("Sorry, I have trouble with the graphics mode(1)!\n");
+    return ERROR;
   }
 
   graph_mode.cb=14;
@@ -174,22 +179,22 @@ KBDKEYINFO kki;
   graph_mode.fmt_ID=0;
   graph_mode.attrib=1;
   status=VIOSETMODE(&graph_mode,0);
-  if(status!=0){
-    if (!p->quiet){
-      fprintf(stderr,"Sorry, I have trouble with the graphics mode(2)!\n");
-    }
-    return;
+  if(status!=0)
+  {
+    if (!pg->quiet)
+      Eprintf ("Sorry, I have trouble with the graphics mode(2)!\n");
+    return ERROR;
   }
 
   vpb.pBuf=(PBYTE)0xa0000;
   vpb.cb  =graph_mode.hres*graph_mode.vres/8;
   vpb.asel[0]=0;
   status=VIOGETPHYSBUF(&vpb,0);
-  if(status!=0){
-    if (!p->quiet){
-      fprintf(stderr,"Sorry, I have trouble with the graphics mode(3)!\n");
-    }
-    return;
+  if(status!=0)
+  {
+    if (!pg->quiet)
+      Eprintf ("Sorry, I have trouble with the graphics mode(3)!\n");
+    return ERROR;
   }
   VIOSCRLOCK(1,&rubbish,0);
   screen=MAKEP(vpb.asel[0],0);
@@ -197,15 +202,15 @@ KBDKEYINFO kki;
     screen[x]=0;
   }
 
-  for (row_c=0, y=picbuf->nr+yoff-1; row_c < picbuf->nr; row_c++, y--)
+  for (row_c=0, y=pb->nr+yoff-1; row_c < pb->nr; row_c++, y--)
   {
-        row = get_RowBuf (picbuf, row_c);
-        for (x=0; x < picbuf->nc; x++)
-        {
-                color_index = index_from_RowBuf(row, x, picbuf);
-                if (color_index != xxBackground)
-                        set_pixel_os2 (x+xoff, y, (Byte) color_index);
-        }
+	row = get_RowBuf (pb, row_c);
+	for (x=0; x < pb->nc; x++)
+	{
+		color_index = index_from_RowBuf(row, x, pb);
+		if (color_index != xxBackground)
+			set_pixel_os2 (x+xoff, y, (Byte) color_index);
+	}
   }
 
   do{
@@ -218,13 +223,13 @@ KBDKEYINFO kki;
 
   VIOSCRUNLOCK(0);
   status=VIOSETMODE(&text_mode,0);
-  if(status!=0){
-    if (!p->quiet){
-      fprintf(stderr,"Sorry, I have trouble with the graphics mode(4)!\n");
-    }
-    return;
+  if(status!=0)
+  {
+    if (!pg->quiet)
+      Eprintf ("Sorry, I have trouble with the graphics mode(4)!\n");
+    return ERROR;
   }
-
+  return 0;
 }
 
 

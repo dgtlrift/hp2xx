@@ -54,7 +54,7 @@ typedef LONG ID;	/* An ID is four printable ASCII chars but
 			 * stored as a LONG for efficient copy & compare.*/
 
 /* Four-character IDentifier builder.*/
-#define MakeID(a,b,c,d)  ( (LONG)(a)<<24L | (LONG)(b)<<16L | (c)<<8 | (d) )
+#define MakeID(a,b,c,d)  ( ((LONG)(a)<<24L) | ((LONG)(b)<<16L) | ((c)<<8) | (d) )
 
 /* Standard group IDs.  A chunk with one of these IDs contains a
    SubTypeID followed by zero or more chunks.*/

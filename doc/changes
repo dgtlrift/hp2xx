@@ -7,6 +7,52 @@ NOTES:
         source restructuring or minor bug fixes.
 
 
+V 3.20a, 94/02/15:
+
+This release contains major modifications. Besides a lot of cleamup it
+deals with the introduction of high-level functions which represent
+the different conversion phases of hp2xx. These may be called by *any*
+user front-end, not just the traditional command line interface.
+
+My intention is to facilitate the introduction of various graphical
+user front-ends. If you want to add one, study function "action_traditional"
+and read the comments in "hp2xx.h"!
+
+
+	-- hp2xx.h:     Re-structured! Options & parameters now separated into
+	                three groups: General / for input / for output conversion
+	-- hp2xx.c:     Now with high-level routines suitable for future
+	                GUI front-ends.
+	                CLI functions incl. main() moved to "std_main.c"
+	-- std_main.c:  New file! Keeps functions for traditional command line interface.
+	                PCL mode now also accepts 600 DPI.
+	-- hpgl.c:      Bug fixed: Gap in min/max determination caused later crash
+	-- to_pbm.c:    Color supported + compact binary format (by Ian McPhedran)
+	-- most files:    o  Adapted to new parameter structs
+	                  o  Re-organized
+	                  o  Use of "const"
+	                  o  Better error recovery
+	                  o  Direct output to stderr now eliminated (see std_main.c)
+	Plus all changes later than 3.14a
+
+
+V 3.15a, 94/01/02:
+
+    Suggestions by Lawrence Lowe:
+	-- to_pcl.c.c:  Effects of -o -O with and without -i more consistent
+	-- hpgl.c:      New option: -C (center mode); affects -o -O
+	-- chardraw.c:  Symbol plotting now with more general symbol centering
+	-- hp2xx.c:     Warning "DPI setting is no ..." suppressed in DeskJet modes
+	-- hpgl.c:      Second parameter of ES now optional (default 0)
+
+
+V 3.14b, 93/11/23:
+
+	-- to_pcx.c:    Color mode working again - though CLUT still has no effects
+	                (by R. Frahm, DESY, Hamburg)
+	-- hp2xxinf.tex:More typos fixes
+
+
 V 3.14a, 93/11/15:
 
 	-- to_eps.c:    Code now closer to Adobe EPSF structuring conventions
@@ -14,7 +60,7 @@ V 3.14a, 93/11/15:
 	-- generic.mak: install-exe --> install-bin
 	-- hp2xxinf.tex:Typos fixes
 	Plus all changes later than 3.13a
- 
+
 
 
 V 3.13c, 93/10/23 & 93/11/08:

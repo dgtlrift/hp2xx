@@ -1,26 +1,3 @@
-/*
-   Copyright (c) 1991 - 1993 Claus H. Langhans.  All rights reserved.
-   Distributed by Free Software Foundation, Inc.
-
-This file is part of HP2xx.
-
-HP2xx is distributed in the hope that it will be useful, but
-WITHOUT ANY WARRANTY.  No author or distributor accepts responsibility
-to anyone for the consequences of using it or for whether it serves any
-particular purpose or works at all, unless he says so in writing.  Refer
-to the GNU General Public License, Version 2 or later, for full details.
-
-Everyone is granted permission to copy, modify and redistribute
-HP2xx, but only under the conditions described in the GNU General Public
-License.  A copy of this license is supposed to have been
-given to you along with HP2xx so you can know your rights and
-responsibilities.  It should be in a file named COPYING.  Among other
-things, the copyright notice and this notice must be preserved on all
-copies.
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-*/
-
 /**
  ** to_pbm.c: PortableBitMap (PBM) converter part of project "hp2xx"
  **
@@ -28,8 +5,10 @@ copies.
  ** 92/04/16  V 1.01  CHL  Better error handling
  ** 92/05/17  V 1.01b HWW  Output to stdout if outfile == '-'
  ** 92/05/19  V 1.01c HWW  Abort if color mode
+ ** 94/02/10  V 2.00  IJMP Add colour/use binary mode
+ **			   (IJMP = Ian_MacPhedran@engr.usask.ca)
+ ** 94/02/14  V 2.10  HWW  Adapted to changes in hp2xx.h
  **/
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,45 +20,114 @@ copies.
 
 
 
-void
-PicBuf_to_PBM(PicBuf * picbuf, PAR * p)
+int
+PicBuf_to_PBM (const GEN_PAR *pg, const OUT_PAR *po)
 {
 FILE           *fd;
-int             row_count = 0;
-int             row_c, byte_c, bit, x;
-RowBuf         *row;
+int             row_c, byte_c, x;
+const RowBuf   *row;
+const PicBuf   *pb;
+#ifdef PBMascii
+int             bit, row_count = 0;
+char	       *ppm[] = { "1 1 1", "0 0 0", "1 0 0", "0 1 0",
+		"0 0 1", "0 1 1", "1 0 1", "1 1 0"};
+#else
+int	       ppm[][3] = { {255, 255, 255}, {0,0,0}, {255,0,0}, {0,255,0},
+		{0,0,255},{0,255,255},{255,0,255},{255,255,0}};
+#endif /*PBMascii*/
+int		colour;
 
-  if (picbuf->depth > 1)
-  {
-	fprintf(stderr, "\nPBM mode does not support colors yet -- sorry\n");
-	goto ERROR_EXIT_2;
-  }
+  if (pg == NULL || po == NULL)
+	return ERROR;
+  pb = po->picbuf;
+  if (pb == NULL)
+	return ERROR;
 
-  if (!p->quiet)
-	fprintf(stderr, "\nWriting PBM output: %s\n",p->outfile);
-  if (*p->outfile != '-')
+  if (!pg->quiet)
+	Eprintf("\nWriting PBM output: %s\n", po->outfile);
+  if (*po->outfile != '-')
   {
 
 #ifdef VAX
-	if ((fd = fopen(p->outfile, WRITE_BIN, "rfm=var", "mrs=512")) == NULL)
+	if ((fd = fopen(po->outfile, WRITE_BIN, "rfm=var", "mrs=512")) == NULL)
 #else
-	if ((fd = fopen(p->outfile, WRITE_BIN)) == NULL)
+	if ((fd = fopen(po->outfile, WRITE_BIN)) == NULL)
 #endif
 		goto ERROR_EXIT;
   }
   else
 	fd = stdout;
 
-  if (fprintf(fd, "P1\n")== EOF)
-	goto ERROR_EXIT;
-  if (fprintf(fd, "%d %d\n", (picbuf->nb) * 8, picbuf->nr)== EOF)
-	goto ERROR_EXIT;
-
-  for (row_c = 0; row_c < picbuf->nr; row_c++)
+  if (pb->depth > 1)
   {
-	row = get_RowBuf(picbuf, picbuf->nr - row_c - 1);
+#ifdef PBMascii
+    if (fprintf(fd, "P3\n")== EOF)
+	goto ERROR_EXIT;
+    if (fprintf(fd, "%d %d\n1\n", pb->nc, pb->nr)== EOF)
+	goto ERROR_EXIT;
+#else
+    if (fprintf(fd, "P6\n")== EOF)
+	goto ERROR_EXIT;
+    if (fprintf(fd, "%d %d\n255\n", pb->nc, pb->nr)== EOF)
+	goto ERROR_EXIT;
+#endif /* PBMascii */
 
-	for (byte_c = x = 0; byte_c < picbuf->nb; byte_c++)
+    for (row_c = 0; row_c < pb->nr; row_c++)
+    {
+	row = get_RowBuf(pb, pb->nr - row_c - 1);
+	if (row == NULL)
+		continue;
+
+	for (x = 0; x < pb->nc; x++)
+	{
+	    colour = index_from_RowBuf(row, x, pb);
+#ifdef PBMascii
+	    if (fprintf(fd,"%s",ppm[colour]) == EOF) goto ERROR_EXIT;
+#else
+	    if (fprintf(fd,"%c%c%c",ppm[colour][0],ppm[colour][1],
+		ppm[colour][2]) == EOF) goto ERROR_EXIT;
+#endif /* PBMascii */
+#ifdef PBMascii
+	    row_count++;
+	    if (row_count >= MAXOUTPUTROWS)
+	    {
+		row_count = 0;
+		if(putc('\n', fd)== EOF) goto ERROR_EXIT;
+	    }
+	    else
+	    {
+		if(putc(' ', fd)== EOF) goto ERROR_EXIT;
+	    }
+#endif /* PBMascii */
+	}
+	if ((!pg->quiet) && (row_c % 10 == 0))
+	    /* For the impatients among us ...	 */
+	    Eprintf(".");
+#ifdef PBMascii
+	row_count = 0;
+	putc('\n', fd);
+#endif /* PBMascii */
+    }
+  }
+  else
+  {
+#ifdef PBMascii
+    if (fprintf(fd, "P1\n")== EOF)
+#else
+    if (fprintf(fd, "P4\n")== EOF)
+#endif /* PBMascii */
+	goto ERROR_EXIT;
+    if (fprintf(fd, "%d %d\n", (pb->nb) * 8, pb->nr)== EOF)
+	goto ERROR_EXIT;
+
+    for (row_c = 0; row_c < pb->nr; row_c++)
+    {
+	row = get_RowBuf(pb, pb->nr - row_c - 1);
+	if (row == NULL)
+		continue;
+
+	for (byte_c = x = 0; byte_c < pb->nb; byte_c++)
+#ifdef PBMascii
 	{
 	    for (bit = 128; bit; bit GGE 1, x++)
 		if (bit & row->buf[byte_c])
@@ -103,22 +151,31 @@ RowBuf         *row;
 		    }
 		}
 	}
-	if ((!p->quiet) && (row_c % 10 == 0))
+#else
+	{
+		if(putc(row->buf[byte_c], fd)== EOF) goto ERROR_EXIT;
+	}
+#endif /* PBMascii */
+	if ((!pg->quiet) && (row_c % 10 == 0))
 	    /* For the impatients among us ...	 */
-	    putc('.', stderr);
+	    Eprintf(".");
+#ifdef PBMascii
 	row_count = 0;
 	putc('\n', fd);
+#endif /* PBMascii */
+    }
   }
+  fflush(fd);
 
-  if (!p->quiet)
-	fputc('\n', stderr);
+  if (!pg->quiet)
+	Eprintf("\n");
   if (fd != stdout)
 	fclose(fd);
-  return;
+  return 0;
 
 ERROR_EXIT:
-  perror      ("write_PBM");
+  PError ("write_PBM");
 ERROR_EXIT_2:
-  free_PicBuf (picbuf, p->swapfile);
-  exit	      (ERROR);
+  return ERROR;
 }
+

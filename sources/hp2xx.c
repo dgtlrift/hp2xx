@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 1991 - 1993 Heinz W. Werntges.  All rights reserved.
+   Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
    Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -69,6 +69,7 @@ copies.
  ** -- Juergen Gross     for access to a HP 9000 machine
  ** -- Roland Emmerich   for proofreading, beta-testing, and his HGC support
  ** -- Jon Gillian       for valuable suggestions
+ ** -- Lawrence Lowe     for various improvements and contributions
  **-------------------------------------------------------------------------
  **/
 
@@ -123,11 +124,13 @@ copies.
  ** 93/09/03  V 3.13a HWW  Wait() renamed to NormalWait() (name collision on VAX),
  **			   Option -P : Option parser modified; -m hpgl added
  ** 93/09/22  V 3.13b HWW  Fix in autoset_outfile_name()
+ ** 94/01/01  V 3.14a HWW  Additions by L. Lowe
+ ** 94/02/14  V 3.20b HWW  Re-structured to facilitate multiple user interfaces
  **/
 
-char	*VERS_NO = "3.14";
-char	*VERS_DATE = "93/11/15";
-char	*VERS_COPYRIGHT = "(c) 1991 - 1993  Heinz W. Werntges";
+char	*VERS_NO = "3.20";
+char	*VERS_DATE = "94/02/14";
+char	*VERS_COPYRIGHT = "(c) 1991 - 1994  Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
 	"\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n";
@@ -143,34 +146,19 @@ char	*VERS_ADDITIONS = "";
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <math.h>
 #include "bresnham.h"
 #include "hp2xx.h"
-#include "getopt.h"
 
-
-
-/**
- ** When adding your special mode, add a symbol here.
- ** Please not the alphabetical order (and keep it).
- **/
-
-typedef	enum{
-	XX_CAD, XX_CS, XX_EM, XX_EPIC, XX_EPS, XX_HPGL, XX_ILBM, XX_IMG,
-	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PIC, XX_PRE, XX_RGIP,
-	XX_TERM	/* Dummy: terminator	*/
-} hp2xx_mode;
 
 
 /**
  ** When adding your special mode, add a line here.
- ** Please not the alphabetical order (and keep it).
+ ** Please note the alphabetical order (and keep it).
+ ** Also see the definition of "hp2xx_mode" in hp2xx.h.
  **/
 
-static struct {
-	hp2xx_mode	mode;
-	char		*modestr;
-} ModeList[] = {
+mode_list  ModeList[] =
+{
 	{XX_CAD,	"cad"},	/* LaTeX: TeXcad compatible output	*/
 #ifdef	ATARI
 	{XX_CS,		"cs"},	/* LaTeX using \special{...} for C. Strunk's TeX	*/
@@ -197,60 +185,15 @@ static struct {
 };
 
 
-static	Logfile_flag = FALSE;
-
-
-void	SilentWait (void)
-{
-char	dummy[80];
-#ifdef UNIX
-FILE	*tty;
-#endif
-/**
- ** Get anything typed including '\n' if stderr does NOT go to a file
- ** or else the user may be invisibly prompted.
- **
- ** According to a suggestion from A. Bagge, in UNIX pipe mode stdin
- ** will be replaced by /dev/tty.
- **/
-  if (!Logfile_flag)
-  {
-#ifdef UNIX
-	if ((tty = fopen("/dev/tty","r")) != NULL)
-	{
-		fgets (dummy, 80, tty);
-		fclose(tty);
-	}
-	else
-#endif
-		fgets (dummy,80,stdin);
-  }
-}
-
-
-
-
-void	NormalWait (void)
-{
-#ifdef	UNIX
-  if (getenv("TERM") == (char *) NULL)
-	return;
-#endif
-  printf ("\nPress <Return> to continue ...\n");
-  SilentWait ();
-}
-
-
-
 
 void	print_supported_modes(void)
 {
 int	i;
 
-  fprintf(stderr, "%s", ModeList[0].modestr);
+  Eprintf ("%s", ModeList[0].modestr);
   for (i=1; ModeList[i].mode != XX_TERM; i++)
-	fprintf(stderr, ",%s", ModeList[i].modestr);
-  fprintf(stderr, "\n");
+	Eprintf (",%s", ModeList[i].modestr);
+  Eprintf ("\n");
 }
 
 
@@ -258,120 +201,118 @@ int	i;
 
 void	Send_version(void)
 {
-  fprintf(stderr,"\n%s\n%s\n%s\n%s\n%s\n",
+  Eprintf ("\n%s\n%s\n%s\n%s\n%s\n",
   "hp2xx is free software and you are welcome to distribute copies of it",
   "  under certain conditions. There is absolutely no warranty for hp2xx!",
   "For full details, read file COPYING (shipped along with this package),",
   "  or write to:\t\tFree Software Foundation, Inc.",
   "\t\t\t675 Mass Ave, Cambridge, MA 02139, USA");
 
-  fprintf(stderr,"\n%s\tV %s  (%s)   %s\n%s",
+  Eprintf ("\n%s\tV %s  (%s)   %s\n%s",
 	"HP2xx:\tA HPGL converter (xx = mf, eps, pcl, pcx, img ...)\n",
 	VERS_NO, VERS_DATE, VERS_COPYRIGHT, VERS_ADDITIONS);
 }
 
 
 
-void	usage_msg (PAR *p)
+void	usage_msg (const GEN_PAR *pg, const IN_PAR *pi, const OUT_PAR *po)
 {
-if (p->quiet)
+if (pg->quiet)
 	return;
 
 Send_version();
 
 #ifdef ATARI
-fprintf (stderr,"Usage:\tdouble-click on HP2XX.TTP, type parameters into\n");
-fprintf (stderr,"\tcommand-line with following syntax:\n");
-fprintf (stderr,"\t[options] [hpglfile]\n");
-fprintf (stderr,"\n\t(if command-line offers not enough space for all parameters\n");
-fprintf (stderr,"\tuse a command-line interpreter for starting HP2xx)\n");
+  Eprintf ("Usage:\tdouble-click on HP2XX.TTP, type parameters into\n");
+  Eprintf ("\tcommand-line with following syntax:\n");
+  Eprintf ("\t[options] [hpglfile]\n");
+  Eprintf ("\n\t(if command-line offers not enough space for all parameters\n");
+  Eprintf ("\tuse a command-line interpreter for starting HP2xx)\n");
 #else
-fprintf (stderr,"Usage:\thp2xx [options] [file1 [file2 ...]]\n");
+  Eprintf ("Usage:\thp2xx [options] [file1 [file2 ...]]\n");
 #endif	/* ATARI */
 
-fprintf (stderr,"\tUnix: Filter usage (.. | hp2xx -q -f- [options] | ..) ok\n");
+  Eprintf ("\tUnix: Filter usage (.. | hp2xx -q -f- [options] | ..) ok\n");
 NormalWait();
 
-fprintf (stderr,"\nOpt fmt   defaults\tComment:\n");
-fprintf (stderr,
+  Eprintf ("\nOpt fmt   defaults\tComment:\n");
+  Eprintf (
 "---------------------------------------------------------------------------\n");
-fprintf (stderr,"-m strg   %s\t\tMode. Valid mode strings are:\n\t\t\t", p->mode);
+  Eprintf ("-m strg   %s\t\tMode. Valid mode strings are:\n\t\t\t", pg->mode);
 print_supported_modes();
 
-fprintf (stderr,"-f strg   (auto gen.)\tName of output file ('-' = to stdout)\n");
-fprintf (stderr,"-l strg   (stderr)\tName of log file\n");
-fprintf (stderr,"-p strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPensize(s) (in 1/10 mm (mf,ps) or dots (rest)).\n",
-	p->pensize[1], p->pensize[2], p->pensize[3], p->pensize[4],
-	p->pensize[5], p->pensize[6], p->pensize[7], p->pensize[8]);
-fprintf (stderr,"\t\t\t\"strg\" must consist of 1 to 8 digits '0'-'9'\n");
-fprintf (stderr,"-c strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPen color(s) (see manual for details).\n",
-	p->pencolor[1], p->pencolor[2], p->pencolor[3], p->pencolor[4],
-	p->pencolor[5], p->pencolor[6], p->pencolor[7], p->pencolor[8]);
-fprintf (stderr,"-P n:n    %d:%d\t\tPage range (0:0 = all pages).\n",
-	p->first_page, p->last_page);
-fprintf (stderr,"-q        %s\t\tQuiet mode (no diagnostics)\n",
-	FLAGSTATE(p->quiet));
-fprintf (stderr,"-r float%5.1f\t\tRotation angle [deg]. -r90 = landscape\n",
-	p->rotation);
-fprintf (stderr,"-s strg   %s\tName of swap file\n",
-	p->swapfile);
+  Eprintf ("-f strg   (auto gen.)\tName of output file ('-' = to stdout)\n");
+  Eprintf ("-l strg   (stderr)\tName of log file\n");
+  Eprintf ("-p strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPensize(s) (in 1/10 mm (mf,ps) or dots (rest)).\n",
+	pg->pensize[1], pg->pensize[2], pg->pensize[3], pg->pensize[4],
+	pg->pensize[5], pg->pensize[6], pg->pensize[7], pg->pensize[8]);
+  Eprintf ("\t\t\t\"strg\" must consist of 1 to 8 digits '0'-'9'\n");
+  Eprintf ("-c strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPen color(s) (see manual for details).\n",
+	pg->pencolor[1], pg->pencolor[2], pg->pencolor[3], pg->pencolor[4],
+	pg->pencolor[5], pg->pencolor[6], pg->pencolor[7], pg->pencolor[8]);
+  Eprintf ("-P n:n    %d:%d\t\tPage range (0:0 = all pages).\n",
+	pi->first_page, pi->last_page);
+  Eprintf ("-q        %s\t\tQuiet mode (no diagnostics)\n",
+	FLAGSTATE(pg->quiet));
+  Eprintf ("-r float%5.1f\t\tRotation angle [deg]. -r90 = landscape\n",
+	pi->rotation);
+  Eprintf ("-s strg   %s\tName of swap file\n", pg->swapfile);
 
-fprintf (stderr,"\nBitmap controls:\n");
-fprintf (stderr,"-d int    %d\t\tDPI value for x or x&y, if -D unused.\n",
-	p->dpi_x);
-fprintf (stderr,"-D int    %d\t\tDPI value for y ONLY\n", p->dpi_x);
+  Eprintf ("\nBitmap controls:\n");
+  Eprintf ("-d int    %d\t\tDPI value for x or x&y, if -D unused.\n",
+	po->dpi_x);
+  Eprintf ("-D int    %d\t\tDPI value for y ONLY\n", po->dpi_x);
 	 /* x, not y! */
 NormalWait();
 
-fprintf (stderr,"\nPCL-exclusive options:\n");
-fprintf (stderr,"-i         %s\tPre-initialize printer\n",
-	FLAGSTATE (p->init_p));
-fprintf (stderr,"-F         %s\tSend a FormFeed at end\n",
-	FLAGSTATE(p->formfeed));
-fprintf (stderr,"-S int     %d\tUse Deskjet special commands (0=off, 1=B/W, 3=CMY, 4=CMYK)\n",
-	p->specials);
-fprintf (stderr,"NOTE:    \tOnly valid for -d: 300/150/100/75; -D invalid!\n");
+  Eprintf ("\nPCL-exclusive options:\n");
+  Eprintf ("-i         %s\tPre-initialize printer\n", FLAGSTATE (po->init_p));
+  Eprintf ("-F         %s\tSend a FormFeed at end\n", FLAGSTATE(po->formfeed));
+  Eprintf ("-S int     %d\tUse Deskjet special commands (0=off, 1=B/W, 3=CMY, 4=CMYK)\n",
+	po->specials);
+  Eprintf ("NOTE:    \tOnly valid for -d: 300/150/100/75; -D invalid!\n");
 
-fprintf (stderr,"\nPCL / PostScript / Preview options:\n");
-fprintf (stderr,"-o float %5.1f\tX offset [mm] of picture\n", p->xoff);
-fprintf (stderr,"-O float %5.1f\tY offset [mm] of picture\n", p->yoff);
+  Eprintf ("\nPCL / PostScript / Preview options:\n");
+  Eprintf ("-o float %5.1f\tX offset [mm] of picture\n", pi->xoff);
+  Eprintf ("-O float %5.1f\tY offset [mm] of picture\n", pi->yoff);
+  Eprintf ("-C           \tFit picture into center of (-a/-h/-w) rectangle\n");
 
-fprintf (stderr,"\nSize controls:\n");
+  Eprintf ("\nSize controls:\n");
 
-fprintf (stderr,"-a float %5.1f\tAspect factor (x/y correction). Valid: > 0.0\n",
-	p->aspectfactor);
-fprintf (stderr,"-h float %5.1f\tHeight [mm] of picture\n",p->height);
-fprintf (stderr,"-w float %5.1f\tWidth  [mm] of picture\n",p->width );
-fprintf (stderr,"-t         %s\tShow true HPGL size. Disables -a -h -w !\n",
-	FLAGSTATE (p->truesize));
-fprintf (stderr,"-x float   -\tManual HPGL-coord range presetting: x0\n");
-fprintf (stderr,"-X float   -\tManual HPGL-coord range presetting: x1\n");
-fprintf (stderr,"-y float   -\tManual HPGL-coord range presetting: y0\n");
-fprintf (stderr,"-Y float   -\tManual HPGL-coord range presetting: y1\n");
+  Eprintf ("-a float %5.1f\tAspect factor (x/y correction). Valid: > 0.0\n",
+	pi->aspectfactor);
+  Eprintf ("-h float %5.1f\tHeight [mm] of picture\n",pi->height);
+  Eprintf ("-w float %5.1f\tWidth  [mm] of picture\n",pi->width );
+  Eprintf ("-t         %s\tShow true HPGL size. Disables -a -h -w !\n",
+	FLAGSTATE (pi->truesize));
+  Eprintf ("-x float   -\tManual HPGL-coord range presetting: x0\n");
+  Eprintf ("-X float   -\tManual HPGL-coord range presetting: x1\n");
+  Eprintf ("-y float   -\tManual HPGL-coord range presetting: y0\n");
+  Eprintf ("-Y float   -\tManual HPGL-coord range presetting: y1\n");
 
 #ifdef DOS
-fprintf (stderr,"\n-V int   %d\tVGA mode byte (decimal). Change at own risk!\n",
-		p->vga_mode);
+  Eprintf ("\n-V int   %d\tVGA mode byte (decimal). Change at own risk!\n",
+		po->vga_mode);
 #endif
 
 NormalWait();
 
-fprintf (stderr,"Corresponding long options:\n\n");
-fprintf (stderr,
-	"hp2xx   [--mode] [--colors] [--pensizes] [--pages] [--quiet]\n");
-fprintf (stderr,"\t[--width] [--height] [--aspectfactor] [--truesize]\n");
-fprintf (stderr,"\t[--x0] [--x1] [--y0] [--y1] [--xoffset] [--yoffset]\n");
-fprintf (stderr,"\t[--DPI] [--DPI_x] [--DPI_y]\n");
-fprintf (stderr,"\t[--outfile] [--logfile] [--swapfile]\n");
-fprintf (stderr,"\t[--PCL_formfeed] [--PCL_init] [--PCL_Deskjet]\n");
+  Eprintf ("Corresponding long options:\n\n");
+  Eprintf ("hp2xx   [--mode] [--colors] [--pensizes] [--pages] [--quiet]\n");
+  Eprintf ("\t[--width] [--height] [--aspectfactor] [--truesize]\n");
+  Eprintf ("\t[--x0] [--x1] [--y0] [--y1]\n");
+  Eprintf ("\t[--xoffset] [--yoffset] [--center]\n");
+  Eprintf ("\t[--DPI] [--DPI_x] [--DPI_y]\n");
+  Eprintf ("\t[--outfile] [--logfile] [--swapfile]\n");
+  Eprintf ("\t[--PCL_formfeed] [--PCL_init] [--PCL_Deskjet]\n");
 #ifdef DOS
-fprintf (stderr,"\t[--VGAmodebyte]");
+  Eprintf ("\t[--VGAmodebyte]");
 #endif
-fprintf (stderr,"\t[--help] [--version]\n");
+  Eprintf ("\t[--help] [--version]\n");
 
 
 #ifdef PURE_C
-fprintf(stderr,"\nPress RETURN key\n");
+  Eprintf("\nPress RETURN key\n");
 getchar();
 #endif
 }
@@ -379,76 +320,83 @@ getchar();
 
 
 
-void	reset_par (PAR *pp)
+void	reset_par (IN_PAR *pi)
 /**
  ** Reset some parameter struct elements which may have been changed
  ** by action() to their defaults
  **/
 {
-  pp->x0	=  1e10;	/* HP7550A's range is about     */
-  pp->x1	= -1e10;	/* [-2^24, 2^24], so we're safe */
-  pp->y0	=  1e10;
-  pp->y1	= -1e10;
-  pp->pen	= 1;
+  pi->x0	=  1e10;	/* HP7550A's range is about     */
+  pi->x1	= -1e10;	/* [-2^24, 2^24], so we're safe */
+  pi->y0	=  1e10;
+  pi->y1	= -1e10;
 }
 
 
 
 
-void	preset_par (PAR *pp)
+void	preset_par (GEN_PAR *pg, IN_PAR *pi, OUT_PAR *po)
 /**
  ** Pre-set constant parameter struct elements with reasonable defaults
  **/
 {
 int	i;
 
-  pp->logfile	= "";
-  pp->outfile	= "";
-  pp->swapfile	= "hp2xx.swp";
-  pp->mode	= "pre";
-  pp->aspectfactor = 1.0;
-  pp->xoff	= 0.0;
-  pp->yoff	= 0.0;
-  pp->height	= 200.0;
-  pp->width	= 200.0;
-  pp->truesize	= FALSE;
-  pp->rotation	= 0.0;
-  pp->first_page= 0;
-  pp->last_page	= 0;
-  pp->init_p	= FALSE;
-  pp->formfeed	= FALSE;
-  pp->quiet	= FALSE;
-  pp->specials	= 0;
-  pp->dpi_x	= 75;
-  pp->dpi_y	= 0;
-  pp->vga_mode	= 18;		/* 0x12: VGA 640x480, 16 colors */
-  pp->maxpensize= 1;		/* in pixel or 1/10 mm		*/
-  pp->maxcolor	= 1;		/* max. color index		*/
-  pp->pensize[0]= 0;		/* in pixel or 1/10 mm		*/
-  pp->pencolor[0]= xxBackground;
+  pi->aspectfactor = 1.0;
+  pi->center_mode  = FALSE;
+  pi->height	= 200.0;
+  pi->width	= 200.0;
+  pi->xoff	= 0.0;
+  pi->yoff	= 0.0;
+  pi->truesize	= FALSE;
+  pi->rotation	= 0.0;
+  pi->in_file	= "";
+  pi->hd	= NULL;
+  pi->first_page= 0;
+  pi->last_page	= 0;
+
+  po->init_p	= FALSE;
+  po->formfeed	= FALSE;
+  po->specials	= 0;
+  po->dpi_x	= 75;
+  po->dpi_y	= 0;
+  po->vga_mode	= 18;		/* 0x12: VGA 640x480, 16 colors */
+  po->picbuf	= NULL;
+  po->outfile	= "";
+
+  pg->logfile	= "";
+  pg->swapfile	= "hp2xx.swp";
+  pg->mode	= "pre";
+  pg->td	= NULL;
+  pg->xx_mode	= XX_PRE;
+  pg->quiet	= FALSE;
+  pg->maxpensize= 1;		/* in pixel or 1/10 mm		*/
+  pg->maxcolor	= 1;		/* max. color index		*/
+  pg->pensize[0]= 0;		/* in pixel or 1/10 mm		*/
+  pg->pencolor[0]= xxBackground;
   for (i=1; i<=8; i++)
   {
-	pp->pensize [i]	= 1;	/* in pixel or 1/10 mm		*/
-	pp->pencolor[i]	= xxForeground;
+	pg->pensize [i]	= 1;	/* in pixel or 1/10 mm		*/
+	pg->pencolor[i]	= xxForeground;
   }
-  pp->is_color	= FALSE;
-  pp->Clut[xxBackground][0]= 255;  pp->Clut[xxBackground][1]	= 255;
-  pp->Clut[xxBackground][2]= 255;
-  pp->Clut[xxForeground][0]= 0;	   pp->Clut[xxForeground][1]	= 0;
-  pp->Clut[xxForeground][2]= 0;
-  pp->Clut[xxRed][0]	= 255;	   pp->Clut[xxRed][1]		= 0;
-  pp->Clut[xxRed][2]	= 0;
-  pp->Clut[xxGreen][0]	= 0;	   pp->Clut[xxGreen][1]		= 255;
-  pp->Clut[xxGreen][2]	= 0;
-  pp->Clut[xxBlue][0]	= 0;	   pp->Clut[xxBlue][1]		= 0;
-  pp->Clut[xxBlue][2]	= 255;
-  pp->Clut[xxCyan][0]	= 0;	   pp->Clut[xxCyan][1]		= 255;
-  pp->Clut[xxCyan][2]	= 255;
-  pp->Clut[xxMagenta][0]= 255;	   pp->Clut[xxMagenta][1]	= 0;
-  pp->Clut[xxMagenta][2]= 255;
-  pp->Clut[xxYellow][0]	= 255;	   pp->Clut[xxYellow][1]	= 255;
-  pp->Clut[xxYellow][2]	= 0;
-  reset_par (pp);
+  pg->is_color	= FALSE;
+  pg->Clut[xxBackground][0]= 255;  pg->Clut[xxBackground][1]	= 255;
+  pg->Clut[xxBackground][2]= 255;
+  pg->Clut[xxForeground][0]= 0;	   pg->Clut[xxForeground][1]	= 0;
+  pg->Clut[xxForeground][2]= 0;
+  pg->Clut[xxRed][0]	= 255;	   pg->Clut[xxRed][1]		= 0;
+  pg->Clut[xxRed][2]	= 0;
+  pg->Clut[xxGreen][0]	= 0;	   pg->Clut[xxGreen][1]		= 255;
+  pg->Clut[xxGreen][2]	= 0;
+  pg->Clut[xxBlue][0]	= 0;	   pg->Clut[xxBlue][1]		= 0;
+  pg->Clut[xxBlue][2]	= 255;
+  pg->Clut[xxCyan][0]	= 0;	   pg->Clut[xxCyan][1]		= 255;
+  pg->Clut[xxCyan][2]	= 255;
+  pg->Clut[xxMagenta][0]= 255;	   pg->Clut[xxMagenta][1]	= 0;
+  pg->Clut[xxMagenta][2]= 255;
+  pg->Clut[xxYellow][0]	= 255;	   pg->Clut[xxYellow][1]	= 255;
+  pg->Clut[xxYellow][2]	= 0;
+  reset_par (pi);
 }
 
 
@@ -468,40 +416,42 @@ unsigned char	*p;
 
   p = msg;
   while (*p!=0xa5)
-	putc ((*p++ ^ 0xa5), stderr);
+	Eprintf("%c", (*p++ ^ 0xa5));
   exit  (COPYNOTE);
 }
 
 
 
 
-void	autoset_outfile_name(PAR *pp, char *inp_name)
+void	autoset_outfile_name(
+		const char* mode, const char *in_name,
+		char** outfile)
 {
 int	len, i;
 
-  if (*pp->outfile=='-')/* If output explicitly to stdout:		*/
+  if (**outfile=='-')	/* If output explicitly to stdout:		*/
 	return;		/*    then nothing's to do here			*/
 
-  if (isalpha(*pp->outfile))/* If this looks like an output file name:	*/
+  if (isalpha(**outfile))/* If this looks like an output file name:	*/
 	return;		/*    Just accept it! Add validity check later?	*/
 
-  if (inp_name == NULL)	/* If input from stdin				*/
+  if (*in_name == '-')	/* If input from stdin				*/
 	len = 0;
   else
-	len = strlen(inp_name);
+	len = strlen(in_name);
 
   if (len == 0)		/* If input from stdin:				*/
   {			/*    then supply a default file name		*/
-	pp->outfile="hp2xx.out";
+	*outfile="hp2xx.out";
 	return;
   }
 
-  if (strcmp(pp->mode,"pre") == 0)
+  if (strcmp(mode,"pre") == 0)
 	return;		/* If preview mode:				*/
 			/*    then output file name is unused		*/
 
   for (i=len-1; i; i--)	/* Search for (last) '.' char in path		*/
-	if (inp_name[i] == '.')
+	if (in_name[i] == '.')
 		break;
   i++;
 
@@ -511,583 +461,375 @@ int	len, i;
  ** and no harm will be done by an incorrect output file name.
  **/
 
-  if ((pp->outfile = malloc(len+2+strlen(pp->mode))) == NULL)
+  if ((*outfile = malloc(len+2+strlen(mode))) == NULL)
   {
-	fprintf(stderr,"Error: No mem for output file name!\n");
-	perror ("autoset_outfile_name");
+	Eprintf("Error: No mem for output file name!\n");
+	PError ("autoset_outfile_name");
 	exit   (ERROR);
   }
-  strcpy(pp->outfile, inp_name);
+  strcpy(*outfile, in_name);
 
   if (i==1 || len-i > 3) /* No or non-DOS extension: Add mode string	*/
   {
-	strcat(pp->outfile, ".");
-	strcat(pp->outfile, pp->mode);	/* Mode string is extension!	*/
+	strcat(*outfile, ".");
+	strcat(*outfile, mode);	/* Mode string is extension!	*/
   }
   else
-	strcpy(pp->outfile+i, pp->mode);	/* Replace extension	*/
+	strcpy(*outfile+i, mode);	/* Replace extension	*/
+}
+
+
+
+/**************************************************************************
+ **
+ ** cleanup_x ():
+ **
+ ** Call these functions to close & remove the temp. and input file
+ **	as well as to free the raster picture buffer.
+ ** Calling is ok even if the buffer is already freed or the files
+ **	are already closed, so just call them when in doubt.
+ **/
+
+void
+cleanup_g (GEN_PAR *pg)
+{
+  if (pg != NULL && pg->td != NULL)
+  {
+	fclose (pg->td);
+	pg->td = NULL;
+  }
+
+#if defined(DOS) && defined (GNU)
+/**
+ ** GNU libc.a (DJ's DOS port) bug fix:
+ **/
+  unlink ("hp2xx.$$$");
+#endif
+}
+
+
+void
+cleanup_i (IN_PAR *pi)
+{
+  if (pi != NULL && pi->hd != NULL)
+  {
+	if (pi->hd != stdin)
+		fclose (pi->hd);
+	pi->hd = NULL;
+  }
+}
+
+
+void
+cleanup_o (OUT_PAR *po)
+{
+  if (po != NULL && po->picbuf != NULL)
+  {
+	free_PicBuf (po->picbuf);
+	po->picbuf = NULL;
+  }
 }
 
 
 
 
-
-void	action (PAR *p, FILE *hd)
+void
+cleanup (GEN_PAR *pg, IN_PAR *pi, OUT_PAR *po)
 {
-FILE		*td;
-PicBuf		*picbuf;
-DevPt		Maxdotcoord;
-hp2xx_mode	xx_mode=XX_TERM;
-int		i;
+  cleanup_g (pg);
+  cleanup_i (pi);
+  cleanup_o (po);
+}
 
-  if (!p->quiet)
-	Send_version();
-  for (i=0; ModeList[i].mode != XX_TERM; i++)
-	if (strncmp(p->mode, ModeList[i].modestr,
-		strlen(ModeList[i].modestr)) == 0)
+
+
+
+/**************************************************************************
+ **
+ ** HPGL_to_TMP ():
+ **
+ ** This call opens a single HP-GL input file, scans and interprets
+ ** its commands, and writes elementary move/draw commands into
+ ** a temporary file.
+ **	The input file is closed after returning, but the temp. file
+ ** is kept open. You may re-use it multiple times. Close it finally!
+ **	Calling this function invalidates later processing stages like
+ ** the picture buffer.
+ **/
+
+int
+HPGL_to_TMP (GEN_PAR *pg, IN_PAR *pi)
+{
+  /**
+   ** Clean up previous leftovers (if any)
+   **/
+
+  cleanup_g (pg);
+  cleanup_i (pi);
+
+  /**
+   ** Open HP-GL input file. Use stdin if selected.
+   **/
+
+  if (*pi->in_file == '-')
+	pi->hd = stdin;
+  else
+	if ((pi->hd=fopen (pi->in_file, READ_BIN)) == NULL)
 	{
-		xx_mode = ModeList[i].mode;
-		break;
+		PError("hp2xx");
+		return ERROR;
 	}
 
-/**
- ** Read HPGL data, put them into compact temporary binary file, and obtain
- ** scaling data (xmin/xmax/ymin/ymax in plotter coordinates)
- **/
+  /**
+   ** Open temporary intermediate file.
+   **
+   ** GNU libc.a (DJ's DOS port) bug fix (part 1 of 2):
+   **	 tmpfile() does not seem to work!
+   ** See code below for part 2/2 (removing hp2xx.$$$).
+   ** NOTE:
+   **	If program terminates abnormally, delete hp2xx.$$$ manually!!
+   **/
 
 #if defined(DOS) && defined (GNU)
-	/**
-	 ** GNU libc.a (DJ's DOS port) bug fix (part 1 of 2):
-	 **	 tmpfile() does not seem to work!
-	 ** See code below for part 2/2 (removing hp2xx.$$$).
-	 ** NOTE:
-	 **	If program terminates abnormally,
-	 **	delete hp2xx.$$$ manually!!
-	 **/
-  if ((td = fopen("hp2xx.$$$","w+b")) == NULL)
+  if ((pg->td = fopen("hp2xx.$$$","w+b")) == NULL)
 #elif defined(AMIGA)
-  if ((td = fopen("t:hp2xx.tmp","w+b")) == NULL)
+  if ((pg->td = fopen("t:hp2xx.tmp","w+b")) == NULL)
 #else
-  if ((td = tmpfile()) == NULL)
-#endif
+  if ((pg->td = tmpfile()) == NULL)
+#endif	/** !DOS && GNU	**/
   {
-	perror("hp2xx -- opening temporary file");
-	exit (ERROR);
+	PError("hp2xx -- opening temporary file");
+	return ERROR;
   }
-  read_HPGL (p, hd, td, &Maxdotcoord);
-  if (hd != stdin)
-	fclose (hd);
 
-/**********************************************************
- ** Vector modes:
+  /**
+   ** Convert HPGL data into compact temporary binary file, and obtain
+   ** scaling data (xmin/xmax/ymin/ymax in plotter coordinates)
+   **/
+
+  read_HPGL (pg, pi);
+
+  if (pi->hd != stdin)
+  {
+	fclose (pi->hd);
+	pi->hd = NULL;
+  }
+  return 0;
+}
+
+
+
+/**************************************************************************
+ **
+ ** TMP_to_VEC ():
+ **
+ ** Vector mode conversions.
+ **	Call any number of times as long as the temp. file is opened.
+ **
+ ** Returns:
+ **	ERROR	if error
+ **	1	if mode not found
+ **	0 	if successfully processed
  **/
-  switch (xx_mode)
+
+int	TMP_to_VEC (const GEN_PAR *pg, const OUT_PAR *po)
+{
+  if (pg->td == NULL)
+	return ERROR;
+
+  rewind (pg->td);		/* Rewind temp file for re-reading	*/
+
+  switch (pg->xx_mode)
   {
     case XX_MF:
-	rewind	(td);	    /* Rewind temp file after filling it*/
-	to_mftex(p, td, 0); /* Output conversion/generation	*/
-	fclose	(td);	    /* Close & unlink temp file 	*/
-	return;
+	to_mftex(pg, po, 0);
+	return 0;
 
     case XX_EM:
-	rewind	(td);
-	to_mftex(p, td, 1);
-	fclose	(td);
-	return;
+	to_mftex(pg, po, 1);
+	return 0;
 
     case XX_EPIC:
-	rewind	(td);
-	to_mftex(p, td, 2);
-	fclose	(td);
-	return;
+	to_mftex(pg, po, 2);
+	return 0;
 
     case XX_CAD:
-	rewind	(td);
-	to_mftex(p, td, 3);
-	fclose	(td);
-	return;
+	to_mftex(pg, po, 3);
+	return 0;
 
 #ifdef	ATARI
     case XX_CS:
-	rewind	(td);
-	to_mftex(p, td, 4);
-	fclose	(td);
-	return;
+	to_mftex(pg, po, 4);
+	return 0;
 #endif
 
     case XX_HPGL:
-	rewind	(td);
-	to_mftex(p, td, 5);
-	fclose	(td);
-	return;
+	to_mftex(pg, po, 5);
+	return 0;
 
     case XX_EPS:
-	rewind	(td);
-	to_eps	(p, td);
-	fclose	(td);
-	return;
+	to_eps	(pg, po);
+	return 0;
 
     case XX_RGIP:
-	rewind	(td);
-	to_rgip	(p, td);
-	fclose	(td);
-	return;
+	to_rgip	(pg, po);
+	return 0;
 
-    /* default: drop through	*/
     default:
-	break;
+	return 1;
   }
+}
 
 
-/**********************************************************
- ** Common part for all pixel-oriented formats:
- ** 	Buffer allocation / vector-to-raster conversion
+
+/**************************************************************************
+ **
+ ** TMP_to_BUF ():
+ **
+ ** Rasterization into a memory buffer
+ **	A pre-requisite for all raster formats. Call any number of times
+ **		as long as the temp. file is opened.
+ **	An internal raster picture buffer is maintained in memory
+ **		by this call.
+ **	The picture buffer is kept allocated after this call so that
+ **		the time-consuming rasterization is needed only once.
+ **		De-allocate at program end or when not needed anymore!
+ **
+ ** Returns:
+ **	ERROR	if error
+ **	0 	if successfully processed
  **/
+
+int	TMP_to_BUF (const GEN_PAR *pg, OUT_PAR *po)
+{
+int	n_rows, n_cols;
+
+  if (pg->td == NULL)
+	return ERROR;
+
+  rewind (pg->td);		/* Rewind temp file for re-reading	*/
+
+  cleanup_o (po);
 
 /**
  ** 1) Allocate virtual plotter area
  **/
-  Maxdotcoord.x += (p->maxpensize - 1);
-  Maxdotcoord.y += (p->maxpensize - 1);
-  if ((picbuf = allocate_PicBuf (&Maxdotcoord, p)) == NULL)
+
+  size_PicBuf (pg, po, &n_rows, &n_cols);
+
+  if ((po->picbuf = allocate_PicBuf (pg, n_rows, n_cols)) == NULL)
   {
-	fprintf(stderr,"Fatal error: cannot allocate %d*%d picture buffer\n",
-		Maxdotcoord.x, Maxdotcoord.y);
-	exit(ERROR);
+	Eprintf("Fatal error: cannot allocate %d*%d picture buffer\n",
+		n_rows, n_cols);
+	return ERROR;
   }
 
 /**
- ** 2) Read vectors from temporary file and plot them in memory buffer
- **/
-  tmpfile_to_PicBuf (picbuf, p, td);
-  fclose (td); /* Close & unlink tmpfile */
-
-#if defined(DOS) && defined (GNU)
-/**
- ** GNU libc.a (DJ's DOS port) bug fix (part 2 of 2):
- **/
-  unlink ("hp2xx.$$$");
-#endif
-
-
-
-/**********************************************************
- ** Raster modes:
+ ** Read vectors from temporary file and plot them in memory buffer
  **/
 
-  switch (xx_mode)
+  tmpfile_to_PicBuf (pg, po);
+
+  return 0;
+}
+
+
+
+/**************************************************************************
+ **
+ ** BUF_to_RAS ():
+ **
+ ** Conversion of raster picture buffer into the final output format.
+ **
+ ** Returns:
+ **	ERROR	if error
+ **	1 	if output mode not found
+ **	0 	if successfully processed
+ **/
+
+int	BUF_to_RAS (const GEN_PAR *pg, const OUT_PAR *po)
+{
+  if (po->picbuf == NULL)
+	return ERROR;
+
+  switch (pg->xx_mode)
   {
-  case XX_PCL:	PicBuf_to_PCL (picbuf,p); break; /* HP PCL Level 3	*/
-  case XX_PCX:	PicBuf_to_PCX (picbuf,p); break; /* Paintbrush PCX	*/
-#ifdef	PIC_PAC
-  case XX_PIC:	PicBuf_to_PIC (picbuf,p); break; /* ATARI 32K format	*/
-  case XX_PAC:	PicBuf_to_PAC (picbuf,p); break; /* ATARI STaD format	*/
-#endif						 /*   To be phased out!	*/
-#ifdef	AMIGA
-  case XX_ILBM:	PicBuf_to_ILBM(picbuf,p); break; /* AMIGA IFF-ILBM fmt	*/
-#endif
-  case XX_IMG:	PicBuf_to_IMG (picbuf,p); break; /* GEM's IMG format	*/
-  case XX_PBM:	PicBuf_to_PBM (picbuf,p); break; /* Portable BitMap fmt	*/
+	case XX_PCL:		/* HP PCL Level 3	*/
+		return PicBuf_to_PCL (pg, po);
 
-  case XX_PRE:
-/**********************************************************
+	case XX_PCX:		/* Paintbrush PCX	*/
+		return PicBuf_to_PCX (pg, po);
+
+#ifdef	PIC_PAC			/*   To be phased out!	*/
+	case XX_PIC:		/* ATARI 32K format	*/
+		return PicBuf_to_PIC (pg, po);
+
+	case XX_PAC:		/* ATARI STaD format	*/
+		return PicBuf_to_PAC (pg, po);
+#endif
+
+#ifdef	AMIGA
+	case XX_ILBM:		/* AMIGA IFF-ILBM fmt	*/
+		return PicBuf_to_ILBM(pg, po);
+#endif
+
+	case XX_IMG:		/* GEM's IMG format	*/
+		return PicBuf_to_IMG (pg, po);
+
+	case XX_PBM:		/* Portable BitMap fmt	*/
+		return PicBuf_to_PBM (pg, po);
+
+/**
  ** Previewers (depending on hardware platform):
  **/
+	case XX_PRE:
 #if   defined(HAS_DOS_DJGR)
-		PicBuf_to_DJ_GR (picbuf,p); break;
+		return PicBuf_to_DJ_GR (pg, po);
 #elif defined(HAS_DOS_HGC)
-		PicBuf_to_HGC	(picbuf,p); break;
+		return PicBuf_to_HGC	(pg, po);
 #elif defined(HAS_DOS_VGA)
-		PicBuf_to_VGA	(picbuf,p); break;
+		return PicBuf_to_VGA	(pg, po);
 #elif defined(HAS_OS2_EMX)
-		PicBuf_to_OS2	(picbuf,p); break;
+		return PicBuf_to_OS2	(pg, po);
 #elif defined(HAS_OS2_PM)
-		PicBuf_to_PM	(picbuf,p); break;
+		return PicBuf_to_PM	(pg, po);
 #elif defined(HAS_UNIX_X11)
-		PicBuf_to_X11	(picbuf,p); break;
+		return PicBuf_to_X11	(pg, po);
 #elif defined(HAS_UNIX_SUNVIEW)
-		PicBuf_to_Sunview(picbuf,p);break;
+		return PicBuf_to_Sunview(pg, po);
 #elif defined(ATARI)
-		PicBuf_to_ATARI	(picbuf,p); break;
+		return PicBuf_to_ATARI	(pg, po);
 #elif defined(AMIGA)
-		PicBuf_to_AMIGA	(picbuf,p); break;
+		return PicBuf_to_AMIGA	(pg, po);
 #elif defined(VAX)
-		PicBuf_to_UIS	(picbuf,p); break;
+		return PicBuf_to_UIS	(pg, po);
 #else
-		PicBuf_to_Dummy	(); break;
+		return PicBuf_to_Dummy	();
 #endif	/* defined(...)	*/
-
-/**********************************************************
- ** Done -- clean up
- **/
-  default:	fprintf(stderr,"%s: Not implemented!\n", p->mode); break;
   }
-
-  free_PicBuf (picbuf, p->swapfile);
+  return 1;
 }
 
 
 
-
-
-/**
- ** main(): Process command line & call action routine
+/**********************************************************************
+ **
+ **  My intention is to facilitate the implementation of various
+ **  user interfaces including e.g. a Windows front-end.
+ **
+ **  Note that e.g. in Windows programs there is a "win_main()" function
+ **  instead of "main()", and that waiting for user acknowledgement
+ **  or diagnostic output must not use stdin/out/err...
+ **
+ **  In a separate file, one of possibly several versions of
+ **  user interface dependend functions + local utility functions
+ **  is supplied. The traditional version can be found in "std_main.c"
+ **
+ **	Function	Tradiditional equivalent
+ **
+ **	EPrintf(...)	fprintf(stderr, ...)
+ **	PError		perror
+ **	SilentWait	-
+ **	NormalWait	-
+ **	...		main
  **/
-
-int	main (int argc, char *argv[])
-{
-PAR	par;
-double	width, height;
-int	c, i,j, longind;
-char	*p, cdummy;
-FILE	*hd;
-
-char	*shortopts = "a:c:d:D:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:FHiqtv";
-struct	option longopts[] = {
-	{"mode",	1, NULL,	'm'},
-	{"pencolors",	1, NULL,	'c'},
-	{"pensizes",	1, NULL,	'p'},
-	{"pages",	1, NULL,	'P'},
-	{"quiet",	0, NULL,	'q'},
-
-	{"DPI",		1, NULL,	'd'},
-	{"DPI_x",	1, NULL,	'd'},
-	{"DPI_y",	1, NULL,	'D'},
-
-	{"PCL_formfeed",0, NULL,	'F'},
-	{"PCL_init",	0, NULL,	'i'},
-	{"PCL_Deskjet",	1, NULL,	'S'},
-
-	{"outfile",	1, NULL,	'f'},
-	{"logfile",	1, NULL,	'l'},
-	{"swapfile",	1, NULL,	's'},
-
-	{"aspectfactor",1, NULL,	'a'},
-	{"height",	1, NULL,	'h'},
-	{"width",	1, NULL,	'w'},
-	{"truesize",	0, NULL,	't'},
-
-	{"x0",		1, NULL,	'x'},
-	{"x1",		1, NULL,	'X'},
-	{"y0",		1, NULL,	'y'},
-	{"y1",		1, NULL,	'Y'},
-
-	{"xoffset",	1, NULL,	'o'},
-	{"yoffset",	1, NULL,	'O'},
-
-#ifdef DOS
-	{"VGAmodebyte",1, NULL,	'V'},
-#endif
-	{"help",	0, NULL,	'H'},
-	{"version",	0, NULL,	'v'}
-};
-
-  preset_par (&par);
-  width = par.width;	/* Copy defaults	*/
-  height= par.height;
-
-  if (argc == 1)
-  {
-	usage_msg (&par);
-	exit (ERROR);
-  }
-
-  while ((c=getopt_long(argc,argv, shortopts, longopts, &longind)) != EOF)
-	switch (c)	/* Easy addition of options ... */
-	{
-	  case 'a':
-		par.aspectfactor = atof (optarg);
-		if (par.aspectfactor <= 0.0)
-		{
-			fprintf(stderr,"Aspect factor: %g illegal\n",
-				par.aspectfactor);
-			exit(ERROR);
-		}
-		break;
-
-	  case 'c':
-		i = strlen(optarg);
-		if ((i<1) || (i>8))
-		{
-			fprintf(stderr,"Invalid pencolor string: %s\n", optarg);
-			exit(ERROR);
-		}
-		for (j=1, p = optarg; j <= i; j++, p++)
-		{
-		    switch (*p-'0')
-		    {
-			case xxBackground:par.pencolor[j] = xxBackground; break;
-			case xxForeground:par.pencolor[j] = xxForeground; break;
-			case xxRed:	  par.pencolor[j] = xxRed;	  break;
-			case xxGreen:	  par.pencolor[j] = xxGreen;	  break;
-			case xxBlue:	  par.pencolor[j] = xxBlue;	  break;
-			case xxCyan:	  par.pencolor[j] = xxCyan;	  break;
-			case xxMagenta:	  par.pencolor[j] = xxMagenta;	  break;
-			case xxYellow:	  par.pencolor[j] = xxYellow;	  break;
-			default :
-				  fprintf(stderr,
-				    "Invalid color of pen %d: %c\n", j, *p);
-				  exit(ERROR);
-		    }
-		    if (par.pencolor[j] != xxBackground &&
-			par.pencolor[j] != xxForeground)
-				par.is_color = TRUE;
-		}
-		break;
-
-	  case 'd':
-		switch (par.dpi_x = atoi (optarg))
-		{
-		  case 75:
-			break;
-		  case 100:
-		  case 150:
-		  case 300:
-			if ((!par.quiet) && (strcmp(par.mode,"pcl")==0))
-			fprintf(stderr,
-			"Warning: DPI setting is no PCL level 3 feature!\n");
-			break;
-		  default:
-			if ((!par.quiet) && (strcmp(par.mode,"pcl")==0))
-			fprintf(stderr,
-			"Warning: DPI value %d is invalid for PCL mode\n",
-				par.dpi_x);
-			break;
-		}
-		break;
-
-	  case 'D':
-		par.dpi_y = atoi (optarg);
-		if ((!par.quiet) && (strcmp(par.mode,"pcl")==0))
-			fprintf(stderr,"Warning: %s\n",
-			"Different DPI for x & y is invalid for PCL mode");
-		break;
-
-	  case 'F':
-		par.formfeed = TRUE;
-		break;
-
-	  case 'f':
-		par.outfile = optarg;
-		break;
-
-	  case 'h':
-		par.height = height = atof (optarg);
-		if (height < 0.1)
-			fprintf(stderr,
-				"Warning: Small height: %g mm\n", height);
-		if (height > 300.0)
-			fprintf(stderr,
-				"Warning: Huge  height: %g mm\n", height);
-		break;
-
-	  case 'i':
-		par.init_p = TRUE;
-		break;
-
-	  case 'l':
-		par.logfile = optarg;
-		if (freopen(par.logfile, "w", stderr) == NULL)
-		{
-			perror ("Cannot open log file");
-			fprintf(stderr, "Error redirecting stderr\n");
-			fprintf(stderr, "Continuing with output to stderr\n");
-		}
-		else
-			Logfile_flag = TRUE;
-		break;
-
-	  case 'm':
-		par.mode = optarg;
-		for (i=0; ModeList[i].mode != XX_TERM; i++)
-			if (strcmp(ModeList[i].modestr, par.mode) == 0)
-				break;
-		if (ModeList[i].mode == XX_TERM)
-		{
-			fprintf(stderr,
-			"'%s': unknown mode!\n", par.mode);
-			fprintf(stderr,"Supported are:\n\t");
-			print_supported_modes();
-			Send_Copyright();
-		}
-		break;
-
-	  case 'o':
-		par.xoff = atof (optarg);
-		if (par.xoff < 0.0)
-		{
-			fprintf(stderr,"Illegal X offset: %g < 0\n",
-				par.xoff);
-			exit(ERROR);
-		}
-		if (par.xoff > 210.0)	/* About DIN A4 width */
-		{
-			fprintf(stderr,"Illegal X offset: %g > 210\n",
-				par.xoff);
-			exit(ERROR);
-		}
-		break;
-
-	  case 'O':
-		par.yoff = atof (optarg);
-		if (par.yoff < 0.0)
-		{
-			fprintf(stderr,"Illegal Y offset: %g < 0\n",
-				par.yoff);
-			exit(ERROR);
-		}
-		if (par.yoff > 300.0)	/* About DIN A4 height */
-		{
-			fprintf(stderr,"Illegal Y offset: %g > 300\n",
-				par.yoff);
-			exit(ERROR);
-		}
-		break;
-
-	  case 'p':
-		i = strlen(optarg);
-		if ((i<1) || (i>8))
-		{
-			fprintf(stderr,"Invalid pensize string: %s\n", optarg);
-			exit(ERROR);
-		}
-		for (j=1, p = optarg; j <= i; j++, p++)
-		{
-			if ((*p < '0') || (*p > '9'))
-			{
-				fprintf(stderr,"Invalid size of pen %d: %c\n",
-					j, *p);
-				exit(ERROR);
-			}
-			par.pensize[j] = *p - '0';
-			if (par.maxpensize < par.pensize[j])
-				par.maxpensize = par.pensize[j];
-		}
-		break;
-
-	  case 'P':
-		if (*optarg == ':')
-		{
-			par.first_page = 0;
-			optarg++;
-			if (sscanf(optarg,"%d", &par.last_page) != 1)
-				par.last_page = 0;
-		}
-		else
-			switch (sscanf(optarg,"%d%c%d",
-				&par.first_page, &cdummy, &par.last_page))
-			{
-			  case 1:
-				par.last_page = par.first_page;
-				break;
-
-			  case 2:
-				if (cdummy == ':')
-				{
-					par.last_page = 0;
-					break;
-				}
-				/* not ':' Syntax error -- drop through	*/
-			  case 3:
-				if (cdummy == ':')
-					break;
-				/* not ':' Syntax error -- drop through	*/
-			  default:
-				fprintf(stderr,"Illegal page range.\n");
-				usage_msg (&par);
-				exit(ERROR);
-			}
-		break;
-
-	  case 'q':
-		par.quiet = TRUE;
-		break;
-
-	  case 'r':
-		par.rotation = atof(optarg);
-		break;
-
-	  case 'S':
-		par.specials = atoi (optarg);
-		break;
-
-	  case 's':
-		par.swapfile = optarg;
-		break;
-
-	  case 't':
-		par.truesize = TRUE;
-		break;
-
-	  case 'V':
-		par.vga_mode = atoi (optarg);
-		break;
-
-	  case 'w':
-		par.width = width = atof (optarg);
-		if (width < 0.1)
-			fprintf(stderr,
-				"Warning: Small width: %g mm\n", width);
-		if (width > 300.0)
-			fprintf(stderr,
-				"Warning: Huge  width: %g mm\n", width);
-		break;
-
-	  case 'v':
-		Send_version();
-		exit (NOERROR);
-
-	  case 'x':
-		par.x0 = atof (optarg);
-		break;
-
-	  case 'X':
-		par.x1 = atof (optarg);
-		break;
-
-	  case 'y':
-		par.y0 = atof (optarg);
-		break;
-
-	  case 'Y':
-		par.y1 = atof (optarg);
-		break;
-
-	  case 'H':
-	  case '?':
-	  default:
-		usage_msg (&par);
-		exit (ERROR);
-	}
-
-/**
- ** Place consistency checks here
- ** - I'm just not in the mood for writing them myself ...
- **/
-
-  if (par.dpi_y == 0)
-	par.dpi_y = par.dpi_x;
-
-  if (optind == argc)		/* No  filename: use stdin	*/
-  {
-	autoset_outfile_name (&par, NULL);
-	action (&par, stdin);
-  }
-  else	for ( ; optind < argc; optind++)
-	{			/* Multiple-input file handling: */
-		autoset_outfile_name (&par, argv[optind]);
-		if ((hd=fopen (argv[optind], READ_BIN)) == NULL)
-		{
-			perror("hp2xx");
-			exit (ERROR);
-		}
-		action (&par, hd);	/* action() closes file	*/
-		reset_par (&par);
-		par.width = width;	/* Restore width/height	*/
-		par.height= height;	/* Changed in hpgl.c !	*/
-	}
-
-  if (*par.logfile)
-	fclose (stderr);
-  return NOERROR;
-}
