@@ -3435,6 +3435,20 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		C2.x += pg->extraclip;
 		C2.y += pg->extraclip;
 
+		break;
+
+	case OP:		/* Output reference Points P1,P2 */
+		if (!silent_mode) {
+			Eprintf("\nP1 = (%g, %g)\n", P1.x, P1.y);
+			Eprintf("P2 = (%g, %g)\n", P2.x, P2.y);
+		}
+
+		C1.x -= pg->extraclip;
+		C1.y -= pg->extraclip;
+		C2.x += pg->extraclip;
+		C2.y += pg->extraclip;
+
+
 		if (HAS_CLIP(pg->xx_mode)) {
 		  PlotCmd_to_tmpfile(CLIP);
 		  if (rotate_flag) {	/* hp2xx-specific global rotation       */
@@ -3465,12 +3479,6 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		    HPGL_Pt_to_tmpfile(&p1);
 		  }
 		  iwflag=0;
-		}
-		break;
-	case OP:		/* Output reference Points P1,P2 */
-		if (!silent_mode) {
-			Eprintf("\nP1 = (%g, %g)\n", P1.x, P1.y);
-			Eprintf("P2 = (%g, %g)\n", P2.x, P2.y);
 		}
 		break;
 	case OW:		/* Output clip box  */

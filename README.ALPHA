@@ -1,5 +1,18 @@
 Recent changes in the 3.5.0 development ("alpha") series:
 
+3.5.0a2
+
+Bug fixes:
+
+- Corrected my misapplication of Eugenes previous patch, which broke IW
+  handling (Eugene Doudine)
+- AT code was far too simple and would give numerical errors or strange
+  results in most if not all non-trivial cases. (Eugene Doudine)
+- Fixed several cases where the pen is lowered and raised without being
+  moved, but the resulting point was not drawn. (Eugene Doudine)
+- Test case pages.hp was missing the mandatory SP command, generating
+  strange results.
+
 3.5.0a1
 
 New features:

@@ -1,5 +1,15 @@
 Changes to hp2xx:
 =================
+3.5.0a2:
+Fixes by Eugene Doudine: i had misapplied part of his original patch, 
+thereby breaking IW support. My 'arc through three points' code was
+appropriate only for the trivial case in hp-tests, and  produced strange
+results and arithmetic errors in real-world cases. The 'PDPU dot' hack
+has been separated from the line drawing function to allow calling from
+other HPGL processing functions. As a consequence, more HPGL commands now
+correctly draw dots when special input conditions are met.
+test case 'pages.hp' was missing a SP command.
+
 3.5.0a1:
 Added hooks for output drivers that provide their own polygon filling, and
 added an experimental postscript driver that implements this feature 
