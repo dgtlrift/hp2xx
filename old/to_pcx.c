@@ -49,16 +49,12 @@ copies.
  **                 so this code is *preliminary* when color is used.
  **                 Correct colors appeared only if the color setting corresponded to
  **                 PC conventions...
- **
- ** 00/03/05    3.4a  MK   Write PCX version 5 truecolor files in color mode,
- **                        corrected(?) version 2 palette for b/w mode 
  **/
 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include "bresnham.h"
-#include "pendef.h"
 #include "hp2xx.h"
 
 
@@ -144,10 +140,9 @@ static int last_b, rept;
 typedef struct {
         char    creator, version, encoding, bits;
         short   xmin, ymin, xmax, ymax, hres, vres;
-        unsigned char    palette[16][3], vmode, planes;
+        char    palette[16][3], vmode, planes;
 	short   byteperline, paletteinfo;
-	short   hscreensize, vscreensize;
-        char    dummy[54];
+        char    dummy[58];
 } PCXheader;
 
 
@@ -156,18 +151,12 @@ static int
 start_PCX (const OUT_PAR *po, const GEN_PAR *pg, FILE *fd)
 {
 PCXheader       h;
-int             i;
+int             i , j ;
 
   h.creator     = 0x0A;         /* ZSoft label                  */
-if (po->picbuf->depth ==1)
   h.version     = '\002';       /* V 2.8/3.0, with palette info */
-else
-  h.version     = '\005';       /* V5 24bit PCX                 */
   h.encoding    = 1;            /* RLE                          */
-if (po->picbuf->depth==1)
   h.bits        = 1;            /* Bits per pixel               */
-else
-  h.bits        = 8;            /* Bits per pixel               */
   h.xmin        = 0;            /* Range of bitmap              */
   h.ymin        = 0;
   h.xmax        = po->picbuf->nc - 1;
@@ -175,8 +164,16 @@ else
   h.hres        = po->dpi_x;     /* Resolution                   */
   h.vres        = po->dpi_y;
 
- if (po->picbuf->depth == 1){
+/**  for (i=0; i<8; i++)
+     for (j=0; j<3; j++)
+     {
+	h.palette[i  ][j] = 255-p->Clut[i][j];
+	h.palette[i+8][j] = 255-p->Clut[i][j];
+     }  RF **/
+
   h.palette[ 0][0] =   0; h.palette[ 0][1] =   0; h.palette[ 0][2] =   0; /* white */
+/*  h.palette[ 1][0] = 128; h.palette[ 1][1] =   0; h.palette[ 1][2] =   0;
+  gave an ugly red background in b/w mode ? */
   h.palette[ 1][0] = 255; h.palette[ 1][1] = 255; h.palette[ 1][2] = 255;
   h.palette[ 2][0] =   0; h.palette[ 2][1] = 128; h.palette[ 2][2] =   0;
   h.palette[ 3][0] = 128; h.palette[ 3][1] = 128; h.palette[ 3][2] =   0;
@@ -184,6 +181,7 @@ else
   h.palette[ 5][0] = 128; h.palette[ 5][1] =   0; h.palette[ 5][2] = 128;
   h.palette[ 6][0] =   0; h.palette[ 6][1] = 128; h.palette[ 6][2] = 128;
   h.palette[ 7][0] = 192; h.palette[ 7][1] = 192; h.palette[ 7][2] = 192;
+/*  h.palette[ 8][0] = 128; h.palette[ 8][1] = 128; h.palette[ 8][2] = 128; gray*/
   h.palette[ 8][0] =   0; h.palette[ 8][1] =   0; h.palette[ 8][2] =   0; /*black*/
   h.palette[ 9][0] = 255; h.palette[ 9][1] =   0; h.palette[ 9][2] =   0; /* red*/
   h.palette[10][0] =   0; h.palette[10][1] = 255; h.palette[10][2] =   0; /* green */
@@ -192,24 +190,23 @@ else
   h.palette[13][0] = 255; h.palette[13][1] =   0; h.palette[13][2] = 255;
   h.palette[14][0] =   0; h.palette[14][1] = 255; h.palette[14][2] = 255;
   h.palette[15][0] = 255; h.palette[15][1] = 255; h.palette[15][2] = 255; 
- }else
-  for (i=0;i<16;i++){
-  h.palette[ i][0] =   0; h.palette[ i][1] =   0; h.palette[ i][2] =   0; /* white */
-  }
+
+/****************************************************************
+     for (i=0; i<16; i++)
+     for (j=0; j<3; j++)
+     {
+	h.palette[i  ][j] = pg->Clut[ pg->pencolor[i] ][j];
+     }  
+*******************************        MK     *****************/
 
   h.vmode       = 0;            /* Reserved                        */
   h.planes      = po->picbuf->depth; /* Number of color planes	   */
-  if (po->picbuf->depth ==1 )
-  h.byteperline = po->picbuf->nb;
-  else
-  h.byteperline = 8*po->picbuf->nb;    /* Number of bytes per line   */
+  h.byteperline = po->picbuf->nb;    /* Number of bytes per line   */
   h.paletteinfo = 1;            /* 1 = color & b/w, 2 = gray scale */
-  h.hscreensize = po->picbuf->nc - 1; /* Horizontal screen size in pixels */
-  h.vscreensize = po->picbuf->nr - 1; /* Vertical screen size in pixels */
-  for (i=0; i<54; )             /* Filler for a max. of 128 bytes  */
+  for (i=0; i<58; )             /* Filler for a max. of 128 bytes  */
   {
-        h.dummy[i++] = '\0';
-        h.dummy[i++] = '\0';
+        h.dummy[i++] = 'H';
+        h.dummy[i++] = 'W';
   }
 
 /**
@@ -269,8 +266,8 @@ PicBuf_to_PCX (const GEN_PAR *pg, const OUT_PAR *po)
 {
 FILE    *fd=NULL;
 RowBuf  *row=NULL;
-int     row_c,  x, color_index, err;
-Byte    *p_R=NULL, *p_G=NULL, *p_B=NULL, *p_I=NULL;
+int     row_c, i, x, color_index, offset, err;
+Byte    mask, *p_R=NULL, *p_G=NULL, *p_B=NULL, *p_I=NULL;
 
   err = 0;
   if (!pg->quiet)
@@ -318,10 +315,10 @@ Byte    *p_R=NULL, *p_G=NULL, *p_B=NULL, *p_I=NULL;
    **/
   if (po->picbuf->depth > 1)
   {
-	p_I = calloc (po->picbuf->nb, 8*sizeof(Byte));
-	p_B = calloc (po->picbuf->nb, 8*sizeof(Byte));
-	p_G = calloc (po->picbuf->nb, 8*sizeof(Byte));
-	p_R = calloc (po->picbuf->nb, 8*sizeof(Byte));
+	p_I = calloc (po->picbuf->nb, sizeof(Byte));
+	p_B = calloc (po->picbuf->nb, sizeof(Byte));
+	p_G = calloc (po->picbuf->nb, sizeof(Byte));
+	p_R = calloc (po->picbuf->nb, sizeof(Byte));
 	if (p_I == NULL || p_B == NULL || p_G == NULL || p_R == NULL)
 	{
 		Eprintf(
@@ -340,7 +337,7 @@ Byte    *p_R=NULL, *p_G=NULL, *p_B=NULL, *p_I=NULL;
 	if ((!pg->quiet) && (row_c % 10 == 0))
 		  /* For the impatients among us ...    */
 		Eprintf(".");
-fprintf(stderr,"coverting row %d (%d bytes)\n",row_c,po->picbuf->nb);
+
 	row = get_RowBuf(po->picbuf, row_c);
 	byte_to_PCX (0, PCX_INIT, fd);
 
@@ -348,29 +345,66 @@ fprintf(stderr,"coverting row %d (%d bytes)\n",row_c,po->picbuf->nb);
 		Buf_to_PCX (row->buf, po->picbuf->nb, fd);
 	else
 	{
-		for (x=0; (x < po->picbuf->nb<<3); x++){
+		for (x=0; x < po->picbuf->nb; x++)
 			p_I[x] = p_R[x] = p_G[x] = p_B[x] = 0;
-   
-   color_index = index_from_RowBuf(row, x, po->picbuf);
-/*fprintf(stderr,"color_index= %d\n",color_index);   */
-	p_R[x] = 255-pt.clut[color_index][0] ;
-	p_G[x] = 255-pt.clut[color_index][1] ;
-        p_B[x] = 255-pt.clut[color_index][2] ;
-/*
-	p_R[x] = 255-pt.clut(color_index,R) ;
-	p_G[x] = 255-pt.clut(color_index,G) ;
-	p_B[x] = 255-pt.clut(color_index,B) ;
-*/
-        } 
-/*
-for (x=0; x < po->picbuf->nb; x++)fprintf(stderr,"%d%d%d\n",p_R[x],p_G[x],p_B[x]);
-*/
-		Buf_to_PCX (p_R, 8*po->picbuf->nb, fd);
-		Buf_to_PCX (p_G, 8*po->picbuf->nb, fd);
-		Buf_to_PCX (p_B, 8*po->picbuf->nb, fd);
-		Buf_to_PCX (p_I, 8*po->picbuf->nb, fd);
+
+		for (x=offset=0; x < (po->picbuf->nb << 3); x++, offset = (x >> 3))
+		{
+			color_index = index_from_RowBuf(row, x, po->picbuf);
+
+				mask = 0x80;
+				if ((i = x & 0x07) != 0)
+					mask >>= i;
+
+/****	*(p_R + offset ) |= ( mask ^ ( pg->Clut[color_index][0] & mask ) );
+	*(p_G + offset ) |= ( mask ^ ( pg->Clut[color_index][1] & mask ) );
+        *(p_B + offset ) |= ( mask ^ ( pg->Clut[color_index][2] & mask ) ); 
+****/
+
+
+
+				switch (color_index)
+				{
+				  case xxForeground:
+					*(p_I + offset) |= mask;
+					*(p_R + offset) |= mask;
+					*(p_G + offset) |= mask;
+					*(p_B + offset) |= mask;
+					break;
+				  case xxRed:
+					*(p_G + offset) |= mask;
+					*(p_B + offset) |= mask;
+					break;
+				  case xxGreen:
+					*(p_R + offset) |= mask;
+					*(p_B + offset) |= mask;
+					break;
+				  case xxBlue:
+					*(p_G + offset) |= mask;
+					*(p_R + offset) |= mask;
+					break;
+				  case xxCyan:
+					*(p_R + offset) |= mask;
+					break;
+				  case xxMagenta:
+					*(p_G + offset) |= mask;
+					break;
+				  case xxYellow:
+					*(p_B + offset) |= mask;
+					break;
+				  default:
+					break;
+				}
+		}
+		Buf_to_PCX (p_R, po->picbuf->nb, fd);
+		Buf_to_PCX (p_G, po->picbuf->nb, fd);
+		Buf_to_PCX (p_B, po->picbuf->nb, fd);
+		Buf_to_PCX (p_I, po->picbuf->nb, fd);
 	}
   }
+  if (pg->is_color && !pg->quiet)
+	Eprintf ("\nWARNING: PCX colors should be OK now!\n");  /* RF */
+
   if (!pg->quiet)
 	Eprintf("\n");
 

@@ -43,20 +43,11 @@ copies.
  **      out there know an EASY way how to redirect hp2xx's outputs from
  **      stderr into a window without changing hp2xx itself??
  **/
- 
-/**
- ** 2000/06/21 V ?.?? Simple patch to OS/2 PM previewer
- **                   by Kazutaka Nishiyama (nishiyama@ep.isas.ac.jp)
- ** NOTES:     
- **      Now the PM version has a redirector of stderr into 
- **      a separate window.
- **/
 
-#define	INCL_WIN
-#define INCL_DOS
-#define INCL_DOSERRORS
-#include <os2.h>
+#define	INCL_PM
 
+#include <os2emx.h>
+#include <dos.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -71,8 +62,6 @@ HMQ	hmq;
 HWND	hwndFrame, hwndClient;
 QMSG	qmsg;
 RECTL	rctl;
-PTIB	ptib;
-PPIB	ppib;
 
 static	PicBuf	*pbuf;
 
@@ -249,9 +238,6 @@ PicBuf_to_PM (const GEN_PAR *pg, const OUT_PAR *po)
 	Eprintf ("\nPM preview follows.\n");
 	Eprintf ("Close window to end graphics mode\n");
   }
-
-  DosGetInfoBlocks(&ptib, &ppib);
-  ppib->pib_ultype = PROG_PM;
 
   pbuf = po->picbuf;
 

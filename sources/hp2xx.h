@@ -144,7 +144,7 @@ copies.
 
 #define	MAX_LB_LEN	150	/* Max num of chars per label	*/
 
-#define NUMPENS 256  /* Maximum number of pens supported */
+#define MAXPOLY 20480  /* Size of polygon vertex buffer */
 
 #ifndef VOID
 #ifdef	__STDC__
@@ -155,22 +155,6 @@ copies.
 #endif	/* ifndef VOID */
 
 /* #endif */
-
-
-
-/**
- ** Color codes used within hp2xx
- **/
-
-#define	xxBackground	0
-#define	xxForeground	1
-#define	xxRed		2
-#define	xxGreen		3
-#define	xxBlue		4
-#define	xxCyan		5
-#define	xxMagenta	6
-#define	xxYellow	7
-
 
 /**
  ** Misc. typedefs
@@ -188,7 +172,7 @@ typedef	enum{
 	XX_CAD, XX_CS, XX_EM, XX_EPIC, XX_EPS, XX_FIG, XX_GPT, XX_HPGL, 
         XX_ILBM, XX_IMG,
 	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PIC, XX_PNG, XX_PRE, 
-	XX_RGIP, XX_TIFF, XX_TERM	/* Dummy: terminator	*/
+	XX_RGIP, XX_TIFF, XX_ESC2, XX_TERM	/* Dummy: terminator	*/
 } hp2xx_mode;
 
 
@@ -224,7 +208,7 @@ typedef	struct {
 
 
 typedef enum {
-	NOP, MOVE_TO, DRAW_TO, PLOT_AT, SET_PEN, CMD_EOF
+	NOP, MOVE_TO, DRAW_TO, PLOT_AT, SET_PEN, DEF_PW, DEF_PC, CMD_EOF
 } PlotCmd;
 
 
@@ -232,42 +216,6 @@ typedef struct {
 	hp2xx_mode	mode;
 	char		*modestr;
 } mode_list;
-
-
-/**
- ** Line types: No pattern number = solid line, 0 = dot at end coordinates,
- **		!= 0: various patterns, consisting of
- **			l)ong lines, s)hort lines, d)ots and g)aps.
- **		< 0:  adaptive line types (ada)
- **		> 0:  fixed line types (fix)
- **
- ** NOTE: See HP-GL manuals for details
- **/
-
-typedef	enum
-{
-	LT_lgsgs_ada	= -6,
-	LT_lgs_ada	= -5,
-	LT_lgd_ada	= -4,
-	LT_ls_ada	= -3,
-	LT_l_ada	= -2,
-	LT_d_ada	= -1,
-
-	LT_plot_at	=  0,
-				/* Line patterns:	*/
-	LT_d_fix	=  1,	/*	.	 	*/
-	LT_l_fix	=  2,	/*	-----	 	*/
-	LT_ls_fix	=  3,	/*	------- 	*/
-	LT_lgd_fix	=  4,	/*	------- .	*/
-	LT_lgs_fix	=  5,	/*	------- -	*/
-	LT_lgsgs_fix	=  6,	/*	----- - -	*/
-
-	LT_solid	=  7,
-	LT_default	=  7
-}
-	LineType;
-
-
 
 /**
  ** Input parameters: Used mainly during input file processing
@@ -324,12 +272,10 @@ typedef struct			/* Corresponding option(s)	*/
    char  *logfile;		/* -l logfile			*/
    char	 *swapfile;		/* -s swapfile			*/
    int	 quiet;			/* -q				*/
-   int	 pensize[NUMPENS+1];	/* -p xxxxxxxx			*/
-   int	 pencolor[NUMPENS+1];	/* -c xxxxxxxx			*/
+   int   nofill;		/* -n				*/
    int	 maxpensize;		/* (internally needed)		*/
    int	 is_color;		/* (internally needed)		*/
    int	 maxcolor;		/* (internally needed)		*/
-   Byte	 	Clut[NUMPENS+8][3];	/* (internally needed)		*/
    FILE	 	*td;		/* (internally needed)		*/
    hp2xx_mode	xx_mode;	/* (internally needed)		*/
    int   maxpens;               /* (internally needed)          */
@@ -393,8 +339,13 @@ PlotCmd	PlotCmd_from_tmpfile	(void);
 void	HPGL_Pt_from_tmpfile	(HPGL_Pt *);
 void	Pen_action_to_tmpfile	(PlotCmd, const HPGL_Pt*, int);
 int	read_float		(float*, FILE*);
-int read_PE_coord(int ,FILE* ,PE_flags* ,float* );
+void    line(int relative, HPGL_Pt p);
+int read_PE_flags(const GEN_PAR *, int, FILE *, PE_flags *);
+int read_PE_coord(int ,FILE *, PE_flags *, float *);
+int read_PE_pair(int, FILE *, PE_flags *, HPGL_Pt *);
+void read_PE(const GEN_PAR *, FILE *);
 int decode_PE_char(int , PE_flags *) ;
+int isPEterm(int, PE_flags*);
 void	to_ATARI	(GEN_PAR*, FILE *);
 int	to_mftex	(const GEN_PAR*, const OUT_PAR*, int);
 int	to_eps		(const GEN_PAR*, const OUT_PAR*);
@@ -416,6 +367,9 @@ int     PicBuf_to_TIF   (const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_IMG	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_PBM	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_ILBM	(const GEN_PAR*, const OUT_PAR*);
+#ifdef EPSON
+int	PicBuf_to_ESCP2	(const GEN_PAR*, const OUT_PAR*);
+#endif
 
 #ifdef PIC_PAC
 int	PicBuf_to_PIC	(const GEN_PAR*, const OUT_PAR*);
@@ -434,4 +388,22 @@ int	PicBuf_to_HGC	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_VGA	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_X11	(const GEN_PAR*, const OUT_PAR*);
 
+void fill (HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt P1, HPGL_Pt P2,
+           int scale_flag, int filltype, float spacing, float hatchangle);
+
+/*std_main*/
+void action_oldstyle(GEN_PAR *, IN_PAR *, OUT_PAR *);
+/*to_eps*/
+void ps_end(FILE *);
+void ps_stroke_and_move_to(HPGL_Pt *, FILE *);
+void ps_set_linewidth(double, HPGL_Pt *, FILE *);
+void ps_set_color(double, double, double, HPGL_Pt *, FILE *);
+void ps_line_to(HPGL_Pt *, char, FILE *);
+char *Getdate(void);
+void ps_init(const GEN_PAR *, const OUT_PAR *, FILE *, int);
+/*to_fig*/
+void fig_poly_end(int, int, FILE *, int, long *, long *);
+/*to_x11*/
+void win_close(void);
+           
 #endif	/*	__HP2XX_H	*/

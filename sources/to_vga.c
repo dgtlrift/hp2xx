@@ -57,6 +57,7 @@ copies.
 #include <conio.h>
 #include "bresnham.h"
 #include "hp2xx.h"
+#include "pendef.h"
 #endif	/* !OS2	*/
 
 
@@ -187,7 +188,7 @@ char	c;
   if (pg->is_color)	/* Darker background for higher color contrast	*/
   {
 	for (i=xxBackground; i <= xxYellow; i++)
-		set_color_regs (i, pg->Clut[i][0],pg->Clut[i][1],pg->Clut[i][2]);
+		set_color_regs (i, pt.clut[i][0],pt.clut[i][1],pt.clut[i][2]);
 	set_color_regs((short) xxBackground, 160, 160, 160); /* GRAY	*/
   }
   else

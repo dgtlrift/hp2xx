@@ -59,16 +59,18 @@ OS2DISPFLAG	= -p	# -f (full screen), -p (PM), -w (windowed)
 
 
 
-INCS	= hp2xx.h bresnham.h chardraw.h charset0.h getopt.h
+INCS	= hp2xx.h bresnham.h chardraw.h charset0.h getopt.h pendef.h lindef.h
 
 SRCS	= hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c getopt1.c \
 	  $(INCS)\
 	  to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c $(OS2DISP).c to_pbm.c \
-	  to_rgip.c std_main.c to_fig.c clip.c $(EX_SRC)
+	  to_rgip.c std_main.c to_fig.c clip.c fillpoly.c pendef.c lindef.c \
+	  $(EX_SRC)
 
 OBJS	= hp2xx.o hpgl.o picbuf.o bresnham.o chardraw.o getopt.o getopt1.o \
 	  to_vec.o to_pcx.o to_pcl.o to_eps.o to_img.o $(OS2DISP).o to_pbm.o \
-	  to_rgip.o std_main.o to_fig.o clip.o $(EX_OBJ)
+	  to_rgip.o std_main.o to_fig.o clip.o fillpoly.o pendef.o lindef.o \
+	  $(EX_OBJ)
 
 PROGRAM	= hp2xx
 

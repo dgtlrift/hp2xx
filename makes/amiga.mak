@@ -21,7 +21,7 @@ OBJFILES		= hp2xx.o std_main.o hpgl.o chardraw.o picbuf.o  \
  			  bresnham.o to_vec.o to_pcx.o to_pcl.o  \
  			  to_eps.o  to_amiga.o to_pbm.o to_ilbm.o \
  			  to_img.o to_rgip.o getopt.o getopt1.o \
-			  to_fig.o clip.o
+			  to_fig.o clip.o fillpoly.o pendef.o lindef.o
 
 
 $(PROGRAMM)		:  $(OBJFILES)
@@ -105,3 +105,14 @@ to_fig.o		: to_fig.c
 
 clip.o			: clip.c
 			$(COMPILER) $(CFLAGS) clip.c
+
+fillpoly.o		: fillpoly.c
+			$(COMPILER) $(CFLAGS) fillpoly.c
+
+pendef.o		: pendef.c
+			$(COMPILER) $(CFLAGS) pendef.c
+
+lindef.o		: lindef.c
+			$(COMPILER) $(CFLAGS) lindef.c
+
+

@@ -46,7 +46,7 @@ copies.
 #include <graphics.h>
 #include "bresnham.h"
 #include "hp2xx.h"
-
+#include "pendef.h"
 
 
 
@@ -86,7 +86,7 @@ const RowBuf	*row;
 
   GrSetColor(1, 0, 0, 0);
   for (i=2; i < 8; i++)  /* assuming that we indeed get indices 2 ... 7 */
-	if (i!=GrAllocColor(pg->Clut[i][0], pg->Clut[i][1], pg->Clut[i][2]))
+	if (i!=GrAllocColor(pt.clut[i][0], pt.clut[i][1], pt.clut[i][2]))
 		Eprintf ("WARNING: Color code %d may yield wrong color!\n", i);
 
   GrSetMode (GR_default_graphics, 800, 600);

@@ -33,12 +33,13 @@
 
 #define PDNCOL 8 
 
+int pdImageColorAllocate(pdImagePtr, int, int , int);
 
 int
 PicBuf_to_PNG (const GEN_PAR *pg, const OUT_PAR *po)
 {
 FILE           *fd;
-int             row_c, byte_c, x;
+int             row_c, /*byte_c,*/ x;
 const RowBuf   *row;
 const PicBuf   *pb;
 int	       ppm[][3] = { {255, 255, 255}, {0,0,0}, {255,0,0}, {0,255,0},

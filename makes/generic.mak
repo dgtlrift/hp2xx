@@ -87,7 +87,7 @@ ALL_LIBS  = -lX11 -lm     #  Maybe -lX instead of -lX11 is needed?
 #
 # Solaris /SunOS >5.x
 # LFLAGS    = -L$(OPENWINHOME)/lib -R$(OPENWINHOME)/lib
-# CPPFLAGS  = -I$OPENWINHOME)/include
+# CPPFLAGS  = -I$(OPENWINHOME)/include
 # DEFINES   = -DUNIX -DHAS_UNIX_X11
 # PREVIEWER = to_x11
 # ALL_LIBS  = -lX11 -lm -lnsl -lsocket
@@ -200,7 +200,7 @@ EX_DEFS	=
 # No user-serviceable parts below!
 #############################################################################
 
-COMMON_INCS	= hp2xx.h bresnham.h
+COMMON_INCS	= hp2xx.h bresnham.h pendef.h lindef.h
 ALL_INCS	= $(COMMON_INCS) chardraw.h charset0.h getopt.h x11.h ilbm.h iff.h
 ALL_CFLAGS	= -c $(CFLAGS)
 
@@ -209,11 +209,13 @@ ALL_CFLAGS	= -c $(CFLAGS)
 SRCS	= hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c getopt1.c \
 	  $(ALL_INCS)\
 	  to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c to_pbm.c to_rgip.c \
-	  std_main.c to_fig.c clip.c $(PREVIEWER).c $(EX_SRC)
+	  std_main.c to_fig.c clip.c fillpoly.c pendef.c lindef.c \
+	  $(PREVIEWER).c $(EX_SRC)
 
 OBJS	= hp2xx.o hpgl.o picbuf.o bresnham.o chardraw.o getopt.o getopt1.o \
 	  to_vec.o to_pcx.o to_pcl.o to_eps.o to_img.o to_pbm.o to_rgip.o \
-	  std_main.o to_fig.o clip.o $(PREVIEWER).o $(EX_OBJ)
+	  std_main.o to_fig.o clip.o fillpoly.o pendef.o lindef.o \
+	  $(PREVIEWER).o $(EX_OBJ)
 
 PROGRAM	= hp2xx
 

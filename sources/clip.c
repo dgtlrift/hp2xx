@@ -13,9 +13,8 @@
 
 #include <stdio.h>
 #include <math.h>
+#include "clip.h"
 
-#define CLIP_DRAW 0
-#define CLIP_NODRAW 1
         
 #define CLIP_INSIDE 0
 #define CLIP_RIGHT 1
@@ -32,11 +31,12 @@ static int ClipAreaCode (
 	double px, double py)
 {
 	 short code = CLIP_INSIDE;
-	if (px < x1 ) code |= CLIP_LEFT;
-	else if ( px > x2 ) code |= CLIP_RIGHT;
+
+	if (px < x1-1.e-3 ) code |= CLIP_LEFT;
+	else if ( px > x2+1.e-3 ) code |= CLIP_RIGHT;
 	
-	if (py < y1 ) code |= CLIP_BELOW;
-	else if ( py > y2 ) code |= CLIP_ABOVE;
+	if (py < y1-1.e-3 ) code |= CLIP_BELOW;
+	else if ( py > y2+1.e-3 ) code |= CLIP_ABOVE;
 	
 	return code;
 }		
@@ -79,15 +79,16 @@ short DtClipLine(
 	if (ClipFullyInside(area_code1,area_code2) ) return CLIP_DRAW;
 	
 	if (ClipSurelyOutside(area_code1,area_code2)) {
+/*	fprintf(stderr,"clipped line from %f %f to %f %f\n",*x1,*y1,*x2,*y2);*/
 	 return CLIP_NODRAW;
 	 }
 	 else
 	{
-	register double dx,dy;
+	double dx,dy;
 	int dx0,dy0;
 	double tEnter,tLeave;
-	register double *tE = &tEnter;
-	register double *tL = &tLeave;
+	double *tE = &tEnter;
+	double *tL = &tLeave;
 
 		dx = *x2 - *x1;
 		dy = *y2 - *y1;

@@ -39,15 +39,20 @@ copies.
  **			   Out-dated "DotBlock" concept replaced by "char".
  ** 94/02/14  V 2.10  HWW  New parameter structs; restructured
  **			   Improved cleanup & error handling
+ ** 00/07/16          MK   Modify pensize correction in size_Pixbuf
+ **                        for new .1 pixel pensize unit scheme (G.B.)
  **/
 
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef _NO_VCL
 #include <unistd.h>
+#endif
 #include <string.h>
 #include <math.h>
 #include "bresnham.h"
+#include "pendef.h"
 #include "hp2xx.h"
 
 
@@ -216,6 +221,7 @@ Byte	*addr;
 
   if (depth == 1)
   {
+  	if (color_index > 1) color_index=1;
 	Mask = 0x80;
 	if ((i = x & 0x07) != 0)
 	{
@@ -292,12 +298,17 @@ size_PicBuf (const GEN_PAR* pg, const OUT_PAR* po, int *p_rows, int *p_cols)
 {
 HPGL_Pt	HP_Pt;
 DevPt	D_Pt;
+int maxps;
 
   HP_Pt.x  = po->xmax;
   HP_Pt.y  = po->ymax;
   HPcoord_to_dotcoord (&HP_Pt, &D_Pt, po);
-  *p_cols  = D_Pt.x + pg->maxpensize;	/* Pensize correction	*/
-  *p_rows  = D_Pt.y + pg->maxpensize;
+  /* Pensize correction	*/
+ /* maxps= (int)(1. + pg->maxpensize *po->HP_to_xdots/10.0/0.025); */
+  maxps= pg->maxpensize; /* thick lines are drawn to penwidth - not currently scaled */
+                         /* so we must do the same when calculating limits - or we try to draw outside page */ 
+  *p_cols  = D_Pt.x + maxps;	
+  *p_rows  = D_Pt.y + maxps;
 }
 
 
@@ -528,13 +539,16 @@ line_PicBuf (DevPt *p0, DevPt *p1, int pensize, int pencolor, PicBuf* pb)
 {
 DevPt	pt, *p_act;
 
+/*fprintf(stderr,"line_PicBuf, color %d, width %d\n",pencolor,pensize);*/
+
   if (pensize == 0)		/* No pen selected!	*/
 	return;
-
+/*fprintf(stderr,"line_PicBuf, pencolor ist %d\n",pencolor);*/
   if (pencolor == xxBackground)	/* No drawable color!	*/
 	return;
 
   p_act = bresenham_init (p0, p1);
+
   if (pensize == 1) do
   {
 	plot_PicBuf (pb, p_act, pencolor);
@@ -639,7 +653,9 @@ int		pen_no = 1;
 
   if (!pg->quiet)
 	Eprintf ( "\nPlotting in buffer\n");
+
   rewind (pg->td);
+
   while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
 	switch (cmd)
 	{
@@ -652,6 +668,18 @@ int		pen_no = 1;
 			exit (ERROR);
 		}
 		break;
+	  case DEF_PW:
+                if(!load_pen_width_table(pg->td)) {
+                    PError("Unexpected end of temp. file");
+		    exit(ERROR);
+                }
+		break;
+	  case DEF_PC:
+                if(!load_pen_color_table(pg->td)) {
+                    PError("Unexpected end of temp. file");
+		    exit(ERROR);
+                }
+		break;
 	  case MOVE_TO:
 		HPGL_Pt_from_tmpfile(&pt1);
 		HPcoord_to_dotcoord (&pt1, &ref, po);
@@ -660,7 +688,8 @@ int		pen_no = 1;
 		HPGL_Pt_from_tmpfile(&pt1);
 		HPcoord_to_dotcoord (&pt1, &next, po);
 		line_PicBuf (&ref, &next,
-			pg->pensize[pen_no], pg->pencolor[pen_no],
+			pt.width[pen_no], 
+			pt.color[pen_no], 
 			po->picbuf);
 		memcpy (&ref, &next, sizeof(ref));
 		break;
@@ -668,7 +697,8 @@ int		pen_no = 1;
 		HPGL_Pt_from_tmpfile(&pt1);
 		HPcoord_to_dotcoord (&pt1, &ref, po);
 		line_PicBuf (&ref, &ref,
-			pg->pensize[pen_no], pg->pencolor[pen_no],
+			pt.width[pen_no],
+			pt.color[pen_no],
 			po->picbuf);
 		break;
 

@@ -49,6 +49,7 @@ copies.
 #include <math.h>
 #include "bresnham.h"
 #include "hp2xx.h"
+#include "pendef.h"
 
 
 /*#define	A4_height	297*/	/* in [mm]	*/
@@ -264,7 +265,7 @@ A4_height=297.;
   fprintf(fd,"    2.834646 2.834646 scale\n");	/* 1/72"--> mm */
 /*  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff,
 			A4_height - po->yoff - po->height);*/
-  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff, po->yoff);
+  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff+hmxpenw*200, po->yoff+hmxpenw*200);
   fprintf(fd,"    %6.3f setlinewidth\n", pensize/10.0);
   fprintf(fd,"   } def\n");
   fprintf(fd,"/C {setrgbcolor} def\n");
@@ -305,7 +306,7 @@ to_eps (const GEN_PAR *pg, const OUT_PAR *po)
 PlotCmd	cmd;
 HPGL_Pt	pt1 = {0};
 FILE	*md;
-int	pen_no, pensize, pencolor, err;
+int	pen_no=0, pensize, pencolor=0, err;
 
   err = 0;
   if (!pg->quiet)
@@ -326,7 +327,7 @@ int	pen_no, pensize, pencolor, err;
 
   /* PS header */
 
-  pensize = pg->pensize[DEFAULT_PEN_NO]; /* Default pen	*/
+  pensize = pt.width[DEFAULT_PEN_NO]; /* Default pen	*/
   ps_init (pg, po, md, pensize);
 
   if (pensize != 0)
@@ -356,26 +357,83 @@ int	pen_no, pensize, pencolor, err;
 			err = ERROR;
 			goto EPS_exit;
 		}
-		pensize = pg->pensize[pen_no];
+/*
+		pensize = pensize[pen_no];
 		if (pensize != 0)
 			ps_set_linewidth ((double) pensize/10.0, &pt1, md);
-		pencolor = pg->pencolor[pen_no];
-		ps_set_color (  pg->Clut[pencolor][0]/255.0,
-				pg->Clut[pencolor][1]/255.0,
-				pg->Clut[pencolor][2]/255.0,
+*/
+		pensize = pt.width[pen_no];
+		pencolor = pt.color[pen_no];
+		ps_set_color (  pt.clut[pencolor][0]/255.0,
+				pt.clut[pencolor][1]/255.0,
+				pt.clut[pencolor][2]/255.0,
 				&pt1, md);
 		break;
+          case DEF_PW:
+                if(!load_pen_width_table(pg->td)) {
+                    PError("Unexpected end of temp. file");
+		    err = ERROR;
+		    goto EPS_exit;
+                }
+                break;
+          case DEF_PC:
+                err=load_pen_color_table(pg->td);
+                if (err==0) {
+                    PError("Unexpected end of temp. file");
+		    err = ERROR;
+		    goto EPS_exit;
+                }
+                if (err==pencolor) pencolor *=-1; /*current pen changed*/
+                break;
 	  case MOVE_TO:
+                if(fabs(pensize-pt.width[pen_no]) >= 0.01) {
+                    pensize=pt.width[pen_no];
+                    if (pensize != 0)
+                        ps_set_linewidth ((double) pensize/10.0, &pt1, md);
+                }
+                if(pencolor <0) {
+                pencolor=pt.color[pen_no];
+		ps_set_color (  pt.clut[pencolor][0]/255.0,
+				pt.clut[pencolor][1]/255.0,
+				pt.clut[pencolor][2]/255.0,
+				&pt1, md);
+                }
+
 		HPGL_Pt_from_tmpfile (&pt1);
 		if (pensize != 0)
 			ps_stroke_and_move_to (&pt1, md);
 		break;
 	  case DRAW_TO:
+                if(fabs(pensize-pt.width[pen_no]) >= 0.01) {
+                    pensize=pt.width[pen_no];
+                    if (pensize != 0)
+                        ps_set_linewidth ((double) pensize/10.0, &pt1, md);
+                }
+                if(pencolor <0) {
+                pencolor=pt.color[pen_no];
+		ps_set_color (  pt.clut[pencolor][0]/255.0,
+				pt.clut[pencolor][1]/255.0,
+				pt.clut[pencolor][2]/255.0,
+				&pt1, md);
+                }
 		HPGL_Pt_from_tmpfile (&pt1);
 		if (pensize != 0)
 			ps_line_to (&pt1, 'D', md);
 		break;
 	  case PLOT_AT:
+                if(fabs(pensize-pt.width[pen_no]) >= 0.01) {
+                    pensize=pt.width[pen_no];
+                    if (pensize != 0)
+                        ps_set_linewidth ((double) pensize/10.0, &pt1, md);
+                }
+                if(pencolor<0) {
+                pencolor=pt.color[pen_no];
+		ps_set_color (  pt.clut[pencolor][0]/255.0,
+				pt.clut[pencolor][1]/255.0,
+				pt.clut[pencolor][2]/255.0,
+				&pt1, md);
+                }
+
 		HPGL_Pt_from_tmpfile (&pt1);
 		if (pensize != 0)
 		{

@@ -69,6 +69,9 @@ EXE_dependencies =  \
  std_main.obj \
  to_fig.obj \
  clip.obj \
+ fillpoly.obj \
+ pendef.obj \
+ lindef.obj
 # to_pac.obj \
 # to_pic.obj
 
@@ -95,6 +98,9 @@ to_vec.obj+
 to_vga.obj+
 to_fig.obj+
 clip.obj+
+fillpoly.obj+
+pendef.obj+
+lindef.obj+
 std_main.obj
 hp2xx
 		# no map file
@@ -145,6 +151,12 @@ std_main.obj: hp2xx.cfg std_main.c
 to_fig.obj: hp2xx.cfg to_fig.c
 
 clip.obj: hp2xx.cfg clip.c
+
+fillpoly.obj: hp2xx.cfg fillpoly.c
+
+pendef.obj: hp2xx.cfg pendef.c
+
+lindef.obj: hp2xx.cfg lindef.c
 
 #		*Compiler Configuration File*
 hp2xx.cfg: borland.mak

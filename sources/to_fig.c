@@ -14,6 +14,7 @@
 #include <stdlib.h>
 
 #include "bresnham.h"
+#include "pendef.h"
 #include "hp2xx.h"
 
 #define FIG_NONE 0
@@ -22,7 +23,6 @@
 
 #define MAX_FIG_POINTS 500
 
-void fig_poly_end();
 
 int
 to_fig (const GEN_PAR *pg, const OUT_PAR *po)
@@ -77,16 +77,17 @@ long		x[MAX_FIG_POINTS], y[MAX_FIG_POINTS];
   fprintf(md,"1200 2\n");
 
 for (i=0;i<8;++i)
-fprintf (md,"0 %d #%2.2X%2.2X%2.2X\n",32+i, pg->Clut[i][0],pg->Clut[i][1],pg->Clut[i][2]);
+    fprintf (md,"0 %d #%2.2X%2.2X%2.2X\n",32+i, 
+             pt.clut[i][0],pt.clut[i][1],pt.clut[i][2]);
 
 
   pen_no  = DEFAULT_PEN_NO;
-  pensize = pg->pensize[pen_no];
+  pensize = pt.width[pen_no];
   if (pensize != 0)
   {
 	if (pg->is_color)
-	  colour = 32 +pg->pencolor[pen_no];
-/*	  colour = fig_colour[pg->pencolor[pen_no]];*/
+	  colour = 32 + pt.color[pen_no];
+/*	  colour = fig_colour[pt.color[pen_no]];*/
 	else
 	  colour = -1;
   }
@@ -117,7 +118,7 @@ fprintf (md,"0 %d #%2.2X%2.2X%2.2X\n",32+i, pg->Clut[i][0],pg->Clut[i][1],pg->Cl
 			fig_poly_end(pensize, colour, md, npoints, x, y);
 			npoints = 0;
 		}
-		pensize = pg->pensize[pen_no];
+		pensize = pt.width[pen_no];
 		if (pensize == 0)
 		{
 			colour = 7; /* Draw in white */
@@ -126,12 +127,21 @@ fprintf (md,"0 %d #%2.2X%2.2X%2.2X\n",32+i, pg->Clut[i][0],pg->Clut[i][1],pg->Cl
 		{
 			if (pg->is_color)
 /*	  colour = fig_colour[pg->pencolor[pen_no]];*/
-			  colour = 32 + pg->pencolor[pen_no];
+			  colour = 32 + pt.color[pen_no];
 			else
 			  colour = -1;
 		}
 		if (figmode != FIG_MOVE) figmode = FIG_NONE;
 		break;
+ 
+          case DEF_PW:
+                if(!load_pen_width_table(pg->td)) {
+                    PError("Unexpected end of temp. file");
+                    err = ERROR;
+                    goto FIG_exit;
+                }
+		pensize=pt.width[pen_no];
+                break;
 
 	  case MOVE_TO:
 		HPGL_Pt_from_tmpfile (&pt1);
@@ -208,7 +218,7 @@ FIG_exit:
   return err;
 }
 
-void fig_poly_end(int pensize, int colour, FILE *md, int npoints, int *x, int *y)
+void fig_poly_end(int pensize, int colour, FILE *md, int npoints, long *x, long *y)
 { /* Write out entire polygon to file */
 	int i,j;
 	fprintf(md,"2 1 0 %d %d %d 0 0 -1 0.000 0 0 0 0 0 %d\n",
@@ -216,7 +226,7 @@ void fig_poly_end(int pensize, int colour, FILE *md, int npoints, int *x, int *y
 	j = 0;
 	for (i=0;i<npoints;i++)
 	{
-		fprintf(md," %d %d",x[i],y[i]);
+		fprintf(md," %ld %ld",x[i],y[i]);
 		if (++j > 10)
 		{
 			fprintf(md,"\n");

@@ -31,6 +31,7 @@ copies.
 #include <stdarg.h>
 #include <string.h>
 #include "bresnham.h"
+#include "pendef.h"
 #include "hp2xx.h"
 #include "getopt.h"
 
@@ -198,21 +199,21 @@ char	*p, cdummy;
 		{
 		    switch (*p-'0')
 		    {
-			case xxBackground:pg->pencolor[j] = xxBackground; break;
-			case xxForeground:pg->pencolor[j] = xxForeground; break;
-			case xxRed:	  pg->pencolor[j] = xxRed;	  break;
-			case xxGreen:	  pg->pencolor[j] = xxGreen;	  break;
-			case xxBlue:	  pg->pencolor[j] = xxBlue;	  break;
-			case xxCyan:	  pg->pencolor[j] = xxCyan;	  break;
-			case xxMagenta:	  pg->pencolor[j] = xxMagenta;	  break;
-			case xxYellow:	  pg->pencolor[j] = xxYellow;	  break;
+			case xxBackground:pt.color[j] = xxBackground; break;
+			case xxForeground:pt.color[j] = xxForeground; break;
+			case xxRed:	  pt.color[j] = xxRed;	  break;
+			case xxGreen:	  pt.color[j] = xxGreen;	  break;
+			case xxBlue:	  pt.color[j] = xxBlue;	  break;
+			case xxCyan:	  pt.color[j] = xxCyan;	  break;
+			case xxMagenta:	  pt.color[j] = xxMagenta;  break;
+			case xxYellow:	  pt.color[j] = xxYellow;	  break;
 			default :
 				  Eprintf(
 				    "Invalid color of pen %d: %c\n", j, *p);
 				  exit(ERROR);
 		    }
-		    if (pg->pencolor[j] != xxBackground &&
-			pg->pencolor[j] != xxForeground)
+		    if (pt.color[j] != xxBackground &&
+			pt.color[j] != xxForeground)
 				pg->is_color = TRUE;
 		}
 		pi->hwcolor=TRUE;
@@ -298,6 +299,10 @@ char	*p, cdummy;
 		}
 		break;
 
+	  case 'n':
+	  	pg->nofill = TRUE;
+	  	break;
+	  	
 	  case 'o':
 		pi->xoff = atof (optarg);
 		if (pi->xoff < 0.0)
@@ -340,9 +345,9 @@ char	*p, cdummy;
 				Eprintf("Invalid size of pen %d: %c\n",	j, *p);
 				exit(ERROR);
 			}
-			pg->pensize[j] = *p - '0';
-			if (pg->maxpensize < pg->pensize[j])
-				pg->maxpensize = pg->pensize[j];
+			pt.width[j] = *p - '0';
+			if (pg->maxpensize < pt.width[j])
+				pg->maxpensize = pt.width[j];
 		}
 		pi->hwsize=TRUE;
 		break;
@@ -454,7 +459,7 @@ IN_PAR	Pi;
 OUT_PAR	Po;
 int	i;
 
-char	*shortopts = "a:c:d:D:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHiqtv";
+char	*shortopts = "a:c:d:D:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtv";
 struct	option longopts[] =
 {
 	{"mode",	1, NULL,	'm'},
@@ -462,6 +467,7 @@ struct	option longopts[] =
 	{"pensizes",	1, NULL,	'p'},
 	{"pages",	1, NULL,	'P'},
 	{"quiet",	0, NULL,	'q'},
+	{"nofill",	0, NULL,	'n'},
 
 	{"DPI",		1, NULL,	'd'},
 	{"DPI_x",	1, NULL,	'd'},

@@ -50,13 +50,13 @@ typedef pdImage * pdImagePtr;
 
 /* Functions to manipulate images. */
 
-pdImagePtr pdImageCreate(/* int sx, int sy */);
-void pdImageDestroy(/* gdImagePtr im */);
-void pdImageSetPixel(/* gdImagePtr im, int x, int y, int color */);
-int pdImageGetPixel(/* gdImagePtr im, int x, int y */);
-int pdImageBoundsSafe(/* gdImagePtr im, int x, int y */);
-int gdImageColorAllocate(/* gdImagePtr im, int r, int g, int b */);
-void pdImageColorTransparent(/* gdImagePtr im, int color */);
-void pdImagePNG(/* gdImagePtr im, FILE *out */);
+pdImagePtr pdImageCreate(int , int);
+void pdImageDestroy(pdImagePtr);
+void pdImageSetPixel(pdImagePtr, int, int, int);
+int pdImageGetPixel(pdImagePtr, int, int);
+int pdImageBoundsSafe(pdImagePtr, int, int);
+int gdImageColorAllocate(pdImagePtr, int, int, int);
+void pdImageColorTransparent(pdImagePtr, int);
+void pdImagePNG(pdImagePtr, FILE *);
 
 

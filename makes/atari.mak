@@ -62,11 +62,11 @@ ALL_INCS	= $(COMMON_INCS) chardraw.h charset0.h getopt.h x11.h ilbm.h iff.h
 SRCS	= hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c getopt1.c \
 	  $(ALL_INCS)\
 	  to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c to_pbm.c to_rgip.c \
-	  to_atari.c std_main.c $(EX_SRC)
+	  to_atari.c std_main.c fillpoly.c pendef.c lindef.c $(EX_SRC)
 
 OBJS	= hp2xx.o hpgl.o picbuf.o bresnham.o chardraw.o getopt.o getopt1.o \
 	  to_vec.o to_pcx.o to_pcl.o to_eps.o to_img.o to_pbm.o to_rgip.o \
-	  to_atari.o std_main.o $(EX_OBJ)
+	  to_atari.o std_main.o fillpoly.o pendef.o lindef.o $(EX_OBJ)
 
 PROGRAM	= hp2xx.ttp
 

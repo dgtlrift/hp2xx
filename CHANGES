@@ -1,3 +1,134 @@
+Changes from 3.4.ALPHA6 to 3.4.0
+
+Bug fixes:
+
+- Added polygon mode support for CI
+- Label characters from unsupported fonts are now replaced by their
+  charset 0 equivalents instead of being replaced by blanks.
+- Text was sometimes incorrectly clipped when IW was set
+- Fixed a typo (missing parenthesis) in the Sun5 part of generic.mak
+- Polygon fills were (again) miscalculated in some cases
+
+Changes from 3.4.ALPHA5 to 3.4.ALPHA6
+
+Bug fixes:
+
+- The 'pen dot' feature was unnecessarily adding dots for the segments of 
+  polylines as well
+- PS command with height only and PS with width>height were not treated 
+  correctly, rotation and scaling were applied twice due to code duplication
+- small (cosmetic) corrections to the new linetype code (A. Bird)
+
+Changes from 3.4.ALPHA4 to 3.4.ALPHA5
+
+New features:
+
+- New linetype handling including support for line types 7,8,-7,-8 and
+  user-defined linetype (UL) (written by Andrew Bird)
+- Support for the COmment keyword added (Andrew Bird)
+- PD;PU-sequences without pen movement create a small dot now to mimick the
+  behaviour of a real pen plotter. 
+
+Bug fixes:
+
+- lines drawn in IW mode had extraneous pen-up moves added, which confused 
+  the line pattern generator.
+- clipping (IW) was seriously broken by cleanup and prototyping efforts in
+  ALPHA2/3. Thanks to Andrew Bird for finding and fixing this.
+
+Changes from 3.4.ALPHA3 to 3.4.ALPHA4
+
+New features:
+
+- Added -S option for selection of TIFF compression mode (Andrew Bird)
+- Rewrote pen property handling - a pen can now change width during a 
+  plot (Andrew Bird). Similarly added pencolor changing support (though for
+  the postscript driver only - all other modes require a rewrite of the 
+  intermediate raster 'picbuf' code).
+- Output mode 'esc2' for the Epson Stylus series of printers at 720dpi.
+  (limited to A4 size for now, and in 'microweave' mode, i.e. using only
+   one row of nozzles, which results in exact but very slow printing)
+
+Bug fixes:
+
+- auto-generation of output filenames sometimes failed (side effect of
+  the less restrictive naming rules introduced in ALPHA2)
+- removed extraneous asterisk in the INFO-DIR-ENTRY section of the
+  texinfo doc file (Reinhard Kotucha)
+- IW without parameters was assigned wrong values in some cases (bug
+  introduced in ALPHA2)
+- IW could clip lines just inside the limits due to rounding errors on
+  some platforms
+- changed PostScript 'translate' parameters to adjust plot position on page
+
+ 
+Changes from 3.4.ALPHA2 to 3.4.ALPHA3
+
+New features:
+
+- added command line option '-n'/'--nofill' to suppress polygon filling  
+
+Bug fixes:
+
+- Updated all makefiles to include fillpoly.(c,o)
+- Line pattern length was too long for LT-2
+- SC scale factors were not applied to XT/YT tick marks, resulting in
+  distorted plots
+- Added a #define to support compiling on WinNT (mentioned, but not
+  actually included in ALPHA2)
+
+Changes from 3.4.ALPHA1 to 3.4.ALPHA2
+
+New features:
+
+- OS/2 PM previewer now has stderr output redirection to a separate window
+  (patch provided by Kazutaka Nishiyama)
+- Added step-by-step instructions for compiling on Windows NT (provided by
+  James D. Shaw)
+- X11 preview generates a warning, but no longer aborts if the window is
+  larger than the current screen size 
+- file names may start with non-alphabetic characters (e.g. numbers
+  or unix-style path names) now (Michael Kennedy)
+ 
+Bug fixes:
+
+- deactivated the excessive debug output in the fill code (which could lead
+  to huge temporary files)
+- made the simple scanline algorithm a bit more robust (but it still gets out
+  of step in a few pathological cases - which means that filled and unfilled
+  sections will be reversed for the remainder of that line)
+- enclosed all references to the unfinished Epson driver in #ifdefs, so that
+  it is not built by default. (also fixed a few glaring bugs in the esc/p2 file
+  header code, but the driver still does not work _at_all_)
+- absolute PW pen widths between 0 and .1 were accidentally rounded to zero
+  (invisible lines)
+- the picture border was too wide in some cases (Gerhard Buergmann)
+
+
+Changes from 3.3.2 to 3.4.ALPHA1
+
+New features:
+
+- Support for HPGL/2 commands related to polygons and area fills :
+  EP, ER, FP, FT, PM, PT, RA, RR, WG (no user-defined fill types yet)
+- WU command support, PW fixed accordingly.
+- AT,RT command support (arc through three points)
+- Initial (non-functional) version of an Epson Esc/P2 driver based on 
+  to_pcl.
+- Parser improved to be more robust (especially with PE commands),
+  cliping (IW) support for PE lines, PJL and RTL control sequence handler,
+  type 1 and 2 (anisotropic) scaling support added to SC (Eugene Doudine).
+- Modified to_pcx to produce PCX mode 5 (truecolor) files in color mode,
+  PCX2 in monochrome. (The old PCX2 module is in the 'old' directory, in 
+  case this proves to be worse - i have changed a few of the palette 
+  definitions to get correct b/w output and primary colors even with this 
+  version).
+
+Bug fixes:
+- IW limits were interpreted as plotter units even if scaling (SC) was set.
+- PCX output sometimes had dark red background in b/w mode and wrong colors
+  in colormap mode (rewrote to_pcx.c for PCX5, see above).
+
 Changes from 3.3.1 to 3.3.2
 
 New features:
@@ -96,9 +227,17 @@ Rolf Schreck
 Lars Erikson
 Gerhard Buergmann
 Michele Liberi
+Michael Kennedy
+John Reeve
+Andrew Bird
 
 and bug-hunting by:
 Bernd Bartmann
 Thomas Mirlacher
 Laurent Santona
 Stephan Meystre
+Christian Steigies
+Michael Kennedy
+David Billinghurst
+Wilfred van Rooyen
+

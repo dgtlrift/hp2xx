@@ -44,6 +44,7 @@ copies.
 #include <math.h>
 #include "bresnham.h"
 #include "hp2xx.h"
+#include "lindef.h"
 #include "chardraw.h"
 #include "charset0.h"
 #include "charset1.h"
@@ -64,12 +65,12 @@ copies.
  **/
 
 extern	HPGL_Pt		HP_pos, P1, P2;
-extern	LineType	CurrentLineType, GlobalLineType;
 
 extern int iwflag;
+extern short scale_flag;
 extern int mode_vert;
 extern HPGL_Pt		C1,C2;
-
+extern HPGL_Pt S1,Q;
 TEXTPAR	TEXTP, *tp = &TEXTP;
 
 
@@ -109,7 +110,9 @@ HPGL_Pt	p;
 char	*ptr;
 int outside=0;
 
+  int SafeLineType = CurrentLineType;
   CurrentLineType = LT_solid;
+
   switch (tp->font)
   {
     case 0:	/* charset 0, limited to 7 bit ASCII - 8bit addressing maps to charset 7	*/
@@ -215,9 +218,15 @@ if (c == 101 ) { /* backspacing for special characters  */
 	break;
 
     default:	/* Currently, only charsets 0-7 are supported	*/
-	Eprintf ("Charset %d not supported -- replaced by blank!\n", tp->font);
-		c = ' ';
+	Eprintf ("Charset %d not supported -- replaced by charset 0!\n", tp->font);
+	if (c & 0x80)
+	{
+		/*Eprintf ("8bit character mapped to charset 7\n");*/
+		c+=128;
+		ptr = &charset7[c][0];
+	} else {
 	ptr = &charset0[c][0];
+	}
 	break;
   }
 
@@ -225,33 +234,46 @@ if (c == 101 ) { /* backspacing for special characters  */
   {
 	code_to_ucoord (*ptr & 0x7f, &p);
 /*MK*/
-if (iwflag)
-{
 
-if ( P1.x+p.x > C2.x || P1.y+p.y > C2.y){
-/*fprintf(stderr,"A2C IW set:point %f %f >P2\n",p.x,p.y);*/
-outside=1;
- }
- 
-if ( P1.x+p.x  < C1.x  || P1.y+p.y < C1.y) {
-/* fprintf(stderr,"A2C IW set:point  %f %f <P1\n",p.x,p.y);*/
- outside=1;
-  }
-  }	
- /*MK*/ 
+  if (iwflag)
+      {
+      if (scale_flag) {
+	if ( P1.x+p.x > C2.x || P1.y+p.y > C2.y){
+		fprintf(stderr,"A2C IW set:point %f %f >P2\n",p.x,p.y);
+		outside=1;
+ 		}
+	if ( P1.x+p.x  < C1.x  || P1.y+p.y < C1.y) {
+ 		fprintf(stderr,"A2C IW set:point  %f %f <P1\n",p.x,p.y);
+ 		outside=1;
+  		}
+      }else{
+      if (P1.x + (p.x - S1.x) * Q.x > C2.x || P1.y + (p.y - S1.y) * Q.y > C2.y)
+       {
+       /*fprintf(stderr,"IW set:point %f %f >P2\n",p.x,p.y); */
+       outside = 1;
+       }
+      if (P1.x + (p.x - S1.x) * Q.x < C1.x || P1.y + (p.y - S1.y) * Q.y < C1.y)
+       {
+       /*fprintf(stderr,"IW set:point  %f %f <P1\n",p.x,p.y); */
+       outside = 1;
+       }
+     }
+  }                                                                    
+
 	if ((*ptr & 0x80) && !outside)	/* High bit is draw flag */
 		Pen_action_to_tmpfile (DRAW_TO, &p, FALSE);
 	else 
 		Pen_action_to_tmpfile (MOVE_TO, &p, FALSE);
+  
+  outside = 0;
   }
 
   /* Update cursor: to next character origin!	*/
 
   tp->refpoint.x += tp->chardiff.x;
   tp->refpoint.y += tp->chardiff.y;
-  CurrentLineType = GlobalLineType;
+  CurrentLineType = SafeLineType;
 
-		outside=0;
 
 }
 
@@ -698,8 +720,10 @@ double	x, y;
 float	fx, fy;
 int	pendown = FALSE;
 
+  int SafeLineType = CurrentLineType; /* Save Current Line Type */
+  CurrentLineType  = LT_solid;
+
   tp->refpoint		= HP_pos;
-  CurrentLineType	= LT_solid;
   p.x = tp->refpoint.x + tp->offset.x;
   p.y = tp->refpoint.y + tp->offset.y;
 
@@ -729,6 +753,7 @@ int	pendown = FALSE;
   tp->refpoint.x += tp->chardiff.x;
   tp->refpoint.y += tp->chardiff.y;
   Pen_action_to_tmpfile (MOVE_TO, &tp->refpoint, FALSE);
-  CurrentLineType = GlobalLineType;
+
+  CurrentLineType = SafeLineType; /* restore LineType */
 }
 

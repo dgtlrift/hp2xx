@@ -54,6 +54,7 @@ copies.
 #endif
 
 #include "bresnham.h"
+#include "pendef.h"
 #include "hp2xx.h"
 
 
@@ -288,7 +289,7 @@ HPGL_Pt         old_pt;
 #endif
 
   pen_no  = DEFAULT_PEN_NO;
-  pensize = pg->pensize[pen_no];
+  pensize = pt.width[pen_no];
   if (pensize != 0)
 	switch (mode) {
 	   case 3:
@@ -328,7 +329,7 @@ HPGL_Pt         old_pt;
 			err = ERROR;
 			goto MF_exit;
 		}
-		pensize = pg->pensize[pen_no];
+		pensize = pt.width[pen_no];
 		if (pensize != 0)
 		{
 			if (chars_out)  /* Finish up old polygon */
@@ -350,6 +351,26 @@ HPGL_Pt         old_pt;
 		}
 		break;
 
+          case DEF_PW:
+                if(!load_pen_width_table(pg->td)) {
+                    PError("Unexpected end of temp. file");
+                    err = ERROR;
+                    goto MF_exit;
+                }
+  pensize = pt.width[pen_no];
+  if (pensize != 0)
+	switch (mode) {
+	   case 3:
+		fprintf(md, pen_cmd, pensize, pensize);
+		break;
+	   case 5:
+		fprintf(md, pen_cmd, pen_no);
+		break;
+	   default:
+		fprintf(md, pen_cmd, pensize);
+		break;
+	}
+	break;
 	  case MOVE_TO:
 		HPGL_Pt_from_tmpfile (&pt1);
 		if (pensize == 0 || mode == 3 || mode == 4)

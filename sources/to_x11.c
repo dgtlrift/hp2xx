@@ -45,6 +45,7 @@ copies.
 #include <X11/Xutil.h>
 
 #include "bresnham.h"
+#include "pendef.h"
 #include "hp2xx.h"
 #include "x11.h"
 
@@ -70,7 +71,7 @@ static Window		XWin;			/* Window id		*/
 
 static	unsigned long	col_table[CMS_SIZE];
 static	XColor		Xcol;
-static	Colormap	def_cmap;
+static	Colormap	def_clut;
 
 /**
  ** Screen sizes
@@ -134,7 +135,7 @@ win_open(const GEN_PAR *pg, int x, int y, int w, int h )
 	if (x+w > scr_width || y+h > scr_height)
 	{
 		Eprintf ("Window exceeds screen limits !\n" );
-		return SIZE;
+/*		return SIZE;*/
 	}
 
 	/**
@@ -175,7 +176,7 @@ win_open(const GEN_PAR *pg, int x, int y, int w, int h )
  ** Define color table (compatible to SunView and Turbo-C usage)
  **/
 
-  def_cmap    = DefaultColormap( XDisplay, XScreen );
+  def_clut    = DefaultColormap( XDisplay, XScreen );
   if (DefaultDepth( XDisplay, XScreen ) < 4)
   {
 	col_table[BLACK]	= WhitePixel( XDisplay, XScreen );
@@ -196,16 +197,17 @@ win_open(const GEN_PAR *pg, int x, int y, int w, int h )
   }
   else
   {
-	XParseColor( XDisplay, def_cmap, "gray10",&Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
+	XParseColor( XDisplay, def_clut, "gray10",&Xcol );
+	XAllocColor( XDisplay, def_clut, &Xcol );
 	col_table[GRAY] = Xcol.pixel;
 
 for (i=1;i<=pg->maxpens;i++){
 
-sprintf (colorname,"#%2.2X%2.2X%2.2X", pg->Clut[i][0],pg->Clut[i][1],pg->Clut[i][2]);
-/*fprintf (stderr,"#%2.2X%2.2X%2.2X", pg->Clut[i][0],pg->Clut[i][1],pg->Clut[i][2]);*/
-	XParseColor( XDisplay, def_cmap, colorname, &Xcol );
-	XAllocColor( XDisplay, def_cmap, &Xcol );
+sprintf (colorname,"#%2.2X%2.2X%2.2X", 
+         pt.clut[i][0],pt.clut[i][1],pt.clut[i][2]);
+/*fprintf (stderr,"#%2.2X%2.2X%2.2X", pt.clut[i][0],pt.clut[i][1],pt.clut[i][2]);*/
+	XParseColor( XDisplay, def_clut, colorname, &Xcol );
+	XAllocColor( XDisplay, def_clut, &Xcol );
 	col_table[i] = Xcol.pixel;
 }
   }
@@ -243,7 +245,7 @@ sprintf (colorname,"#%2.2X%2.2X%2.2X", pg->Clut[i][0],pg->Clut[i][1],pg->Clut[i]
 
 
 
-static void
+void
 win_close()
 {
 	XDestroyWindow( XDisplay, XWin );

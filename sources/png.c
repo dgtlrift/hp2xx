@@ -2,6 +2,8 @@
  ** TBI: all PNF stuff goes here
  **/
 
+#include <stdio.h>
+#include <stdlib.h>
 #include "to_png.h"
 #include <png.h>
 
@@ -14,8 +16,8 @@ void pdImagePNG(im, fd)
 	png_structp png_ptr;
 	png_infop   info_ptr;
 	png_uint_32 width, height;
-	int bit_depth, color_type, interlace_type;
-	png_uint_32 num_palette;
+	int bit_depth /*, color_type, interlace_type*/;
+/*	png_uint_32 num_palette; */
 	struct png_color_struct *palette;
 	int ci;
 	png_bytep *row_pointers;

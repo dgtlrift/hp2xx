@@ -1,6 +1,6 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
-   Parts Copyright (c) 1998-2000 Martin Kroeker  All rights reserved.
+   Parts Copyright (c) 1998-2001 Martin Kroeker  All rights reserved.
    
    Distributed by Free Software Foundation, Inc.
 
@@ -143,10 +143,11 @@ copies.
  ** 00/02/06          MK   fixes for scaling and PE; allow overriding of PC/PW
  ** 00/02/12  V 3.32  MK   Mode "tiff" added by M.Liberi (changed to use ZIP
  **                        instead of patented LZW compression; needs libtiff)
+ ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.32";
-char	*VERS_DATE = "00/02/12";
+char	*VERS_NO = "3.4.0";
+char	*VERS_DATE = "01/02/09";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -155,7 +156,7 @@ char	*VERS_ADDITIONS =
 char	*VERS_ADDITIONS =
 	"\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n";
 #else
-char	*VERS_ADDITIONS = "                              (c) 1999 - 2000 Martin Kroeker\n";
+char	*VERS_ADDITIONS = "                              (c) 1999 - 2001 Martin Kroeker\n";
 #endif
 
 
@@ -164,6 +165,7 @@ char	*VERS_ADDITIONS = "                              (c) 1999 - 2000 Martin Kro
 #include <string.h>
 #include <ctype.h>
 #include "bresnham.h"
+#include "pendef.h"
 #include "hp2xx.h"
 
 
@@ -205,6 +207,9 @@ mode_list  ModeList[] =
 	{XX_PRE,	"pre"},	/* DEFAULT: Preview on screen		*/
 #ifdef TIF
         {XX_TIFF,        "tiff"}, /* Tagged image file format            */
+#endif
+#ifdef EPSON
+	{XX_ESC2,	"esc2"}, /* Epson Esc/P2 printer language       */
 #endif
 	{XX_TERM,	""},	/* Dummy: List terminator		*/
 };
@@ -265,16 +270,19 @@ NormalWait();
 "---------------------------------------------------------------------------\n");
   Eprintf ("-m strg   %s\t\tMode. Valid mode strings are:\n\t\t\t", pg->mode);
 print_supported_modes();
-
+  
+  Eprintf ("-n        %s\t\tno filling of polygons (ignore FP commands)\n",
+  	FLAGSTATE(pg->nofill));
+  
   Eprintf ("-f strg   (auto gen.)\tName of output file ('-' = to stdout)\n");
   Eprintf ("-l strg   (stderr)\tName of log file\n");
   Eprintf ("-p strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPensize(s) (in 1/10 mm (mf,ps) or dots (rest)).\n",
-	pg->pensize[1], pg->pensize[2], pg->pensize[3], pg->pensize[4],
-	pg->pensize[5], pg->pensize[6], pg->pensize[7], pg->pensize[8]);
+        pt.width[1], pt.width[2], pt.width[3], pt.width[4],
+        pt.width[5], pt.width[6], pt.width[7], pt.width[8]);
   Eprintf ("\t\t\t\"strg\" must consist of 1 to 8 digits '0'-'9'\n");
   Eprintf ("-c strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPen color(s) (see manual for details).\n",
-	pg->pencolor[1], pg->pencolor[2], pg->pencolor[3], pg->pencolor[4],
-	pg->pencolor[5], pg->pencolor[6], pg->pencolor[7], pg->pencolor[8]);
+        pt.color[1], pt.color[2], pt.color[3], pt.color[4],
+        pt.color[5], pt.color[6], pt.color[7], pt.color[8]);
   Eprintf ("-P n:n    %d:%d\t\tPage range (0:0 = all pages).\n",
 	pi->first_page, pi->last_page);
   Eprintf ("-q        %s\t\tQuiet mode (no diagnostics)\n",
@@ -302,6 +310,10 @@ NormalWait();
   Eprintf ("-O float %5.1f\tY offset [mm] of picture\n", pi->yoff);
   Eprintf ("-C           \tFit picture into center of (-a/-h/-w) rectangle\n");
 
+  Eprintf ("\nTiff-exclusive options:\n");
+  Eprintf ("-S int     %d\tUse Tiff Compression Format (0/1=None, 2=RLE, 3=G3Fax, 4=G4Fax, 5=LZW, 6=OJpeg, 7=Jpeg, 8=Deflate)\n",
+	po->specials);
+
   Eprintf ("\nSize controls:\n");
 
   Eprintf ("-a float %5.1f\tAspect factor (x/y correction). Valid: > 0.0\n",
@@ -324,7 +336,7 @@ NormalWait();
 
   Eprintf ("Corresponding long options:\n\n");
   Eprintf ("hp2xx   [--mode] [--colors] [--pensizes] [--pages] [--quiet]\n");
-  Eprintf ("\t[--width] [--height] [--aspectfactor] [--truesize]\n");
+  Eprintf ("\t[--nofill] [--width] [--height] [--aspectfactor] [--truesize]\n");
   Eprintf ("\t[--x0] [--x1] [--y0] [--y1]\n");
   Eprintf ("\t[--xoffset] [--yoffset] [--center]\n");
   Eprintf ("\t[--DPI] [--DPI_x] [--DPI_y]\n");
@@ -396,34 +408,29 @@ int	i;
   pg->mode	= "pre";
   pg->td	= NULL;
   pg->xx_mode	= XX_PRE;
+  pg->nofill	= FALSE;
   pg->quiet	= FALSE;
   pg->maxpensize= 1;		/* in pixel or 1/10 mm		*/
   pg->maxcolor	= 1;		/* max. color index		*/
-  pg->pensize[0]= 0;		/* in pixel or 1/10 mm		*/
-  pg->pencolor[0]= xxBackground;
   pg->maxpens=8;
-  for (i=1; i<=NUMPENS; i++)
-  {
-	pg->pensize [i]	= 1;	/* in pixel or 1/10 mm		*/
-	pg->pencolor[i]	= xxForeground;
-  }
   pg->is_color	= FALSE;
-  pg->Clut[xxBackground][0]= 255;  pg->Clut[xxBackground][1]	= 255;
-  pg->Clut[xxBackground][2]= 255;
-  pg->Clut[xxForeground][0]= 0;	   pg->Clut[xxForeground][1]	= 0;
-  pg->Clut[xxForeground][2]= 0;
-  pg->Clut[xxRed][0]	= 255;	   pg->Clut[xxRed][1]		= 0;
-  pg->Clut[xxRed][2]	= 0;
-  pg->Clut[xxGreen][0]	= 0;	   pg->Clut[xxGreen][1]		= 255;
-  pg->Clut[xxGreen][2]	= 0;
-  pg->Clut[xxBlue][0]	= 0;	   pg->Clut[xxBlue][1]		= 0;
-  pg->Clut[xxBlue][2]	= 255;
-  pg->Clut[xxCyan][0]	= 0;	   pg->Clut[xxCyan][1]		= 255;
-  pg->Clut[xxCyan][2]	= 255;
-  pg->Clut[xxMagenta][0]= 255;	   pg->Clut[xxMagenta][1]	= 0;
-  pg->Clut[xxMagenta][2]= 255;
-  pg->Clut[xxYellow][0]	= 255;	   pg->Clut[xxYellow][1]	= 255;
-  pg->Clut[xxYellow][2]	= 0;
+
+  pt.width[0] = 0;		/* in pixel or 1/10 mm		*/
+  pt.color[0] = xxBackground;
+  for (i=1; i<=NUMPENS; i++) {
+	pt.width[i]	= 1;	/* in pixel or 1/10 mm		*/
+        pt.color[i]	= xxForeground;
+  }
+
+  set_color_rgb(xxBackground,255,255,255);
+  set_color_rgb(xxForeground,  0,  0,  0);
+  set_color_rgb(xxRed,       255,  0,  0);
+  set_color_rgb(xxGreen     ,  0,255,  0);
+  set_color_rgb(xxBlue      ,  0,  0,255);
+  set_color_rgb(xxCyan      ,  0,255,255);
+  set_color_rgb(xxMagenta   ,255,  0,255);
+  set_color_rgb(xxYellow    ,255,255,  0);
+
   reset_par (pi);
 }
 
@@ -460,9 +467,9 @@ int	len, i;
   if (**outfile=='-')	/* If output explicitly to stdout:		*/
 	return;		/*    then nothing's to do here			*/
 
-  if (isalpha(**outfile))/* If this looks like an output file name:	*/
+  if (isascii(**outfile) && strlen(*outfile) >0){/* If this looks like an output file name:	*/
 	return;		/*    Just accept it! Add validity check later?	*/
-
+}
   if (*in_name == '-')	/* If input from stdin				*/
 	len = 0;
   else
@@ -823,7 +830,10 @@ int	BUF_to_RAS (const GEN_PAR *pg, const OUT_PAR *po)
         case XX_TIFF:            /* Tagged image file fmt */
                return PicBuf_to_TIF (pg, po);
 #endif
-
+#ifdef EPSON
+	case XX_ESC2:		/* Epson Esc/P2	*/
+		return PicBuf_to_ESCP2 (pg, po);
+#endif
 /**
  ** Previewers (depending on hardware platform):
  **/

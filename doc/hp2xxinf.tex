@@ -14,7 +14,7 @@
 
 @tex
 % \def\$#1${{#1}}  % Kludge: collect RCS revision info without $...$
-\xdef\manvers{$Revision: 1.1.2 $}  % For use in headers, footers too
+\xdef\manvers{$Revision: 1.2 $}  % For use in headers, footers too
 @end tex
 
 @c HP2XX CHANGE LOG:
@@ -32,13 +32,14 @@
 @c 99/12/01  V 1.11  MK   Updated for 3.31 (HPGL commands,acknowledgements)
 @c 00/02/06  V 1.12  MK   Added notes on relation between -c/-s and PC/PW
 @c                        and on auto-generation of ppm files in pbm mode
+@c 00/09/20  V 1.2   MK   fixed INFO-DIR-ENTRY, updates for 3.4.0
 @c THIS MANUAL REQUIRES TEXINFO-2 macros and info-makers to format properly.
 
 @ifinfo
 @format
 START-INFO-DIR-ENTRY
 * HP2XX:(hp2xx).  Conversion of HP-GL graphics into raster and
-*                 vector graphics formats
+                  vector graphics formats
 END-INFO-DIR-ENTRY
 @end format
 @end ifinfo
@@ -47,7 +48,7 @@ END-INFO-DIR-ENTRY
 This file documents the HP-GL converter HP2XX
 
 @c !!set edition, date, version
-This is Edition 1.1.2, February 2000,
+This is Edition 1.2, September 2000,
 of @cite{Using HP2XX: A HP-GL Converter}.
 
 Copyright (C) 1998 - 2000 Martin Kroeker
@@ -84,8 +85,8 @@ by the Free Software Foundation instead of in the original English.
 @c @subtitle on XXXX Systems
 @sp 1
 @c !!set edition, date, version
-@subtitle Edition 1.1.2, for HP2XX version 3.3.x
-@subtitle February 2000
+@subtitle Edition 1.2, for HP2XX version 3.4.x
+@subtitle September 2000
 @author by Martin Kroeker (previously by Heinz W. Werntges)
 @page
 @tex
@@ -128,7 +129,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 
 @c !!set edition, date, version
-This is Edition 1.1.2, February 2000, for HP2XX Version 3.3.x
+This is Edition 1.2, September 2000, for HP2XX Version 3.4.x
 @end ifinfo
 
 
@@ -408,7 +409,11 @@ Pen #2 is red, #3 is yellow, and #4 is blue, while all other
 pens keep @samp{foreground} color, e.g., black.
 
 If your HP-GL file contains the PC and/or PW commands introduced with
-HP-GL/2, these are interpreted to allow up to 255 pens. 
+HP-GL/2, these are interpreted to allow up to 255 pens. The special case
+where a pen is redefined to take on different colors is currently only
+supported in PostScript output mode. In all other modes, the last PC
+command encountered determines that pens' color for the entire plot.
+
 
 @node Selecting a page (range), Vector formats, Pen sizes and colors, Basics
 @comment  node-name,  next,  previous,  up
@@ -501,7 +506,7 @@ Therefore, the above considerations apply also to preview mode.
 @comment  node-name,  next,  previous,  up
 @section Printer formats
 
-Currently, there is only one printer format (not counting @samp{eps}, which
+Currently, there is only one well-tested printer format (not counting @samp{eps}, which
 is printable on PostScript printers): @samp{pcl}, which stands for HP PCL
 Level 3. Essentially it is a raster format, but it comes with a few
 restrictions and additional options which correspond to printer properties.
@@ -529,7 +534,9 @@ option @samp{-S 4} for CMYK color mode (for the DJ550C). The Deskjet modes
 automatically invoke TIFF compression (mode 2), while pure PCL Level 3
 does not know about compression.
 
-
+A driver for the Esc/P2 raster language used by the Epson Stylus series
+of inkjet printers has been added in @code{hp2xx-3.4.0}. This should work 
+at least for the small-format printers at 720 dpi.
 
 @node Preview, Misc. options, Printer formats, Basics
 @comment  node-name,  next,  previous,  up
@@ -616,9 +623,6 @@ A4 page, issue a command similar to:
 @example
 hp2xx -m pcl -d 150 -r90 -h270 -w160 landscape.hp
 @end example
-
-
-
 
 @node Advanced subjects, Installation and modification notes, Basics, Top
 @comment  node-name,  next,  previous,  up
@@ -931,14 +935,9 @@ name of the file which fits to your system. Obtain it, rename it to something
 like @file{hp2xx} or @file{hp2xx.exe}, and place it somewhere on your
 search path -- that's it.
 
-There are exceptions, though. AMIGA users should consult their special
-distribution package and follow directions there. DOS users will find a
-ZIP package containing files in addition to @file{hp2xx.exe}. For details,
-read the accompanying descriptions.
-
-Actually, I anticipate a phasing-out of binaries support as soon as
-the sources become available. Consequently, future releases of this
-manual will elaborate on the following subsection instead of this one.
+However, since the source release of @code{hp2xx} under the GNU public
+license, the usual mode of installation has become configuring and 
+building @code{hp2xx} on your own system. This is detailed in the next section. 
 
 
 
@@ -976,7 +975,8 @@ Any single installation will make use of only one previewer (two on
 SUNs with activated SunView support), and there are platform-dependent
 sources for some output formats which are not always used.
 
-
+Users wishing to compile @code{hp2xx} on MS Windows systems will find a
+step-by-step procedure in the file @file{hp2xx_nt} in the documentation directory.
 
 
 @node Modules of hp2xx, Future improvements, Installation procedure, Installation and modification notes
@@ -1127,7 +1127,7 @@ this:
 The following manual was used as reference for command definitions:
 @cite{[1] HP 7550A Interfacing and Programming Manual}. This has gradually
 been expanded to include allmost all of what is now known as HPGL/1, and
-some of the commands from HPGL/2.
+most of the commands from HPGL/2.
 
 Not all commands are supported. Among the non-supported commands
 are those which do not really apply to a software emulator, like:
@@ -1140,14 +1140,10 @@ commands causing various plotter display outputs.
 @end display
 
 Other non-supported commands would be desirable, but were left out
-due to their inherent complexity (or just because nobody pushed me, :-) ).
-The most important ones remaining are probably the
+due to their inherent complexity (or just because nobody had an immediate
+need for them yet).
 
-@display
-polygon and box filling commands
-@end display
-
-Programmers intending to add more HP-GL features should take care to
+Programmers intending to add more HP-GL features should ideally take care to
 implement the less-than-obvious side effects of existing commands on
 the new features, too (and vice versa). E. g., line types (@code{LT;})
 affect most but not all drawing commands: While the @code{ER;} command
@@ -1182,20 +1178,27 @@ that @code{hp2xx} will give you the picture you want!
 @code{Cmd  | i |}
 @code{=====|===|========================================================}
 @code{AA   |+  | Arc Absolute}
-@code{AF   |+  | [same as PG]}
-@code{AH   |+  | [same as PG]}
+@code{AC   | - | Anchor corner}
+@code{AD   | - | Alternate font Definition}
+@code{AF   |+  | Advance Full page [same as PG]}
+@code{AH   |+  | Advance Half page [same as PG]}
 @code{AP   |  .| Automatic pen operations}
 @code{AR   |+  | Arc Relative}
 @code{AS   |  .| Acceleration select}
+@code{AT   |+  | Arc through three points}
 @code{-----|---|--------------------------------------------------------}
-@code{BF   | - | Buffer Plot}
+@code{BF   | - | Buffer Plot [maybe not a valid hpgl command]}
 @code{BL   |+  | Buffer Label}
+@code{BP   |+  | Begin Plot [same as PG;IN]}
 @code{-----|---|--------------------------------------------------------}
 @code{CA   |+  | Designate alternate character set}
 @code{CC   | - | Character Chord angle}
+@code{CF   | - | Character Fill mode}
 @code{CI   |+  | Circle}
 @code{CM   |  .| Character selection mode}
+@code{CO   |+  | File comment}
 @code{CP   |+  | Character plot}
+@code{CR   | - | Color Range}
 @code{CS   |+  | Designate standard character set}
 @code{CT   | - | Chord tolerance}
 @code{CV   | - | Curved line generator}
@@ -1208,33 +1211,45 @@ that @code{hp2xx} will give you the picture you want!
 @code{DR   |+  | Relative direction}
 @code{DS   | - | Designate character into slot}
 @code{DT   |+  | Define label terminator}
+@code{DV   |+  | text Direction Vertical}
 @code{-----|---|--------------------------------------------------------}
 @code{EA   |+  | Edge rectangle absolute}
-@code{EP   | - | Edge polygon}
-@code{ER   | - | Edge rectangle relative}
+@code{EC   |  .| Enable paper Cutter}
+@code{EP   |+  | Edge polygon}
+@code{ER   |+  | Edge rectangle relative}
 @code{ES   |+  | Extra space}
 @code{EW   |+  | Edge wedge}
 @code{-----|---|--------------------------------------------------------}
-@code{FP   | - | Fill polygon}
+@code{FI   | - | pcl Font ID}
+@code{FN   | - | pcl secondary Font Number}
+@code{FP   |+  | Fill polygon}
+@code{FR   | - | FRame advance}
 @code{FS   |  .| Force select}
-@code{FT   | - | Fill type}
+@code{FT   |+  | Fill type}
 @code{-----|---|--------------------------------------------------------}
 @code{GC   |  .| Group count}
 @code{GM   |  .| Graphics memory}
 @code{-----|---|--------------------------------------------------------}
-@code{IM   | - | Input mask}
+@code{IM   | - | Input error reporting mask}
 @code{IN   |+  | Initialize}
 @code{IP   |+  | Input P1 and P2}
+@code{IR   | - | Input Relative P1 and P2}
 @code{IV   | - | Invoke character slot}
 @code{IW   |+  | Input window}
 @code{-----|---|--------------------------------------------------------}
 @code{KY   |  .| Define key}
 @code{-----|---|--------------------------------------------------------}
+@code{LA   | - | Line Attributes}
 @code{LB   |+  | Label}
 @code{LO   |+  | Label origin}
 @code{LT   |+  | Line type}
 @code{-----|---|--------------------------------------------------------}
-@code{NR   |  .| Not ready (unload page)}
+@code{MC   | - | Merge Control}
+@code{MG   |+  | Message [same as WD]}
+@code{MT   | . | Media Type}
+@code{-----|---|--------------------------------------------------------}
+@code{NP   |+  | Number of Pens}
+@code{NR   |  .| Not ready (unload page and go offline)}
 @code{-----|---|--------------------------------------------------------}
 @code{OA   |  .| Output actual position and pen status}
 @code{OC   |  .| Output commanded position and pen status}
@@ -1254,44 +1269,55 @@ that @code{hp2xx} will give you the picture you want!
 @code{-----|---|--------------------------------------------------------}
 @code{PA   |+  | Plot absolute}
 @code{PB   |+  | Print buffered label}
+@code{PC   |+  | Pen Color}
 @code{PD   |+  | Pen down}
+@code{PE   |+  | Polyline Encoded}
 @code{PG   |+  | Page feed}
 @code{PR   |+  | Plot relative}
-@code{PT   | - | Pen thickness}
+@code{PS   |+  | Plot Size}
+@code{PT   |+  | Pen thickness}
 @code{PU   |+  | Pen up}
+@code{PW   |+  | Pen Width}
 @code{-----|---|--------------------------------------------------------}
-@code{RA   | - | Fill rectangle absolute}
+@code{QL   |  .| Quality Level} 
+@code{-----|---|--------------------------------------------------------}
+@code{RA   |+  | Fill rectangle absolute}
+@code{RF   | - | Raster Fill pattern}
 @code{RO   |+  | Rotate coordinate system}
 @code{RP   | - | Replot}
-@code{RR   | - | Fill rectangle relative}
+@code{RR   |+  | Fill rectangle relative}
+@code{RT   |+  | Relative arc through Three points}
 @code{-----|---|--------------------------------------------------------}
 @code{SA   |+  | Select alternate character set}
+@code{SB   | - | Scalable or Bitmap font selection}
 @code{SC   |+  | Scale}
+@code{SD   | - | Standard font attribute Definition}
 @code{SI   |+  | Absolute character size}
 @code{SL   |+  | Character slant}
 @code{SM   |+  | Symbol mode}
 @code{SP   |+  | Select pen}
 @code{SR   |+  | Relative character size}
 @code{SS   |+  | Select standard character set}
+@code{ST   |  .| Sort vectors}
+@code{SV   | - | Screened Vectors}
 @code{-----|---|--------------------------------------------------------}
+@code{TD   | - | Transparent Data}
 @code{TL   |+  | Tick length}
+@code{TR   | - | Transparency mode}
 @code{-----|---|--------------------------------------------------------}
 @code{UC   |+  | User-defined character}
 @code{UF   | - | User-defined fill type}
+@code{UL   |+  | User-defined line type}
 @code{-----|---|--------------------------------------------------------}
 @code{VS   |  .| Velocity select}
 @code{-----|---|--------------------------------------------------------}
 @code{WD   |+  | Write to display}
-@code{WG   | - | Fill wedge}
+@code{WG   |+  | Fill wedge}
+@code{WU   |+  | pen Width Unit}
 @code{-----|---|--------------------------------------------------------}
 @code{XT   |+  | X-Tick}
 @code{-----|---|--------------------------------------------------------}
 @code{YT   |+  | Y-Tick}
-@code{-------------------HPGL/2 commands--------------------------------}
-@code{PC   |+  | Pen color}
-@code{PE   |+  | Polyline encoded}
-@code{PW   |+  | Pen width}
-@code{PS   |+  | Plot Size}
 @end display
 
 
@@ -1358,6 +1384,8 @@ Mode string. Valid: @var{string} =
   @samp{rgip} (Uniplex RGIP vector format),
   @samp{tex}  (line drawing with @TeX{}@ / @code{epic} macros)
   @samp{fig}  (for Brian Smith's XFIG vector drawing program)
+  @samp{tiff} (TIFF tagged image file format)
+  @samp{esc2} (Epson Stylus printers)
 @end display
 
 Occasionally available (unsupported) modes:
@@ -1536,13 +1564,15 @@ especially your monitor!
 @comment  node-name,  next,  previous,  up
 @section Acknowledgement
 
-While @code{hp2xx} was available as binaries on several platforms,
-many people contributed to this project by supplying first HWW and then MK
-with valuable suggestions and reports. Many thanks to all of them!
+Since @code{hp2xx} first became publicly available (in its early days, as 
+binaries on several platforms), many people contributed to this project by 
+supplying first HWW and now MK with valuable suggestions, code patches and 
+reports. Many thanks to all of them!
 It is a pleasure to especially thank the following people for their
 outstanding contributions:
 
-Versions up to 3.2.0 (mid-1994):
+HWW's Versions up to 3.2.0 (mid-1994):
+
 @table @code
 
 @item Nelson Beebe
@@ -1578,7 +1608,7 @@ AMIGA portation; pbm, ilbm formats
 Many helpful suggestions and improvements, e.g. for pcl format
 
 @item Ian MacPhedran
-Color / binary format for pbm/ppm, xfig format
+Color / binary format for pbm/ppm
 
 @item Norbert Meyer
 ATARI portation; img, pic, pac formats; first ATARI previewer
@@ -1605,11 +1635,8 @@ OS/2 support, OS/2 full-screen previewer & help
 @item Alois Treindl
 Code for UC support
 
-@item Heinz W. Werntges 
-for the original versions up to 3.2.0
 
-
-Versions since 3.3.0 (mid-1999):
+@item Versions since 3.3.0 (mid-1999):
 
 @item Emmanuel Bigler
 xfig and gnuplot ascii support
@@ -1617,8 +1644,11 @@ xfig and gnuplot ascii support
 @item Ian MacPhedran
 XFig output
 
-Michael Schmitz
+@item Michael Schmitz
 PNG output
+
+@item Rolf Schreck
+PS/RO fixes
 
 @item Eugene Doudine
 PE command support
@@ -1634,6 +1664,14 @@ EPS plotsize bug fixes
 
 @item Gerhard Buergmann
 bug fixes for plot scaling and PE support
+
+@item James Shaw
+polygon mode testing and examples, 
+WinNT building instructions
+
+@item Andrew Bird
+enhanced PW support
+TIFF enhancements
 @end table
 
 
@@ -1643,7 +1681,7 @@ bug fixes for plot scaling and PE support
 @section Copyright notice
 
 @display
-Copyright (c) 1998 - 1999  Martin Kroeker
+Copyright (c) 1998 - 2000  Martin Kroeker
 Copyright (c) 1991 - 1994  Heinz W. Werntges
 All rights reserved.
 

@@ -35,6 +35,7 @@ copies.
 #include <time.h>
 #include <math.h>
 #include "bresnham.h"
+#include "pendef.h"
 #include "hp2xx.h"
 
 static  float  ax, ay;
@@ -200,7 +201,7 @@ to_rgip (const GEN_PAR* pg, const OUT_PAR* po)
 PlotCmd  cmd;
 HPGL_Pt  pt1 = {0};
 FILE  *md;
-int  pensize, pencolor, pen_no, err = 0;
+int  pensize, pencolor, pen_no=0, err = 0;
 
   /* Give some news... */
   if (!pg->quiet)
@@ -233,7 +234,7 @@ int  pensize, pencolor, pen_no, err = 0;
 
   /* RGIP header */
   fprintf(md,"%%RGIP_METAFILE  :1.0a\n");
-  pensize = pg->pensize[DEFAULT_PEN_NO];
+  pensize = pt.width[DEFAULT_PEN_NO];
   if (pensize != 0)
   {
     rgip_set_linewidth (pensize);
@@ -258,15 +259,27 @@ int  pensize, pencolor, pen_no, err = 0;
 	  PError("Unexpected end of temp. file: ");
 	  exit (ERROR);
 	}
-	pensize = pg->pensize[pen_no];
+	pensize = pt.width[pen_no];
 	if (pensize != 0)
 	{
 	  rgip_set_linewidth (pensize);
 	}
-	pencolor = pg->pencolor[pen_no];
-	rgip_set_color (pg->Clut[pencolor][0]/255.0,
-			pg->Clut[pencolor][1]/255.0,
-			pg->Clut[pencolor][2]/255.0);
+	pencolor = pt.color[pen_no];
+	rgip_set_color (pt.clut[pencolor][0]/255.0,
+			pt.clut[pencolor][1]/255.0,
+			pt.clut[pencolor][2]/255.0);
+	break;
+
+      case DEF_PW:
+         if(!load_pen_width_table(pg->td)) {
+             PError("Unexpected end of temp. file");
+	     exit (ERROR);
+         }
+	pensize = pt.width[pen_no];
+	if (pensize != 0)
+	{
+	  rgip_set_linewidth (pensize);
+	}
 	break;
 
       case MOVE_TO:
