@@ -1,5 +1,10 @@
 Changes to hp2xx:
 =================
+3.4.4a6:
+hp2xx incorrectly assumed that any user-defined label terminator should
+automatically be printed, mishandled DT without parameters (Rich Pasco), 
+and completely ignored the optional second parameter in the DT command. 
+
 3.4.4a5:
 Using the -ansi flag with gcc (even suggested by the generic Makefile) would
 make it ignore the prototype of the hypot() function on some if not all 

@@ -1,3 +1,12 @@
+3.4.4a6
+
+Bug fixes:
+
+- Corrected several bugs in the interpretation of the DT command (DT without
+  parameters resulted in invalid terminator, terminators other than the 
+  default ETX were always printed, and the optional second parameter of 
+  the DT command was ignored.) (Rich Pasco)
+
 3.4.4a5
 
 Bug fixes:

@@ -213,6 +213,7 @@ static short saved_penstate = FALSE;	/* to track penstate over polygon mode */
 static short wu_relative = FALSE;
 static int again = FALSE;
 static char StrTerm = ETX;	/* String terminator char       */
+static short StrTermSilent = 1; /* only terminates, or prints too */
 static char *strbuf = NULL;
 static unsigned int strbufsize = MAX_LB_LEN + 1;
 static char symbol_char = '\0';	/* Char in Symbol Mode (0=off)  */
@@ -375,6 +376,7 @@ static void reset_HPGL(void)
 	CurrentLineAttr.Limit = 5;
 	tp->sstrokewidth = tp->astrokewidth = tp->strokewidth = 0.11;
 	StrTerm = ETX;
+	StrTermSilent = 1;
 	if (strbuf == NULL) {
 		strbuf = malloc(strbufsize);
 		if (strbuf == NULL) {
@@ -1347,7 +1349,7 @@ void read_string(char *buf, FILE * hd)
 		if (n++ < strbufsize)
 			*buf++ = c;
 	}
-	if (c == StrTerm && c != ETX)
+	if (c != StrTerm || StrTermSilent == 0)
 		*buf++ = c;
 	*buf = '\0';
 }
@@ -3215,10 +3217,6 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			User_to_Plotter_coord(&C2, &C2);
 		}
 
-		C1.x -= pg->extraclip;
-		C1.y -= pg->extraclip;
-		C2.x += pg->extraclip;
-		C2.y += pg->extraclip;
 
 		if (C2.x < C1.x) {
 			ftmp = C2.x;
@@ -3230,6 +3228,12 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			C2.y = C1.y;
 			C1.y = ftmp;
 		}
+
+		C1.x -= pg->extraclip;
+		C1.y -= pg->extraclip;
+		C2.x += pg->extraclip;
+		C2.y += pg->extraclip;
+
 		break;
 
 	case OP:		/* Output reference Points P1,P2 */
@@ -3594,6 +3598,15 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		break;
 	case DT:		/* Define string terminator     */
 		StrTerm = getc(hd);
+		if (StrTerm == ';') { /*just DT */
+		 StrTerm=ETX;
+		 StrTermSilent=1;
+		 break;
+		}
+		if (read_float(&ftmp,hd)) {
+		StrTermSilent=1;
+		}
+		else StrTermSilent = (short) ftmp;
 		break;
 	case DV:		/* Text direction vertical      */
 		if (read_float(&ftmp, hd) || ftmp == 0)

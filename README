@@ -24,12 +24,19 @@ Changes from 3.4.3 to 3.4.4
 New features:
 
 - Experimental support for truetype fonts (needs a fixed-width truetype
-  font and '-DSTROKED_FONTS=\"/path/to/this/truetype/font.ttf\"' in the
-  DEFINES section of the Makefile) 
+  font such as the monospace Bitstream Vera from www.gnome.org/fonts,
+  fontlib, and '-DSTROKED_FONTS=\"/path/to/this/truetype/font.ttf\"' in the
+  DEFINES section of the Makefile). Depending on the font, this should 
+  produce better-looking text than the default stick font at the expense
+  of higher CPU and memory consumption. Support for non-ASCII characters
+  is lacking, and the rendering is at the mercy of the still imperfect
+  polygon rasterizer. 
 - Support for the rectangle mode of the PE statement (Eugene Doudine)
 - NR is now recognized as an image terminator in multi-plot files.
 - DXF output provides optional translation of pen number and/or width
   into DXF group 62 line attributes (Georg Viehoever).
+- The error handler now tries to report the offending HPGL command sequence,
+  not just its position in the input stream
 
 Bug fixes:
 
@@ -44,4 +51,8 @@ Bug fixes:
 - polygon sides could escape clipping in some circumstances
 - simplified HPGL output would write very small numbers in exponential
   notation, which is not allowed by any HPGL standard.
+- DT handling was both incorrect and incomplete
+- pdf and eps modes were using much too large miter limits
+- exporting too raster modes could fail in some circumstances due to 
+  wrong linewidth corrections being applied in the raster buffer.
 

@@ -1,4 +1,4 @@
-Changes from 3.4.3 to 3.4.4a1
+Changes from 3.4.3 to 3.4.4a
 
 New features:
 
@@ -6,6 +6,11 @@ New features:
   freetype2 library. To enable this, obtain a suitable fixed-width font
   and add '-DSTROKED_FONTS=\"/path/to/this/truetype/font.ttf\"' in the
   DEFINES section of the Makefile) 
+- The DXF header was improved, and line width and color support added
+- Added support for the rectangle mode within PE mode
+- Added NR as another end-of-image marker in multi-image files
+- hp2xx now tries to print the offending section of the input file when
+  it encounters an error.
 
 Bug fixes:
 
@@ -16,8 +21,15 @@ Bug fixes:
   scanlines
 - forcing penwidth via the -p commandline option no longer worked for 
   the conventional values between 1 and 9 
-
-
+- Simplified HPGL output could contain values in exponential notation
+  (which is illegal in HPGL1)
+- The default miter limit in eps and pdf output was way too large
+- Using the -ansi compiler flag (as even suggested by the supplied
+  Makefiles) could result in a broken binary (due to missing function
+  prototypes) on some platforms
+- the size of the raster buffer was miscalculated in some circumstances,
+- DT implementation was both incorrect and incomplete
+ 
 Changes from 3.4.2 to 3.4.3
 
 New features:
