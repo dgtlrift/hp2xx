@@ -56,7 +56,8 @@ Bug fixes:
 - Polygon fill range was not always initialized correctly (Bill Marr)
 - Compile fix for HPUX11 ansi compiler (add whitespace to work around
   what is probably a compiler bug) (Glen Stewart)
-- Vertices of filled polygons were omitted from calculation of actual size
+- Vertices of filled polygons were omitted from calculation of actual plot
+  size
 - added ROWSPERSTRIP header parameter to TIFF files, as some programs rely
   on its presence 
 - Dots for PUPDPU got drawn for PDPA as well, which made consecutive dashed
@@ -64,6 +65,9 @@ Bug fixes:
   the remainder of the pattern from the previous one. 
 - Removed the checks preventing negative or large offsets to be defined with
   the -o and -O commandline options
+- The viewbox given in the SVG header was too small (Robert Hancock).
+- Closed several memory leaks (mainly important for multi-file operation).
+- The documentation was outdated in several aspects.
 
 Changes from 3.4.1 to 3.4.2
 

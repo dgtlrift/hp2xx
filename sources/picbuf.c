@@ -619,6 +619,7 @@ static void
       switch (CurrentLineAttr.End) {
          case LAE_square:        /* square not implemented yet */
          case LAE_butt:
+         default:
             break;
          case LAE_triangular:    /* triangular not implemented yet */
          case LAE_round:

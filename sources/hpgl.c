@@ -357,6 +357,7 @@ int i;
   iwflag = FALSE;
   ps_flag = FALSE;
   ac_flag = FALSE;
+  filltype = 1;
   saved_hatchangle[0]=saved_hatchangle[1]=0.;
   saved_hatchspace[0]=saved_hatchspace[1]=0.;
   ct_dist = FALSE;
@@ -365,7 +366,7 @@ int i;
   set_line_style_defaults();
 /*  set_line_attr_defaults();*/
   CurrentLineAttr.Join=LAJ_plain_miter;
-  CurrentLineAttr.End=LAE_butt;
+  CurrentLineAttr.End=LAE_default;
   CurrentLineAttr.Limit=5;
   
   StrTerm = ETX;
@@ -414,7 +415,14 @@ int i;
   set_color_rgb(xxCyan      ,  0,255,255);  
   set_color_rgb(xxMagenta   ,255,  0,255);
   set_color_rgb(xxYellow    ,255,255,  0);
-  for (i=0;i<8;i++)pt.color[i]=xxForeground;
+	pt.color[0]=xxBackground;
+	pt.color[1]=xxForeground;
+	pt.color[2]=xxRed;
+	pt.color[3]=xxGreen;
+	pt.color[4]=xxBlue;
+	pt.color[5]=xxCyan;
+	pt.color[6]=xxMagenta;
+	pt.color[7]=xxYellow;
   }
   if (fixedwidth==FALSE)  for (i=0;i<8;i++)pt.width[i]=0.1;
 }
@@ -1727,11 +1735,14 @@ line (int relative, HPGL_Pt p)
 	  Pen_action_to_tmpfile (MOVE_TO, &p, scale_flag);
 	}
     }
+#if 0
   if (polygon_mode && !polygon_penup) 
     {
       HPGL_Pt_to_polygon ( p_last );
       HPGL_Pt_to_polygon ( p );
     }
+/*???????*/
+#endif
   if (polygon_mode && polygon_penup)
     {
       polygon_penup = FALSE;
@@ -3187,7 +3198,8 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 	  if (read_float (&C2.y, hd))	/* x without y! */
 	    par_err_exit (4, cmd);
 	}
-#if 1
+
+#if 0
 	if ( C1.x > C2.x && P1.x<P2.x) {
 		ftmp=C1.x;
 		C1.x=C2.x;
@@ -3201,26 +3213,22 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 #endif
 
 #if 0		
-	if (P2.y < P1.y){
+	if (P2.y < P1.y && C1.y <C2.y){
                 ftmp=C1.y;
                 C1.y=C2.y;
                 C2.y=ftmp;
                 }
 #endif
 #if 0
-	if (C2.x < C1.x){
+	if (P2.x < P1.x && C2.x < C1.x ){
 		ftmp=C2.x;
 		C2.x=C1.x;
 		C1.x=ftmp;
 		}
 #endif
-#if 0
-	if (C2.y < C1.y){
-		ftmp=C2.y;
-		C2.y=C1.y;
-		C1.y=ftmp;
-		}
-#endif		
+
+
+
 if (scale_flag){
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
@@ -3230,6 +3238,17 @@ if (scale_flag){
 	C1.y -= pg->extraclip;
 	C2.x += pg->extraclip;
 	C2.y += pg->extraclip;
+
+	if ( C2.x < C1.x ){
+		ftmp=C2.x;
+		C2.x=C1.x;
+		C1.x=ftmp;
+		}
+	if (C2.y < C1.y ){
+		ftmp=C2.y;
+		C2.y=C1.y;
+		C1.y=ftmp;
+		}
 
 #if 0
       if (rotate_flag)		/* hp2xx-specific global rotation       */

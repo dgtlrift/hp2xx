@@ -1,5 +1,15 @@
 Changes to hp2xx:
 =================
+3.4.3a15: 
+Fixed bug in a14 that set all pencolors to black unless explicitly defined
+using -c. Rewrote IW parameter shuffling to fix all known cases including
+those that a14 broke.  Line ends were erroneously defaulted to butt-shaped 
+instead of rounded for thin lines. Reduced pensize used for polygon fills, 
+and removed check for duplicate intersections. Removed leftover file named
+sources/outfile that had somehow crept into the a14 source tree. Fixed 
+output format for linewidths in svg export. Applied HPGL-to-MM scaling factor
+to SVG viewbox, not just to the coordinates (Robert Hancock). 
+
 3.4.3a14:
 Reset default colors only if they were not overridden by the -c option.
 Reset penwidths and IW clipping flag between plots.

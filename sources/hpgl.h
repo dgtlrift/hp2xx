@@ -9,7 +9,7 @@ void PlotCmd_to_tmpfile (PlotCmd cmd);
 
 void HPGL_Pt_to_tmpfile (const HPGL_Pt * pf);
 
-void HPGL_Pt_to_polygon (const HPGL_Pt pf);
+void HPGL_Pt_to_polygon (const HPGL_Pt pf );
 
 #ifdef EMF
 void reset_tmpfile(void);

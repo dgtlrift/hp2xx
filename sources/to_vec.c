@@ -180,7 +180,7 @@ HPGL_Pt         old_pt;
     case 8: /* SVG */
 	ftype		= "SVG";
 	scale_cmd	= "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n<svg width=\"100%%\" height=\"100%%\" viewBox=\"0 0 %4.3f %4.3f\" xmlns=\"http://www.w3.org/2000/svg\"><g>\n";
-	pen_cmd		= "</g><g style=\"stroke:rgb(%d,%d,%d); fill:none; stroke-width:%d\" >\n";
+	pen_cmd		= "</g><g style=\"stroke:rgb(%d,%d,%d); fill:none; stroke-width:%4.3fmm\" >\n";
 	poly_start	= "<path d=\"M %4.3f, %4.3f \n";
 	poly_next	= "	L %4.3f, %4.3f \n";
 	poly_last	= "	L %4.3f, %4.3f \n\" />\n";
@@ -309,7 +309,7 @@ HPGL_Pt         old_pt;
 	}
 
 	if (mode == 7 ) fprintf(md, scale_cmd);
-	if (mode == 8 ) fprintf(md, scale_cmd, po->width, po->height);
+	if (mode == 8 ) fprintf(md, scale_cmd, po->width*2.834646, po->height*2.834646);
 #ifdef ATARI
   }
 #endif
@@ -347,9 +347,9 @@ HPGL_Pt         old_pt;
 	  ycoord2mm = po->height / ( po->ymax - po->ymin);
   }
 
-  if (mode ==8) {
-  	xcoord2mm *= 2.83;
-  	ycoord2mm *= 2.83;
+  if (mode ==7 || mode ==8) {
+  	xcoord2mm *= 2.834646;
+  	ycoord2mm *= 2.834646;
   	}
 
   while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)

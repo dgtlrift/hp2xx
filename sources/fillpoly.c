@@ -5,6 +5,8 @@
 #include <math.h>
 #include "bresnham.h"
 #include "hp2xx.h"
+#include "hpgl.h"
+#include "lindef.h"
 
 void fill(HPGL_Pt polygon[MAXPOLY], int numpoints,HPGL_Pt point1, HPGL_Pt point2,
 int scale_flag,int filltype,float spacing,float hatchangle)
@@ -17,14 +19,17 @@ double segx,segy;
 static int i; /* to please valgrind when debugging memory accesses */
 int j, k, jj;
 int numlines;
-double penwidth = 1.;
+double penwidth ;
 HPGL_Pt p;
 double denominator;
 double tmp,rot_ang;
 double pxdiff=0.,pydiff=0.;
 double A1,B1,C1,A2,B2,C2;
 double tmp2;
+LineEnds SafeLineEnd=CurrentLineEnd;
+/*CurrentLineEnd=LAE_butt;*/
 
+penwidth=1.;
 if (filltype >2) penwidth=spacing;
 
 polyxmin=100000.;
@@ -61,7 +66,9 @@ fprintf(stderr,"zero area polygon\n");
 return;
 }
 
-
+/*	PlotCmd_to_tmpfile(DEF_LA);
+	Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
+*/
 pydiff=pymax-pymin;
 pxdiff=pxmax-pxmin;
 if (hatchangle != 0.) {
@@ -147,6 +154,7 @@ segy= (C1*A2-C2*A1) /denominator;     /*y coordinate of intersection */
 
 /*fprintf(stderr,"fill: intersection %d with line %d at (%f %f)\n",k,j,segx,segy);*/
 			if (k >0) {
+#if 0			
 			for (jj=0;jj<k;jj++){
 if ( (fabs(segment[jj].x-segment[k].x) < 1.e-5 )
 			&& (fabs(segment[jj].y-segment[k].y) < 1.e-5) ){
@@ -154,7 +162,7 @@ if ( (fabs(segment[jj].x-segment[k].x) < 1.e-5 )
 			break;
 			}
 		        }
-
+#endif
          		for (jj=0;jj<k;jj++){
 	         		if (segment[k].x<segment[jj].x){
 		          		tmp=segment[jj].x;
@@ -238,7 +246,9 @@ if (k>0) {
 
 } /* next scanline */
 
-
+/*	PlotCmd_to_tmpfile(DEF_LA);
+	Line_Attr_to_tmpfile(LineAttrEnd,SafeLineEnd);
+*/
 if (filltype !=4) return;
 
 
@@ -260,6 +270,9 @@ pxmax=pxmax+rot_ang*pydiff;
 pymin=pymin-1.;
 pymax=pymax+1.;
 
+/*	PlotCmd_to_tmpfile(DEF_LA);
+	Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
+*/
 numlines = fabs(1. + ( pxmax - pxmin  +penwidth) / penwidth);
 /*fprintf(stderr,"numlines = %d\n",numlines);*/
 
@@ -352,5 +365,9 @@ if (k>0) {
 }
 
 } /* next scanline */
+
+/*	PlotCmd_to_tmpfile(DEF_LA);
+	Line_Attr_to_tmpfile(LineAttrEnd,SafeLineEnd);
+*/
 }
 

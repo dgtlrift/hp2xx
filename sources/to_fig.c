@@ -169,6 +169,7 @@ for (i=0;i<8;++i)
           			captype= 2 ;
           			break;
           			default:
+          			captype=0;
           			break;
           		}
           		switch(CurrentLineAttr.Join){
