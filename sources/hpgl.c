@@ -995,8 +995,9 @@ read_PE (const GEN_PAR * pg, FILE * hd)
 double ceil_with_tolerance(double x,double tol) {
     double rounded;
                  
-    rounded=rint(x);
-                 
+/*    rounded=rint(x);*/
+      rounded = (long)(x+0.5);
+
     if(fabs(rounded - x) <= tol )
        return(rounded);
     else         
@@ -2285,7 +2286,7 @@ circles (FILE * hd)
       CurrentLinePatLen = HYPOT (p.x, p.y);
     }
 
-  for (phi = eps; phi < 2.0 * M_PI; phi += eps)
+  for (phi = eps; phi < 2.0 * M_PI; phi += eps) 
     {
       p.x = center.x + r * cos (phi);
       p.y = center.y + r * sin (phi);
@@ -2332,7 +2333,42 @@ circles (FILE * hd)
     }
   else
     Pen_action_to_tmpfile (DRAW_TO, &p, scale_flag);
+ 
+ 
+ /* draw one overlapping segment to avoid leaving gap with wide pens */
+  p.x = center.x + r*cos(eps);
+  p.y = center.y + r*sin(eps);
+      if (iwflag)
+	{
+	  if (P1.x + (p.x - S1.x) * Q.x > C2.x
+	      || P1.y + (p.y - S1.y) * Q.y > C2.y)
+	    {
+/*fprintf(stderr,"IW set:point %f %f >P2\n",p.x,p.y); */
+	      outside = 1;
+	    }
+	  if (P1.x + (p.x - S1.x) * Q.x < C1.x
+	      || P1.y + (p.y - S1.y) * Q.y < C1.y)
+	    {
+/*fprintf(stderr,"IW set:point  %f %f <P1\n",p.x,p.y); */
+	      outside = 1;
+	    }
+	}
 
+      if (!outside)
+	{
+	  if (polygon_mode)
+	    {
+	      HPGL_Pt_to_polygon ( polyp );
+	      HPGL_Pt_to_polygon ( p );
+	      polyp.x = p.x;
+	      polyp.y = p.y;
+	    }
+	  else
+	    {
+	      Pen_action_to_tmpfile (DRAW_TO, &p, scale_flag);
+	    }
+	}
+  
   Pen_action_to_tmpfile (MOVE_TO, &center, scale_flag);
 
   CurrentLinePatLen = SafeLinePatLen;	/* Restore */

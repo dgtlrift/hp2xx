@@ -1,5 +1,14 @@
 Recent changes :
 =================
+
+3.4.3a22:
+Fixed a bug in the miter fill code that could cause gaps in the filled area.
+Modified circle drawing code to create an overlapping segment to join the
+first and last segments when drawing wide lines. Modified polygon_PicBuf to
+draw fill lines directly instead of calling the bresenham code. Removed all
+references to (l)rint as they only created portability problems. Line join
+logic should be correct now.
+
 3.4.3a21: 
 Some code cleanup (Andrew Bird). Modified criteria for drawing miter sections
 to fix some cases where non-consecutive lines were erroneosly joined. Improved

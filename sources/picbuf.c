@@ -645,7 +645,8 @@ void polygon_PicBuf(DevPt p1, DevPt p4, DevPt p2, DevPt p3, int pencolor, PicBuf
 
    DevPt polygon[8];
    int xmin, ymin, xmax, ymax;
-   DevPt start, end, *p_act;
+   int start, end, tmp;
+   DevPt p_act;
    double denominator;
    double A1, B1, C1, A2, B2, C2;
    int scany;
@@ -695,7 +696,7 @@ xmax=xmax+2;
 
    for (i = 0; i <= numlines; i++) {    /* for all scanlines ... */
       k = -1;
-      start.x = start.y = end.x = end.y = 0;
+      start = end = 0;
       scany = ymin + i;
 /*
 if(scany >= ymax || scany<=ymin) {
@@ -719,11 +720,13 @@ continue;
          denominator = A1 * B2 - A2 * B1;
          if (fabs(denominator) > 1.e-5) {       /* zero means parallel lines */
 
-            segx = lrint((B1 * C2 - B2 * C1) / denominator);    /*x coordinate of intersection */
+            segx = (int)((B1 * C2 - B2 * C1) / denominator);    /*x coordinate of intersection */
             segy = (C1 * A2 - C2 * A1) / denominator;   /*y coordinate of intersection */
 
 /*fprintf(stderr,"seg x,y= %d %d\n",segx,segy);*/
             if ((segx > xmax) || (segx < xmin) ||
+            	(scany < MIN(polygon[j].y,polygon[j +1].y)) ||
+            	(scany > MAX(polygon[j].y,polygon[j +1].y)) ||
                 (segx < MIN(polygon[j].x, polygon[j + 1].x)) ||
                 (segx > MAX(polygon[j].x, polygon[j + 1].x))) {
 /*fprintf(stderr,"intersection  at %d %d is not within (%d,%d)-(%d,%d)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y )
@@ -732,24 +735,24 @@ continue;
 
                k++;
                if (k == 0) {
-                  start.x = segx;
-                  start.y = scany;
-               } else if (fabs(segx - start.x) > 1) {
-                  end.x = segx;
-                  end.y = scany;
-               } else if (k >= 0)
+                  start = segx;
+               } else if ( segx != start) {
+                  end = segx;
+               } else if (k > 0)
                   k--;
             }                   /* if crossing withing range */
          }
          /*if not parallel */
       }                         /*next edge */
-/*fprintf(stderr,"k=%d\n",k);*/
       if (k >= 1) {
+	if (start>end){
+	tmp=end;
+	end=start;
+	start=tmp;
+	}
 /*fprintf(stderr,"fillline %d %d - %d %d\n",start.x,start.y,end.x,end.y);*/
-         p_act = bresenham_init(&start, &end);
-         do {
-            plot_PicBuf(pb, p_act, pencolor);
-         } while (bresenham_next() != BRESENHAM_ERR);
+      for (p_act.x = start, p_act.y = scany; p_act.x <= end; p_act.x++)
+         plot_PicBuf(pb, &p_act, pencolor);
 
       }
 
@@ -786,6 +789,7 @@ void tmpfile_to_PicBuf(const GEN_PAR * pg, const OUT_PAR * po)
               PError("Unexpected end of temp. file");
               exit(ERROR);
            }
+	   consecutive=0;
            break;
         case DEF_PW:
            if (!load_pen_width_table(pg->td)) {
@@ -798,12 +802,14 @@ void tmpfile_to_PicBuf(const GEN_PAR * pg, const OUT_PAR * po)
               PError("Unexpected end of temp. file");
               exit(ERROR);
            }
+           consecutive=0;
            break;
         case DEF_LA:
            if (load_line_attr(pg->td) < 0) {
               PError("Unexpected end of temp. file");
               exit(ERROR);
            }
+           consecutive=0;
            break;
         case MOVE_TO:
            HPGL_Pt_from_tmpfile(&pt1);
@@ -815,7 +821,7 @@ void tmpfile_to_PicBuf(const GEN_PAR * pg, const OUT_PAR * po)
            HPcoord_to_dotcoord(&pt1, &next, po);
            line_PicBuf(&ref, &next, pt.width[pen_no], pt.color[pen_no], consecutive, po);
            memcpy(&ref, &next, sizeof(ref));
-	   consecutive=1;
+	   consecutive++;
            break;
         case PLOT_AT:
            HPGL_Pt_from_tmpfile(&pt1);

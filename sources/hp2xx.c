@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a21";
-char	*VERS_DATE = "02/10/23";
+char	*VERS_NO = "3.4.3a22";
+char	*VERS_DATE = "02/10/27";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -156,7 +156,7 @@ char	*VERS_ADDITIONS =
 char	*VERS_ADDITIONS =
 	"\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n";
 #else
-char	*VERS_ADDITIONS = "                                (c) 1999 - 2002 Martin Kroeker\n";
+char	*VERS_ADDITIONS = "                                 (c) 1999 - 2002 Martin Kroeker\n";
 #endif
 
 

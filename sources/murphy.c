@@ -42,9 +42,12 @@ static struct {
 } murphy;
 
 
-#ifdef NORINT
-#define lrint(a) ((long)(a+0.5))
-#endif
+/*#i fdef NORINT
+#de fine lrint(a) ((long)(a+0.5))
+#en dif
+*/
+
+#define my_lrint(a) ((long)(a+0.5))
 
 static void do_miter(int, DevPt, DevPt, DevPt, DevPt);
 
@@ -91,8 +94,9 @@ void murphy_wideline(DevPt p0, DevPt p1, int width, int miter)
    float offset = width / 2;
 
    DevPt pt, ptx, ml1, ml2, ml1b, ml2b;
+#if 0
    int dist1, dist2 /*, miter*/;
-
+#endif
    int d0, d1;                  /* difference terms d0=perpendicular to line, d1=along line */
 
    int q;                       /* pel counter,q=perpendicular to line */
@@ -141,23 +145,23 @@ void murphy_wideline(DevPt p0, DevPt p1, int width, int miter)
    ang = atan((double) murphy.v / (double) murphy.u);   /* calc new initial point - offset both sides of ideal */
 
    if (murphy.oct2 == 0) {
-      pt.x = p0.x + lrint(offset * sin(ang));
+      pt.x = p0.x + my_lrint(offset * sin(ang));
       if (murphy.quad4 == 0) {
-         pt.y = p0.y - lrint(offset * cos(ang));
+         pt.y = p0.y - my_lrint(offset * cos(ang));
       } else {
-         pt.y = p0.y + lrint(offset * cos(ang));
+         pt.y = p0.y + my_lrint(offset * cos(ang));
       }
    } else {
-      pt.x = p0.x - lrint(offset * cos(ang));
+      pt.x = p0.x - my_lrint(offset * cos(ang));
       if (murphy.quad4 == 0) {
-         pt.y = p0.y + lrint(offset * sin(ang));
+         pt.y = p0.y + my_lrint(offset * sin(ang));
       } else {
-         pt.y = p0.y - lrint(offset * sin(ang));
+         pt.y = p0.y - my_lrint(offset * sin(ang));
       }
    }
 
    tk = 4 * HYPOT(pt.x - p0.x, pt.y - p0.y) * HYPOT(murphy.u, murphy.v);        /* used here for constant thickness line */
-#if 1
+#if 0
    dist1 = (pt.x - murphy.last1.x) * (pt.x - murphy.last1.x)
        + (pt.y - murphy.last1.y) * (pt.y - murphy.last1.y);
 
@@ -170,10 +174,9 @@ void murphy_wideline(DevPt p0, DevPt p1, int width, int miter)
       murphy.last2 = ptx;
    }
 #endif
-
-   if (MIN(dist1, dist2) >= width * width * 2)
+/*   if (MIN(dist1, dist2) >= width * width * 2)
 	          miter = 0;
-
+*/
    if (miter ==0) {
    		murphy.first1.x=-10000000;
 		murphy.first1.y=-10000000;
@@ -277,7 +280,7 @@ DevPt ml1b, ml2b, ml1, ml2;
    DevPt m1, m2, *p_act;
    DevPt fi,la,cur;
 
-   if (miter == 1) {
+   if (miter > 1) {
 	if (murphy.first1.x != -10000000) {
 /*
       ftmp2 = (murphy.last2.x - ml2b.x) * (murphy.last2.x - ml2b.x) 
