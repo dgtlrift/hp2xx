@@ -10,7 +10,7 @@ New features:
 Bug fixes:
 
 - hp2xx now ignores SC commands with invalid parameters 
-  (original patch by Slavek Banko)
+  (Slavek Banko)
 - AC support in 3.4.2 slowed down the polygon fill code
 - raster mode was allocating a big 8 bit per pixel memory
   buffer even when the pen data would fit in 4bpp
@@ -19,6 +19,10 @@ Bug fixes:
 - The DXF header was a bit too minimalistic for some readers
   (Francisco Doubrawa Filho)
 - Dots drawn for PUPDPU sequences were not clipped by IW
+- Unsupported subtypes 6 and 7 of SD and AD (weight & typeface)
+  caused an error exit instead of simply being ignored
+- extremely short line segments could confuse the pattern state machine,
+  resulting in no or extraneous lines being drawn (J.L. Fernandez Jambrina)
 
 Changes from 3.4.1 to 3.4.2
 

@@ -53,7 +53,7 @@ void murphy_paraline(DevPt pt,int d1) { /* implements Figure 5B */
 
 void murphy_wideline(DevPt p0, DevPt p1, int width) {  /* implements figure 5A - draws lines parallel to ideal line */
 
-   int offset = width/2;
+   float offset = width/2;
 
    DevPt pt;
    int d0, d1;                    /* difference terms d0=perpendicular to line, d1=along line */
@@ -102,9 +102,6 @@ void murphy_wideline(DevPt p0, DevPt p1, int width) {  /* implements figure 5A -
    d1 = 0;
    dd = 0;
 
-   tk = ceil(4. * offset * murphy_normconst(murphy.u, murphy.v)+1.);    /* used here for constant thickness line */
-                                                                           /* one pixel fudge factor - ajb */
-
    ang=atan((double) murphy.v / (double) murphy.u);         /* calc new initial point - offset both sides of ideal */
 
    if(murphy.oct2 == 0) {
@@ -122,9 +119,12 @@ void murphy_wideline(DevPt p0, DevPt p1, int width) {  /* implements figure 5A -
          pt.y = p0.y - lrint(offset * sin(ang));
       }
    }
+
+   tk = 4 * murphy_normconst(pt.x-p0.x,pt.y-p0.y) * murphy_normconst(murphy.u,
+   murphy.v); /* used here for constant thickness line */
    for (q = 0; dd <= tk; q++) {  /* outer loop, stepping perpendicular to line */
 
-      murphy_paraline(pt,d1);         /* call to inner loop - centre */
+      murphy_paraline(pt,d1);         /* call to inner loop - right edge */
 
       if (d0 < murphy.kt) {            /* square move  - M2 */
          if(murphy.oct2 == 0) {

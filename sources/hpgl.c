@@ -424,7 +424,6 @@ init_HPGL (const GEN_PAR * pg, const IN_PAR * pi)
       rot_cos = cos (M_PI * rot_ang / 180.0);
       rot_sin = sin (M_PI * rot_ang / 180.0);
     }
-
   vec_cntr_r = 0L;
   vec_cntr_w = 0L;
   n_unexpected = 0;
@@ -1024,7 +1023,7 @@ Line_Generator (HPGL_Pt * pa, const HPGL_Pt * pb, int mv_flag)
     {
 
     case LT_solid:
-      if (seg_len == 0.0) return;/***???***/
+      if (seg_len == 0.0) return;
       PlotCmd_to_tmpfile (DRAW_TO);
       HPGL_Pt_to_tmpfile (pb);
       return;
@@ -1038,6 +1037,10 @@ Line_Generator (HPGL_Pt * pa, const HPGL_Pt * pb, int mv_flag)
 	}
       pat_pos = 0.0;		/* Reset to start-of-pattern    */
       n_pat = ceil_with_tolerance (seg_len / CurrentLinePatLen, CurrentLinePatLen * LT_PATTERN_TOL);
+	if (n_pat == 0) { /* sanity check for segment << pattern length */
+		n_pat=1;
+		if (!silent_mode)fprintf(stderr,"very short pattern run encountered\n");
+		}
       dx /= n_pat;
       dy /= n_pat;
       /* Now draw n_pat complete line patterns */
@@ -1117,7 +1120,6 @@ Pen_action_to_tmpfile (PlotCmd cmd, const HPGL_Pt * p, int scaled)
       P.y = rot_sin * P.x + rot_cos * P.y;
       P.x = tmp;
     }
-
 
   /* Extreme values needed for later scaling:    */
 
@@ -2615,10 +2617,12 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	case 3: /* font pitch */
         case 4: /* font height */
 	case 5: /* posture */
+	case 6: /* stroke weight */
+	case 7: /* typeface*/
 	if (read_float(&csfont, hd))
          par_err_exit (2, cmd);
         else
-	if (!silent_mode) fprintf(stderr,"pitch/height/posture unsupported\n");	
+	if (!silent_mode) fprintf(stderr,"pitch/height/posture/weight/typeface unsupported\n");	
 	break;
 	default:
 	par_err_exit(1,cmd);
@@ -3054,8 +3058,9 @@ if (rotate_flag){
 	{
 	  if (scale_flag)
 	    {
-	      if (rotate_flag)
-		{
+	      if (rotate_flag && ((rot_ang ==90.) || (int)rot_tmp%90 !=0))
+		{   /* FIXME: there must be a more elegant solution for
+			the interactions between -r and RO */
 		  C1.x = S1.y;
 		  C1.y = S1.x;
 		  C2.x = S2.y;
@@ -3071,7 +3076,7 @@ if (rotate_flag){
 	    }
 	  else
 	    {
-		if (rotate_flag) {
+		if (rotate_flag && ((rot_ang==90. )|| (int)rot_tmp%90 !=0)) {
 		C1.x= P1.y;
 		C1.y= P1.x;
 		C2.x= P2.y;
@@ -3081,7 +3086,7 @@ if (rotate_flag){
 	      C1.y = P1.y;
 	      C2.x = P2.x;
 	      C2.y = P2.y;
-	      } 
+	      }
 /*fprintf (stderr," clip limits (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);*/
 	    }
 	}
@@ -3095,7 +3100,6 @@ if (rotate_flag){
 	    par_err_exit (4, cmd);
 	}
 	
-#if 1
 	if ( C1.x > C2.x) {
 		ftmp=C1.x;
 		C1.x=C2.x;
@@ -3106,12 +3110,9 @@ if (rotate_flag){
 		C1.y=C2.y;
 		C2.y=ftmp;
 		}	
-#endif		
-/*      if (scale_flag)****/
-	{
+
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
-	}
 
       break;
 
@@ -3225,6 +3226,7 @@ if (rotate_flag){
 	if (p1.x == p2.x || p1.y == p2.y) {/* min must differ from max*/
 	          if (!silent_mode)
             Eprintf ("Warning: Invalid SC command parameters -- ignored\n");
+	Q.x=Q.y=1.0;
 	break;
 	}
 	S1.x=p1.x;
@@ -3360,15 +3362,17 @@ if (rotate_flag){
 	      M.x = M.y;
 	      M.y = ftmp;
 	      break;
+	    case 0:
 	    case 180:
 	    default:
+	    rotate_flag=0;
 	      break;
 	    }
+
 	 /* if (!silent_mode)
 	    fprintf (stderr, "cumulative rot_ang now %f\n", rot_ang);*/
 	  rot_cos = cos (M_PI * rot_ang / 180.0);
 	  rot_sin = sin (M_PI * rot_ang / 180.0);
-	  rotate_flag = 1;
 
 	  if (ps_flag)
 	    {			/* transform extents from previous PS statement */
@@ -3571,10 +3575,12 @@ if (rotate_flag){
 	case 3: /* font pitch */
         case 4: /* font height */
 	case 5: /* posture */
+	case 6: /* stroke weight */
+	case 7: /* typeface */
 	if (read_float(&csfont, hd))
          par_err_exit (2, cmd);
         else
-	if (!silent_mode) fprintf(stderr,"pitch/height/posture unsupported\n");	
+	if (!silent_mode) fprintf(stderr,"pitch/height/posture/weight/typeface unsupported\n");	
 	break;
 	default:
 	par_err_exit(1,cmd);

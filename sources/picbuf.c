@@ -328,7 +328,7 @@ int maxps;
    X_Offset = maxps / 2;
    Y_Offset = maxps / 2;
 
-   printf("maxps = %d\n",maxps);
+/*   printf("maxps = %d\n",maxps);*/
   *p_cols  = D_Pt.x + maxps + 1;	
   *p_rows  = D_Pt.y + maxps + 1;
 }
@@ -655,7 +655,7 @@ int		pen_no = 1;
 			PError("Unexpected end of temp. file");
 			exit (ERROR);
 		}
-                printf("\npen number %d == %f\n",pen_no,ceil(pt.width[pen_no]*po->HP_to_xdots/0.025));
+/*                printf("\npen number %d == %f\n",pen_no,ceil(pt.width[pen_no]*po->HP_to_xdots/0.025));*/
 		break;
 	  case DEF_PW:
                 if(!load_pen_width_table(pg->td)) {
