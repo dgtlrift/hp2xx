@@ -65,8 +65,8 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
-#define VERS_NO        "3.5.0a2"
-#define VERS_DATE      "03/07/24"
+#define VERS_NO        "3.5.0a7"
+#define VERS_DATE      "03/11/08"
 #define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
 #if defined(AMIGA)
 #define VERS_ADDITIONS "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"
@@ -319,7 +319,10 @@ typedef struct {
 	int rect;
 } PE_flags;
 
-
+unsigned char pattern[8][256][256];
+int pat;
+int pw[8];
+int ph[8];
 #define	DEFAULT_PEN_NO		1
 
 #define	FLAGSTATE(flag)		(flag) ? "ON" : "off"
@@ -432,7 +435,7 @@ int to_emp(const GEN_PAR * pg, const OUT_PAR * po);
 #endif
 
 void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt P1, HPGL_Pt P2,
-	  int scale_flag, int filltype, float spacing, float hatchangle);
+	  int scale_flag, int filltype, float spacing, float hatchangle,float penwidth);
 
 /*std_main*/
 void action_oldstyle(GEN_PAR *, IN_PAR *, OUT_PAR *);

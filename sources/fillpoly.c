@@ -11,7 +11,7 @@
 
 void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	  HPGL_Pt point2, int scale_flag, int filltype, float spacing,
-	  float hatchangle)
+	  float hatchangle,float curwidth)
 {
 	typedef struct {
 		double x, y;
@@ -23,28 +23,35 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	double segx, segy;
 	static int i;		/* to please valgrind when debugging memory accesses */
 	int j, k, jj, kk;
+	int ia,ib,pati,l;
 	int numlines;
 	double penwidth;
+	int patj=0;
 	HPGL_Pt p;
 	double rot_ang;
 	double pxdiff = 0., pydiff = 0.;
 	double avx, avy, bvx, bvy, ax, ay, bx, by, atx, aty, btx, bty, mu;
-	PEN_W SafePenW = pt.width[1];
+				int hit=0;
+				int miss=0;
+
+
+	PEN_W SafePenW = curwidth;
 	LineEnds SafeLineEnd = CurrentLineEnd;
 	CurrentLineEnd = LAE_butt;
 
 	penwidth = 0.1;
-
 	PlotCmd_to_tmpfile(DEF_PW);
 	Pen_Width_to_tmpfile(1, penwidth);
 
 	PlotCmd_to_tmpfile(DEF_LA);
 	Line_Attr_to_tmpfile(LineAttrEnd, LAE_round);
 
-	if (filltype > 2)
+	if (filltype > 2 && filltype <5)
 		penwidth = spacing;
 
 
+if (filltype == 10) penwidth=4.;
+if (filltype == 11) penwidth=1.69;
 	polyxmin = 100000.;
 	polyymin = 100000.;
 	polyxmax = -100000.;
@@ -64,8 +71,8 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 		goto FILL_VERT;
 	}
 
-	pxmin = point1.x - 0.5;
-	pymin = point1.y - 0.5;
+	pxmin = MIN(polyxmin,point1.x - 0.5);
+	pymin = MIN(polyymin,point1.y - 0.5);
 	pxmax = polyxmax;
 	pymax = polyymax;
 	if (polyxmin == polyxmax && polyymin == polyymax) {
@@ -142,7 +149,7 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 			      avy * (bx - ax)) / (bvy * avx - avy * bvx);
 
 
-#if 0
+#if 1
 /* debug code to show outline */
 			p.x = polygon[j].x;
 			p.y = polygon[j].y;
@@ -209,10 +216,64 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 				p.y = segment[j].y;
 				Pen_action_to_tmpfile(MOVE_TO, &p,
 						      scale_flag);
+				switch (filltype){
+				case 11:
+/*				for(ia=0;ia<ph[pat];ia++){
+				for(ib=0;ib<pw[pat];ib++)if (pattern [pat][ia][ib]>0) printf("o"); 
+								else
+								printf(" ");
+							printf("\n");
+							 }	
+
+*/
+						patj=i-(i/ph[pat])*ph[pat];
+						if (patj>ph[pat]) patj=0;
+					do  {
+					if (pattern[pat][pati][patj]> 0) { 
+					Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);
+					p.x+=0.001;
+					p.y+=0.001;
+					Pen_action_to_tmpfile(DRAW_TO,&p,scale_flag);
+					p.x-=0.001;
+					p.y-=0.001;
+					}
+/*					else Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);*/
+					pati++;
+					if (pati >pw[pat])pati=0;
+					p.x+= 1.68;
+					} while (p.x < segment[j+1].x);
+				break;
+				
+				case 10:
+				hit=miss=0;
+				ib=0;
+				do {
+				ib = 1 + (int) (100.0 *rand()/(RAND_MAX+1.0));
+				if ( ib <=  (int)spacing ) {
+					hit++;
+					Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);
+					p.x+=0.001;
+					p.y+=0.001;
+					Pen_action_to_tmpfile(DRAW_TO,&p,scale_flag);	
+					p.x-=0.001;
+					p.y-=0.001;
+					}else{
+					miss++;
+/*					Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);*/
+					}
+				p.x+=1.68;	
+				} while (p.x < segment[j+1].x);			
+/*
+		fprintf(stderr,"scanline hits %d percentage %f\n",hit,(float)hit/(float)(hit+miss));
+*/
+				break;
+
+				default:	
 				p.x = segment[j + 1].x;
 				p.y = segment[j + 1].y;
 				Pen_action_to_tmpfile(DRAW_TO, &p,
 						      scale_flag);
+				}
 			}
 		} else {
 #if 0

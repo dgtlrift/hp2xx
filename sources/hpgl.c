@@ -182,9 +182,9 @@ static int filltype = 1;
 static float hatchspace = 0.;
 static short hatchscale = FALSE;
 static float hatchangle = 0.;
-static float saved_hatchspace[2] = { 0., 0. };
-static int saved_hatchscale[2] = { FALSE , FALSE };
-static float saved_hatchangle[2] = { 0., 0. };
+static float saved_hatchspace[4] = { 0., 0., 0. , 0.};
+static int saved_hatchscale[4] = { FALSE , FALSE, FALSE, FALSE };
+static float saved_hatchangle[4] = { 0., 0. ,0., 0.};
 static float thickness = 0.;
 static short polygon_penup = FALSE;
 static HPGL_Pt anchor = { 100000.0, 100000.0 };
@@ -287,6 +287,7 @@ static unsigned char b_max = 255;
 #define PU	0x5055
 #define PW	0x5057		/*MK */
 #define RA      0x5241
+#define RF      0x5246
 #define RO	0x524F		/*RS */
 #define RR      0x5252
 #define RT      0x5254
@@ -354,7 +355,18 @@ static void par_err_exit(int code, int cmd, FILE * hd)
 static void reset_HPGL(void)
 {
 	int i;
-
+	pat=0;
+	pw[0]=pw[1]=pw[2]=ph[0]=ph[1]=ph[2]=256;
+	pw[3]=pw[4]=pw[5]=ph[3]=ph[4]=ph[5]=256;
+	pw[6]=pw[7]=ph[6]=ph[7]=256;
+		memset(pattern[0],1,256*256);
+		memset(pattern[1],1,256*256);
+		memset(pattern[2],1,256*256);
+		memset(pattern[3],1,256*256);
+		memset(pattern[4],1,256*256);
+		memset(pattern[5],1,256*256);
+		memset(pattern[6],1,256*256);
+		memset(pattern[7],1,256*256);
 	p_last.x = p_last.y = M_PI;
 	pen_down = FALSE;
 	plot_rel = FALSE;
@@ -370,8 +382,11 @@ static void reset_HPGL(void)
 	ac_flag = FALSE;
 	filltype = 1;
 	saved_hatchangle[0] = saved_hatchangle[1] = 0.;
+	saved_hatchangle[2] = saved_hatchangle[3] = 0.;
 	saved_hatchspace[0] = saved_hatchspace[1] = 0.;
+	saved_hatchspace[2] = saved_hatchspace[3] = 0.;
 	saved_hatchscale[0] = saved_hatchscale[1] = FALSE;
+	saved_hatchscale[2] = saved_hatchscale[3] = FALSE;
 	ct_dist = FALSE;
 	CurrentLineType = LT_solid;
 
@@ -642,6 +657,7 @@ void HPGL_Pt_to_polygon(HPGL_Pt pf)
 		pf.y = rot_sin * pf.x + rot_cos * pf.y;
 		pf.x = tmp;
 	}
+	if (scale_flag) User_to_Plotter_coord(&pf,&pf);
 	xmin = MIN(pf.x, xmin);
 	ymin = MIN(pf.y, ymin);
 	xmax = MAX(pf.x, xmax);
@@ -959,7 +975,7 @@ static void rect(const GEN_PAR * pg, int relative, int filled, float cur_pensize
 			/*      anchor.y=MIN(P1.y,ymin); */
 		}
 		fill(polygons, vertices, anchor, P2, scale_flag,
-		     filltype, hatchspace, hatchangle);
+		     filltype, hatchspace, hatchangle,pt.width[pen]);
 	}
 	Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 }
@@ -1090,6 +1106,7 @@ int read_PE_flags(GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 			pens_in_use[pen] = 1;
 		pg->maxcolor = MAX(pg->maxcolor, (int) pen);
 /*MK */
+	fprintf(stderr,"PE: pen %d\n",pen);
 		break;
 
 	case 190:
@@ -1425,7 +1442,7 @@ int read_float(float *pnum, FILE * hd)
 		if (c == ';')
 			return 1;	/* Terminator reached   */
 		if (((c >= 'A') && (c <= 'Z')) ||
-		    ((c >= 'a') && (c <= 'a')) || (c == ESC)) {
+		    ((c >= 'a') && (c <= 'z')) || (c == ESC)) {
 			ungetc(c, hd);
 			return 1;	/* Next Mnemonic reached */
 		}
@@ -2415,11 +2432,12 @@ static void fwedges(FILE * hd, float cur_pensize)
 	if (filltype < 3 && thickness > 0.)
 		hatchspace = thickness;
 	if (!ac_flag) {		/* not yet initialized */
-		anchor.x = P1.x;
-		anchor.y = P1.y;
+		anchor.x = xmin;
+		anchor.y = ymin;
+		if (scale_flag) Plotter_to_User_coord(&anchor,&anchor);	
 	}
 	fill(polygons, vertices, anchor, P2, scale_flag, filltype,
-	     hatchspace, hatchangle);
+	     hatchspace, hatchangle,pt.width[pen]);
 
 
 	CurrentLinePatLen = SafeLinePatLen;	/* Restore */
@@ -2696,11 +2714,13 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 	0., 0.};
 	float ftmp;
 	float csfont;
-	int mypen, myred, mygreen, myblue, i;
+	int mypen, myred, mygreen, myblue, i,j;
 	float mywidth, myheight;
 	char tmpstr[1024];
 	char SafeTerm;
+#if 0
 	static int FoundUserFill = 0;
+#endif
 /**
  ** Each command consists of 2 characters. We unite them here to a single int
  ** to allow for easy processing within a big switch statement:
@@ -2924,11 +2944,12 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		if (filltype < 3 && thickness > 0.)
 			hatchspace = thickness;
 		if (!ac_flag) {	/* not yet initialized */
-			anchor.x = P1.x;
-			anchor.y = P1.y;
+		anchor.x = xmin;
+		anchor.y = ymin;
+		if (scale_flag) Plotter_to_User_coord(&anchor,&anchor);	
 		}
 		fill(polygons, vertices, anchor, P2, scale_flag, filltype,
-		     hatchspace, hatchangle);
+		     hatchspace, hatchangle,pt.width[pen]);
 		Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 		break;
 	case FT:		/* Fill Type */
@@ -2940,7 +2961,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		}
 		if (filltype < 3)
 			break;
-
+#if 0
 		if (filltype > 4) {
 			if (FoundUserFill == 0) {
 				FoundUserFill = 1;
@@ -2950,28 +2971,29 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			}
 			filltype = 1;
 		}
+#endif
 		if (filltype < 3)
 			break;
 
 		if (read_float(&ftmp, hd)) {
-			hatchspace = saved_hatchspace[filltype - 3];
+			hatchspace = saved_hatchspace[filltype - 3 - (filltype> 9 ? 5:0)];
 			if (hatchspace == 0.)
 				hatchspace = 0.01 * Diag_P1_P2;
-			hatchangle = saved_hatchangle[filltype - 3];
+			hatchangle = saved_hatchangle[filltype - 3- (filltype> 9 ? 5:0)];
 		} else {
 			if (ftmp <= 0.)
 				ftmp = 0.01 * Diag_P1_P2;
 			hatchspace = ftmp;
 			hatchscale=scale_flag;
 
-			saved_hatchspace[filltype - 3] = hatchspace;
-			saved_hatchscale[filltype - 3] = hatchscale;
+			saved_hatchspace[filltype - 3- (filltype>9 ? 5:0)] = hatchspace;
+			saved_hatchscale[filltype - 3- (filltype>9 ? 5:0)] = hatchscale;
 		
 		if (read_float(&ftmp, hd)) {
-			hatchangle = saved_hatchangle[filltype - 3];
+			hatchangle = saved_hatchangle[filltype - 3- (filltype>9 ? 5:0)];
 		} else {
 			hatchangle = ftmp;
-			saved_hatchangle[filltype - 3] = hatchangle;
+			saved_hatchangle[filltype - 3- (filltype>9 ? 5:0)] = hatchangle;
 		}
 		}
 		break;
@@ -3246,9 +3268,8 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				if (pg->maxpensize < mywidth)
 					pg->maxpensize = mywidth;
 			}
-/*
+
          fprintf(stderr,"pen%d, size now %f\n",(int) ftmp,mywidth);
-*/
 		}
 		break;
 	case TL:		/* Tick Length                  */
@@ -3272,6 +3293,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			fillpoly(td,NZFILL_POLY,filltype,Q.x,
 				 hatchspace,hatchscale,hatchangle,rotate_flag,rot_ang);
 	  	} else {
+		if (pg->nofill)
+		wedges(hd);
+		else
 		fwedges(hd, pt.width[pen]);
 
 	  	}
@@ -3508,12 +3532,44 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		break;
 
 	case RA:		/* Fill Rectangle absolute */
-		rects(pg,plot_rel = FALSE, 1, pt.width[pen], hd);
+		rects(pg,plot_rel = FALSE, pg->nofill ? 0 : 1, pt.width[pen], hd);
 		tp->CR_point = HP_pos;
 		break;
-
+	case RF:
+		if (read_float(&ftmp,hd)) 	/* just RF */
+		memset(pattern[0],1,256*256);
+		memset(pattern[1],1,256*256);
+		memset(pattern[2],1,256*256);
+		memset(pattern[3],1,256*256);
+		memset(pattern[4],1,256*256);
+		memset(pattern[5],1,256*256);
+		memset(pattern[6],1,256*256);
+		memset(pattern[7],1,256*256);
+		break;		/* default all patterns to solid*/
+		if (ftmp <0 || ftmp>7) break; /* we only have 8 patterns - ignore */
+		pat=(int)ftmp;
+		if (read_float(&ftmp,hd))	/* no width */
+		memset(pattern[pat],1,256*256);
+		break; 		/* default this pattern to solid*/
+		pw[pat]=(int)ftmp;
+		if (read_float(&ftmp,hd))	/* width but no height -invalid */
+			par_err_exit(3, cmd, hd);
+		ph[pat]=(int)ftmp;	
+		for (i=0;i<ph[pat];i++)
+			for(j=0;j<pw[pat];j++){ read_float(&ftmp,hd);pattern[pat][i][j]=(unsigned char)ftmp;}
+#if 0	
+			for (i=0;i<ph[pat];i++) {
+				for(j=0;j<pw[pat];j++) {
+				if (pattern[pat][i][j] == 0) printf(" ");
+				else 
+				printf("#");
+				}
+				printf("\n");
+			}
+#endif			
+		break;
 	case RR:		/* Fill Rectangle relative */
-		rects(pg,plot_rel = TRUE, 1, pt.width[pen], hd);
+		rects(pg,plot_rel = TRUE, pg->nofill ? 0 : 1, pt.width[pen], hd);
 		tp->CR_point = HP_pos;
 		break;
 

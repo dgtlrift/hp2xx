@@ -245,8 +245,8 @@ OBJS	= hp2xx.o hpgl.o picbuf.o bresnham.o chardraw.o getopt.o getopt1.o \
 PROGRAM	= hp2xx
 
 default:
-	@echo "This makefile needs manual configuration! Edit it now!
-	@echo "After configuration, you may use the following commands:
+	@echo "This makefile needs manual configuration! Edit it now!"
+	@echo "After configuration, you may use the following commands:"
 	@echo   ""
 	@echo   "make all             Compile everything"
 	@echo   "make check           Run a color application in preview mode"

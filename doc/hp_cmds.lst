@@ -164,7 +164,7 @@ Cmd  | i |
  QL  |  .| Quality Level
      |   |
  RA  |+  | Fill rectangle absolute
- RF  | - | Raster Fill pattern definition
+ RF  |+  | Raster Fill pattern definition
  RO  |+  | Rotate coordinate system 
  RP  | - | Replot
  RR  |+  | Fill rectangle relative
@@ -188,7 +188,6 @@ Cmd  | i |
  TR  | - | TRansparency mode [opaquify white areas] 
      |   |
  UC  |+  | User-defined character
- UF  | - | User-defined fill type
  UL  |+  | User-defined line type
      |   |
  VS  |  .| Velocity select
@@ -201,6 +200,6 @@ Cmd  | i |
      |   |
  YT  |+  | Y-Tick
 
-Useless statistics : this makes currently (3.4.3) 
-72 fully supported, 3 partially supported, 24 not-applicable 
-and 23 unsupported commands.
+Useless statistics : this makes currently (3.5.0) 
+73 fully supported, 3 partially supported, 24 not-applicable 
+and 21 unsupported commands.

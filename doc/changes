@@ -1,5 +1,36 @@
 Changes to hp2xx:
 =================
+3.5.0a7:
+changed RA,RR,WG to honor the "no fill" option.
+Added support for filltypes 10 (raster fill percentage) and 11 (user-defined), 
+and the RF (raster fill) command.
+(not yet supported by the new high-level postscript renderer). Removed "UF"
+from command table in hp_cmds.lst as it is not in the HP language documents
+(misreading of RF perhaps?)
+
+3.5.0a6:
+to_fig.c and to_rgip.c would abort on reading color info for pen 0. Restore
+current penwidth instead of pen 1 width after polygon fills.
+
+3.5.0a5:
+rewrote to_pdf.c to rely on the newly released libharu from sourceforge.net,
+as PDFLIB is definitely non-free for commercial use. If you do wish to use
+PDFLIB, specify -DPDFLIB in addition to -DUSEPDF in the Makefile and link
+against -lpdf instead of -lharu. (PDFLIB seems to generate slightly smaller 
+files, but this is the only difference seen so far).
+
+3.5.0a4:
+Scale polygon vertices if necessary before using them in the calculation of
+the drawing limits. Use (scaled) xmin,ymin as default anchor points for fills,
+use minimum of anchor point and polygon extents in fillpoly().
+
+3.5.0a3:
+Fixed a long-standing bug in handling of lowercase HPGL commands, present
+since at least 3.2.0 of 1994, and probably even earlier. (Yuichi Fujishige)
+Added missing quotation marks in echo statements of generic.mak, os2.mak 
+and windows.mak - another long-standing bug that could confuse some shells.
+(Christian Zuckschwerdt)
+
 3.5.0a2:
 Fixes by Eugene Doudine: i had misapplied part of his original patch, 
 thereby breaking IW support. My 'arc through three points' code was

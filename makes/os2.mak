@@ -239,8 +239,8 @@ $(PROGRAM): $(OBJS)
 	$(BINDCMD)
 
 default:
-	@echo "This makefile needs manual configuration! Edit it now!
-	@echo "After configuration, you may use the following commands:
+	@echo "This makefile needs manual configuration! Edit it now!"
+	@echo "After configuration, you may use the following commands:"
 	@echo   ""
 	@echo   "make all             Compile everything"
 	@echo   "make check           Run a color application in preview mode"

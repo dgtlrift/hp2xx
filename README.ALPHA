@@ -1,4 +1,51 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a7
+
+New features:
+
+- Added support for filltypes 10 (percentage), 11 (user-defined) and the RF
+ (raster fill) command
+
+3.5.0a6
+
+Bug fixes: 
+
+- fig and rgip module aborted when asked to change color of pen 0.
+- penwidth was reset to that of pen 1 (instead of that of the current pen)
+  after polygon fills
+
+3.5.0a5
+
+Bug fixes:
+
+- pdf output module was not adapted to the new highlevel command handling
+  scheme 
+
+New features:
+
+- hp2xx can now be compiled against Takeshi Kanno's Haru Free PDF Library
+  for pdf export (which, unlike PDFLIB, is available under the PNG/ZLIB
+  license and thus may be used royalty-free even in commercial settings)
+
+3.5.0a4
+
+Bug fixes:
+
+- Files containing both SCaled coordinates and polygons were rendered with
+  an extra margin in some circumstances (initial patch by Hans Peter Rueger)
+- miscalculation of the pattern anchor point could lead to polygons being
+  left unfilled (i.e. invisible) in the same circumstances.
+
+
+3.5.0a3
+
+Bug fixes:
+
+- HPGL commands given in lowercase were ignored (very old bug, found and
+  fixed by Yuishi Fujishige)
+- Several of the template Makefiles were missing quotation marks on some
+  'echo' commands (Christian Zuckschwerdt)
+
 
 3.5.0a2
 
