@@ -1011,7 +1011,6 @@ Line_Generator (HPGL_Pt * pa, const HPGL_Pt * pb, int mv_flag)
 	    Eprintf ("Warning: Zero line segment length -- skipped\n");
 	  return;		/* No line to draw ??           */
 	}
-
       if (mv_flag)		/* Last move ends old line pattern      */
 	pat_pos = 0.0;
       quot = seg_len / CurrentLinePatLen;
@@ -1588,8 +1587,9 @@ lines (int relative, FILE * hd)
 #if 1
 	  if (numcmds > 0)
 	    return;
-	  if (pen_down)
+	  if (pen_down && mv_flag)
 	    {			/*simulate dot created by 'real' pen on PD;PU; */
+				/*but not on PDPA*/
 	      p.x=p_last.x+0.01;
 	      p.y=p_last.y+0.01;
 	outside=0;
@@ -1691,16 +1691,15 @@ line (int relative, HPGL_Pt p)
 	  Pen_action_to_tmpfile (MOVE_TO, &p, scale_flag);
 	}
     }
-#if 0
-  if (polygon_mode && !polygon_penup)
+  if (polygon_mode && !polygon_penup) 
     {
       HPGL_Pt_to_polygon ( p_last );
       HPGL_Pt_to_polygon ( p );
     }
-#endif
   if (polygon_mode && polygon_penup)
     {
       polygon_penup = FALSE;
+	polystart=p;
       pen_down = TRUE;
     }
 
@@ -2444,9 +2443,11 @@ rect (int relative, int filled, float cur_pensize, FILE * hd)
 	    hatchspace = cur_pensize;
 	  if (filltype < 3 && thickness > 0.)
 	    hatchspace = thickness;
-	if (!ac_flag){ /* not yet initialized*/
-		anchor.x=xmin;
-		anchor.y=ymin;
+	if (ac_flag==0){ /* not yet initialized*/
+		anchor.x=P1.x;
+		anchor.y=P1.y;
+	fprintf(stderr,"anchor init to P1\n");
+	/*	anchor.y=MIN(P1.y,ymin);*/
 	}
 	  fill (polygons, vertices, anchor, P2, scale_flag, filltype, hatchspace,
 		hatchangle);
@@ -2715,8 +2716,8 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       if (filltype < 3 && thickness > 0.)
 	hatchspace = thickness;
 	if (!ac_flag){ /* not yet initialized*/
-		anchor.x=xmin;
-		anchor.y=ymin;
+		anchor.x=P1.x;
+		anchor.y=P1.y;
 	}
       fill (polygons, vertices, anchor, P2, scale_flag, filltype, hatchspace,
 	    hatchangle);
@@ -2796,15 +2797,15 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	  if (read_float (&ftmp, hd))	/* no red component  */
 	    myred = 0;
 	  else
-	    myred = 255*r_max/(ftmp-r_base);
+	    myred = 255*(ftmp-r_base)/r_max;
 	  if (read_float (&ftmp, hd))	/* no green component  */
 	    mygreen = 0;
 	  else
-	    mygreen = 255*g_max/(ftmp-g_base);
+	    mygreen = 255*(ftmp-g_base)/g_max;
 	  if (read_float (&ftmp, hd))	/* no blue component  */
 	    myblue = 0;
 	  else
-	    myblue = 255*b_max/(ftmp-b_base);
+	    myblue = 255*(ftmp-b_base)/b_max;
 	  pg->is_color = TRUE;
 	  PlotCmd_to_tmpfile (DEF_PC);
 	  Pen_Color_to_tmpfile (mypen, myred, mygreen, myblue);
@@ -2841,8 +2842,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	  pen_down = saved_penstate;
 	  if (p_last.x != polystart.x || p_last.y != polystart.y){
 	  HPGL_Pt_to_polygon (p_last); 
-	  HPGL_Pt_to_polygon (polystart); /* force closing of open polygon */	  
-	  }
+	  HPGL_Pt_to_polygon (polystart); /* force closing of open polygon */	  	  }
 	}
       break;
     case PR:			/* Plot Relative                */
@@ -3138,9 +3138,10 @@ if (rotate_flag){
 		ftmp=C1.y;
 		C1.y=C2.y;
 		C2.y=ftmp;
-		}	
+		}
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
+
 	C1.x -= pg->extraclip;
 	C1.y -= pg->extraclip;
 	C2.x += pg->extraclip;

@@ -48,6 +48,11 @@ Bug fixes:
 - Compile fix for HPUX11 ansi compiler (add whitespace to work around
   what is probably a compiler bug) (Glen Stewart)
 - Vertices of filled polygons were omitted from calculation of actual size
+- added ROWSPERSTRIP header parameter to TIFF files, as some programs seem
+  to require it 
+- Dots for PUPDPU got drawn for PDPA as well, which made consecutive dashed
+  lines restart the dash pattern for each segment instead of carrying over 
+  the remainder of the pattern from the previous one. 
 
 Changes from 3.4.1 to 3.4.2
 

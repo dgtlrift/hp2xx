@@ -31,8 +31,6 @@ polyxmin=100000.;
 polyymin=100000.;
 polyxmax=-100000.;
 polyymax=-100000.;
-
-/*fprintf(stderr,"AC %f %f\n",point1.x,point1.y);*/
 for (i = 0 ; i <= numpoints; i++ ) {
 /*fprintf(stderr,"%d: %f %f \n",i,polygon[i].x,polygon[i].y);*/
 
@@ -51,10 +49,10 @@ if (hatchangle >89.9 && hatchangle < 180.) {
 
 pxmin=point1.x;
 pymin=point1.y;
-/*
-pxmin=polyxmin;
+#if 0
 pymin=polyymin;
-*/
+pxmin=polyxmin;
+#endif
 /*fprintf(stderr,"anchor %f %f , minpoly %f %f\n",point1.x,point1.y,polyxmin,polyymin);*/
 pxmax=polyxmax;
 pymax=polyymax;

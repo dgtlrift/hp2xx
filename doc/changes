@@ -1,5 +1,18 @@
 Changes to hp2xx:
 =================
+3.4.3a9:
+
+still looking for correct defaults for AC. Reactivated polygon vertex storing
+code in line() - not sure if the real problem is with PM1 handling. The code
+i added to support Color Range caused strange colors for all but the primary
+colors, as i managed to invert the scaling factor. Ouch. Added 
+TIFFTAG_ROWSPERSTRIP to the TIFF header in to_tif.c - apparently required 
+by the standard, definitely required by at least one program. Value seems
+to be -1 by definition for compressed files, and happens to be 1 for the
+uncompressed files because all the code does is dump the individual scanlines. 
+The 'pentip dots' introduced for PUPDPU sequences got drawn for PDPA as well,
+which messed up the drawing of dashed lines (pattern disruption between what
+should be consecutive lines, as the dot drawing forced a move command)
 
 3.4.3a8:
 

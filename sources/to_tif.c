@@ -82,7 +82,12 @@ int PicBuf_to_TIF (const GEN_PAR *pg, const OUT_PAR *po)
             Eprintf("\nCompression Format - not supported yet\n");
             break;
   }
-           
+
+  if (po->specials > 0)
+	TIFFSetField(w, TIFFTAG_ROWSPERSTRIP, -1);           
+  else
+	TIFFSetField(w, TIFFTAG_ROWSPERSTRIP, 1);
+
   if (D==1){
     if (pt.clut[0][0]+pt.clut[0][1]+pt.clut[0][2]>0)
       TIFFSetField(w, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISWHITE);
