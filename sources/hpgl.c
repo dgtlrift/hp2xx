@@ -368,7 +368,7 @@ int i;
   CurrentLineAttr.Join=LAJ_plain_miter;
   CurrentLineAttr.End=LAE_butt;
   CurrentLineAttr.Limit=5;
-  
+  tp->sstrokewidth=tp->astrokewidth=tp->strokewidth=0.11;
   StrTerm = ETX;
   if (strbuf == NULL)
     {
@@ -1940,6 +1940,7 @@ tarcs (int relative, FILE * hd)
   switch (read_float (&eps, hd))	/* chord angle is optional */
     {
     case 0:
+      if (eps <0.5 ) eps = 0.5;
       break;
     case 1:			/* No resolution option */
       eps = 5.0;		/*    so use default!   */
@@ -2059,6 +2060,7 @@ arcs (int relative, FILE * hd)
   switch (read_float (&eps, hd))
     {
     case 0:
+      if (eps <0.5 ) eps = 0.5;
       break;
     case 1:			/* No resolution option */
       eps = 5.0;		/*    so use default!   */
@@ -2142,6 +2144,7 @@ fwedges (FILE * hd, float cur_pensize)	/*derived from circles */
   switch (read_float (&eps, hd))	/* chord angle */
     {
     case 0:
+      if (eps <0.5 ) eps = 0.5;
       break;
     case 1:			/* No resolution option */
       eps = 5.0;		/*    so use default!   */
@@ -2244,6 +2247,7 @@ circles (FILE * hd)
   switch (read_float (&eps, hd))
     {
     case 0:
+      if (eps <0.5 ) eps = 0.5;
       break;
     case 1:			/* No resolution option */
       eps = 5.0;		/*    so use default!   */
@@ -2395,6 +2399,7 @@ wedges (FILE * hd)		/*derived from circles */
   switch (read_float (&eps, hd))	/* chord angle */
     {
     case 0:
+      if (eps <0.5 ) eps = 0.5;
       break;
     case 1:			/* No resolution option */
       eps = 5.0;		/*    so use default!   */
@@ -2674,11 +2679,19 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
         case 4: /* font height */
 	case 5: /* posture */
 	case 6: /* stroke weight */
+	if (read_float(&ftmp,hd)) 
+		par_err_exit (2,cmd);
+		if (ftmp == 9999) tp->astrokewidth=ftmp;
+			else {
+			if (ftmp <-7. || ftmp > 7.) ftmp=0.;
+			tp->astrokewidth = 0.11 + ftmp/70.; /* 0.01 ... 0.21 mm */	
+			}
+	break;
 	case 7: /* typeface*/
 	if (read_float(&csfont, hd))
          par_err_exit (2, cmd);
         else
-	if (!silent_mode) fprintf(stderr,"pitch/height/posture/weight/typeface unsupported\n");	
+	if (!silent_mode) fprintf(stderr,"pitch/height/posture/typeface unsupported\n");	
 	break;
 	default:
 	par_err_exit(1,cmd);
@@ -3602,7 +3615,7 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
     case CP:			/* Char Plot (rather: move)     */
       if (read_float (&p1.x, hd))	/* No number found  */
 	{
-	  plot_string ("\n\r", LB_direct);
+	  plot_string ("\n\r", LB_direct, pen);
 	  return;
 	}
       else if (read_float (&p1.y, hd))
@@ -3668,7 +3681,7 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
        break;
     case LB:			/* Label string                 */
       read_string (strbuf, hd);
-      plot_string (strbuf, LB_direct);
+      plot_string (strbuf, LB_direct, pen);
       /*
        * Bug fix by W. Eric Norum:
        * Update the position so that subsequent `PR's will work.
@@ -3690,7 +3703,7 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
       adjust_text_par ();
       break;
     case PB:			/* Plot Buffered label string   */
-      plot_string (strbuf, LB_buffered);
+      plot_string (strbuf, LB_buffered, pen);
       break;
     case SI:			/* Char cell Sizes (absolute)   */
       if (read_float (&tp->width, hd))	/* No number found */
@@ -3735,10 +3748,11 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
       adjust_text_par ();
       break;
     case SA:			/* Select designated alternate charset */
-      if (tp->altfont)
+      if (tp->altfont) 
 	tp->font = tp->altfont;
-      else			/* Was never designated, default to 0 */
+      else 			/* Was never designated, default to 0 */
 	tp->font = 0;
+	tp->strokewidth = tp->astrokewidth;
       break;
     case SD:
 	if (read_float(&ftmp, hd)) /* just SD - defaults */
@@ -3762,11 +3776,19 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
         case 4: /* font height */
 	case 5: /* posture */
 	case 6: /* stroke weight */
+	if (read_float(&ftmp,hd)) 
+		par_err_exit (2,cmd);
+		if (ftmp == 9999) tp->sstrokewidth=ftmp;
+			else {
+			if (ftmp <-7. || ftmp > 7.) ftmp=0.;
+			tp->sstrokewidth = 0.11 + ftmp/70.; /* 0.01 ... 0.21 mm */	
+			}
+	break;
 	case 7: /* typeface */
 	if (read_float(&csfont, hd))
          par_err_exit (2, cmd);
         else
-	if (!silent_mode) fprintf(stderr,"pitch/height/posture/weight/typeface unsupported\n");	
+	if (!silent_mode) fprintf(stderr,"pitch/height/posture/typeface unsupported\n");	
 	break;
 	default:
 	par_err_exit(1,cmd);
@@ -3774,13 +3796,14 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 	}	
 	break;
     case SS:			/* Select designated standard character set */
-      if (tp->stdfont)
+      if (tp->stdfont) 
 	tp->font = tp->stdfont;
       else			/* Was never designated, default to 0 */
 	tp->font = 0;
+	tp->strokewidth = tp->sstrokewidth;
       break;
     case UC:			/* User defined character       */
-      plot_user_char (hd);
+      plot_user_char (hd,pen);
       break;
     case UL:			/* User defined line style      */
       set_line_style_by_UL (hd);

@@ -1,5 +1,19 @@
 Changes to hp2xx:
 =================
+3.4.3a25:
+Small improvements in PCL3GUI support (still not really working, best result
+had the designjet500 print strips of the desired image separated by equally 
+wide blank areas (it is unclear whether this is due to extraneous paper feed 
+commands or to the fact that its native resolution is 600x1200 while the test
+case was 600x600dpi). Suppressed miter code for dotted line ends, where it is 
+unnecessary (this also works around the remaining bug that could cause stray
+lines particularly in characters). Made character stroke width independent of
+pen linewidth by default. Implemented kind=6 (stroke width) function of the 
+SD/AD command (-7 to +7 translated to 0.01 ... 0.21 mm penwidth, defaulting 
+to 0.11 which is close to the hp2xx default penwidth of 0.1. SD6,9999 copies 
+current PW value). Handle arc commands with an eps value given as zero (Steve 
+Edmonds)
+
 3.4.3a24:
 Wide line miter code still swapped near and far end of preceding line at
 will. Hopefully fixed for good now. PCL3GUI does not work yet - best result

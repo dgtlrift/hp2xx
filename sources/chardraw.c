@@ -983,7 +983,7 @@ static	float	nc, nl, nc_max;
 
 
 void
-plot_string (char *txt, LB_Mode mode)
+plot_string (char *txt, LB_Mode mode, short current_pen)
 /**
  ** String txt cannot simply be processed char-by-char. Depending on
  ** the current label mode, its origin must first be calculated properly.
@@ -993,11 +993,16 @@ plot_string (char *txt, LB_Mode mode)
  **/
 {
 char	*txt0;
+double  savedwidth=0.;
 
   txt0 = txt;
   tp->refpoint = HP_pos;
   get_label_offset (txt, mode);
-
+  if (tp->strokewidth != 9999.) {
+		savedwidth=pt.width[current_pen];
+  		PlotCmd_to_tmpfile(DEF_PW);
+  		Pen_Width_to_tmpfile(current_pen, tp->strokewidth);
+  		}
   while (*txt)
   {
 	switch (*txt)
@@ -1071,6 +1076,10 @@ char	*txt0;
 	Pen_action_to_tmpfile (MOVE_TO, &tp->refpoint, FALSE);
 	txt++;
   }
+  if (tp->strokewidth != 9999.) {
+  		PlotCmd_to_tmpfile(DEF_PW);
+  		Pen_Width_to_tmpfile(current_pen, savedwidth);
+  		}
 }
 
 
@@ -1195,7 +1204,7 @@ plot_symbol_char (char c)
 
 
 void
-plot_user_char (FILE *hd)
+plot_user_char (FILE *hd, short current_pen)
 /**
  ** added by Alois Treindl 12-apr-93
  **/
@@ -1204,6 +1213,7 @@ HPGL_Pt	p;
 double	x, y;
 float	fx, fy;
 int	pendown = FALSE;
+double  savedwidth=0.;
 
   LineType SafeLineType = CurrentLineType; /* Save Current Line Type */
   CurrentLineType  = LT_solid;
@@ -1211,6 +1221,12 @@ int	pendown = FALSE;
   tp->refpoint		= HP_pos;
   p.x = tp->refpoint.x + tp->offset.x;
   p.y = tp->refpoint.y + tp->offset.y;
+
+  if (tp->strokewidth != 9999.) {
+		savedwidth=pt.width[current_pen];
+  		PlotCmd_to_tmpfile(DEF_PW);
+  		Pen_Width_to_tmpfile(current_pen, tp->strokewidth);
+  		}
 
   while (read_float(&fx, hd) == 0)
   {
@@ -1240,5 +1256,9 @@ int	pendown = FALSE;
   Pen_action_to_tmpfile (MOVE_TO, &tp->refpoint, FALSE);
 
   CurrentLineType = SafeLineType; /* restore LineType */
+  if (tp->strokewidth != 9999.) {
+  		PlotCmd_to_tmpfile(DEF_PW);
+  		Pen_Width_to_tmpfile(current_pen, savedwidth);
+  		}
 }
 

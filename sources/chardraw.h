@@ -92,6 +92,9 @@ typedef struct
 		refpoint,	/* Current reference point	*/
 		CR_point,	/* Returns point after a <CR>	*/
 		offset;	/* Needed for HP-GL command ``LO;''	*/
+  double	strokewidth;	/* current stroke weight (or 9999. for current PW */		
+  double	sstrokewidth;	/* stdfont stroke weight (or 9999. for current PW */		
+  double	astrokewidth;	/* altfont stroke weight (or 9999. for current PW */		
 }
   TEXTPAR, *TextPar;
 
@@ -136,7 +139,7 @@ int	init_font	(int);
 void	init_text_par	(void);
 void	adjust_text_par	(void);
 /* void	ASCII_to_char	(int);*/
-void	plot_string	(char *, LB_Mode);
+void	plot_string	(char *, LB_Mode, short);
 void	plot_symbol_char(char);
 
 #ifdef	__cplusplus

@@ -339,7 +339,7 @@ void	PError		(const char*);
 void	SilentWait	(void);
 void	NormalWait	(void);
 
-void	plot_user_char	(FILE *);
+void	plot_user_char	(FILE *, short);
 void	read_HPGL	(GEN_PAR*, const IN_PAR*);
 void	adjust_input_transform	(const GEN_PAR*, const IN_PAR*, OUT_PAR*);
 void	adjust_input_transform	(const GEN_PAR*, const IN_PAR*, OUT_PAR*);

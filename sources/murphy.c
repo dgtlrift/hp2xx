@@ -283,7 +283,7 @@ DevPt ml1b, ml2b, ml1, ml2;
    DevPt fi,la,cur;
 
    if (miter > 1) {
-	if (murphy.first1.x != -10000000) {
+	if (murphy.first1.x != -10000000) {	
 	fi.x=(murphy.first1.x+murphy.first2.x)/2;
 	fi.y=(murphy.first1.y+murphy.first2.y)/2;
 	la.x=(murphy.last1.x+murphy.last2.x)/2;
@@ -292,18 +292,17 @@ DevPt ml1b, ml2b, ml1, ml2;
 	cur.y=(ml1.y+ml2.y)/2;
 	ftmp1=(fi.x-cur.x)*(fi.x-cur.x)+(fi.y-cur.y)*(fi.y-cur.y);
 	ftmp2=(la.x-cur.x)*(la.x-cur.x)+(la.y-cur.y)*(la.y-cur.y);
-	if (ftmp1<ftmp2){
+	if (ftmp1<=ftmp2){
 	m1=murphy.first1;
 	m2=murphy.first2;
 	}else{
 	m1=murphy.last1;
 	m2=murphy.last2;
 	}
-
       ftmp2 = (m2.x - ml2b.x) * (m2.x - ml2b.x) + (m2.y - ml2b.y) * (m2.y - ml2b.y);
       ftmp1 = (m2.x - ml2.x) * (m2.x - ml2.x) + (m2.y - ml2.y) * (m2.y - ml2.y);
 
-      if (fabs(ftmp2) > fabs(ftmp1)) {
+      if (fabs(ftmp2) >= fabs(ftmp1)) {
          ftmp1 = ml2b.x;
          ftmp2 = ml2b.y;
          ml2b.x = ml2.x;

@@ -370,8 +370,9 @@ int size;
    /*  \033&a0V   vertical position  0     */
 	if (po->init_p3gui){
 	fprintf(fd,"%crbC%cE",ESC,ESC);
-	fprintf(fd,"%c%%-12345X@PJL ENTER LANGUAGE=PCL3GUI",ESC);
-	fprintf(fd,"%c&l%dA%c&l0L%c&l0E%c9%c&a0V%c*p0Y",ESC, size, ESC, ESC, ESC, ESC,ESC);
+	fprintf(fd,"%c%%-12345X@PJL ENTER LANGUAGE=PCL3GUI\n",ESC);
+	
+	fprintf(fd,"%c&l%dA%c&l0L%c&l0E%c*o0M%c*o2D",ESC, size, ESC, ESC, ESC, ESC);
 	}else
    fprintf(fd,"%cE%c&l%dA%c&l0L%c&l0E%c9%c&a0V", ESC, ESC, size, ESC, ESC, ESC, ESC);
  }
@@ -383,6 +384,20 @@ int size;
 static void
 start_graphmode (const OUT_PAR *po, FILE *fd)
 {
+	typedef struct init_s {
+		unsigned char a[26];
+		}init_t;
+	init_t init= 
+	{{0x02,0x04,0x01,0x2c,0x01,0x2c,0x00,0x02,
+			0x01,0x2c,0x01,0x2c,0x00,0x02,
+			0x01,0x2c,0x01,0x2c,0x00,0x02,
+			0x01,0x2c,0x01,0x2c,0x00,0x02}} ;	
+	typedef struct init_bw {
+		unsigned char a[8];
+		}init_tb;
+	init_tb init_bw= 
+	{{0x02,0x04,0x01,0x2c,0x01,0x2c,0x00,0x02}};
+		
 /**
  ** X & Y offsets: Use "decipoints" as unit to stick to PCL level 3
  **		1 dpt = 0.1 pt = 1/720 in
@@ -405,20 +420,57 @@ start_graphmode (const OUT_PAR *po, FILE *fd)
   if (po->specials)
   {
 	fprintf(fd,"\033*r%dS", po->picbuf->nc);
+	if (po->init_p3gui) fprintf(fd,"\033*r%dT", po->picbuf->nr);
+	
 	switch (po->specials)
 	{
-	  case 4:	/* KCMY 			*/
+	  case 4:	/* KCMY				*/
+		if (po->init_p3gui) {
+	if (po->dpi_x == 600) { /* update resolution info in colorplane data*/
+		init.a[2]=0x02;
+		init.a[3]=0x58;
+		init.a[4]=0x02;
+		init.a[5]=0x58;
+		init.a[8]=0x02;
+		init.a[9]=0x58;
+		init.a[10]=0x02;
+		init.a[11]=0x58;
+		init.a[14]=0x02;
+		init.a[15]=0x58;
+		init.a[16]=0x02;
+		init.a[17]=0x58;
+		init.a[20]=0x02;
+		init.a[21]=0x58;
+		init.a[22]=0x02;
+		init.a[23]=0x58;
+	}
+		fprintf(fd,"\033*g%dW",sizeof(init));
+		fwrite(init.a,sizeof(unsigned char),sizeof(init.a),fd);	
+		}
 		fprintf(fd,"\033*r-4U");
 		break;
 	  case 3:	/* CMY				*/
 		fprintf(fd,"\033*r-3U");
 		break;
 	  default:	/* Single color plane		*/
+		if (po->init_p3gui) {
+		if (po->dpi_x == 600) { /* update resolution info in colorplane data*/
+		init_bw.a[2]=0x02;
+		init_bw.a[3]=0x58;
+		init_bw.a[4]=0x02;
+		init_bw.a[5]=0x58;}
+		fprintf(fd,"\033*g%dW",sizeof(init_bw));
+		fwrite(init_bw.a,sizeof(unsigned char),sizeof(init_bw.a),fd);	
+		}
 		fprintf(fd,"\033*r1U");
 		break;
 	}
   }
 
+	if (po->init_p3gui) {
+		fprintf(fd,"\033*p%ddY",0);
+		fprintf(fd,"\033*p%ddX",0);
+		}
 /**
  ** Start Raster Graphics at current position
  ** This is NO PCL level 3 feature, but LaserjetII and compatibles
@@ -436,7 +488,7 @@ end_graphmode (FILE *fd)
 /**
  ** End Raster Graphics
  **/
-  fprintf(fd,"\033*rbC");	/* fix: *rB --> *rbC	*/
+	fprintf(fd,"\033*rbC");
 }
 
 

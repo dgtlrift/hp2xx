@@ -1,5 +1,12 @@
 Recent changes :
 =================
+3.4.3a25:
+Added support for the stroke-width subcommand of the SD/AD command, made
+character stroke width independent of penwidth (unless explicitly set).
+Disabled the miter code for lines with round ends, where it is unnecessary.
+Improved PCL3GUI driver (still not functional). Fixed handling of arc 
+commands that specify a zero chord angle (Steve Edmonds).
+
 3.4.3a24:
 Yet more fixes to the 'wide line miter' stuff (the previous code sometimes
 added extraneous lines in characters). The PCL3GUI code definitely does not
