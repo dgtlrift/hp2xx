@@ -163,7 +163,6 @@ int PicBuf_to_TIF (const GEN_PAR *pg, const OUT_PAR *po)
 
   free(tifbuf);
   TIFFClose(w);
-fprintf(stderr,"tiff closed \n");
   if (*po->outfile == '-'){
     int c;
 #ifndef UNIX

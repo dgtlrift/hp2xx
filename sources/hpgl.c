@@ -398,17 +398,23 @@ reset_HPGL (void)
       rot_sin = sin (M_PI * rot_ang / 180.0);
     }
   init_text_par ();
+  set_color_rgb(xxBackground,255,255,255);  
+  set_color_rgb(xxForeground,  0,  0,  0);  
+  set_color_rgb(xxRed,       255,  0,  0);  
+  set_color_rgb(xxGreen     ,  0,255,  0);  
+  set_color_rgb(xxBlue      ,  0,  0,255);  
+  set_color_rgb(xxCyan      ,  0,255,255);  
+  set_color_rgb(xxMagenta   ,255,  0,255);
+  set_color_rgb(xxYellow    ,255,255,  0);
 }
-
-
-
-static void
+  
+  static void
 init_HPGL (GEN_PAR * pg, const IN_PAR * pi)
 {
 /**
  ** Re-init. global var's for multiple-file applications
  **/
-fprintf(stderr,"init_HPGL\n");
+/*fprintf(stderr,"init_HPGL\n");*/
   td = pg->td;
   silent_mode = pg->quiet;
   xmin = pi->x0;

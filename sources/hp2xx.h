@@ -254,6 +254,7 @@ typedef struct			/* Corresponding option(s)	*/
    int	init_p;			/* -i  (PCL only)		*/
    int	formfeed;		/* -F  (PCL only)		*/
    int  specials;		/* -s specials  (PCL only)	*/
+   int  pagecount;		/* for naming multi-page output */
    char	  *outfile;		/* -f outfile ("-" = stdout)	*/
    double xmin,ymin, xmax,ymax; /* (internally needed)		*/
    double xoff, yoff;		/* Internal copies from IN_PAR	*/

@@ -118,7 +118,7 @@ action_oldstyle (GEN_PAR *pg, IN_PAR *pi, OUT_PAR *po)
 {
 int	err;
 char savedname[100];
-int counter=-1;
+/*int counter=-1;*/
 char thepage[4];
 
 
@@ -133,17 +133,22 @@ strcpy(savedname,po->outfile);
    ** Phase 1: HP-GL --> TMP file data
    **/
   err = HPGL_to_TMP (pg, pi);
-  if (err)
+  if (err){
+  strcpy(po->outfile,"");
+   cleanup_i(pi);
+   cleanup_g(pg);
+   cleanup_o(po);
 	return;
+	}
 #if 0	
   cleanup_i (pi);
 #endif
 
 #if 1
 if (strcmp(pg->mode,"pre")) {
-	counter++;
-	if (po->outfile != "-" && counter >0) {
-	sprintf(thepage,"%d",counter);
+	po->pagecount++;
+	if (po->outfile != "-" && po->pagecount >0) {
+	sprintf(thepage,"%d",po->pagecount);
 	strcpy(po->outfile,savedname);
 	strcpy(strstr(po->outfile,pg->mode),thepage);
 	strcat(po->outfile,".");
@@ -504,6 +509,7 @@ GEN_PAR	Pg;
 IN_PAR	Pi;
 OUT_PAR	Po;
 int	i;
+char 	*outname=malloc(128*sizeof(char));
 
 char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtvN";
 struct	option longopts[] =
@@ -584,10 +590,14 @@ struct	option longopts[] =
   if (Po.dpi_y == 0)
 	Po.dpi_y = Po.dpi_x;
 
+ 	Po.pagecount=-1;
+	if(strlen(Po.outfile)>0)
+	strcpy(outname,Po.outfile); /* store fixed outfile name if present*/
+
 /**
  ** Action loop over all input files
  **/
-
+	
   if (optind == argc)		/* No  filename: use stdin	*/
   {
 	Pi.in_file = "-";
@@ -597,6 +607,11 @@ struct	option longopts[] =
   else	for ( ; optind < argc; optind++)
 	{			/* Multiple-input file handling: */
 		Pi.in_file = argv[optind];
+	/* if output file name given on commandline, use it for all files */		
+		if (strlen(outname)>0)
+			strcpy(Po.outfile,outname);
+		else
+			Po.pagecount=-1; /* reset page counter for new file*/
 		autoset_outfile_name (Pg.mode, Pi.in_file, &Po.outfile);
 		action_oldstyle (&Pg, &Pi, &Po);
 		reset_par (&Pi);

@@ -1,3 +1,8 @@
+3.4.3a13: 
+reset outfile name between files in multiple-file mode (unless a common
+basename was declared via -f) to ensure generation of correct output file 
+names.  Reset default pencolors on IN or DF.
+
 3.4.3a12:
 S1,S2 were not initialized by IP (Problem uncovered in a11, and reported by
 Bengt-Arne Fjellner). Usage message was printing zeroes for the penwidth
