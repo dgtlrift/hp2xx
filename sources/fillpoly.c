@@ -47,8 +47,8 @@ if (hatchangle >89.9 && hatchangle < 180.) {
         goto FILL_VERT;
         }
 
-pxmin=point1.x;
-pymin=point1.y;
+pxmin=point1.x-0.5;
+pymin=point1.y-0.5;
 #if 0
 pymin=polyymin;
 pxmin=polyxmin;
@@ -168,7 +168,7 @@ if ( (fabs(segment[jj].x-segment[k].x) < 1.e-5 )
 		  } /* if not the first intersection */
           	} /* if crossing withing range */ 
     } /*if not parallel*/
-#if 0    
+#if 0
 else if (scany1 == polygon[j].y) {
 fprintf(stderr,"para\n");
 		segment[++k].x=MAX(polygon[j].x,polygon[j+1].x);
@@ -268,6 +268,7 @@ if (hatchangle != 0.) pxdiff=tan(M_PI*hatchangle/180.)*(pymax-pymin);
 for (i = 0; i <= numlines; ++i) { /* for all scanlines ...*/ 
 k=-1;
 scanx1=pxmin + (double)i * penwidth;
+if (scanx1 >=pxmax || scanx1 <= pxmin) continue;
 scanx2=scanx1 - pxdiff;
 if (scanx2< polyxmin) continue;
 /* coefficients for current scan line */

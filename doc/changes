@@ -1,5 +1,19 @@
 Changes to hp2xx:
 =================
+3.4.3a12:
+S1,S2 were not initialized by IP (Problem uncovered in a11, and reported by
+Bengt-Arne Fjellner). Usage message was printing zeroes for the penwidth
+string. Rephrased the description of the penwidth and color options - it now
+mentions the relation between digit position and pen number, and lists the
+corresponding colors for 0-7 instead of refering to the manual. Also mentions
+that the range of valid output modes is a property of that particular binary.
+More cleanup of to_pdf.c and equivalent changes to to_eps.c (color, miter,join
+support) by Andrew Bird. Updated documentation. Added line cap/join support
+in to_fig.c, adapted minimum linewidth requirements to get it to draw normal
+width lines again. Moved calculated anchor point for polygon fills by 0.5 units
+to avoid missing borderlines. Added sanity check for out-of-area scanlines to
+the vertical fill function as well.
+
 3.4.3a11:
 Rectangle drawing was broken by the vertex buffer changes in a8. The multi-file
 mode added in a10 crashed in previews because it tried to generate output file 

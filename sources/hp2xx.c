@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a11";
-char	*VERS_DATE = "02/07/1?";
+char	*VERS_NO = "3.4.3a12";
+char	*VERS_DATE = "02/08/03";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -282,7 +282,7 @@ NormalWait();
   Eprintf ("\nOpt fmt   defaults\tComment:\n");
   Eprintf (
 "---------------------------------------------------------------------------\n");
-  Eprintf ("-m strg   %s\t\tMode. Valid mode strings are:\n\t\t\t", pg->mode);
+  Eprintf ("-m strg   %s\t\tMode. Valid mode strings for this particular binary are:\n\t\t\t", pg->mode);
 print_supported_modes();
   
   Eprintf ("-n        %s\t\tno filling of polygons (ignore FP commands)\n",
@@ -290,13 +290,17 @@ print_supported_modes();
   
   Eprintf ("-f strg   (auto gen.)\tName of output file ('-' = to stdout)\n");
   Eprintf ("-l strg   (stderr)\tName of log file\n");
-  Eprintf ("-p strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPensize(s) (in 1/10 mm (mf,ps) or dots (rest)).\n",
-        (unsigned)pt.width[1], (unsigned)pt.width[2], (unsigned)pt.width[3],  (unsigned)pt.width[4],
-         (unsigned)pt.width[5],  (unsigned)pt.width[6],  (unsigned)pt.width[7],  (unsigned)pt.width[8]);
+  Eprintf ("-p strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPensize(s) of pen 1 to 8 (in 1/10 mm).\n",
+        (unsigned)(10*pt.width[1]), (unsigned)(10*pt.width[2]), (unsigned)(10*pt.width[3]), (unsigned)(10*pt.width[4]),
+         (unsigned)(10*pt.width[5]),  (unsigned)(10*pt.width[6]),  (unsigned)(10*pt.width[7]),  (unsigned)(10*pt.width[8]));
   Eprintf ("\t\t\t\"strg\" must consist of 1 to 8 digits '0'-'9'\n");
-  Eprintf ("-c strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPen color(s) (see manual for details).\n",
+  Eprintf ("\t\t\tfirst digit = pen1 ... last digit = pen 8\n");
+  Eprintf ("\t\t\t(default settings shown)\n");
+  Eprintf ("-c strg   %1d%1d%1d%1d%1d%1d%1d%1d\tPen color(s) (default settings shown).\n",
         pt.color[1], pt.color[2], pt.color[3], pt.color[4],
         pt.color[5], pt.color[6], pt.color[7], pt.color[8]);
+  Eprintf ("\t\t\t0 = off, 1 = black, 2 = red, 3 = green, 4 = blue,\n");
+  Eprintf ("\t\t\t5 = cyan, 6 = magenta, 7 = yellow\n");
   Eprintf ("-P n:n    %d:%d\t\tPage range (0:0 = all pages).\n",
 	pi->first_page, pi->last_page);
   Eprintf ("-q        %s\t\tQuiet mode (no diagnostics)\n",

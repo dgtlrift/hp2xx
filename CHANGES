@@ -7,6 +7,7 @@ New features:
   Bresenham' algorithm by Alan Murphy of IBM that was released into the public 
   domain through an IBM Technical Bulletin
 - Added support for (most of) the LA, line attributes command (Andrew J. Bird)
+  (cap/join types best supported in eps,fig and pdf for now)
 - Added support for the CR (relative color range) command
 - Added support for the IR (input reference points as percentage of current
   limits) command

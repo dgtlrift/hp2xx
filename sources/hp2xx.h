@@ -412,16 +412,8 @@ void fill (HPGL_Pt polygon[MAXPOLY], int numpoints, HPGL_Pt P1, HPGL_Pt P2,
 
 /*std_main*/
 void action_oldstyle(GEN_PAR *, IN_PAR *, OUT_PAR *);
-/*to_eps*/
-void ps_end(FILE *);
-void ps_stroke_and_move_to(HPGL_Pt *, FILE *);
-void ps_set_linewidth(PEN_W, HPGL_Pt *, FILE *);
-void ps_set_color(double, double, double, HPGL_Pt *, FILE *);
-void ps_line_to(HPGL_Pt *, char, FILE *);
-char *Getdate(void);
-void ps_init(const GEN_PAR *, const OUT_PAR *, FILE *, PEN_W);
 /*to_fig*/
-void fig_poly_end(PEN_W, int, FILE *, int, long *, long *);
+void fig_poly_end(PEN_W, int, int, int, FILE *, int, long *, long *);
 /*to_x11*/
 void win_close(void);
            

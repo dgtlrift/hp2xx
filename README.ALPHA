@@ -1,0 +1,124 @@
+3.4.3a12:
+S1,S2 were not initialized by IP (Problem uncovered in a11, and reported by
+Bengt-Arne Fjellner). Usage message was printing zeroes for the penwidth
+string. Rephrased the description of the penwidth and color options - it now
+mentions the relation between digit position and pen number, and lists the
+corresponding colors for 0-7 instead of refering to the manual. Also mentions
+that the range of valid output modes is a property of that particular binary.
+More cleanup of to_pdf.c and equivalent changes to to_eps.c (color, miter,join
+support) by Andrew Bird. Updated documentation. Added line cap/join support
+in to_fig.c, adapted minimum linewidth requirements to get it to draw normal
+width lines again. Moved calculated anchor point for polygon fills by 0.5 units
+to avoid missing borderlines. Added sanity check for out-of-area scanlines to
+the vertical fill function as well.
+
+3.4.3a11:
+Rectangle drawing was broken by the vertex buffer changes in a8. The multi-file
+mode added in a10 crashed in previews because it tried to generate output file 
+names. Added an instruction counter for HPGL commands - this also helps decide
+whether to generate another output file (otherwise PG at end would be required)
+a10 based that decision on the number of commands currently in the temporary
+file, but this may change depending on how many initialisation code is moved 
+there. Moved the line attribute initialization from the temporary file to
+global parameters (need to check back with Andrew Bird if this is correct).
+Changed wedge code to use the polygon buffer instead of private storage.
+Added experimental line join/miter support in PDF output (Simon Milton,using
+the framework already built by Andrew Bird). Moved call to init_HPGL to ensure
+it is called only once even for multiple files (else PG would imply IN).
+Some cleanup in PS/IW/RO - all files from my collection can be rotated without
+undue clipping again. Esc E is no longer flagged as an invalid sequence.
+Andrew Bird cleaned up to_pdf.c, using filled circle for PLOT_AT instead of
+short line. Added OW (output clipping window) command.
+
+3.4.3a10:
+
+another change in the endless RO/IW saga. And a fix for IP with P2.y < P1.y.
+Added a loop in std_main/hp2xx.c to allow dissecting plotfiles that contain
+several images. Previous versions would plot all in the same frame, now you
+get a neat set of numbered output files (or a slideshow-like preview). Replaced
+the tmpnam() in to_tif.c with a mkstemp/dup combination - not sure if anybody
+even wants to send TIFF output to stdout, as most if not all viewers will need
+random access to the image because of its complicated structure (which is also
+the reason why we need a temporary file here at all). This is mostly to silence
+the annoying warning in GNU ld, and non-Unix platforms still use the old,
+potentially insecure code for portability reasons. Added support for IR, but
+this is largely untested as i have yet to find a file that does more than
+the default "IR0,100,0,100". ifdef'd out Werntges' sanity checks on the 
+of -o/-O offsets in std_main.c. There may well be valid reasons for negative
+offsets (printing on DJ970cx is said to be a case), and maybe even for offsets
+bigger than the width or height of an A4 page.
+
+3.4.3a9:
+
+still looking for correct defaults for AC. Reactivated polygon vertex storing
+code in line() - not sure if the real problem is with PM1 handling. The code
+i added to support Color Range caused strange colors for all but the primary
+colors, as i managed to invert the scaling factor. Ouch. Added 
+TIFFTAG_ROWSPERSTRIP to the TIFF header in to_tif.c - apparently required 
+by the standard, definitely required by at least one program. Value seems
+to be -1 by definition for compressed files, and happens to be 1 for the
+uncompressed files because all the code does is dump the individual scanlines. 
+The 'pentip dots' introduced for PUPDPU sequences got drawn for PDPA as well,
+which messed up the drawing of dashed lines (pattern disruption between what
+should be consecutive lines, as the dot drawing forced a move command)
+
+3.4.3a8:
+
+moved the vertex adding stuff to a new function that updates the extents of
+the drawing as well - previously vertices that were only used as boundaries
+for filling, not edging, polygon, did not enter into the size calculation.
+Tried to achieve a more sensible initialization of AC - 0,0 as in alpha7 is
+plain stupid, but the "physical extents" is a somewhat dubious thing in hp2xx,
+and the actual limits are not yet known when the IN or plain AC is seen.
+Modified the warning message code to make sure that the "unsupported charset"
+message is printed only once per SD, not once per character.
+The seeming IW brokenness was not in hp2xx but in the program that created the
+strange test file, so i have reverted the change from a7, which makes some
+correct files display again.
+Some fixes by Bengt-Arne Fjellner: usage message was printing garbage 
+in description of -p (because of penwidth type change), EMF files were 
+upside down, and microsoft platforms seem to need a replacement for 
+rint/lrint (actually some non-MS platforms may need this as well - not sure 
+if everybody does obey C99 already ?).
+
+3.4.3a7:
+Stray Escape chars in the HPGL code are reported and ignored (one guy was 
+trying to use esc-prefixed commands in his code because he was too familiar 
+with PCL). Guess what, there was still some brokenness in IW/SC handling.:-(
+Fixed some wreckage from the penwidth type change in to_emf.c and added the
+ability to create EMF files on UNIX with libEMF. Added VS and CR support.
+Added -e for extra margin around IW (at least one commercial code miscalculates
+its clip boxes, cutting of text from spectra). FP with --nofill now does EP,
+so fat lettering done with just FP does not simply vanish.
+
+3.4.3a6:
+PM2 now closes open polygons automatically. Anchor corners for fill patterns
+were defaulting to P1 which could be undefined or unsuitable at that time.
+Added some whitespace between operators and constants to work around what
+is most probably a compiler bug on HPUX 11 with ansi CC.
+ 
+3.4.3a5:
+Most of the LA line ending options are now supported, thanks to Andrew Bird.
+X11 previewer was leaking memory when zooming, but valgrind found that.
+to_pdf sometimes got confused about when to begin and end its stroke paths.
+
+3.4.3a4:
+PJL preambles with more than one Esc sequence confused the HPGL parser.
+
+3.4.3a3:
+Several optional arguments to SD,AD and BP were not handled, causing strange 
+results.  Extremely short lines could confuse the line pattern generator 
+into drawing the gaps instead of the lines. 
+
+3.4.3a2:
+Andrew Bird implemented a "fat bresenham" to draw true linewidths in the
+raster modes.
+
+3.4.3a1:
+Ignore broken SC. Fix AC to not always calculate scan lines across the 
+whole canvas for each polygon. Use 8bpp pixel buffer only if large pen
+numbers are actually used, not just defined - lots of programs do NP255
+by default. Fixed stupidity where IW/RO interaction could cause unwanted
+image cutoff on rotation. to_pdf could overflow the y coordinate, inverting
+one half of the image onto the other. Dots for PUPDPU were not clipped by IW.
+to_dxf now writes a more elaborate header. 

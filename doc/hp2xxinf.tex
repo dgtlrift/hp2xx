@@ -51,7 +51,7 @@ This file documents the HP-GL converter HP2XX
 This is Edition 1.2, September 2000,
 of @cite{Using HP2XX: A HP-GL Converter}.
 
-Copyright (C) 1998 - 2000 Martin Kroeker
+Copyright (C) 1998 - 2002 Martin Kroeker
 Copyright (C) 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
@@ -85,8 +85,8 @@ by the Free Software Foundation instead of in the original English.
 @c @subtitle on XXXX Systems
 @sp 1
 @c !!set edition, date, version
-@subtitle Edition 1.2, for HP2XX version 3.4.x
-@subtitle September 2000
+@subtitle Edition 1.3, for HP2XX version 3.4.3
+@subtitle July  2002
 @author by Martin Kroeker (previously by Heinz W. Werntges)
 @page
 @tex
@@ -98,7 +98,7 @@ by the Free Software Foundation instead of in the original English.
 @end tex
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1998 - 2000 Martin Kroeker
+Copyright @copyright{} 1998 - 2002 Martin Kroeker
 Copyright @copyright{} 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
@@ -129,7 +129,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 
 @c !!set edition, date, version
-This is Edition 1.2, September 2000, for HP2XX Version 3.4.x
+This is Edition 1.3, July 2002, for HP2XX Version 3.4.3
 @end ifinfo
 
 
@@ -160,8 +160,8 @@ The various supported output formats include Encapsulated PostScript (EPS),
 PCX, IMG, and several formats intended to facilitate the generation of
 graphics within @TeX{} documents.
 In addition, @code{hp2xx} output is printable on the HP Laserjet/Deskjet
-printer series, and it may be used as a HP-GL previewer on many
-platforms, e.g. X11 and DOS (VGA).
+printer series and some Epson Stylus printers, and it may be used as a HP-GL 
+previewer on many platforms, e.g. X11, OS/2, MS Windows and plain old DOS (VGA).
 
 @code{hp2xx} first converts all HP-GL data into pure vectors and buffers
 them internally. It then converts these vectors into a specified output
@@ -381,8 +381,10 @@ Pen colors and sizes are represented by digits to allow for a compact
 option list. There are 8 colors including @var{background} (usually white).
 @xref{Appendix B}, the Option Summary, for a list of all colors. E.g., color 3 is green,
 and color 7 means yellow. Permitted pen sizes are 0 ... 9 units.
-WARNING: In raster modes, all pen sizes are approximated by double, triple,
-etc. width, and lines wider than 4 will probably not give useful results.
+WARNING: In versions of @code{hp2xx} before 3.4.3, all raster mode pen sizes 
+were approximated by double, triple, etc. width, and lines wider than 4 would
+normally not give useful results. In 3.4.3, the line drawing algorithm has
+been substantially improved and should render accurate pen widths. 
 
 Options @samp{-c @var{c-string}} and @samp{-s @var{s-string}} tell
 @code{hp2xx} about the pens to be placed in the carousel.
@@ -431,7 +433,12 @@ to ignore all HP-GL commands other than on page @var{n} with option
 @samp{-P @var{n}}, effectively filtering out any one-page graphics.
 Sometimes, converting a whole page range makes sense, too. Therefore,
 @code{hp2xx} also accepts page ranges via @samp{-P @var{n1}:@var{n2}}.
-The default is @samp{-P @var{0}} which selects all pages.
+The default is @samp{-P @var{0}} which selects all pages. The output will
+be split into appropriate files whose name is derived from the base name
+of the input file by appending the frame number before the filetype
+extension. In preview mode, each page will display as a separate image -
+in contrast to versions earlier than 3.4.3, which would render everything 
+in one image.
 
 WARNING: Some HP-GL sources may start with a @samp{PG;} so the first
 page of your graphics may be 2 instead of 1. Look for the number of
@@ -459,10 +466,16 @@ recommended. Recently, Adobe's Portable Document Format (PDF) has mostly taken
 its place for formatted online documentation. For Web-based applications,
 the Scalable Vector Graphics (SVG) format, a W3C standard, holds some promise
 as a non-proprietary, XML-based format for vector images, not only on web pages.
+In the engineering community, the 2D DXF format originally used by AutoCAD has
+become a common denominator for the exchange of vector data.
 
 Unix users may also want to use either @code{Gnuplot} or especially @code{XFig}
 to annotate their plots. The native formats of these programs are directly
 supported via the @samp{-m @code{gpt}} and @samp{-m @code{fig}} options.
+
+The Enhanced Metafile Format was originally tied to the Microsoft Windows
+environment, but it has recently found more wide-spread use as one of the
+few vector formats supported by StarOffice and OpenOffice.
 
 Currently, all other supported vector formats represent various compromises
 to persuade @TeX{}@ or La@TeX{}@ into the generation of graphics.
@@ -492,8 +505,9 @@ direction.
 Some programs were found, which generate HPGL output with too tight clipping
 bounds, which lead, for example, to some parts of text characters clipped off.
 Use option @samp{-e @var{num}} to add some extra amount of space to clip areas
-to workaround such mistakes. For example, @samp{-e @var{40}} will add 40 extra
-plotter units to every side of clipping box which is @code{1 mm} in true size.
+to work around such problems. For example, @samp{-e @var{40}} will add 40 extra
+plotter units to every side of the clipping box, which corresponds to @code{1 mm} 
+in true size.
 
 There are plenty of raster formats on various platforms, much more
 than @code{hp2xx} will ever handle. The supported raster formats
@@ -527,7 +541,7 @@ and @samp{-d 300} are recommended (@code{hp2xx} will emit a warning for other
 values, but will try to create the desired output); option @samp{-D} must not 
 be used. Some recent printer models do support 600, 720 or even higher
 resolutions, but even for those the requirements both in terms of cpu load
-and file size may be prohibitive.
+and file size may be prohibitive at least on older systems.
 
 There are two flags which may be useful if the output goes directly
 to a printer: Option @samp{-i} initializes the printer and tries to select
@@ -541,7 +555,11 @@ generate both CMY-based and CMYK-based color output (if colors are used:
 see option @samp{-c}). Supply option @samp{-S 3} for CMY color mode, and
 option @samp{-S 4} for CMYK color mode (for the DJ550C). The Deskjet modes
 automatically invoke TIFF compression (mode 2), while pure PCL Level 3
-does not know about compression.
+does not know about compression. NOTE: Some recent low-end Designjet
+plotters (if ordered without the HPGL processor board) and probably also 
+some models of Deskjet use a sparsely documented variant called PCL3GUI
+which appears to differ at least in the initialization sequence used. 
+Currently @code{hp2xx} will not work with such printers.
 
 A driver for the Esc/P2 raster language used by the Epson Stylus series
 of inkjet printers has been added in @code{hp2xx-3.4.0}. This should work 
@@ -580,7 +598,12 @@ mode, correctly gauged for your screen.
 Depending on page offsets and the selected sizes and resolutions, a preview
 may not fit on your screen. In that case, some preview modules simply
 clip the picture; others give a warning but let you continue (DOS),
-and others simply terminate --- so don't start too large.
+and others simply terminate. 
+
+The X11 viewer allows to pan the visible area using mouse button one (which
+usually corresponds to the left button), and supports one level of zoom
+around the current cursor position, selectable with button two (middle
+button, or right button on two-button mice).
 
 DOS users: Most VGA cards offer high-resolution modes (SVGAs). Unfortunately,
 there is no software standard for these modes. @code{hp2xx} lets you
@@ -606,7 +629,13 @@ doubt, switch off your monitor immediately!!
 with option @samp{-H}, or with any illegal option or without any
 parameter, will display about 2 pages of text. (Note: I'd have preferred
 option @samp{-h} for on-line help, but this option is needed by the
-indispensable @var{height} parameter.)
+indispensable @var{height} parameter.) 
+
+The list of supported output files (displayed for the @samp{-m} parameter)
+shown in the help text always corresponds to the selection actually
+compiled into that particular executable copy of @code{hp2xx} (which may 
+vary according to licensing considerations, local availability of third-party 
+libraries, or preferences of whoever built it). 
 
 During operation, @code{hp2xx} outputs various information about the current
 HP-GL file and about @code{hp2xx}'s actions. As usual, all this goes to
@@ -704,7 +733,8 @@ manually. Use the preview mode for testing. You'll get the same scale
 as long as the limiting window and (@var{xmax} - @var{xmin}) and
 (@var{ymax} - @var{ymin}) remain constant for all pictures.
 
-WARNING: @code{hp2xx} does not clip lines. If the picture limits which
+WARNING: @code{hp2xx} does not clip lines (unless told to by the IW
+directive of HPGL/2, of course). If the picture limits which
 you manually can pre-set via options @samp{-xXyY} are chosen too narrow,
 they will be pushed outside just as described in the last section,
 resulting in a different scale. Check the coordinate ranges @code{hp2xx}
@@ -717,7 +747,7 @@ reports. The should match the values supplied by options @samp{-xXyY}!
 @comment  node-name,  next,  previous,  up
 @section Scaling to true size
 
-Earlier releases of @code{hp2xx} (binaries) did not offer option
+The very first (i.e. ancient) releases of @code{hp2xx} (binaries) did not offer option
 @samp{-t}, which does everything you'll need for producing output with
 exactly the sizes shown on a real plotter. The following paragraph
 shows how to manually emulate the working of this option. Though outdated,
@@ -775,28 +805,34 @@ Use @samp{-m epic} for such an example.
 
 Line thicknesses can vary. Especially for thick lines, the matter of
 line caps (how lines are ended, e.g. with a round cap) becomes relevant.
-@code{hp2xx} does not do an elaborate job here. If line caps matter to you,
-use @samp{-m eps}, edit the resulting Encapsulated PostScript file, look
-for a line with @code{setlinecap} in it (near line 45), and select the
-line cap of your choice by modifying the PostScript command @code{setlinecap}
+(According to the HPGL/2 references, these issues are only relevant for
+lines wider than 3.5 mm).
+@code{hp2xx} does not yet offer complete support for these features -
+currently your best bet is to use @samp{-m eps} or @samp{-m pdf}, as
+@code{hp2xx} will simply emit the corresponding linestyle commands of
+those formats instead of having to calculate all the details itself.
+While most line end cap types are supported even in the raster modes
+(since version 3.4.3), this applies especially to the mitering options,
+i.e. the way the junction is drawn.
+To force a certain type of line caps, you can also use @samp{-m eps}, edit 
+the resulting Encapsulated PostScript file, look for a line with 
+@code{setlinecap} in it (near line 45), and select the line cap of your 
+choice by modifying the PostScript command @code{setlinecap}
 accordingly. You can also use Metafont (via @samp{-m mf}) and replace
 the picked pen "pencircle" by some other type. However, both methods
 are far from convenient.
 
-The internal rasterization done by @code{hp2xx} is a simple process
-and may someday be replaced by something more efficient: A "draw point"
-command essentially sets a single pel in the internal buffer.
-If line width grows (2 - 4 units), a square of 2 to 4 pels length will
-be set. Vector drawing is broken down to point drawing by the
-Bresenham algorithm. Therefore, there is no notion of controlled
-line caps. The shapes of line ends simply result from plotting these squares.
-In addition, plotting all those pels is not really efficiently implemented,
-so if anybody out there looks for a good place for speeding up @code{hp2xx},
-this code (located in file @file{picbuf.c}) is a good place to start.
-
-Currently there are no plans by me to introduce different line caps
-into @code{hp2xx}, so waiting for them will be of no use.
-
+The internal rasterization done by versions of @code{hp2xx} before 3.4.3 
+was a simple process based on positioning squares (roughly corresponding
+to the linewidth) by the Bresenham algorithm. Since 3.4.3, a modified
+algorithm for drawing wide lines - based on an IBM Technical Bulletin
+written by Alan Murphy - is employed, which also supports true endcap
+drawing. The current code still does not support the various miter options,
+e.g. drawing out the endpoints of two lines so that they meet in an exact
+triangle or a blunt wedge. Unfortunately the current layout makes it hard
+to implement such a feature, as the internal representation of the command
+sequence is just another sequential list of lines without any indication
+of intersections. 
 
 
 
@@ -821,12 +857,11 @@ This is just a brief note, not a real manual entry -- sorry.
 @item OS2
 	Full-screen OS/2 2.x and DOS previewer. HWW: I don't yet have the
 	right development system, so this code is still missing.
-	MK: Any volunteers ?
-
-@item PM
-	OS/2 2.0 PM previewer. Working, but without redirection of
-	messages to stderr into a second window. Volunteers needed to
-	keep OS/2 support up to date in new versions.
+	MK: Any volunteers ? Is this still needed at all, now that several
+	years have passed since HWW wrote this comment ? OS/2 users should
+	be able to use the @samp{PM} mode, which is kept alive by Kazutaka
+	Nishiyama.
+		
 @end table
 
 
@@ -835,6 +870,12 @@ This is just a brief note, not a real manual entry -- sorry.
 @node TeX formats, , Unsupported formats, Advanced subjects
 @comment  node-name,  next,  previous,  up
 @section @TeX{}@  formats
+
+This section is a bit historic now, as one can easily embed @samp{eps}
+graphics in La@TeX{} and preview the result with xdvi et al. nowadays.
+I have left it in for the sake of completeness, and for special cases
+where one might still prefer plain @TeX{} or one of the classical import
+methods.
 
 @TeX{}@  was designed for typesetting, not for handling graphics. Putting
 graphics directly into @TeX{}@  therefore is always somewhat clumsy.
@@ -904,8 +945,9 @@ via special fonts:
 
 via EPS:
   @code{+:} High-quality results; easy; no burden for @TeX{}@ or drivers
-  @code{-:} No DVI preview; PostScript printer (or, e.g., GhostScript) required;
-            PostScript previewing is slower than DVI previewing.
+  @code{-:} No DVI preview (unless ghostscript is available); PostScript 
+	    printer (or, e.g., GhostScript) required;
+            PostScript previewing is slower than pure DVI previewing.
 @end display
 
 
@@ -943,6 +985,13 @@ This is simple! If you find a collection of pre-compiled versions of
 name of the file which fits to your system. Obtain it, rename it to something
 like @file{hp2xx} or @file{hp2xx.exe}, and place it somewhere on your
 search path -- that's it.
+Linux users will usually be able to find appropriate @code{RPM}, @code{DEB}
+or similar binary packages for their distribution on the CDs and websites
+of the various distributors. FreeBSD users should check the @code{ports}
+collection for packages, and users of commercial unices should check the
+freeware archives provided by their vendors. Finally, users of that other 
+operating system may find semi-current versions through the gnuwin32 project 
+page on sourceforge.net. 
 
 However, since the source release of @code{hp2xx} under the GNU public
 license, the usual mode of installation has become configuring and 
@@ -963,13 +1012,19 @@ on manual work yet. Here is a description how to proceed:
 After unbundling all sources, go to subdirectory @file{./makes}. Select a
 makefile most closely resembling your system's needs from the samples given,
 copy it to @file{./sources/makefile}, adapt it manually (if necessary),
-and run @code{make all}.
+and run @code{make all}. (The source package as distributed through
+ftp.gnu.org usually contains a file @file{sources/Makefile}. This is what
+i use myself on Linux systems, so you could try using that one first, if you
+are trying to build @code{hp2xx} on this or a similar platform.
 If everything is set correctly, this results directly in a valid executable
 file which you may install at any convenient place on your search path.
 
 There are two types of makefile adaptation: First, let's assume there
 is a makefile template available for your system. You then have the option to
-add a few unsupported modes. Do so by un-commenting the appropriate lines
+add a few non-default modes. (These are typically platform-specific modes,
+or modes requiring third-party libraries like PNG,JPEG,TIFF or PDF that are
+not usually part of a default system installation - particularly on commercial
+operating systems ). Do so by un-commenting the appropriate lines
 near the beginning of the makefile, and by commenting out the corresponding
 standard lines.
 
@@ -1039,15 +1094,12 @@ please consider contributing it to the @code{hp2xx} project.
 @section Future improvements
 
 The following table lists miscellaneous desirable features for future
-releases:
+releases (check the @file{TODO} file in the source package for current
+status) :
 @display
-  Box and sector drawing / filling
   Other, more rarely used HP-GL commands
-  Color support in UIS 
   PCL: Better data compression for DJ500, DJ500C, DJ550;
   Loadable fonts, e.g. Hershey fonts, or: more built-in fonts
-  Full-screen previewer for OS/2
-  Easy installation on various platforms, e.g. via a configure script
 @end display
 
 @tex
@@ -1066,8 +1118,7 @@ variable-width characters. There are commands for font selection
 and quick switching between two pre-selected fonts, and there
 is also a way for users to download own character definitions.
 
-@code{hp2xx} currently features just a few fixed-width  character sets 
-(sets 0-7).
+@code{hp2xx} currently features just a few fixed-width  character sets.
 
 If you plan to modify these characters set or to add more,
 you need an understanding of how characters are drawn by
@@ -1135,7 +1186,7 @@ this:
 @code{hp2xx} originally emulated a subset of the Hewlett-Packard 7550A plotter.
 The following manual was used as reference for command definitions:
 @cite{[1] HP 7550A Interfacing and Programming Manual}. This has gradually
-been expanded to include allmost all of what is now known as HPGL/1, and
+been expanded to include almost all of what is now known as HPGL/1, and
 most of the commands from HPGL/2.
 
 Not all commands are supported. Among the non-supported commands
@@ -1161,7 +1212,6 @@ affect most but not all drawing commands: While the @code{ER;} command
 both @code{PR;} and @code{PA;} use the current line type! In addition,
 new features may need initializations by the already supported
 codes @code{IN;} or @code{DF;}, so these may have to be expanded.
-So carefully consult [1] prior to adding new HP-GL commands.
 
 The remainder of this section lists all HP-GL commands given on
 pages 1-2 to 1-4 of [1] and marks them as either
@@ -1179,8 +1229,10 @@ you should have absolutely no problem with this class of commands.
 Though there still are unsupported commands, this does not mean that
 you might have trouble using @code{hp2xx}. Nowadays, most HP-GL files are
 machine-generated, e.g. by CAD or DTP programs. These tend to make use
-of just a simple subset of HP-GL. To my experience, chances are high
-that @code{hp2xx} will give you the picture you want!
+of just a subset of HP-GL. To my experience, chances are high
+that @code{hp2xx} will give you the picture you want! (Areas where hp2xx
+is definitely lacking are font support and polygon fills, but even there
+you should get a good approximation of what a plotter would produce).
 
 @display
 @code{HP-GL|s n| Description & Remarks}
@@ -1198,7 +1250,7 @@ that @code{hp2xx} will give you the picture you want!
 @code{-----|---|--------------------------------------------------------}
 @code{BF   | - | Buffer Plot [maybe not a valid hpgl command]}
 @code{BL   |+  | Buffer Label}
-@code{BP   |+  | Begin Plot [same as PG;IN]}
+@code{BP   |+  | Begin Plot}
 @code{BR   |+  | Bezier curve, Relative}
 @code{BZ   |+  | Bezier curve, Absolute}
 @code{-----|---|--------------------------------------------------------}
@@ -1209,7 +1261,7 @@ that @code{hp2xx} will give you the picture you want!
 @code{CM   |  .| Character selection mode}
 @code{CO   |+  | File comment}
 @code{CP   |+  | Character plot}
-@code{CR   | - | Color Range}
+@code{CR   |+  | Color Range}
 @code{CS   |+  | Designate standard character set}
 @code{CT   |+  | Chord tolerance}
 @code{CV   |  .| Curved line generator}
@@ -1244,13 +1296,13 @@ that @code{hp2xx} will give you the picture you want!
 @code{IM   | - | Input error reporting mask}
 @code{IN   |+  | Initialize}
 @code{IP   |+  | Input P1 and P2}
-@code{IR   | - | Input Relative P1 and P2}
+@code{IR   |+  | Input Relative P1 and P2}
 @code{IV   | - | Invoke character slot}
 @code{IW   |+  | Input window}
 @code{-----|---|--------------------------------------------------------}
 @code{KY   |  .| Define key}
 @code{-----|---|--------------------------------------------------------}
-@code{LA   | - | Line Attributes}
+@code{LA   |*  | Line Attributes}
 @code{LB   |+  | Label}
 @code{LO   |+  | Label origin}
 @code{LT   |+  | Line type}
@@ -1276,7 +1328,7 @@ that @code{hp2xx} will give you the picture you want!
 @code{OP   |+  | Output P1 and P2}
 @code{OS   | - | Output status}
 @code{OT   |  .| Output carousel type}
-@code{OW   | - | Output window}
+@code{OW   |+  | Output window}
 @code{-----|---|--------------------------------------------------------}
 @code{PA   |+  | Plot absolute}
 @code{PB   |+  | Print buffered label}
@@ -1342,6 +1394,7 @@ that @code{hp2xx} will give you the picture you want!
 * Size controls::
 * Raster format controls::
 * PCL specifics::
+* TIFF specifics::
 * Margins::
 * Preview (DOS only)::
 * Help::
@@ -1358,7 +1411,7 @@ Option parameter names suggest the expected data type, e. g.,
 @samp{--rotate (-r) @var{float}} means that option @samp{--rotate} or its
 corresponding short form @samp{-r} expect a parameter of type @samp{float}.
 
-@node General options, Size controls, , Appendix B
+@node General options, Size controls, ,Appendix B
 @comment  node-name,  next,  previous,  up
 @section General options
 
@@ -1404,7 +1457,7 @@ Mode string. Valid: @var{string} =
   @samp{esc2} (Epson Stylus printers)
 @end display
 
-Occasionally available (unsupported) modes:
+Occasionally available (currently unsupported) modes:
 @display
   @samp{ilbm} (e.g., for AMIGA: ILBM/IFF format),
   @samp{pac}  (e.g., for ATARI/STAD),
@@ -1501,7 +1554,7 @@ Set extra clipping space to @var{int} plotter units. Default: @var{int} = 0.
 
 
 
-@node PCL specifics, Margins, Raster format controls, Appendix B
+@node PCL specifics, TIFF specifics, Raster format controls, Appendix B
 @comment  node-name,  next,  previous,  up
 @section  PCL specifics
 
@@ -1525,9 +1578,25 @@ Set x resolution (see above): Valid here: @var{int} = 75, 100, 150, 300
 Set y resolution (see above). Invalid here!
 @end table
 
+@node TIFF specifics, Margins, PCL specifics, Appendix B
+@comment  node-name,  next,  previous,  up
+@section TIFF specifics
+
+@table @samp
 
 
-@node Margins, Preview (DOS only), PCL specifics, Appendix B
+@item -S @var{int}
+Select TIFF compression algorithm. @var{int} = 0 or 1 no compression,
+@var{int} = 2 run length encoding (RLE), @var{int} = 3 Group 3 FAX,
+@var{int} = 4 Group 4 FAX; @var{int} = 5 LZW (normally disabled in to_tiff.c
+due to Unisys patent), @var{int} = 6 old-style JPEG, @var{int} = 7 JPEG,
+@var{int} = 8 Deflate.
+
+@end table
+
+
+
+@node Margins, Preview (DOS only), TIFF specifics, Appendix B
 @comment  node-name,  next,  previous,  up
 @section  Margins
 
@@ -1582,7 +1651,7 @@ especially your monitor!
 
 @node Appendix C, , Appendix B, Top
 @comment  node-name,  next,  previous,  up
-@appendix
+@appendix Acknowledgements
 
 @menu
 * Acknowledgement::
@@ -1711,7 +1780,7 @@ TIFF enhancements
 @section Copyright notice
 
 @display
-Copyright (c) 1998 - 2000  Martin Kroeker
+Copyright (c) 1998 - 2002  Martin Kroeker
 Copyright (c) 1991 - 1994  Heinz W. Werntges
 All rights reserved.
 

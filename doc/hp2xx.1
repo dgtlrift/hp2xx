@@ -16,8 +16,8 @@ General options:
                          6=magenta, 7=yellow.
   -f   char *  ""        Name of output file. "" = autom., "-" = stdout
   -l   char *  ""        Name of optional log file
-  -m   char *  pre       Mode. Valid:
-                         mf,cad,dxf,em,emf,epic,eps,escp2,fig,jpg,gpt,hpgl,rgip,pcl,pcx,pic,img,pbm,png,pre,svg
+  -m   char *  pre       Mode. Valid (some are compile-time options):
+                         mf,cad,dxf,em,emf,epic,eps,escp2,fig,jpg,gpt,hpgl,rgip,pcl,pcx,pic,img,pbm,png,pre,svg,tiff,pdf 
   -p   char *  11111111  Pensize(s) [dots] (default), [1/10 mm] (mf, ps).
                          Valid: 1 to 8 digits of 0-9 each.
   -P   int     0:0       Selected page range (m:n) (0 = 0:0 = all pages)
@@ -35,10 +35,14 @@ Size controls:
   -Y   double   -        Preset ymax value of HPGL coordinate range
   -t           off       True size mode. Inhibits effects of -a -h -w
 
+HPGL handling controls:
+  -n           off	 No filling of polygons; draws outline instead
+  -N           off	 Ignore PS commands, calculate plot size as needed
+  -e   int 	0	 Extend IW clipping limits by given amount
+
 Raster format controls:
   -d   int     75        DPI value (x or both x&y)
   -D   int     75        DPI value (y only)
-  -e   int     0         Extra clipping space
 
 PCL only:
   -F           off       Send a FormFeed after graphics data
@@ -173,7 +177,7 @@ to change the resolution, e.g. -d300 will cause a HP LJ-II compatible
 for y direction:
 .I -D DPI_y_value
 
-Some programs were found, which generate HPGL output with too tight clipping
+Some programs were found to generate HPGL output with too tight clipping
 bounds, which lead, for example, to some parts of text characters clipped off.
 Use option
 .I -e extraclip
@@ -212,8 +216,9 @@ Setting either -p or -c will override the equivalent HPGL/2 commands
 
 Sometimes, HP-GL files contain several pages of plotter output.
 .I hp2xx
-recognizes the HP-GL commands for "feed-forward" or "new page", but by
-default it draws everything on a single page. You can select any
+recognizes the HP-GL commands for "feed-forward" or "new page", and by
+default draws each image as a separate page (saving to sequentially numbered
+output files, or opening a new preview window for each). You can select any
 particular page range by using option
 .I -P firstpage:lastpage
 which causes
@@ -268,10 +273,10 @@ puts your picture "flush" to the left and upper paper limit by default.
 .LP
 .SH RASTER FORMATS
 .LP
-The following formats are supported: HP-PCL, Esc/P2, PCX, PIC, IMG, JPG, PBM/PPM, PNG, TIFF, and previews. (PNG and TIFF formats rely on external libpng,zlib and libtiff, JPG relies on libjpeg. Versions built on MS windows systems may additionally 
+The following formats are supported: HP-PCL, Esc/P2, PCX, PIC, IMG, JPG, PBM/PPM, PNG, TIFF, and previews. (PNG and TIFF formats rely on external libpng,zlib and libtiff, JPG relies on libjpeg. Versions built on MS windows systems - or versions linked against libEMF on other platforms - may additionally 
 support EMF generation and printing.)
-However, generation of
-other formats is made easy for programmers because of
+
+Addition of other formats is made easy for programmers because of
 .I hp2xx's
 modular structure. The program allocates a bitmap on a line-by-line basis,
 swapping lines to disk if needed, and plots into this bitmap. Depending

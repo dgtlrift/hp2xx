@@ -1662,6 +1662,7 @@ line (int relative, HPGL_Pt p)
       y1 = P1.y + (p_last.y - S1.y) * Q.y;
       x2 = P1.x + (p.x - S1.x) * Q.x;
       y2 = P1.y + (p.y - S1.y) * Q.y;
+ 
       outside =
 	(DtClipLine (C1.x, C1.y, C2.x, C2.y, &x1, &y1, &x2, &y2) ==
 	 CLIP_NODRAW);
@@ -3094,6 +3095,10 @@ if (rotate_flag){
       P2 = p2;
 
     IP_Exit:
+#if 1
+      S1=P1;
+      S2=P2;
+#endif
       Q.x = (P2.x - P1.x) / (S2.x - S1.x);
       Q.y = (P2.y - P1.y) / (S2.y - S1.y);
       Diag_P1_P2 = HYPOT (P2.x - P1.x, P2.y - P1.y);

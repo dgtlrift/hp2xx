@@ -8,6 +8,7 @@
  ** 95/01/13  V 1.1 IJMP  Convert to FIG 3.1 from FIG 2.1
  ** 95/01/22  V 1.2 IJMP  Fix bugs for colours
  ** 99/06/12  V 1.3 MK    user-defined colours (for PenColour support)
+ ** 02/08/01	    MK    linecap/linejoin support
  **/
 
 #include <stdio.h>
@@ -16,6 +17,7 @@
 
 #include "bresnham.h"
 #include "pendef.h"
+#include "lindef.h"
 #include "hp2xx.h"
 
 #define FIG_NONE 0
@@ -37,6 +39,8 @@ FILE            *md = NULL;
 int             pen_no;
 PEN_W		pensize;
 int		err = 0, figmode, colour;
+int		captype=1;  /* 0=butt 1=round 2=projecting */
+int		jointype=1; /* 0=miter 1=round 2=bevel */
 /*int		fig_colour[8];*/
 int		i;
 char            *ftype="";
@@ -86,7 +90,7 @@ for (i=0;i<8;++i)
 
   pen_no  = DEFAULT_PEN_NO;
   pensize = pt.width[pen_no];
-  if (pensize >= MM_PER_DISPLAY_UNIT)
+  if (pensize >= MM_PER_DISPLAY_UNIT/10)
   {
 	if (pg->is_color)
 	  colour = 32 + pt.color[pen_no];
@@ -95,7 +99,9 @@ for (i=0;i<8;++i)
 	  colour = -1;
   }
   else
-  {colour = 7;}
+  {
+  if (!pg->quiet) fprintf(stderr,"suppressing very thin line\n"); 
+  colour = 7;}
 
 /* mm to 1/1200 inch */
 	xcoord2mm = (1200.0 / 25.4) * po->width  / (po->xmax - po->xmin);
@@ -118,13 +124,14 @@ for (i=0;i<8;++i)
 		}
 		if (figmode == FIG_PLOT)
 		{
-			fig_poly_end(pensize, colour, md, npoints, x, y);
+			fig_poly_end(pensize, colour, jointype, captype, md, npoints, x, y);
 			npoints = 0;
 		}
 		pensize = pt.width[pen_no];
-		if (pensize < MM_PER_DISPLAY_UNIT)
+		if (pensize < MM_PER_DISPLAY_UNIT/10)
 		{
 			colour = 7; /* Draw in white */
+  if (!pg->quiet) fprintf(stderr,"suppressing very thin line\n"); 
 		}
 		else
 		{
@@ -145,12 +152,45 @@ for (i=0;i<8;++i)
                 }
 		pensize=pt.width[pen_no];
                 break;
+          case DEF_LA:
+          	if (load_line_attr(pg->td) <0 ){
+          	    PError("Unexpected end of temp. file");
+          	    err = ERROR;
+          	    goto FIG_exit;
+          	}     
+          	captype=1;
+          	jointype=1;
+          	if (pensize>0.35) {
+          		switch(CurrentLineAttr.End){
+          			case LAE_butt:
+          			captype= 0 ;
+          			break;
+          			case LAE_round:
+          			captype= 2 ;
+          			break;
+          			default:
+          			break;
+          		}
+          		switch(CurrentLineAttr.Join){
+          			case LAJ_plain_miter:
+          			case LAJ_bevel_miter:
+          			jointype = 0;
+          			break;
+          			case LAJ_bevelled:
+          			jointype = 2;	
+          			break;
+          			default:
+          			jointype = 1;
+          			break;
+			}
+		}
+		break;
 
 	  case MOVE_TO:
 		HPGL_Pt_from_tmpfile (&pt1);
-		if (figmode == FIG_PLOT)          /* Finish up old polygon */
+		if (figmode == FIG_PLOT)          /* Finish up old polyline */
 		{
-			fig_poly_end(pensize, colour, md, npoints, x, y);
+			fig_poly_end(pensize, colour, jointype, captype, md, npoints, x, y);
 			npoints = 0;
 		}
 		figmode = FIG_MOVE;
@@ -176,7 +216,7 @@ for (i=0;i<8;++i)
 		npoints++;
 		if (npoints == MAX_FIG_POINTS)
 		{
-			fig_poly_end(pensize, colour, md, npoints, x, y);
+			fig_poly_end(pensize, colour, jointype, captype, md, npoints, x, y);
 			npoints = 0;
 		}
 		figmode = FIG_PLOT;
@@ -184,9 +224,9 @@ for (i=0;i<8;++i)
 
 	  case PLOT_AT:
 		HPGL_Pt_from_tmpfile (&pt1);
-		if (figmode == FIG_PLOT)          /* Finish up old polygon */
+		if (figmode == FIG_PLOT)          /* Finish up old polyline */
 		{
-			fig_poly_end(pensize, colour, md, npoints, x, y);
+			fig_poly_end(pensize, colour, jointype, captype, md, npoints, x, y);
 			npoints = 0;
 		}
 /*		if (pensize == 0) break; */
@@ -194,7 +234,7 @@ for (i=0;i<8;++i)
 		x[0] = (int)((pt1.x - po->xmin) * xcoord2mm);
 		y[0] = (int)((po->ymax - pt1.y) * ycoord2mm);
 		npoints = 1;
-		fig_poly_end(pensize, colour, md, npoints, x, y);
+		fig_poly_end(pensize, colour, jointype, captype, md, npoints, x, y);
 		figmode = FIG_MOVE;
 		break;
 
@@ -205,9 +245,9 @@ for (i=0;i<8;++i)
 	}
 
 
-	if (figmode == FIG_PLOT)	/* Finish up old polygon */
+	if (figmode == FIG_PLOT)	/* Finish up old polyline */
 	{
-		fig_poly_end(pensize, colour, md, npoints, x, y);
+		fig_poly_end(pensize, colour, jointype, captype, md, npoints, x, y);
 		npoints = 0;
 	}
 
@@ -221,15 +261,19 @@ FIG_exit:
   return err;
 }
 
-void fig_poly_end(PEN_W pensize, int colour, FILE *md, int npoints, long *x, long *y)
-{ /* Write out entire polygon to file */
+void fig_poly_end(PEN_W pensize, int colour, int jointype, int captype, FILE *md, int npoints, long *x, long *y)
+{ /* Write out entire polyline to file */
 	int i,j;
         int units;
 
         units = (int) ceil(pensize/MM_PER_DISPLAY_UNIT);
-
-	fprintf(md,"2 1 0 %d %d %d 0 0 -1 0.000 0 0 0 0 0 %d\n",
-		units,colour,colour,npoints);
+/* objecttype(2=line) subtype(1=polyline) linestyle(0=solid)
+   width pencolor fillcolor
+   depth(0) penstyle(unused) areafill(-1 = no fill)
+   style_val(gaplength 0.000) join_style cap_style 
+   arcbox_radius forward_arrow backward_arrow numpoints */ 
+	fprintf(md,"2 1 0 %d %d %d 0 0 -1 0.000 %d %d 0 0 0 %d\n",
+		units,colour,colour,jointype,captype,npoints);
 	j = 0;
 	for (i=0;i<npoints;i++)
 	{
