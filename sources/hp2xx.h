@@ -65,6 +65,7 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
+#include "pendef.h"
 
 /**
  ** Working with Pure C (the official descendant of Borland's
@@ -274,7 +275,7 @@ typedef struct			/* Corresponding option(s)	*/
    int	 quiet;			/* -q				*/
    int   nofill;		/* -n				*/
    int   no_ps;			/* -N				*/
-   int	 maxpensize;		/* (internally needed)		*/
+   PEN_W maxpensize;		/* (internally needed)		*/
    int	 is_color;		/* (internally needed)		*/
    int	 maxcolor;		/* (internally needed)		*/
    FILE	 	*td;		/* (internally needed)		*/
@@ -410,13 +411,13 @@ void action_oldstyle(GEN_PAR *, IN_PAR *, OUT_PAR *);
 /*to_eps*/
 void ps_end(FILE *);
 void ps_stroke_and_move_to(HPGL_Pt *, FILE *);
-void ps_set_linewidth(double, HPGL_Pt *, FILE *);
+void ps_set_linewidth(PEN_W, HPGL_Pt *, FILE *);
 void ps_set_color(double, double, double, HPGL_Pt *, FILE *);
 void ps_line_to(HPGL_Pt *, char, FILE *);
 char *Getdate(void);
-void ps_init(const GEN_PAR *, const OUT_PAR *, FILE *, int);
+void ps_init(const GEN_PAR *, const OUT_PAR *, FILE *, PEN_W);
 /*to_fig*/
-void fig_poly_end(int, int, FILE *, int, long *, long *);
+void fig_poly_end(PEN_W, int, FILE *, int, long *, long *);
 /*to_x11*/
 void win_close(void);
            

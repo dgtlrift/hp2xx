@@ -95,14 +95,14 @@ HelpLib         =       [-]HP2XX.HLB
 .LAST
         WRITE SYS$OUTPUT "      Hp2xx complete"
 
-COMMON_INCS     =       hp2xx.h, bresnham.h, pendef.h lindef.h
+COMMON_INCS     =       hp2xx.h, bresnham.h, murphy.h, pendef.h lindef.h
 
 OBJS            =       hp2xx.obj,hpgl.obj,picbuf.obj,bresnham.obj,     -
                         chardraw.obj,getopt.obj,getopt1.obj,            -
                         to_vec.obj,to_pcx.obj,to_pcl.obj,to_eps.obj,    -
                         to_img.obj,to_pbm.obj,to_rgip.obj,std_main.obj  -
 			to_fig.obj clip.obj fillpoly.obj pendef.obj lindef.obj -
-                        $(PREVIEWER)
+                        murphy.obj $(PREVIEWER)
 
 HP2XX           =       [-]HP2XX.EXE
 
@@ -124,6 +124,8 @@ hpgl.obj        :       hpgl.c,         $(COMMON_INCS), chardraw.h
 picbuf.obj      :       picbuf.c,       $(COMMON_INCS)
 
 bresnham.obj    :       bresnham.c,                     bresnham.h
+
+murphy.obj	:	murphy.c,	murphy.h
 
 chardraw.obj    :       chardraw.c,     $(COMMON_INCS), chardraw.h, charset0.h
 

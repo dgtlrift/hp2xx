@@ -95,10 +95,16 @@ void	ps_stroke_and_move_to (HPGL_Pt *ppt, FILE *fd)
 /**
  ** Set line width
  **/
-void	ps_set_linewidth (double width, HPGL_Pt *ppt, FILE *fd)
+void	ps_set_linewidth (PEN_W width, HPGL_Pt *ppt, FILE *fd)
 {
-  ps_stroke_and_move_to (ppt, fd);	/* MUST start a new path!	*/
-  fprintf  (fd," %6.3f W\n", width);
+   static PEN_W lastwidth=-1.0;
+
+   if((fabs(width-lastwidth) >= 0.01) && (width >= 0.05)){
+      ps_stroke_and_move_to (ppt, fd);	                                 /* MUST start a new path!	*/
+      fprintf  (fd," %6.3f W\n", width);
+      lastwidth=width;
+   }
+   return;
 }
 
 
@@ -161,12 +167,12 @@ char *p;
  **/
 
 void	ps_init (const GEN_PAR *pg, const OUT_PAR *po, FILE *fd,
-		 int pensize)
+		 PEN_W pensize)
 {
 long	left, right, low, high;
 double	hmxpenw;
 
-  hmxpenw = pg->maxpensize / 200.0;	/* Half max. pen width, in mm	*/
+  hmxpenw = pg->maxpensize / 2.0;	/* Half max. pen width, in mm	*/
 
 /**
  ** Header comments into PostScript file
@@ -254,7 +260,7 @@ double	hmxpenw;
   fprintf(fd,"   {\n");
   fprintf(fd,"    2.834646 2.834646 scale\n");	/* 1/72"--> mm */
   fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff+hmxpenw, po->yoff+hmxpenw);
-  fprintf(fd,"    %6.3f setlinewidth\n", pensize/10.0);
+  fprintf(fd,"    %6.3f setlinewidth\n", pensize);
   fprintf(fd,"   } def\n");
   fprintf(fd,"/C {setrgbcolor} def\n");
   fprintf(fd,"/D {lineto} def\n");
@@ -280,9 +286,7 @@ double	hmxpenw;
   fprintf(fd,"@SetPlot\n\n");
   fprintf(fd,"bop\n");
   fprintf(fd,"%%%%EndPageSetup\n");
-}
-
-
+} 
 
 /**
  ** Higher-level interface: Output Encapsulated PostScript format
@@ -291,10 +295,11 @@ double	hmxpenw;
 int
 to_eps (const GEN_PAR *pg, const OUT_PAR *po)
 {
-PlotCmd	cmd;
-HPGL_Pt	pt1 = {0};
-FILE	*md;
-int	pen_no=0, pensize, pencolor=0, err;
+  PlotCmd	cmd;
+  HPGL_Pt	pt1 = {0};
+  FILE		*md;
+  int		pen_no=0, pencolor=0, err;
+  PEN_W		pensize;
 
   err = 0;
   if (!pg->quiet)
@@ -318,8 +323,8 @@ int	pen_no=0, pensize, pencolor=0, err;
   pensize = pt.width[DEFAULT_PEN_NO]; /* Default pen	*/
   ps_init (pg, po, md, pensize);
 
-  if (pensize != 0)
-	fprintf(md," %6.3f W\n", pensize/10.0);
+  if (pensize > 0.05)
+	fprintf(md," %6.3f W\n", pensize);
 
   /* Factor for transformation of HP coordinates to mm	*/
 
@@ -346,13 +351,7 @@ int	pen_no=0, pensize, pencolor=0, err;
 			goto EPS_exit;
 		}
 		pensize = pt.width[pen_no];
-		if (pensize != 0)
-			ps_set_linewidth ((double) pensize/10.0, &pt1, md);
-		pencolor = pt.color[pen_no];
-		ps_set_color (  pt.clut[pencolor][0]/255.0,
-				pt.clut[pencolor][1]/255.0,
-				pt.clut[pencolor][2]/255.0,
-				&pt1, md);
+                pencolor = pt.color[pen_no];
 		break;
           case DEF_PW:
                 if(!load_pen_width_table(pg->td)) {
@@ -360,6 +359,7 @@ int	pen_no=0, pensize, pencolor=0, err;
 		    err = ERROR;
 		    goto EPS_exit;
                 }
+                pensize=pt.width[pen_no];
                 break;
           case DEF_PC:
                 err=load_pen_color_table(pg->td);
@@ -371,57 +371,48 @@ int	pen_no=0, pensize, pencolor=0, err;
                 if (err==pencolor) pencolor *=-1; /*current pen changed*/
                 break;
 	  case MOVE_TO:
-                if(fabs(pensize-pt.width[pen_no]) >= 0.01) {
-                    pensize=pt.width[pen_no];
-                    if (pensize != 0)
-                        ps_set_linewidth ((double) pensize/10.0, &pt1, md);
-                }
+                ps_set_linewidth(pensize, &pt1, md);
+
                 if(pencolor <0) {
-                pencolor=pt.color[pen_no];
-		ps_set_color (  pt.clut[pencolor][0]/255.0,
-				pt.clut[pencolor][1]/255.0,
+                    pencolor=pt.color[pen_no];
+		    ps_set_color (  pt.clut[pencolor][0]/255.0,
+		      		pt.clut[pencolor][1]/255.0,
 				pt.clut[pencolor][2]/255.0,
 				&pt1, md);
                 }
 
 		HPGL_Pt_from_tmpfile (&pt1);
-		if (pensize != 0)
+		if (pensize > 0.05)
 			ps_stroke_and_move_to (&pt1, md);
 		break;
 	  case DRAW_TO:
-                if(fabs(pensize-pt.width[pen_no]) >= 0.01) {
-                    pensize=pt.width[pen_no];
-                    if (pensize != 0)
-                        ps_set_linewidth ((double) pensize/10.0, &pt1, md);
-                }
+                ps_set_linewidth(pensize, &pt1, md);
+
                 if(pencolor <0) {
-                pencolor=pt.color[pen_no];
-		ps_set_color (  pt.clut[pencolor][0]/255.0,
-				pt.clut[pencolor][1]/255.0,
-				pt.clut[pencolor][2]/255.0,
-				&pt1, md);
-                }
-		HPGL_Pt_from_tmpfile (&pt1);
-		if (pensize != 0)
-			ps_line_to (&pt1, 'D', md);
-		break;
-	  case PLOT_AT:
-                if(fabs(pensize-pt.width[pen_no]) >= 0.01) {
-                    pensize=pt.width[pen_no];
-                    if (pensize != 0)
-                        ps_set_linewidth ((double) pensize/10.0, &pt1, md);
-                }
-                if(pencolor<0) {
-                pencolor=pt.color[pen_no];
-		ps_set_color (  pt.clut[pencolor][0]/255.0,
+                   pencolor=pt.color[pen_no];
+		   ps_set_color (  pt.clut[pencolor][0]/255.0,
 				pt.clut[pencolor][1]/255.0,
 				pt.clut[pencolor][2]/255.0,
 				&pt1, md);
                 }
 
 		HPGL_Pt_from_tmpfile (&pt1);
-		if (pensize != 0)
-		{
+		if (pensize > 0.05)
+			ps_line_to (&pt1, 'D', md);
+		break;
+	  case PLOT_AT:
+                ps_set_linewidth(pensize, &pt1, md);
+
+                if(pencolor<0) {
+                   pencolor=pt.color[pen_no];
+		   ps_set_color (  pt.clut[pencolor][0]/255.0,
+				pt.clut[pencolor][1]/255.0,
+				pt.clut[pencolor][2]/255.0,
+				&pt1, md);
+                }
+
+		HPGL_Pt_from_tmpfile (&pt1);
+		if (pensize > 0.05) {
 			ps_line_to (&pt1, 'M', md);
 			ps_line_to (&pt1, 'D', md);
 		}

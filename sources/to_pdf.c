@@ -89,7 +89,7 @@ PDF_setrgbcolor(fd,red,green,blue);
  **/
 
 void	pdf_init (const GEN_PAR *pg, const OUT_PAR *po, PDF *fd,
-		 int pensize)
+		 PEN_W pensize)
 {
 long	left, right, low, high;
 double	hmxpenw;
@@ -102,7 +102,7 @@ double	hmxpenw;
   high  = (long) ceil ((po->yoff+po->height+hmxpenw)	    * 2.834646);
 
   PDF_begin_page(fd, right,high);
-  PDF_setlinewidth(fd, pensize/10.);
+  PDF_setlinewidth(fd, pensize);
 
 }
 
@@ -118,8 +118,10 @@ to_pdf (const GEN_PAR *pg, const OUT_PAR *po)
 PlotCmd	cmd;
 PDF	*md;
 HPGL_Pt	pt1 = {0};
-int	pen_no=0, pensize, pencolor=0, err;
+int	pen_no=0, pencolor=0, err;
 int firstmove;
+PEN_W pensize;
+
    PDF_boot();
    
   err = 0;
@@ -171,7 +173,7 @@ int firstmove;
 		 	firstmove=1;
 		 	}
                     if (pensize != 0)
-		pdf_set_linewidth ((double) pensize/10.0, &pt1, md);
+		pdf_set_linewidth ((double) pensize, &pt1, md);
 		pdf_set_color (  pt.clut[pencolor][0]/255.0,
 				pt.clut[pencolor][1]/255.0,
 				pt.clut[pencolor][2]/255.0,
@@ -198,7 +200,7 @@ int firstmove;
                     pensize=pt.width[pen_no];
                     if (pensize != 0){
 		if(!firstmove)PDF_stroke(md);
-		pdf_set_linewidth ((double) pensize/10.0, &pt1, md);
+		pdf_set_linewidth ((double) pensize, &pt1, md);
 
 			}
                 }
@@ -222,7 +224,7 @@ int firstmove;
                     pensize=pt.width[pen_no];
                     if (pensize != 0){
 		 if(!firstmove)PDF_stroke(md);
-                        pdf_set_linewidth ((double) pensize/10.0, &pt1, md);
+                        pdf_set_linewidth ((double) pensize, &pt1, md);
                 	}
                 }
                 if(pencolor <0) {
@@ -244,7 +246,7 @@ int firstmove;
                     pensize=pt.width[pen_no];
                     if (pensize != 0){
 			 if(!firstmove)PDF_stroke(md);
-                        pdf_set_linewidth ((double) pensize/10.0, &pt1, md);
+                        pdf_set_linewidth ((double) pensize, &pt1, md);
 			}
                 }
                 if(pencolor<0) {

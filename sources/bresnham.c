@@ -23,8 +23,9 @@ copies.
 
 /** bresnham.c: Implementation of Bresenham's algorithm
  **
- ** 91/01/04  V 1.00  HWW  Due to pseudocode in D.F. Rogers (1986) McGraw Hill
- ** 91/10/15  V 1.01  HWW  ANSI_C
+ ** 1991/01/04  V 1.00  HWW  Due to pseudocode in D.F. Rogers (1986) McGraw Hill
+ ** 1991/10/15  V 1.01  HWW  ANSI_C
+ ** 2002/04/28	V 1.02  AJB  Move static vars into struct
  **/
 
 #define	TEST	0
@@ -32,12 +33,13 @@ copies.
 
 
 #include <stdio.h>
+#include <stdlib.h>
 #include "bresnham.h"
 
-
-static	DevPt	p_act;
-static	int	dx, dy, s1, s2, swapdir, err, i;
-
+static struct {
+   DevPt p_act;
+   int dx, dy, s1, s2, swapdir, err, count;
+} bres;
 
 DevPt	*bresenham_init (DevPt *pp1, DevPt *pp2)
 /**
@@ -57,50 +59,50 @@ DevPt	*bresenham_init (DevPt *pp1, DevPt *pp2)
  **	} while (bresenham_next() != BRESENHAM_ERR);
  **/
 {
-  p_act = *pp1;
+  bres.p_act = *pp1;
 
-  if ((dx = pp2->x - pp1->x) != 0)
+  if ((bres.dx = pp2->x - pp1->x) != 0)
   {
-	if (dx < 0)
+	if (bres.dx < 0)
 	{
-		dx = -dx;
-		s1 = -1;
+		bres.dx = -bres.dx;
+		bres.s1 = -1;
 	}
 	else
-		s1 = 1;
+		bres.s1 = 1;
   }
   else
-	s1 = 0;	/* dx = abs(x2-x1), s1 = sign(x2-x1)	*/
+	bres.s1 = 0;	/* dx = abs(x2-x1), s1 = sign(x2-x1)	*/
 
-  if ((dy = pp2->y - pp1->y) != 0)
+  if ((bres.dy = pp2->y - pp1->y) != 0)
   {
-	if (dy < 0)
+	if (bres.dy < 0)
 	{
-		dy = -dy;
-		s2 = -1;
+		bres.dy = -bres.dy;
+		bres.s2 = -1;
 	}
 	else
-		s2 = 1;
+		bres.s2 = 1;
   }
   else
-	s2 = 0;	/* dy = abs(y2-y1), s2 = sign(y2-y1)	*/
+	bres.s2 = 0;	/* dy = abs(y2-y1), s2 = sign(y2-y1)	*/
 
-  if (dy > dx)
+  if (bres.dy > bres.dx)
   {
-	swapdir = dx;	/* use swapdir as temp. var.	*/
-	dx = dy;
-	dy = swapdir;
-	swapdir = 1;
+	bres.swapdir = bres.dx;	/* use swapdir as temp. var.	*/
+	bres.dx = bres.dy;
+	bres.dy = bres.swapdir;
+	bres.swapdir = 1;
   }
   else
-	swapdir = 0;
+	bres.swapdir = 0;
 
-  i   = dx;		/* Init. of loop cnt	*/
-  dy <<=1;
-  err = dy - dx;	/* Init. of error term	*/
-  dx <<=1;
+  bres.count = bres.dx;		/* Init. of loop cnt	*/
+  bres.dy <<=1;
+  bres.err = bres.dy - bres.dx;	/* Init. of error term	*/
+  bres.dx <<=1;
 
-  return &p_act;
+  return &bres.p_act;
 }
 
 
@@ -114,28 +116,26 @@ int	bresenham_next (void)
  **	   BRESENHAM_ERR else (e.g. if moving past EOL attempted)
  **/
 {
-  if (i<=0)
+  if (bres.count<=0)
 	return (BRESENHAM_ERR);	/* Beyond last point! */
 
-  while (err >= 0)
+  while (bres.err >= 0)
   {
-	if (swapdir)
-		p_act.x += s1;
+	if (bres.swapdir)
+		bres.p_act.x += bres.s1;
 	else
-		p_act.y += s2;
-	err -=  dx;
+		bres.p_act.y += bres.s2;
+	bres.err -=  bres.dx;
   }
-  if (swapdir)
-	p_act.y += s2;
+  if (bres.swapdir)
+	bres.p_act.y += bres.s2;
   else
-	p_act.x += s1;
-  err +=  dy;
+	bres.p_act.x += bres.s1;
+  bres.err +=  bres.dy;
 
-  i--;	/* i==0 indicates "last point reached"	*/
-  return ((i) ? 0 : BRESENHAM_EOL);
+  bres.count--;	/* i==0 indicates "last point reached"	*/
+  return ((bres.count) ? 0 : BRESENHAM_EOL);
 }
-
-
 
 	/* Test module */
 #if TEST

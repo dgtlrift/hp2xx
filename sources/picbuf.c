@@ -52,14 +52,16 @@ copies.
 #include <string.h>
 #include <math.h>
 #include "bresnham.h"
+#include "murphy.h"
 #include "pendef.h"
+#include "picbuf.h"
 #include "hp2xx.h"
 
 
 static	RowBuf	*first_buf = NULL, *last_buf = NULL;
 
-
-
+static int X_Offset=0;
+static int Y_Offset=0;
 
 #ifndef SEEK_SET
 #define SEEK_SET 0
@@ -167,7 +169,7 @@ RowBuf	*row;
 	return NULL;
   if (index < 0 || index >= pb->nr)
   {
-	Eprintf("get_RowBuf: Illegal y (%d not in [0, %d])\n", index, pb->nr);
+	Eprintf("get_RowBuf: Illegal y (%d not in [0, %d])\n", index, pb->nr-1);
 	return NULL;
   }
 
@@ -318,13 +320,17 @@ int maxps;
   HP_Pt.y  = po->ymax;
   HPcoord_to_dotcoord (&HP_Pt, &D_Pt, po);
   /* Pensize correction	*/
- /* maxps= (int)(1. + pg->maxpensize *po->HP_to_xdots/10.0/0.025); */
-	maxps =	 ceil(pg->maxpensize *po->HP_to_xdots/10.0/0.025), 
+ /* maxps= (int)(1. + pg->maxpensize *po->HP_to_xdots/0.025); */
+   maxps = ceil(pg->maxpensize *po->HP_to_xdots/0.025); 
 /*  maxps= pg->maxpensize; */
                          /* thick lines are drawn to penwidth - not currently scaled */
                          /* so we must do the same when calculating limits - or we try to draw outside page */ 
-  *p_cols  = D_Pt.x + maxps;	
-  *p_rows  = D_Pt.y + maxps;
+   X_Offset = maxps / 2;
+   Y_Offset = maxps / 2;
+
+   printf("maxps = %d\n",maxps);
+  *p_cols  = D_Pt.x + maxps + 1;	
+  *p_rows  = D_Pt.y + maxps + 1;
 }
 
 
@@ -519,16 +525,15 @@ int	i;
 
 
 
-static void
-plot_PicBuf(PicBuf *pb, DevPt *pt, int color_index)
+void plot_PicBuf(PicBuf *pb, DevPt *pt, int color_index)
 {
-  if (pt->x < 0 || pt->x > pb->nc)
+  if ((pt->x + X_Offset) < 0 || pt->x > (pb->nc - X_Offset))
   {
 	Eprintf("plot_PicBuf: Illegal x (%d not in [0, %d])\n",
-		pt->x, pb->nc);
+		pt->x+X_Offset, pb->nc);
 	return;
   }
-  plot_RowBuf(get_RowBuf(pb, pt->y), pt->x, pb->depth, color_index);
+  plot_RowBuf(get_RowBuf(pb, pt->y+Y_Offset), pt->x+X_Offset, pb->depth, color_index);
 }
 
 
@@ -547,110 +552,74 @@ index_from_PicBuf (const PicBuf *pb, const DevPt *pt)
 }
 
 
+static void dot_PicBuf (DevPt *p0, int pensize, int pencolor, PicBuf* pb) {
+
+   DevPt	pt;
+
+   int dd=3-(pensize);
+   int dx=0;
+   int dy=pensize/2;
+
+   for( ; dx <= dy ; dx++) {
+      for(pt.x=p0->x-dx, pt.y=p0->y+dy ;  pt.x <= p0->x+dx ; pt.x++)
+         plot_PicBuf(pb,&pt,pencolor);
+
+      for(pt.x=p0->x-dx, pt.y=p0->y-dy ;  pt.x <= p0->x+dx ; pt.x++)
+         plot_PicBuf(pb,&pt,pencolor);
+
+      for(pt.x=p0->x-dy, pt.y=p0->y+dx ;  pt.x <= p0->x+dy ; pt.x++)
+         plot_PicBuf(pb,&pt,pencolor);
+
+      for(pt.x=p0->x-dy, pt.y=p0->y-dx ;  pt.x <= p0->x+dy ; pt.x++)
+         plot_PicBuf(pb,&pt,pencolor);
+
+      if(dd < 0) {
+         dd += (4 * dx) + 6;
+      } else {
+         dd +=  4 * (dx-dy) + 10;
+         dy--;
+      }
+   }
+}
 
 
 static void
-line_PicBuf (DevPt *p0, DevPt *p1, int pensize, int pencolor, PicBuf* pb)
-/**
- ** Rasterize a vector (draw a line in the picture buffer), using the
- ** Bresenham algorithm.
- **/
+  line_PicBuf (DevPt *p0, DevPt *p1, int pensize, int pencolor, PicBuf* pb)
+    /**
+     ** Rasterize a vector (draw a line in the picture buffer), using the
+     ** Bresenham algorithm.
+     **/
 {
-DevPt	pt, *p_act;
+   DevPt	*p_act;
+   
+   if (pensize == 0)		/* No pen selected!	*/
+     return;
+   
+   if (pencolor == xxBackground)	/* No drawable color!	*/
+     return;
+   
+   if (pensize == 1) {                                                               /* Thin lines of any attitude */
+      p_act = bresenham_init (p0, p1);
+      do {                
+	 plot_PicBuf (pb, p_act, pencolor);
+      } while (bresenham_next() != BRESENHAM_ERR);
+      return;
+   } 
 
-/*fprintf(stderr,"line_PicBuf, color %d, width %d\n",pencolor,pensize);*/
+   if( ( (p1->x - p0->x) == 0) && ((p1->y - p0->y) == 0) ) {                               /* No Movement Dot Only */
+      dot_PicBuf(p0,pensize,pencolor,pb);
+      return;
+   }
 
-  if (pensize == 0)		/* No pen selected!	*/
-	return;
-/*fprintf(stderr,"line_PicBuf, pencolor ist %d\n",pencolor);*/
-  if (pencolor == xxBackground)	/* No drawable color!	*/
-	return;
+   murphy_init(pb,pencolor);                                                                         /* Wide Lines */
+   murphy_wideline(*p0,*p1, pensize);
 
-  p_act = bresenham_init (p0, p1);
-
-  if (pensize == 1) do
-  {
-	plot_PicBuf (pb, p_act, pencolor);
-  } while (bresenham_next() != BRESENHAM_ERR);
-  else do
-  {
-	plot_PicBuf (pb, p_act, pencolor);
-
-	pt = *p_act;
-	pt.x++;	plot_PicBuf (pb, &pt, pencolor);
-	pt.y++; plot_PicBuf (pb, &pt, pencolor);
-	pt.x--; plot_PicBuf (pb, &pt, pencolor);
-
-	if (pensize > 2)
-	{
-		pt = *p_act;
-		pt.x += 2;	plot_PicBuf (pb, &pt, pencolor);
-		pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-		pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-		pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-		pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-
-		if (pensize > 3)	/* expecting 4 ... 9	*/
-		{
-			pt = *p_act;
-			pt.x += 3;	plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-		}
-
-		if (pensize > 7)	/* who knows	*/
-		{
-			pt = *p_act;
-			pt.x += 4;	plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-		}
-		if (pensize > 12)	/* who knows	*/
-		{
-			pt = *p_act;
-			pt.x += 5;	plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-		}
-		if (pensize > 15)	/* who knows	*/
-		{
-			pt = *p_act;
-			pt.x += 6;	plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.y++;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-			pt.x--;		plot_PicBuf (pb, &pt, pencolor);
-		}
-	}
-  } while (bresenham_next() != BRESENHAM_ERR);
+/* if(LA.Kind == 1) && (LA.Value == 4)) { */
+   if(1){
+      dot_PicBuf(p0,pensize,pencolor,pb);                                       /* Wide lines need Line Attributes */
+      dot_PicBuf(p1,pensize,pencolor,pb);                             /* make them round until we can implement LA */
+   }
 }
-
 
 
 
@@ -686,6 +655,7 @@ int		pen_no = 1;
 			PError("Unexpected end of temp. file");
 			exit (ERROR);
 		}
+                printf("\npen number %d == %f\n",pen_no,ceil(pt.width[pen_no]*po->HP_to_xdots/0.025));
 		break;
 	  case DEF_PW:
                 if(!load_pen_width_table(pg->td)) {
@@ -707,7 +677,7 @@ int		pen_no = 1;
 		HPGL_Pt_from_tmpfile(&pt1);
 		HPcoord_to_dotcoord (&pt1, &next, po);
 		line_PicBuf (&ref, &next,
-			ceil(pt.width[pen_no]*po->HP_to_xdots/10.0/0.025), 
+			ceil(pt.width[pen_no]*po->HP_to_xdots/0.025), 
 			pt.color[pen_no], 
 			po->picbuf);
 		memcpy (&ref, &next, sizeof(ref));
@@ -716,7 +686,7 @@ int		pen_no = 1;
 		HPGL_Pt_from_tmpfile(&pt1);
 		HPcoord_to_dotcoord (&pt1, &ref, po);
 		line_PicBuf (&ref, &ref,
-			ceil(pt.width[pen_no]*po->HP_to_xdots/10.0/0.025), 
+			ceil(pt.width[pen_no]*po->HP_to_xdots/0.025), 
 			pt.color[pen_no],
 			po->picbuf);
 		break;

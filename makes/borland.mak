@@ -52,6 +52,7 @@ INCLUDEPATH = C:\BC\INCLUDE;C:\BC\INCLUDE\SHARE
 
 EXE_dependencies =  \
  bresnham.obj \
+ murphy.obj \
  chardraw.obj \
  getopt.obj \
  getopt1.obj \
@@ -80,6 +81,7 @@ hp2xx.exe: hp2xx.cfg $(EXE_dependencies)
   $(TLINK) /v/x/c/P-/L$(LIBPATH) @&&|
 c0l.obj+
 bresnham.obj+
+murphy.obj+
 chardraw.obj+
 getopt.obj+
 getopt1.obj+
@@ -113,6 +115,8 @@ cl.lib
 
 #		*Individual File Dependencies*
 bresnham.obj: hp2xx.cfg bresnham.c
+
+murphy.obj: hp2xx.cfg murphy.c
 
 chardraw.obj: hp2xx.cfg chardraw.c
 

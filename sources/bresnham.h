@@ -21,16 +21,18 @@ copies.
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 
+#ifndef BRESNHAM_H
+#define BRESNHAM_H
+
 /** bresnham.h: Header for Bresenham utility
  **
- ** 91/01/04  V 1.00  HWW Originating
- ** 92/01/12  V 1.01  HWW ANSI prototypes required now
+ ** 1991/01/04  V 1.00  HWW Originating
+ ** 1992/01/12  V 1.01  HWW ANSI prototypes required now
  **/
 
 
 #define	BRESENHAM_EOL	0x04
 #define	BRESENHAM_ERR	0xff
-
 
 
 typedef struct {
@@ -39,4 +41,6 @@ typedef struct {
 
 
 DevPt	*bresenham_init	(DevPt *, DevPt *);
-int	bresenham_next	(void);
+int	bresenham_next (void);
+
+#endif /* BRESNHAM_H */

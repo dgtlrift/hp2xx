@@ -27,6 +27,7 @@ FILE           *fd;
 int             row_c, byte_c, x;
 const RowBuf   *row;
 const PicBuf   *pb;
+#if 0
 #ifdef PBMascii
 int             bit, row_count = 0;
 char	       *ppm[] = { "1 1 1", "0 0 0", "1 0 0", "0 1 0",
@@ -35,6 +36,7 @@ char	       *ppm[] = { "1 1 1", "0 0 0", "1 0 0", "0 1 0",
 int	       ppm[][3] = { {255, 255, 255}, {0,0,0}, {255,0,0}, {0,255,0},
 		{0,0,255},{0,255,255},{255,0,255},{255,255,0}};
 #endif /*PBMascii*/
+#endif /* used ? */
 int		colour;
 
   if (pg == NULL || po == NULL)

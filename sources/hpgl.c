@@ -545,7 +545,7 @@ PlotCmd_to_tmpfile (PlotCmd cmd)
 
 
 static void
-Pen_Width_to_tmpfile (int pen, int width)
+Pen_Width_to_tmpfile (int pen, PEN_W width)
 {
   PEN_N tp;
   PEN_W tw;
@@ -2685,7 +2685,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	  break;
 	}
       if (hatchspace == 0.)
-	hatchspace = pt.width[pen] / 10.;
+	hatchspace = pt.width[pen] ;
       if (filltype < 3 && thickness > 0.)
 	hatchspace = thickness;
       fill (polygons, vertices, anchor, P2, scale_flag, filltype, hatchspace,
@@ -2931,12 +2931,13 @@ if (rotate_flag){
       if (read_float (&ftmp, hd))
 	{			/* no parameters -> set defaults */
 	  mywidth = 0.35;
+/* FIXME - scaling here ! */
 	  if (wu_relative)
 	    mywidth = Diag_P1_P2 / 1000.;
 	  if (mywidth < 0.1)
 	    mywidth = 0.1;
 	  PlotCmd_to_tmpfile (DEF_PW);
-	  Pen_Width_to_tmpfile (0, (int) (mywidth * 10.));
+	  Pen_Width_to_tmpfile (0, mywidth);
 /*	 
           fprintf(stderr,"PW: defaulting to 0.35 for all pens\n");
 */
@@ -2954,24 +2955,24 @@ if (rotate_flag){
       if (read_float (&ftmp, hd))
 	{			/* width only, applies to all pens */
 	  PlotCmd_to_tmpfile (DEF_PW);
-	  Pen_Width_to_tmpfile (0, (int) (mywidth * 10.));
-	  if (pg->maxpensize < mywidth * 10.)
-	    pg->maxpensize = mywidth * 10.;
+	  Pen_Width_to_tmpfile (0, mywidth );
+	  if (pg->maxpensize < mywidth )
+	    pg->maxpensize = mywidth ;
 /*	 
-          fprintf(stderr,"PW: defaulting to %d for all pens\n",(int) (mywidth*10.));
+          fprintf(stderr,"PW: defaulting to %f for all pens\n",mywidth);
 */
 	}
       else
 	{			/* second parameter is pen */
 	  PlotCmd_to_tmpfile (DEF_PW);
-	  Pen_Width_to_tmpfile (ftmp, (int) (mywidth * 10.));
+	  Pen_Width_to_tmpfile (ftmp,mywidth);
 	  if (ftmp <= pg->maxpens)
 	    {
-	      if (pg->maxpensize < mywidth * 10.)
-		pg->maxpensize = mywidth * 10.;
+	      if (pg->maxpensize < mywidth)
+		pg->maxpensize = mywidth;
 	    }
 /*
-         fprintf(stderr,"pen%d, size now %d\n",(int) ftmp,(int) (mywidth * 10.));
+         fprintf(stderr,"pen%d, size now %f\n",(int) ftmp,mywidth);
 */
 	}
       break;
@@ -2993,7 +2994,7 @@ if (rotate_flag){
 	neg_ticklen = ftmp / 100.0;
       break;
     case WG:			/* Filled Wedge                 */
-      fwedges (hd, pt.width[pen] / 10.);
+      fwedges (hd, pt.width[pen] );
       break;
     case WU:			/* pen Width Unit is relative  */
       if (read_float (&ftmp, hd) || ftmp == 0.)	/* Zero or no number  */
@@ -3132,7 +3133,7 @@ if (rotate_flag){
       break;
 
     case EA:			/* Edge Rectangle absolute */
-      rect (plot_rel = FALSE, 0, pt.width[pen] / 10., hd);
+      rect (plot_rel = FALSE, 0, pt.width[pen] , hd);
       tp->CR_point = HP_pos;
       break;
 
@@ -3142,12 +3143,12 @@ if (rotate_flag){
       break;
 
     case RA:			/* Fill Rectangle absolute */
-      rect (plot_rel = FALSE, 1, pt.width[pen] / 10., hd);
+      rect (plot_rel = FALSE, 1, pt.width[pen] , hd);
       tp->CR_point = HP_pos;
       break;
 
     case RR:			/* Fill Rectangle relative */
-      rect (plot_rel = TRUE, 1, pt.width[pen] / 10., hd);
+      rect (plot_rel = TRUE, 1, pt.width[pen] , hd);
       tp->CR_point = HP_pos;
       break;
 

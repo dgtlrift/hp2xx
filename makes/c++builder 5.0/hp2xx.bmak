@@ -18,7 +18,7 @@ OBJFILES = chardraw.obj clip.obj fillpoly.obj getopt.obj getopt1.obj hp2xx.obj \
     hpgl.obj lindef.obj no_prev.obj pendef.obj picbuf.obj std_main.obj \
     to_emf.obj to_eps.obj to_escp2.obj to_fig.obj to_ilbm.obj to_img.obj \
     to_pac.obj to_pbm.obj to_pcl.obj to_pcx.obj to_pic.obj to_rgip.obj \
-    to_vec.obj bresnham.obj
+    to_vec.obj bresnham.obj murphy.obj
 RESFILES = 
 MAINSOURCE = hp2xx.bpf
 RESDEPEN = $(RESFILES)

@@ -63,7 +63,7 @@ $       LINK /TRACE/NOMAP/EXEC=[-]HP2XX.EXE hp2xx.obj,hpgl.obj,picbuf.obj,bresnh
                                       chardraw.obj,getopt.obj,getopt1.obj,std_main.obj, -
                                       to_pcx.obj,to_pcl.obj,to_eps.obj,                 -
                                       to_img.obj,to_pbm.obj,to_rgip.obj,                -
-                                      to_fig.obj,clip.obj,fillpoly.obj,                 -
+                                      to_fig.obj,clip.obj,fillpoly.obj, murphy.obj                 -
 				      pendef.obj,to_vec.obj,to_uis.obj,lindef.obj,                 -
 				      'Option'/opt
 $       WRITE SYS$OUTPUT "      Hp2xx complete"

@@ -3,6 +3,8 @@
 .\bresnham.c : \
 	".\bresnham.h"\
 	
+.\murphy.c : \
+	".\murphy.h"\
 
 .\chardraw.c : \
 	".\bresnham.h"\

@@ -20,8 +20,8 @@
 
 
 typedef unsigned short int PEN_N;
-typedef unsigned short int PEN_W;
 typedef unsigned short int PEN_C;
+typedef float PEN_W;
 typedef unsigned char BYTE;
 
 typedef struct {

@@ -1,4 +1,4 @@
-###########################################################################
+/##########################################################################
 #    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
 #   Parts Copyright (c) 1999  Martin Kroeker  All rights reserved.
 #    Distributed by Free Software Foundation, Inc.
@@ -212,7 +212,7 @@ ALL_LIBS += -ltiff -lz -ljpeg
 # No user-serviceable parts below!
 #############################################################################
 
-COMMON_INCS	= hp2xx.h bresnham.h
+COMMON_INCS	= hp2xx.h bresnham.h murphy.h
 ALL_INCS	= $(COMMON_INCS) chardraw.h charset0.h charset5.h charset7.h \
 		getopt.h x11.h ilbm.h iff.h clip.h
 ALL_CFLAGS	= -c $(CFLAGS)
@@ -223,12 +223,14 @@ SRCS	= clip.c fillpoly.c\
 	  hp2xx.c hpgl.c picbuf.c bresnham.c chardraw.c getopt.c getopt1.c \
 	  $(ALL_INCS)\
 	  to_vec.c to_pcx.c to_pcl.c to_eps.c to_img.c to_pbm.c  \
-	  to_rgip.c to_fig.c std_main.c $(PREVIEWER).c pendef.c lindef.c $(EX_SRC)
+	  to_rgip.c to_fig.c std_main.c $(PREVIEWER).c pendef.c lindef.c \
+	  murphy.c $(EX_SRC)
 
 OBJS	= clip.o fillpoly.o\
 	  hp2xx.o hpgl.o picbuf.o bresnham.o chardraw.o getopt.o getopt1.o \
 	  to_vec.o to_pcx.o to_pcl.o  to_eps.o to_img.o to_pbm.o \
-	  to_rgip.o to_fig.o std_main.o $(PREVIEWER).o pendef.o lindef.o $(EX_OBJ)
+	  to_rgip.o to_fig.o std_main.o $(PREVIEWER).o pendef.o lindef.o \
+	  murphy.o $(EX_OBJ)
 
 PROGRAM	= hp2xx
 
@@ -274,6 +276,8 @@ hp2xx.info:	../doc/hp2xxinf.tex
 		-$(MKINFO) hp2xx.texinfo
 
 # bresnham.o:	$< bresnham.h
+
+# murphy.o:	$< murphy.h
 
 # chardraw.o:	$< $(COMMON_INCS) chardraw.h charset0.h
 

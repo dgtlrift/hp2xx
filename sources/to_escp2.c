@@ -31,6 +31,7 @@ copies.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "bresnham.h"
 #include "hp2xx.h"
 #include "pendef.h"

@@ -1,5 +1,12 @@
 Changes from 3.4.2 to 3.4.3
 
+New features:
+
+- Raster graphics modes now use correctly scaled penwidths instead of 
+  crude approximations (Andrew J. Bird, using a 'wide line Bresenham' 
+  algorithm by Alan Murphy of IBM that was released into the public 
+  domain through an IBM Technical Bulletin)
+
 Bug fixes:
 
 - hp2xx now ignores SC commands with invalid parameters 

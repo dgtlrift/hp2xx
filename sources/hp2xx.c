@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a1";
-char	*VERS_DATE = "02/05/03";
+char	*VERS_NO = "3.4.3a2";
+char	*VERS_DATE = "02/05/12";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -422,15 +422,15 @@ int	i;
   pg->xx_mode	= XX_PRE;
   pg->nofill	= FALSE;
   pg->quiet	= FALSE;
-  pg->maxpensize= 1;		/* in pixel or 1/10 mm		*/
+  pg->maxpensize= 0.1;		/* 1/10 mm		*/
   pg->maxcolor	= 1;		/* max. color index		*/
   pg->maxpens=8;
   pg->is_color	= FALSE;
 
-  pt.width[0] = 0;		/* in pixel or 1/10 mm		*/
+  pt.width[0] = 0.0;		/* 1/10 mm		*/
   pt.color[0] = xxBackground;
   for (i=1; i<=NUMPENS; i++) {
-	pt.width[i]	= 1;	/* in pixel or 1/10 mm		*/
+	pt.width[i]	= 0.1;	/* 1/10 mm		*/
         pt.color[i]	= xxForeground;
   }
 

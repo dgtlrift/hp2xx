@@ -24,6 +24,7 @@ USEUNIT("to_pic.c");
 USEUNIT("to_rgip.c");
 USEUNIT("to_vec.c");
 USEUNIT("bresnham.c");
+USEUNIT("murphy.c");
 //---------------------------------------------------------------------------
 This file is used by the project manager only and should be treated like the project file
 

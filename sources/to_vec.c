@@ -68,7 +68,8 @@ PlotCmd         cmd;
 HPGL_Pt         pt1;
 float           xcoord2mm, ycoord2mm;
 FILE            *md = NULL;
-int             pensize, pencolor,pen_no, chars_out = 0, max_chars_out = 210;
+PEN_W           pensize; 
+int		pencolor,pen_no, chars_out = 0, max_chars_out = 210;
 int		np = 1, err = 0;
 char            *ftype="", *scale_cmd="", *pen_cmd="",
 		*poly_start="", *poly_next="", *poly_last="", *poly_end="",
@@ -86,7 +87,7 @@ HPGL_Pt         old_pt;
     case 0:     /* Metafont mode        */
 	ftype           = "METAFONT";
 	scale_cmd       = "mode_setup;\nbeginchar(\"Z\",%4.3fmm#,%4.3fmm#,0);\n";
-	pen_cmd         = "pickup pencircle scaled 0.%1dmm;\n";
+	pen_cmd         = "pickup pencircle scaled %2.1fmm;\n";
 	poly_start      = "draw(%4.3fmm,%4.3fmm)";
 	poly_next       = "--(%4.3fmm,%4.3fmm)";
 	poly_last       = "--(%4.3fmm,%4.3fmm);\n";
@@ -97,7 +98,7 @@ HPGL_Pt         old_pt;
     case 1:     /* TeX (em-Specials) mode       */
 	ftype           = "emTeX-specials";
 	scale_cmd       = "\\unitlength1mm\n\\begin{picture}(%4.3f,%4.3f)\n";
-	pen_cmd         = "\\special{em:linewidth 0.%1dmm}\n";
+	pen_cmd         = "\\special{em:linewidth %2.1fmm}\n";
 	poly_start      = "\\put(%4.3f,%4.3f){\\special{em:moveto}}\n";
 	poly_next       = "\\put(%4.3f,%4.3f){\\special{em:lineto}}\n";
 	poly_last       = poly_next;
@@ -108,7 +109,7 @@ HPGL_Pt         old_pt;
     case 2:     /* TeX (epic) mode      */
 	ftype           = "TeX (epic)";
 	scale_cmd       = "\\unitlength1mm\n\\begin{picture}(%4.3f,%4.3f)\n";
-	pen_cmd         = "\\linethickness{0.%1dmm}\n";
+	pen_cmd         = "\\linethickness{%2.1fmm}\n";
 	poly_start      = "\\drawline(%4.3f,%4.3f)";
 	poly_next       = "(%4.3f,%4.3f)";
 	poly_last       = "(%4.3f,%4.3f)\n";
@@ -119,7 +120,7 @@ HPGL_Pt         old_pt;
     case 3:     /* TeXcad (\emline-Macros) mode */
 	ftype           = "TeXcad compatible";
 	scale_cmd       = "\\unitlength=1mm\n\\begin{picture}(%4.3f,%4.3f)\n";
-	pen_cmd         = "\\special{em:linewidth 0.%1dmm}\n\\linethickness{ 0.%1dmm}\n";
+	pen_cmd         = "\\special{em:linewidth %2.1fmm}\n\\linethickness{ %2.1fmm}\n";
 	poly_start      = "\\emline{%4.3f}{%4.3f}{%d}";
 	poly_next       = "{%4.3f}{%4.3f}{%d}%%\n";
 		/* %% = Fix for John Post's bug report	*/
@@ -133,7 +134,7 @@ HPGL_Pt         old_pt;
 	ftype           = "CS-TeX specials";
 	scale_cmd       = "\\unitlength1mm\n\\begin{draw}{%4.3f}{%4.3f}{%s}\n";
 	special_cmd     = "\\put(0,0){\\special{CS!i %s}}\n";
-	pen_cmd         = "w 0.%1dmm\n";
+	pen_cmd         = "w %2.1fmm\n";
 	poly_start      = "%4.3f %4.3f l ";
 	poly_next       = "%4.3f %4.3f\n";
 	poly_last       = poly_next;
@@ -326,7 +327,7 @@ HPGL_Pt         old_pt;
 	   case 7:
 	   	break;
 	   case 8:
-	   	fprintf(md, pen_cmd, 0,0,0,pensize);
+	   	fprintf(md, pen_cmd, 0,0,0,10*pensize);
 		break;
 	   default:
 		fprintf(md, pen_cmd, pensize);
@@ -364,7 +365,7 @@ HPGL_Pt         old_pt;
 			goto MF_exit;
 		}
 		pensize = pt.width[pen_no];
-		if (pensize != 0)
+		if (pensize != 0.)
 		{
 			if (chars_out)  /* Finish up old polygon */
 			{
@@ -458,7 +459,7 @@ HPGL_Pt         old_pt;
 		HPGL_Pt_from_tmpfile (&pt1);
     if (mode == 8) pt1.y = po->ymax -pt1.y;
 
-		if (pensize == 0)
+		if (pensize == 0.)
 			break;
 
 

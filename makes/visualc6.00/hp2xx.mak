@@ -38,6 +38,7 @@ ALL : "$(OUTDIR)\hp2xx.exe"
 
 CLEAN :
 	-@erase "$(INTDIR)\bresnham.obj"
+	-@erase "$(INTDIR)\murphy.obj"
 	-@erase "$(INTDIR)\chardraw.obj"
 	-@erase "$(INTDIR)\clip.obj"
 	-@erase "$(INTDIR)\fillpoly.obj"
@@ -111,6 +112,7 @@ LINK32=link.exe
 LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib comdlg32.lib /nologo /subsystem:console /incremental:no /pdb:"$(OUTDIR)\hp2xx.pdb" /machine:I386 /out:"$(OUTDIR)\hp2xx.exe" 
 LINK32_OBJS= \
 	"$(INTDIR)\bresnham.obj" \
+	"$(INTDIR)\murphy.obj" \
 	"$(INTDIR)\chardraw.obj" \
 	"$(INTDIR)\clip.obj" \
 	"$(INTDIR)\fillpoly.obj" \
@@ -155,6 +157,7 @@ ALL : "$(OUTDIR)\hp2xx.exe"
 
 CLEAN :
 	-@erase "$(INTDIR)\bresnham.obj"
+	-@erase "$(INTDIR)\murphy.obj"
 	-@erase "$(INTDIR)\chardraw.obj"
 	-@erase "$(INTDIR)\clip.obj"
 	-@erase "$(INTDIR)\fillpoly.obj"
@@ -231,6 +234,7 @@ LINK32=link.exe
 LINK32_FLAGS=kernel32.lib user32.lib gdi32.lib comdlg32.lib /nologo /subsystem:console /incremental:yes /pdb:"$(OUTDIR)\hp2xx.pdb" /debug /machine:I386 /out:"$(OUTDIR)\hp2xx.exe" /pdbtype:sept 
 LINK32_OBJS= \
 	"$(INTDIR)\bresnham.obj" \
+	"$(INTDIR)\murphy.obj" \
 	"$(INTDIR)\chardraw.obj" \
 	"$(INTDIR)\clip.obj" \
 	"$(INTDIR)\fillpoly.obj" \
@@ -279,6 +283,9 @@ SOURCE=.\bresnham.c
 
 "$(INTDIR)\bresnham.obj" : $(SOURCE) "$(INTDIR)"
 
+SOURCE=.\murphy.c
+
+"$(INTDIR)\murphy.obj" : $(SOURCE) "$(INTDIR)"
 
 SOURCE=.\chardraw.c
 

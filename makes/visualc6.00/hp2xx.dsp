@@ -93,6 +93,10 @@ SOURCE=.\bresnham.c
 # End Source File
 # Begin Source File
 
+SOURCE=.\murphy.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\chardraw.c
 # End Source File
 # Begin Source File

@@ -235,7 +235,7 @@ int  pensize, pencolor, pen_no=0, err = 0;
   /* RGIP header */
   fprintf(md,"%%RGIP_METAFILE  :1.0a\n");
   pensize = pt.width[DEFAULT_PEN_NO];
-  if (pensize != 0)
+  if (pensize > 0.05)
   {
     rgip_set_linewidth (pensize);
   }
@@ -260,7 +260,7 @@ int  pensize, pencolor, pen_no=0, err = 0;
 	  exit (ERROR);
 	}
 	pensize = pt.width[pen_no];
-	if (pensize != 0)
+	if (pensize > 0.05)
 	{
 	  rgip_set_linewidth (pensize);
 	}
@@ -276,7 +276,7 @@ int  pensize, pencolor, pen_no=0, err = 0;
 	     exit (ERROR);
          }
 	pensize = pt.width[pen_no];
-	if (pensize != 0)
+	if (pensize > 0.05)
 	{
 	  rgip_set_linewidth (pensize);
 	}

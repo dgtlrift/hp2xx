@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "bresnham.h"
 #include "pendef.h"
@@ -23,6 +24,7 @@
 
 #define MAX_FIG_POINTS 500
 
+#define MM_PER_DISPLAY_UNIT 0.31750
 
 int
 to_fig (const GEN_PAR *pg, const OUT_PAR *po)
@@ -32,7 +34,8 @@ PlotCmd         cmd;
 HPGL_Pt         pt1;
 float           xcoord2mm, ycoord2mm;
 FILE            *md = NULL;
-int             pensize, pen_no;
+int             pen_no;
+PEN_W		pensize;
 int		err = 0, figmode, colour;
 /*int		fig_colour[8];*/
 int		i;
@@ -83,7 +86,7 @@ for (i=0;i<8;++i)
 
   pen_no  = DEFAULT_PEN_NO;
   pensize = pt.width[pen_no];
-  if (pensize != 0)
+  if (pensize >= MM_PER_DISPLAY_UNIT)
   {
 	if (pg->is_color)
 	  colour = 32 + pt.color[pen_no];
@@ -119,7 +122,7 @@ for (i=0;i<8;++i)
 			npoints = 0;
 		}
 		pensize = pt.width[pen_no];
-		if (pensize == 0)
+		if (pensize < MM_PER_DISPLAY_UNIT)
 		{
 			colour = 7; /* Draw in white */
 		}
@@ -218,11 +221,15 @@ FIG_exit:
   return err;
 }
 
-void fig_poly_end(int pensize, int colour, FILE *md, int npoints, long *x, long *y)
+void fig_poly_end(PEN_W pensize, int colour, FILE *md, int npoints, long *x, long *y)
 { /* Write out entire polygon to file */
 	int i,j;
+        int units;
+
+        units = (int) ceil(pensize/MM_PER_DISPLAY_UNIT);
+
 	fprintf(md,"2 1 0 %d %d %d 0 0 -1 0.000 0 0 0 0 0 %d\n",
-		pensize,colour,colour,npoints);
+		units,colour,colour,npoints);
 	j = 0;
 	for (i=0;i<npoints;i++)
 	{
