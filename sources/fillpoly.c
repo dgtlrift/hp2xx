@@ -44,7 +44,7 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 
 
 	if (numpoints <3) {
-	fprintf(stderr,"polygon with %d vertices ???\n",numpoints);
+/*	fprintf(stderr,"polygon with %d vertices ???\n",numpoints);*/
 	return;
 	}
 	CurrentLineEnd = LAE_butt;

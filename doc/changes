@@ -1,5 +1,11 @@
 Changes to hp2xx:
 =================
+3.5.0a12:
+Added do-while loops in AD and SD option processing to handle more than
+one font option per command. IW without parameters was scaled twice if SC
+was set. Character drawing now uses DtClipLine function instead of local,
+broken logic.
+
 3.5.0a11:
 The fixed penwidth of 0.1 used internally for solid fills needs to be
 scaled if the plot uses SC (Simon Clayton). Made another attempt to get

@@ -1,4 +1,4 @@
-hp2xx-3.5.0 (to be released sometime in spring 2004)
+hp2xx-3.5.0 (to be released sometime in 2004)
 
 I would greatly appreciate receiving bug reports, patches or even sample 
 HPGL files. (In the latter case, please make sure that no copyright or 
@@ -25,7 +25,8 @@ New features:
 - Support for filltypes 10 (percentage) and 11 (user-defined pattern) and
   the RF command
 - PDF output generator can optionally be built using Takeshi Kanno's 
-  libharu, which has a much less restrictive license than PDFLIB.
+  libharu (sourceforge.net), which has a much less restrictive license 
+  than PDFLIB.
 
 Bug fixes:
 
@@ -40,3 +41,11 @@ Bug fixes:
 - Corrected several bugs in the miter code for wide lines, which could
   cause both jagged appearance of line sequences and extraneous lines 
   being drawn.
+- Polygons drawn with raised pen were not rendered.
+- Scaling of polygons could turn solid fills into striped patterns.
+- When a single SD or AD command contained more than one font option,
+  only the first one was read.
+- Clipping of circles and arcs added a line from the center to the new
+  starting point in some cases.
+- IW sometimes clipped labels when it should not.
+

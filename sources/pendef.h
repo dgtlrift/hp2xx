@@ -43,7 +43,9 @@ copies.
 typedef unsigned short int PEN_N;
 typedef unsigned short int PEN_C;
 typedef float PEN_W;
-typedef unsigned char Byte;
+#ifndef _ZCONF_H
+typedef unsigned char Byte;     /* zconf.h already defines this */
+#endif
 typedef struct {
    PEN_W width[NUMPENS+1];      /* -p xxxxxxxx / PW             */
    PEN_C color[NUMPENS+1];      /* -c xxxxxxxx / PC             */

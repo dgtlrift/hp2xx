@@ -1880,7 +1880,6 @@ static void lines(int relative, FILE * hd)
 
 		if (read_float(&p.y, hd))	/* x without y invalid! */
 			par_err_exit(2, PA, hd);
-
 		if (!cdot(relative,&p,pen_down)) line(relative, p);
 		numcmds++;
 	}
@@ -1940,7 +1939,6 @@ void line(int relative, HPGL_Pt p)
 			HPGL_Pt_to_polygon(p);
 		}
 	}	else {
-		
 	if (pen_down && !outside) {
 //		if (polygon_mode) {
 //			if (!pm1_flag) {
@@ -2805,6 +2803,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		if (read_float(&ftmp, hd))	/* just AD - defaults */
 			tp->altfont = 0;
 		else {
+			do {
 			switch ((int) ftmp) {
 			case 1:	/* charset */
 				if (read_float(&csfont, hd))
@@ -2847,6 +2846,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			default:
 				par_err_exit(1, cmd, hd);
 			}
+		} while (read_float(&ftmp,hd));	
 		}
 		break;
 	case CA:		/* Alternate character set      */
@@ -3495,10 +3495,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			}
 			C1 = P1;
 			C2 = P2;
-			if (scale_flag) {
-				C1 = S1;
-				C2 = S2;
-			}
+
 			if (rotate_flag && !ps_flag) {
 				switch ((int) fabs(rot_tmp)) {
 				case 90:
@@ -3522,12 +3519,13 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			if (read_float(&C2.y, hd))	/* x without y! */
 				par_err_exit(4, cmd, hd);
 		}
-/*fprintf (stderr," clip limits (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);*/
-
-		if (scale_flag) {
+//fprintf (stderr," clip limits1 (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);
+//fprintf (stderr," sc limits1 (%f,%f)(%f,%f)\n",S1.x,S1.y,S2.x,S2.y);
+		if (scale_flag ) {
 			User_to_Plotter_coord(&C1, &C1);
 			User_to_Plotter_coord(&C2, &C2);
 		}
+//fprintf (stderr," clip limits2 (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);
 
 
 		if (C2.x < C1.x) {
@@ -4088,6 +4086,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		if (read_float(&ftmp, hd))	/* just SD - defaults */
 			tp->stdfont = 0;
 		else {
+			do {
 			switch ((int) ftmp) {
 			case 1:	/* charset */
 				if (read_float(&csfont, hd))
@@ -4130,6 +4129,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			default:
 				par_err_exit(1, cmd, hd);
 			}
+		} while (read_float(&ftmp,hd));	
 		}
 		break;
 	case SS:		/* Select designated standard character set */

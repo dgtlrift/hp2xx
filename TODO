@@ -13,3 +13,4 @@
 - Add miter support in the raster modes, now that we have true wide line
   support
 - add HP-RTL (raster image) support
+- finish Postscript driver (polygon rotation, some line and fill types)

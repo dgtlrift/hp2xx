@@ -57,6 +57,7 @@ copies.
 #include "charset7.h"
 #include "font205.h"
 #include "font173.h"
+#include "clip.h"
 
 #ifdef STROKED_FONTS
 
@@ -128,8 +129,8 @@ static void code_to_ucoord(char c, HPGL_Pt * pp)
 	x = (double) (c >> 4) - 1.0;	/* Bits 4,5,6 --> value 0..7 */
 	y = (double) (c & 0x0f) - 4.0;	/* Bits 0-3   --> value 0..f */
 
-	pp->x = tp->Txx * x + tp->Txy * y + tp->refpoint.x + tp->offset.x;
-	pp->y = tp->Tyx * x + tp->Tyy * y + tp->refpoint.y + tp->offset.y;
+	pp->x = tp->Txx * x + tp->Txy * y + tp->refpoint.x + tp->offset.x ;
+	pp->y = tp->Tyx * x + tp->Tyy * y + tp->refpoint.y + tp->offset.y ;
 }
 
 
@@ -769,25 +770,11 @@ static void ASCII_to_char(int c)
 
 	for (; *ptr; ptr++) {	/* Draw this char */
 		code_to_ucoord(*ptr & 0x7f, &p);
-		 /*MK*/ if (iwflag) {
-			if (scale_flag) {
-				if (P1.x + p.x > C2.x || P1.y + p.y > C2.y) {
-					outside = 1;
-				}
-				if (P1.x + p.x < C1.x || P1.y + p.y < C1.y) {
-					outside = 1;
-				}
-			} else {
-				if (P1.x + (p.x - S1.x) * Q.x > C2.x
-				    || P1.y + (p.y - S1.y) * Q.y > C2.y) {
-					outside = 1;
-				}
-				if (P1.x + (p.x - S1.x) * Q.x < C1.x
-				    || P1.y + (p.y - S1.y) * Q.y < C1.y) {
-					outside = 1;
-				}
-			}
-		}
+		      if (iwflag) {
+			double ppx,ppy;
+			ppx=p.x;ppy=p.y;
+			outside =(DtClipLine(C1.x,C1.y,C2.x,C2.y,&ppx,&ppy,&ppx,&ppy) == 0);
+		      }
 
 		if ((*ptr & 0x80) && !outside)	/* High bit is draw flag */
 			Pen_action_to_tmpfile(DRAW_TO, &p, FALSE);

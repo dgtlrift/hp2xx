@@ -1,4 +1,13 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a12
+
+Bug fixes:
+
+- When a single AD or SD command contained more than one font option, only 
+  the first one was read.
+- IW clip window coordinates were scaled twice if scaling was in effect.
+- IW sometimes clipped labels when it should not.
+
 3.5.0a11
 
 Bug fixes:
