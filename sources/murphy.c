@@ -40,6 +40,10 @@ static struct {
    int quad4;
 } murphy;
 
+#ifdef NORINT
+#define lrint(a) ((long)(a+0.5))
+#endif
+
 void murphy_init(PicBuf *pb,int color) {
    murphy.color=color;            /* setup buffer / color info */
    murphy.pb=pb;

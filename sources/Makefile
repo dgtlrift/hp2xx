@@ -174,7 +174,7 @@ EX_LIBS =
 #
 # Include PDF support
 #EX_SRC	+= to_pdf.c
-#EX_OBJ += to_pdf.o
+#EX_OBJ += to_pdf.o /usr/local/lib/libpdf.a
 #EX_DEFS += -DUSEPDF
 #EX_LIBS += -lpdf
 #
@@ -184,21 +184,21 @@ EX_LIBS =
 #EX_DEFS += -DEPSON
 #
 # Include PNG support:
-#EX_SRC  += png.c to_png.c
-#EX_OBJ  += png.o to_png.o
-#EX_DEFS += -DPNG
-#EX_LIBS += -lpng -lz
+EX_SRC  += png.c to_png.c
+EX_OBJ  += png.o to_png.o
+EX_DEFS += -DPNG
+EX_LIBS += -lpng -lz
 #
 # Include TIFF support:
-#EX_SRC  += to_tif.c
-#EX_OBJ  += to_tif.o
-#EX_DEFS += -DTIF
-#EX_LIBS += -ltiff
+EX_SRC  += to_tif.c
+EX_OBJ  += to_tif.o
+EX_DEFS += -DTIF
+EX_LIBS += -ltiff
 #
-#EX_SRC  += to_jpg.c
-#EX_OBJ  += to_jpg.o
-#EX_DEFS += -DJPG
-#EX_LIBS += -ljpeg
+EX_SRC  += to_jpg.c
+EX_OBJ  += to_jpg.o
+EX_DEFS += -DJPG
+EX_LIBS += -ljpeg
 #
 #EX_SRC += to_emf.c
 #EX_OBJ += to_emf.o /usr/local/lib/libEMF.a

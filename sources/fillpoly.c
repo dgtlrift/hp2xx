@@ -35,8 +35,10 @@ polyymax=-100000.;
 /*fprintf(stderr,"AC %f %f\n",point1.x,point1.y);*/
 for (i = 0 ; i <= numpoints; i++ ) {
 /*fprintf(stderr,"%d: %f %f \n",i,polygon[i].x,polygon[i].y);*/
+
 polyxmin=MIN(polyxmin,polygon[i].x);
 polyymin=MIN(polyymin,polygon[i].y);
+
 polyxmax=MAX(polyxmax,polygon[i].x);
 polyymax=MAX(polyymax,polygon[i].y);
 }
@@ -53,7 +55,7 @@ pymin=point1.y;
 pxmin=polyxmin;
 pymin=polyymin;
 */
-fprintf(stderr,"anchor %f %f , minpoly %f %f\n",point1.x,point1.y,polyxmin,polyymin);
+/*fprintf(stderr,"anchor %f %f , minpoly %f %f\n",point1.x,point1.y,polyxmin,polyymin);*/
 pxmax=polyxmax;
 pymax=polyymax;
 if (polyxmin == polyxmax && polyymin == polyymax){

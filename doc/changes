@@ -1,6 +1,57 @@
 Changes to hp2xx:
 =================
 
+3.4.3a8:
+
+moved the vertex adding stuff to a new function that updates the extents of
+the drawing as well - previously vertices that were only used as boundaries
+for filling, not edging, polygon, did not enter into the size calculation.
+Tried to achieve a more sensible initialization of AC - 0,0 as in alpha7 is
+plain stupid, but the "physical extents" is a somewhat dubious thing in hp2xx,
+and the actual limits are not yet known when the IN or plain AC is seen.
+Modified the warning message code to make sure that the "unsupported charset"
+message is printed only once per SD, not once per character.
+The seeming IW brokenness was not in hp2xx but in the program that created the
+strange test file, so i have reverted the change from a7, which makes some
+correct files display again.
+Some fixes by Bengt-Arne Fjellner: usage message was printing garbage 
+in description of -p (because of penwidth type change), EMF files were 
+upside down, and microsoft platforms seem to need a replacement for 
+rint/lrint (actually some non-MS platforms may need this as well - not sure 
+if everybody does obey C99 already ?).
+
+3.4.3a6,a7:
+PM2 now closes open polygons automatically. Stray Escape chars in the HPGL
+code are reported and ignored (one guy was trying to use esc-prefixed 
+commands in his code because he was too familiar with PCL). Guess what,
+there was still some brokenness in IW/SC handling. Anchor corners for
+fill patterns were defaulting to a P1 which could be undefined or unsuitable
+at that time. Fixed some wreckage from the penwidth type change in to_emf.c
+and added ability to create EMF files on UNIX with libEMF. Added VS and CR.
+Added -e for extra margin around IW (at least one commercial code miscalculates
+its clip boxes, cutting of text from spectra). FP with --nofill now does EP,
+so fat lettering done with just FP does not simply vanish.
+
+3.4.3a5:
+Most of LA line ending options are now supported, thanks to Andrew Bird.
+X11 previewer was leaking memory when zooming, but valgrind found that.
+to_pdf sometimes got confused about when to begin and end its stroke paths.
+
+a2-a4:
+PJL preambles with more than one Esc sequence and some arguments to SD,AD,BP 
+were not handled, causing strange results.  Extremely short lines could 
+confuse the line pattern generator into drawing the gaps instead. 
+Andrew Bird implemented a "fat bresenham" to draw true linewidths in the
+raster modes.
+
+3.4.3a1:
+Ignore broken SC. Fix AC to not always calculate scan lines across the 
+whole canvas for each polygon. Use 8bpp pixel buffer only if large pen
+numbers are actually used, not just defined - lots of programs do NP255
+by default. Fixed stupidity where IW/RO interaction could cause unwanted
+image cutoff on rotation. to_pdf could overflow the y coordinate, inverting
+one half of the image onto the other. Dots for PUPDPU were not clipped by IW.
+to_dxf now writes a more elaborate header. 
 V 3.4.1, hopefully sometime in Jan 02:
 
 call line_PicBuf with pt.width scaled by HP_to_xdots/10./0.025 to achieve

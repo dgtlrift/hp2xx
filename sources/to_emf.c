@@ -32,6 +32,8 @@ copies.
 ** 01/10/17  V 1.02  BAF  Added Windows Preview
 ** 01/10/23  V 1.04  BAF  Updated to 3.4.1
 ** 01/11/25  V 1.05  BAF  Updated to 3.4.1b
+** 02/06/??  V 1.06  ???  Support for EMF under UNIX
+** 02/07/05  V 1.07  BAF  Fixup for UNIX support and a little cleanup
 */
 
 #ifndef EMF
@@ -52,7 +54,6 @@ copies.
 
 
 #include <stdio.h>
-//#include <string.h>
 #include <math.h>
 #include "bresnham.h"
 #include "hp2xx.h"
@@ -472,10 +473,6 @@ to_emf (const GEN_PAR *pg, const OUT_PAR *po)
 {
 	HANDLE outDC;
 	int err=0;
-#ifdef UNIX
-	HWND desktop= GetDesktopWindow();
-	HDC dc=GetDC(desktop);
-#endif
 	if (!pg->quiet)
 		Eprintf ("\n\n- Writing emf code to \"%s\"\n",
 		*po->outfile == '-' ? "stdout" : po->outfile);
@@ -484,31 +481,18 @@ to_emf (const GEN_PAR *pg, const OUT_PAR *po)
 
 	if (*po->outfile != '-')
 	{
-#ifdef UNIX
-		if ((outDC=CreateEnhMetaFile(dc,po->outfile,NULL,"hp2xx"))==0){
+		if ((outDC=CreateEnhMetaFile(NULL,po->outfile,NULL,"hp2xx\0\0"))==0){
 			PError("hp2xx (emf)");
 			return ERROR;
 		}
-#else
-		if ((outDC=CreateEnhMetaFile(NULL,po->outfile,NULL,"hej\0hopp\0"))==0)
-		{
-			PError("hp2xx (emf)");
-			return ERROR;
-		}
-#endif
 	}
 	else
 	{
 		PError("hp2xx (Cant send metafile to stdout emf)");
 		return ERROR;
 	}
-#ifdef UNIX
-	SetMapMode(dc,MM_ANISOTROPIC);
-	SetViewportExtEx(dc,10,-10,NULL);
-#else	
 	SetMapMode(outDC,MM_ANISOTROPIC);
 	SetViewportExtEx(outDC,10,-10,NULL); // size mult
-#endif
 	err=plotit(outDC,pg,po);
 	CloseEnhMetaFile(outDC);
 

@@ -47,6 +47,7 @@ Bug fixes:
 - Polygon fill range was not always initialized correctly (Bill Marr)
 - Compile fix for HPUX11 ansi compiler (add whitespace to work around
   what is probably a compiler bug) (Glen Stewart)
+- Vertices of filled polygons were omitted from calculation of actual size
 
 Changes from 3.4.1 to 3.4.2
 

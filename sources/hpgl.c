@@ -103,7 +103,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#ifndef _NO_VCL
 #include <unistd.h>
+#endif
+
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
@@ -186,6 +190,7 @@ static float rot_cos, rot_sin;
 
 static short rotate_flag = FALSE;	/* Flags tec external to HP-GL  */
 static short ps_flag = FALSE;
+static short ac_flag = FALSE;
 static double rot_ang = 0.;
 static double rot_tmp = 0.;	/* saved RO value for resetting after drawing */
 static short mv_flag = FALSE;
@@ -558,6 +563,19 @@ void HPGL_Pt_to_tmpfile (const HPGL_Pt * pf) {
   ymin = MIN (pf->y, ymin);
   xmax = MAX (pf->x, xmax);
   ymax = MAX (pf->y, ymax);
+}
+
+
+void HPGL_Pt_to_polygon (const HPGL_Pt  pf) {
+  if (record_off)		/* Wrong page!  */
+    return;
+
+    polygons[++vertices]=pf;
+  xmin = MIN (pf.x, xmin);
+  ymin = MIN (pf.y, ymin);
+  xmax = MAX (pf.x, xmax);
+  ymax = MAX (pf.y, ymax);
+  
 }
 
 
@@ -1652,8 +1670,8 @@ line (int relative, HPGL_Pt p)
     {
       if (polygon_mode)
 	{
-	  polygons[++vertices] = p_last;
-	  polygons[++vertices] = p;
+	  HPGL_Pt_to_polygon( p_last ) ;
+	  HPGL_Pt_to_polygon( p );
 /*	      fprintf(stderr,"polygon line1: %f %f - %f %f\n",p_last.x,p_last.y,p.x,p.y);*/
 	}
       else
@@ -1676,8 +1694,8 @@ line (int relative, HPGL_Pt p)
 #if 0
   if (polygon_mode && !polygon_penup)
     {
-      polygons[++vertices] = p_last;
-      polygons[++vertices] = p;
+      HPGL_Pt_to_polygon ( p_last );
+      HPGL_Pt_to_polygon ( p );
     }
 #endif
   if (polygon_mode && polygon_penup)
@@ -1733,16 +1751,16 @@ arc_increment (HPGL_Pt * pcenter, double r, double phi)
 	polygon_penup = FALSE;
       else if (pen_down && !outside)
 	{
-	  polygons[++vertices] = p_last;
-	  polygons[++vertices] = p;
+	  HPGL_Pt_to_polygon ( p_last );
+	  HPGL_Pt_to_polygon ( p );
 /*fprintf(stderr,"arcpoint %f %f\n",p.x,p.y);*/
 
 	}
       else if ((p.x != p_last.x) || (p.y != p_last.y))
 	{
 	  /*polygon_penup=TRUE; */
-	  polygons[++vertices] = p_last;
-	  polygons[++vertices] = p;
+	  HPGL_Pt_to_polygon ( p_last );
+	  HPGL_Pt_to_polygon ( p );
 /*fprintf(stderr,"final arcpoint %f %f\n",p.x,p.y);*/
 	}
     }
@@ -1833,8 +1851,8 @@ p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
 	  if (!outside)
 	    {
 	    if (polygon_mode){
-	      polygons[++vertices] = polyp;
-	      polygons[++vertices] = p;
+	      HPGL_Pt_to_polygon ( polyp );
+	      HPGL_Pt_to_polygon ( p );
 	      polyp.x = p.x;
 	      polyp.y = p.y;
 	    }else{
@@ -2153,6 +2171,10 @@ fwedges (FILE * hd, float cur_pensize)	/*derived from circles */
     hatchspace = cur_pensize;
   if (filltype < 3 && thickness > 0.)
     hatchspace = thickness;
+	if (!ac_flag){ /* not yet initialized*/
+		anchor.x=xmin;
+		anchor.y=ymin;
+	}
   fill (wpolygon, i, anchor, P2, scale_flag, filltype, hatchspace, hatchangle);
 
   CurrentLinePatLen = SafeLinePatLen;	/* Restore */
@@ -2242,8 +2264,8 @@ circles (FILE * hd)
 	{
 	  if (polygon_mode)
 	    {
-	      polygons[++vertices] = polyp;
-	      polygons[++vertices] = p;
+	      HPGL_Pt_to_polygon ( polyp );
+	      HPGL_Pt_to_polygon ( p );
 	      polyp.x = p.x;
 	      polyp.y = p.y;
 	    }
@@ -2260,8 +2282,8 @@ circles (FILE * hd)
   p.y = center.y;
   if (polygon_mode)
     {
-      polygons[++vertices] = polyp;
-      polygons[++vertices] = p;
+      HPGL_Pt_to_polygon ( polyp );
+      HPGL_Pt_to_polygon ( p );
     }
   else
     Pen_action_to_tmpfile (DRAW_TO, &p, scale_flag);
@@ -2406,22 +2428,26 @@ rect (int relative, int filled, float cur_pensize, FILE * hd)
       else
 	{
 	  vertices = 0;
-	  polygons[vertices] = p_last;
+	  HPGL_Pt_to_polygon ( p_last );
 	  p1.x = p_last.x;
 	  p1.y = p.y;
-	  polygons[++vertices] = p1;
-	  polygons[++vertices] = p1;
-	  polygons[++vertices] = p;
-	  polygons[++vertices] = p;
+	  HPGL_Pt_to_polygon ( p1 );
+	  HPGL_Pt_to_polygon ( p1 );
+	  HPGL_Pt_to_polygon ( p );
+	  HPGL_Pt_to_polygon ( p );
 	  p1.x = p.x;
 	  p1.y = p_last.y;
-	  polygons[++vertices] = p1;
-	  polygons[++vertices] = p1;
-	  polygons[++vertices] = p_last;
+	  HPGL_Pt_to_polygon ( p1 );
+	  HPGL_Pt_to_polygon ( p1 );
+	  HPGL_Pt_to_polygon ( p_last );
 	  if (hatchspace == 0.)
 	    hatchspace = cur_pensize;
 	  if (filltype < 3 && thickness > 0.)
 	    hatchspace = thickness;
+	if (!ac_flag){ /* not yet initialized*/
+		anchor.x=xmin;
+		anchor.y=ymin;
+	}
 	  fill (polygons, vertices, anchor, P2, scale_flag, filltype, hatchspace,
 		hatchangle);
 	}
@@ -2533,6 +2559,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
     	  if (scale_flag)User_to_Plotter_coord(&anchor,&anchor);
        	  break;
     	  }else{
+    	  ac_flag=1;
     	anchor.x=ftmp;
     	}
     	if (read_float(&ftmp,hd))
@@ -2687,7 +2714,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	hatchspace = pt.width[pen] ;
       if (filltype < 3 && thickness > 0.)
 	hatchspace = thickness;
-	if (anchor.x==100000. && anchor.y==100000.){
+	if (!ac_flag){ /* not yet initialized*/
 		anchor.x=xmin;
 		anchor.y=ymin;
 	}
@@ -2813,8 +2840,8 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	  polygon_mode = FALSE;
 	  pen_down = saved_penstate;
 	  if (p_last.x != polystart.x || p_last.y != polystart.y){
-	  polygons[++vertices]=p_last; 
-	  polygons[++vertices]=polystart; /* force closing of open polygon */	  
+	  HPGL_Pt_to_polygon (p_last); 
+	  HPGL_Pt_to_polygon (polystart); /* force closing of open polygon */	  
 	  }
 	}
       break;
@@ -3102,7 +3129,6 @@ if (rotate_flag){
 	  if (read_float (&C2.y, hd))	/* x without y! */
 	    par_err_exit (4, cmd);
 	}
-#if 1
 	if ( C1.x > C2.x && P1.x<P2.x) {
 		ftmp=C1.x;
 		C1.x=C2.x;
@@ -3113,11 +3139,8 @@ if (rotate_flag){
 		C1.y=C2.y;
 		C2.y=ftmp;
 		}	
-#endif
-if (rotate_flag&&!scale_flag){
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
-	  }
 	C1.x -= pg->extraclip;
 	C1.y -= pg->extraclip;
 	C2.x += pg->extraclip;

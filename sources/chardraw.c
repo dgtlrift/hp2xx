@@ -112,6 +112,7 @@ ASCII_to_char (int c)
    HPGL_Pt	p;
    char	*ptr;
    int outside=0;
+   static int warnfont=0;
    int SafeLineType = CurrentLineType;
    LineEnds SafeLineEnd = CurrentLineEnd;
 
@@ -700,7 +701,10 @@ if (c == 101 ) { /* backspacing for special characters  */
 		ptr= &charset205[c][0];
 		break;		
     default:	/* Currently, only charsets 0-7,30-39 are supported	*/
+		if (tp->font != warnfont){ /* warn only once per font */
+		warnfont=tp->font; 
 	Eprintf ("Charset %d not supported -- replaced by charset 0!\n", tp->font);
+	}
 	if (c & 0x80)
 	{
 		/*Eprintf ("8bit character mapped to charset 7\n");*/
