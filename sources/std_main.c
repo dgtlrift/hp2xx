@@ -124,6 +124,7 @@ char thepage[4];
 
   if (!pg->quiet)
 	Send_version();
+
 #if 1
 strcpy(savedname,po->outfile);
 	for (;;){
@@ -139,13 +140,15 @@ strcpy(savedname,po->outfile);
 #endif
 
 #if 1
-counter++;
-if (po->outfile != "-" && counter >0) {
+if (strcmp(pg->mode,"pre")) {
+	counter++;
+	if (po->outfile != "-" && counter >0) {
 	sprintf(thepage,"%d",counter);
-strcpy(po->outfile,savedname);
-strcpy(strstr(po->outfile,pg->mode),thepage);
-strcat(po->outfile,".");
-strcat(po->outfile,pg->mode);
+	strcpy(po->outfile,savedname);
+	strcpy(strstr(po->outfile,pg->mode),thepage);
+	strcat(po->outfile,".");
+	strcat(po->outfile,pg->mode);
+	}
 }
 #endif
   /**

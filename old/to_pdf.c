@@ -52,7 +52,6 @@ void pdf_set_linejoin( LineJoins type, LineLimit limit, double pensize, PDF *fd)
 void	pdf_set_color (double, double, double, HPGL_Pt *, PDF *);
 void 	pdf_end(PDF *);
 
-#define PAGEMODE if (openpath==1) { PDF_stroke(md); openpath=0; }
 
 
 /**
@@ -71,21 +70,9 @@ void	pdf_end (PDF *fd)
 /**
  ** Set line width
  **/
-void pdf_set_linewidth (double width, HPGL_Pt *ppt, PDF *fd) {
-
-   static double lastwidth = -1;
-   double newwidth;
-
-   if(width == 0.0) {
-      newwidth=0.0001;
-   } else {
-      newwidth=width;
-   }
-
-   if(fabs(newwidth-lastwidth) >= 0.01) {
-      PDF_setlinewidth(fd, newwidth * MM_TO_PS_POINT);
-      lastwidth=newwidth;
-   }
+void	pdf_set_linewidth (double width, HPGL_Pt *ppt, PDF *fd)
+{
+  PDF_setlinewidth(fd, width);
 }
 
 
@@ -198,17 +185,16 @@ void	pdf_init (const GEN_PAR *pg, const OUT_PAR *po, PDF *fd,
 {
 long	left, right, low, high;
 double	hmxpenw;
-HPGL_Pt	pt1 = {0};
 
   hmxpenw = pg->maxpensize / 20.0;	/* Half max. pen width, in mm	*/
 
-  left  = (long) floor(abs(po->xoff-hmxpenw)                * MM_TO_PS_POINT);
-  low   = (long) floor(abs(po->yoff-hmxpenw)                * MM_TO_PS_POINT);
-  right = (long) ceil ((po->xoff+po->width+hmxpenw)         * MM_TO_PS_POINT);
-  high  = (long) ceil ((po->yoff+po->height+hmxpenw)        * MM_TO_PS_POINT);
+  left  = (long) floor(abs(po->xoff-hmxpenw)		    * 2.834646);
+  low   = (long) floor(abs(po->yoff-hmxpenw)* 2.834646);
+  right = (long) ceil ((po->xoff   + po->width+hmxpenw)	    * 2.834646);
+  high  = (long) ceil ((po->yoff+po->height+hmxpenw)	    * 2.834646);
 
   PDF_begin_page(fd, right,high);
-  pdf_set_linewidth(pensize,&pt1,fd);
+  PDF_setlinewidth(fd, pensize);
   pdf_set_linecap(CurrentLineAttr.End,pensize,fd);
   pdf_set_linejoin(CurrentLineAttr.Join,CurrentLineAttr.Limit,pensize,fd);
 }
@@ -252,8 +238,8 @@ PEN_W pensize;
 
   /* Factor for transformation of HP coordinates to mm	*/
 
-  xcoord2mm = po->width  / (po->xmax - po->xmin) * MM_TO_PS_POINT;
-  ycoord2mm = po->height / (po->ymax - po->ymin) * MM_TO_PS_POINT;
+  xcoord2mm = po->width  / (po->xmax - po->xmin) * 2.834646;
+  ycoord2mm = po->height / (po->ymax - po->ymin) * 2.834646;
   xmin	    = po->xmin;
   ymin	    = po->ymin;
 
@@ -267,7 +253,6 @@ PEN_W pensize;
 	{
 	  case NOP:
 		break;
-
 	  case SET_PEN:
 		if ((pen_no = fgetc(pg->td)) == EOF)
 		{
@@ -276,18 +261,26 @@ PEN_W pensize;
 			goto PDF_exit;
 		}
 		pensize = pt.width[pen_no];
-		pencolor = -pt.color[pen_no];
+		pencolor = pt.color[pen_no];
+		 if(openpath==1){PDF_stroke(md);
+		 	openpath=0;
+		 	}
+                    if (pensize != 0)
+		pdf_set_linewidth ((double) pensize, &pt1, md);
+                pdf_set_linecap(CurrentLineAttr.End,(double) pensize,md);
+                pdf_set_linejoin(CurrentLineAttr.Join,CurrentLineAttr.Limit,(double) pensize,md);
+		pdf_set_color (  pt.clut[pencolor][0]/255.0,
+				pt.clut[pencolor][1]/255.0,
+				pt.clut[pencolor][2]/255.0,
+				&pt1, md);
 		break;
-
           case DEF_PW:
                 if(!load_pen_width_table(pg->td)) {
                     PError("Unexpected end of temp. file");
 		    err = ERROR;
 		    goto PDF_exit;
                 }
-		pensize = pt.width[pen_no];
                 break;
-                
           case DEF_PC:
                 err=load_pen_color_table(pg->td);
                 if (err<0) {
@@ -297,7 +290,6 @@ PEN_W pensize;
                 }
                 if (err==pencolor) pencolor *=-1; /*current pen changed*/
                 break;
-
           case DEF_LA:
                 if(load_line_attr(pg->td) <0) {
                     PError("Unexpected end of temp. file");
@@ -305,13 +297,19 @@ PEN_W pensize;
 		    goto PDF_exit;
                 }
                 break;
-                
 	  case MOVE_TO:
+		if (openpath==1) {
+			PDF_stroke(md);
+			openpath=0;
+			}
+                if(fabs(pensize-pt.width[pen_no]) >= 0.01) {
                     pensize=pt.width[pen_no];
-		    PAGEMODE;
+                    if (pensize != 0){
                        pdf_set_linewidth ((double) pensize, &pt1, md);
                        pdf_set_linecap(CurrentLineAttr.End,(double) pensize,md);
                        pdf_set_linejoin(CurrentLineAttr.Join,CurrentLineAttr.Limit,(double) pensize,md);
+                    }
+                }
                 if(pencolor <0) {
                    pencolor=pt.color[pen_no];
                    pdf_set_color(pt.clut[pencolor][0]/255.0,
@@ -321,16 +319,19 @@ PEN_W pensize;
                 }
 
                 HPGL_Pt_from_tmpfile (&pt1);
-                PDF_moveto(md,(pt1.x-xmin)*xcoord2mm,(pt1.y-ymin)*ycoord2mm);
-		openpath=1;
+                if(pensize != 0){
+                   PDF_moveto(md,(pt1.x-xmin)*xcoord2mm,(pt1.y-ymin)*ycoord2mm);
+                }
 		break;
-		
 	  case DRAW_TO:
+                if(fabs(pensize-pt.width[pen_no]) >= 0.01) {
                    pensize=pt.width[pen_no];
+                   if(pensize != 0){
                       pdf_set_linewidth ((double) pensize, &pt1, md);
                       pdf_set_linecap(CurrentLineAttr.End,(double) pensize,md);
                       pdf_set_linejoin(CurrentLineAttr.Join,CurrentLineAttr.Limit,(double) pensize,md);
-
+                   }
+                }
                 if(pencolor <0) {
                    pencolor=pt.color[pen_no];
                    pdf_set_color(pt.clut[pencolor][0]/255.0,
@@ -339,12 +340,24 @@ PEN_W pensize;
                                  &pt1, md);
                 }
                 HPGL_Pt_from_tmpfile (&pt1);
+                if(pensize != 0){
                    PDF_lineto(md,(pt1.x-xmin)*xcoord2mm,(pt1.y-ymin)*ycoord2mm);
                    openpath=1;
+                }
                 break;
-
 	  case PLOT_AT:
+/*		if (openpath==1){
+			PDF_stroke(md);
+			openpath=0;
+			}*/
+                if(fabs(pensize-pt.width[pen_no]) >= 0.01) {
                    pensize=pt.width[pen_no];
+                   if(pensize != 0){
+                      pdf_set_linewidth ((double) pensize, &pt1, md);
+                      pdf_set_linecap(CurrentLineAttr.End,(double) pensize,md);
+                      pdf_set_linejoin(CurrentLineAttr.Join,CurrentLineAttr.Limit,(double) pensize,md);
+                   }
+                }
                 if(pencolor<0) {
                    pencolor=pt.color[pen_no];
 		   pdf_set_color(pt.clut[pencolor][0]/255.0,
@@ -353,14 +366,13 @@ PEN_W pensize;
                                  &pt1, md);
                 }
 		HPGL_Pt_from_tmpfile (&pt1);
-                PAGEMODE;
-                PDF_save(md);
-                PDF_setlinewidth(md,0.00001);
-                PDF_circle(md,(pt1.x-xmin)*xcoord2mm,(pt1.y-ymin)*ycoord2mm, pensize/2 * MM_TO_PS_POINT);
-                PDF_fill(md);
-                PDF_restore(md);
+                if(pensize != 0) {
+                   PDF_moveto(md,(pt1.x-xmin)*xcoord2mm,(pt1.y-ymin)*ycoord2mm);
+                   PDF_lineto(md,(pt1.x-xmin)*xcoord2mm+1,(pt1.y-ymin)*ycoord2mm+1);
+/*		   PDF_stroke(md);*/
+		openpath=1;
+                }
                 break;
-
 	  default:
 		Eprintf ("Illegal cmd in temp. file!");
 		err = ERROR;
@@ -369,10 +381,13 @@ PEN_W pensize;
   }
 
   /* Finish up */
-  PAGEMODE;
+if (openpath==1) PDF_stroke(md);
   pdf_end (md);
 
 PDF_exit:
+/*  if (md != stdout)
+	fclose (md);
+*/
   if (!pg->quiet)
 	Eprintf ("\n");
   return err;

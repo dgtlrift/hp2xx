@@ -232,10 +232,10 @@ double	hmxpenw;
  **
  ** (hmxpenw & floor/ceil corrections suggested by Eric Norum)
  **/
-  left  = (long) floor(abs(po->xoff-hmxpenw)		    * 2.834646);
-  low   = (long) floor(abs(po->yoff-hmxpenw)* 2.834646);
-  right = (long) ceil ((po->xoff   + po->width+hmxpenw)	    * 2.834646);
-  high  = (long) ceil ((po->yoff+po->height+hmxpenw)	    * 2.834646);
+  left  = (long) floor(abs(po->xoff-hmxpenw)                * MM_TO_PS_POINT);
+  low   = (long) floor(abs(po->yoff-hmxpenw)                * MM_TO_PS_POINT);
+  right = (long) ceil ((po->xoff+po->width+hmxpenw)         * MM_TO_PS_POINT);
+  high  = (long) ceil ((po->yoff+po->height+hmxpenw)        * MM_TO_PS_POINT);
   fprintf(fd,"%%%%BoundingBox: %ld %ld %ld %ld\n", left, low, right, high);
   if (!pg->quiet)
 	Eprintf ("Bounding Box: [%ld %ld %ld %ld]\n",
@@ -300,7 +300,7 @@ double	hmxpenw;
 
   fprintf(fd,"/@SetPlot\n");
   fprintf(fd,"   {\n");
-  fprintf(fd,"    2.834646 2.834646 scale\n");	/* 1/72"--> mm */
+  fprintf(fd,"    %f %f scale\n",MM_TO_PS_POINT,MM_TO_PS_POINT);	/* 1/72"--> mm */
   fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff+hmxpenw, po->yoff+hmxpenw);
   fprintf(fd,"    %6.3f setlinewidth\n", pensize);
   fprintf(fd,"   } def\n");

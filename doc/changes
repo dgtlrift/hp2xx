@@ -1,5 +1,23 @@
 Changes to hp2xx:
 =================
+3.4.3a11:
+Rectangle drawing was broken by the vertex buffer changes in a8. The multi-file
+mode added in a10 crashed in previews because it tried to generate output file 
+names. Added an instruction counter for HPGL commands - this also helps decide
+whether to generate another output file (otherwise PG at end would be required)
+a10 based that decision on the number of commands currently in the temporary
+file, but this may change depending on how many initialisation code is moved 
+there. Moved the line attribute initialization from the temporary file to
+global parameters (need to check back with Andrew Bird if this is correct).
+Changed wedge code to use the polygon buffer instead of private storage.
+Added experimental line join/miter support in PDF output (Simon Milton,using
+the framework already built by Andrew Bird). Moved call to init_HPGL to ensure
+it is called only once even for multiple files (else PG would imply IN).
+Some cleanup in PS/IW/RO - all files from my collection can be rotated without
+undue clipping again. Esc E is no longer flagged as an invalid sequence.
+Andrew Bird cleaned up to_pdf.c, using filled circle for PLOT_AT instead of
+short line. Added OW (output clipping window) command.
+
 3.4.3a10:
 
 another change in the endless RO/IW saga. And a fix for IP with P2.y < P1.y.

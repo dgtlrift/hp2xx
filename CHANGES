@@ -6,8 +6,11 @@ New features:
   Andrew J. Bird). Instead of crude approximations we are using a 'wide line 
   Bresenham' algorithm by Alan Murphy of IBM that was released into the public 
   domain through an IBM Technical Bulletin
-- Added support for (most of) the LA command (Andrew J. Bird)
+- Added support for (most of) the LA, line attributes command (Andrew J. Bird)
 - Added support for the CR (relative color range) command
+- Added support for the IR (input reference points as percentage of current
+  limits) command
+- Added support for the OW (output clipping window) command
 - hp2xx now recognizes (and ignores) the VS command to reduce number of
   runtime warnings
 - hp2xx now ignores stray Escape characters among HPGL commands
@@ -15,7 +18,7 @@ New features:
   Allen Barnetts libEMF (http://libemf.sourceforge.net) is installed
 - hp2xx now translates FP commands into EP to show the outlines when the
   -n, --nofill option is used. (Previously polygon commands were ignored 
-  unless in that case unless they contained an explicit EP as well. This was
+  in that case unless they contained an explicit EP as well. This was
   particularly unfortunate in the case of polygon-derived text)
 - Added new commandline option -e, --extraclip <unit> for additional margin
   around clip regions. Some programs apparently miscalculate their frames.
@@ -53,8 +56,8 @@ Bug fixes:
 - Compile fix for HPUX11 ansi compiler (add whitespace to work around
   what is probably a compiler bug) (Glen Stewart)
 - Vertices of filled polygons were omitted from calculation of actual size
-- added ROWSPERSTRIP header parameter to TIFF files, as some programs seem
-  to require it 
+- added ROWSPERSTRIP header parameter to TIFF files, as some programs rely
+  on its presence 
 - Dots for PUPDPU got drawn for PDPA as well, which made consecutive dashed
   lines restart the dash pattern for each segment instead of carrying over 
   the remainder of the pattern from the previous one. 

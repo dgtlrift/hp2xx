@@ -148,6 +148,7 @@ LineType CurrentLineType = LT_solid;
 short scale_flag = FALSE;
 short record_off = FALSE;
 long vec_cntr_w = 0L;
+long n_commands = 0L;
 short silent_mode = FALSE;
 FILE *td;
 
@@ -194,6 +195,7 @@ static short ac_flag = FALSE;
 static double rot_ang = 0.;
 static double rot_tmp = 0.;	/* saved RO value for resetting after drawing */
 static short mv_flag = FALSE;
+static short pg_flag = FALSE;
 static short ct_dist = FALSE;
 static short fixedcolor = FALSE;
 static short fixedwidth = FALSE;
@@ -266,6 +268,7 @@ static unsigned char b_max=255;
 #define NP      0x4E50
 #define NR      0x4E52
 #define OP	0x4F50
+#define OW	0x4F57
 #define PA	0x5041
 #define PB	0x5042
 #define PC      0x5043		/*MK */
@@ -348,12 +351,16 @@ reset_HPGL (void)
   n_unknown = 0;*/
   mv_flag = FALSE;
   wu_relative = FALSE;
+  pg_flag = FALSE;
   ct_dist = FALSE;
   CurrentLineType = LT_solid;
 
   set_line_style_defaults();
-  set_line_attr_defaults();
-
+/*  set_line_attr_defaults();*/
+  CurrentLineAttr.Join=LAJ_plain_miter;
+  CurrentLineAttr.End=LAE_butt;
+  CurrentLineAttr.Limit=5;
+  
   StrTerm = ETX;
   if (strbuf == NULL)
     {
@@ -401,7 +408,7 @@ init_HPGL (GEN_PAR * pg, const IN_PAR * pi)
 /**
  ** Re-init. global var's for multiple-file applications
  **/
-
+fprintf(stderr,"init_HPGL\n");
   td = pg->td;
   silent_mode = pg->quiet;
   xmin = pi->x0;
@@ -434,6 +441,7 @@ init_HPGL (GEN_PAR * pg, const IN_PAR * pi)
   vec_cntr_r = 0L;
   vec_cntr_w = 0L;
   n_unexpected = 0;
+  n_commands = 0;
   n_unknown = 0;
 
   reset_HPGL ();
@@ -567,16 +575,23 @@ void HPGL_Pt_to_tmpfile (const HPGL_Pt * pf) {
 }
 
 
-void HPGL_Pt_to_polygon (const HPGL_Pt  pf) {
+void HPGL_Pt_to_polygon (HPGL_Pt  pf) {
   if (record_off)		/* Wrong page!  */
     return;
 
     polygons[++vertices]=pf;
+#if 1
+if (rotate_flag) 
+    {
+      double tmp = rot_cos * pf.x - rot_sin * pf.y;
+      pf.y = rot_sin * pf.x + rot_cos * pf.y;
+      pf.x = tmp;
+      }
   xmin = MIN (pf.x, xmin);
   ymin = MIN (pf.y, ymin);
   xmax = MAX (pf.x, xmax);
   ymax = MAX (pf.y, ymax);
-  
+#endif  
 }
 
 
@@ -1527,7 +1542,7 @@ read_ESC_RTL (FILE * hd, int c1, int hp)
 	      break;
 	    }
 	}
-	if (c1 != '%') {
+	if (c1 != '%' && c1 != 'E') {
 		ungetc(ctmp,hd);
 		fprintf(stderr,"invalid escape ESC%c%c\n",c1,c2);
 		return;
@@ -2078,7 +2093,7 @@ arcs (int relative, FILE * hd)
 static void
 fwedges (FILE * hd, float cur_pensize)	/*derived from circles */
 {
-  HPGL_Pt p, center, wpolygon[MAXPOLY];
+  HPGL_Pt p, oldp, center;
   float eps, r, start, sweep;
   double phi;
   double SafeLinePatLen = CurrentLinePatLen;
@@ -2117,12 +2132,14 @@ fwedges (FILE * hd, float cur_pensize)	/*derived from circles */
 
 
   center = p_last;		/* reference point is last position */
-  wpolygon[0] = p_last;
+  vertices = -1; 		/* clear the polygon buffer */
   if (r == 0.0)			/* Zero radius given    */
     return;
 
-  wpolygon[1].x = center.x + r * cos (start);
-  wpolygon[1].y = center.y + r * sin (start);
+  HPGL_Pt_to_polygon (p_last);
+  p.x = center.x + r * cos (start);
+  p.y = center.y + r * sin (start);
+
 
   if (CurrentLineType == LT_adaptive)	/* Adaptive patterns    */
     {
@@ -2137,6 +2154,7 @@ fwedges (FILE * hd, float cur_pensize)	/*derived from circles */
   i = 1;
   for (phi = eps; phi <= sweep; phi += eps)
     {
+      oldp=p;
       p.x = center.x + r * cos (start + phi);
       p.y = center.y + r * sin (start + phi);
       if (iwflag)
@@ -2156,17 +2174,13 @@ fwedges (FILE * hd, float cur_pensize)	/*derived from circles */
 	}
       if (!outside)
 	{
-	  i++;
-	  wpolygon[i] = wpolygon[i - 1];
-	  i++;
-	  wpolygon[i] = p;
+	  HPGL_Pt_to_polygon(oldp);
+	  HPGL_Pt_to_polygon(p);
 	}
       outside = 0;
     }
-  i++;
-  wpolygon[i] = p;
-  i++;
-  wpolygon[i] = center;
+    HPGL_Pt_to_polygon(p);
+    HPGL_Pt_to_polygon(center);  
   if (hatchspace == 0.)
     hatchspace = cur_pensize;
   if (filltype < 3 && thickness > 0.)
@@ -2175,7 +2189,8 @@ fwedges (FILE * hd, float cur_pensize)	/*derived from circles */
 		anchor.x=xmin;
 		anchor.y=ymin;
 	}
-  fill (wpolygon, i, anchor, P2, scale_flag, filltype, hatchspace, hatchangle);
+  fill (polygons, vertices, anchor, P2, scale_flag, filltype, hatchspace, hatchangle);
+
 
   CurrentLinePatLen = SafeLinePatLen;	/* Restore */
 
@@ -2427,7 +2442,7 @@ rect (int relative, int filled, float cur_pensize, FILE * hd)
 	}
       else
 	{
-	  vertices = 0;
+	  vertices = -1;
 	  HPGL_Pt_to_polygon ( p_last );
 	  p1.x = p_last.x;
 	  p1.y = p.y;
@@ -2447,7 +2462,8 @@ rect (int relative, int filled, float cur_pensize, FILE * hd)
 	if (ac_flag==0){ /* not yet initialized*/
 		anchor.x=P1.x;
 		anchor.y=P1.y;
-	fprintf(stderr,"anchor init to P1\n");
+/*	fprintf(stderr,"anchor init to P1\n");*/
+
 	/*	anchor.y=MIN(P1.y,ymin);*/
 	}
 	  fill (polygons, vertices, anchor, P2, scale_flag, filltype, hatchspace,
@@ -2888,7 +2904,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	User_to_Plotter_coord (&p1, &p2);
       else
 	p2 = p1;		/* Local copy   */
-#if 0
+#if 1
       if (rotate_flag)		/* hp2xx-specific global rotation       */
 	{
 	  ftmp = rot_cos * p2.x - rot_sin * p2.y;
@@ -2896,30 +2912,17 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	  p2.x = ftmp;
 	}
 #endif
+
+#if 1
       xmin = MIN (p2.x, xmin);
       ymin = MIN (p2.y, ymin);
       xmax = MAX (p2.x, xmax);
       ymax = MAX (p2.y, ymax);
+#endif
+      
+#if 1
       p1.x = myheight;
       p1.y = mywidth;
-
-#if 1
-/* add the following - to get the correct linetype scale etc */
-      P1.x = 0;
-      P1.y = 0;
-      P2.x = myheight;
-      P2.y = mywidth;
-if (rotate_flag){
-	P2.x=mywidth;
-	P2.y=myheight;
-}
-      Diag_P1_P2 = HYPOT (P2.x - P1.x, P2.y - P1.y);
-      CurrentLinePatLen = 0.04 * Diag_P1_P2;
-      S1 = P1;
-      S2 = P2;
-/* ajb */
-#endif
-#if 1
       if (scale_flag)		/* Rescaling    */
 	User_to_Plotter_coord (&p1, &p2);
       else
@@ -2938,6 +2941,24 @@ if (rotate_flag){
       ymin = MIN (p2.y, ymin);
       xmax = MAX (p2.x, xmax);
       ymax = MAX (p2.y, ymax);
+#endif
+/*      fprintf(stderr,"min,max vor PS: %f %f %f %f\n",xmin,ymin,xmax,ymax);*/
+
+#if 1
+/* add the following - to get the correct linetype scale etc */
+      P1.x = 0.;
+      P1.y = 0.;
+      P2.x = myheight;
+      P2.y = mywidth;
+if (rotate_flag){
+	P2.x=mywidth;
+	P2.y=myheight;
+}
+      Diag_P1_P2 = HYPOT (P2.x - P1.x, P2.y - P1.y);
+      CurrentLinePatLen = 0.04 * Diag_P1_P2;
+      S1 = P1;
+      S2 = P2;
+/* ajb */
 #endif
       break;
     case PT:			/* Pen thickness (for solid fills - current pen only */
@@ -3126,40 +3147,13 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
       iwflag = 1;
       if (read_float (&C1.x, hd))	/* No number found  */
 	{
-	  if (scale_flag)
-	    {
-	 if (rotate_flag && ((rot_ang ==90.) || (int)rot_tmp%90 !=0))
-		{   /* FIXME: there must be a more elegant solution for
-			the interactions between -r and RO */
-		  C1.x = S1.y;
-		  C1.y = S1.x;
-		  C2.x = S2.y;
-		  C2.y = S2.x;
-		}
-	      else
-		{
-		  C1.x = S1.x;
-		  C1.y = S1.y;
-		  C2.x = S2.x;
-		  C2.y = S2.y;
-		}
-	    }
-	  else
-	    {
-		if (rotate_flag &&  ((rot_ang==90. )|| (int)rot_tmp%90 !=0) || rot_tmp ==0.) {
-		C1.x= P1.y;
-		C1.y= P1.x;
-		C2.x= P2.y;
-		C2.y= P2.x;
-		}else{	
 	      C1.x = P1.x;
 	      C1.y = P1.y;
 	      C2.x = P2.x;
 	      C2.y = P2.y;
-	      }
-/*fprintf (stderr," clip limits (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);*/
 	    }
-	}
+
+/*fprintf (stderr," clip limits (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);*/
       else
 	{
 	  if (read_float (&C1.y, hd))	/* x without y! */
@@ -3169,6 +3163,7 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 	  if (read_float (&C2.y, hd))	/* x without y! */
 	    par_err_exit (4, cmd);
 	}
+#if 1
 	if ( C1.x > C2.x && P1.x<P2.x) {
 		ftmp=C1.x;
 		C1.x=C2.x;
@@ -3179,21 +3174,50 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 		C1.y=C2.y;
 		C2.y=ftmp;
 		}
-#if 1
 	if (P2.y < P1.y){
                 ftmp=C1.y;
                 C1.y=C2.y;
                 C2.y=ftmp;
                 }
 #endif
+#if 0
+	if (C2.x < C1.x){
+		ftmp=C2.x;
+		C2.x=C1.x;
+		C1.x=ftmp;
+		}
+	if (C2.y < C1.y){
+		ftmp=C2.y;
+		C2.y=C1.y;
+		C1.y=ftmp;
+		}
+#endif		
+if (scale_flag){
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
-
+	}
+	
 	C1.x -= pg->extraclip;
 	C1.y -= pg->extraclip;
 	C2.x += pg->extraclip;
 	C2.y += pg->extraclip;
 
+#if 0
+      if (rotate_flag)		/* hp2xx-specific global rotation       */
+	{
+fprintf(stderr," P1,P2 C1,C2: %f %f %f %f - %f %f %f %f\n",P1.x,P1.y,P2.x,P2.y,C1.x,C1.y,C2.x,C2.y);
+  if ((rot_ang-rot_tmp)==0.) break;
+      p1.x = cos (M_PI * (rot_ang-rot_tmp) / 180.0);
+      p1.y = sin (M_PI * (rot_ang-rot_tmp) / 180.0);
+	  ftmp = p1.x * C1.x - p1.y * C1.y;
+	  C1.y = p1.y * C1.x + p1.x * C1.y;
+	  C1.x = ftmp;
+	  ftmp = p1.x * C2.x - p1.y * C2.y;
+	  C2.y = p1.y * C2.x + p1.x * C2.y;
+	  C2.x = ftmp;
+fprintf(stderr," P1,P2 C1,C2: %f %f %f %f - %f %f %f %f\n",P1.x,P1.y,P2.x,P2.y,C1.x,C1.y,C2.x,C2.y);
+	}
+#endif
       break;
 
     case OP:			/* Output reference Points P1,P2 */
@@ -3201,6 +3225,13 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 	{
 	  Eprintf ("\nP1 = (%g, %g)\n", P1.x, P1.y);
 	  Eprintf ("P2 = (%g, %g)\n", P2.x, P2.y);
+	}
+      break;
+    case OW:			/* Output clip box  */
+      if (!silent_mode)
+	{
+	  Eprintf ("\nC1 = (%g, %g)\n", C1.x, C1.y);
+	  Eprintf ("C2 = (%g, %g)\n", C2.x, C2.y);
 	}
       break;
 
@@ -3212,6 +3243,7 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
       record_off = (first_page > page_number)
 	|| ((last_page < page_number) && (last_page > 0));
 #if 1
+	pg_flag=TRUE;
 	return;
 #endif	
     break;
@@ -3452,6 +3484,7 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 	      break;
 	    case 0:
 	    case 180:
+		break;
 	    default:
 	    rotate_flag=0;
 	      break;
@@ -3731,8 +3764,19 @@ read_HPGL (GEN_PAR * pg, const IN_PAR * pi)
   int c;
   short cmd;
 
-  init_HPGL (pg, pi);
+  vec_cntr_r = 0L;
+  vec_cntr_w = 0L;
+  n_unexpected = 0;
+  n_commands = 0;
+  n_unknown = 0;
+  
+  if ((c= getc(pi->hd)) ==EOF)
+	return;
+  else
+  ungetc(c,pi->hd);
 
+  if (!pg_flag) init_HPGL (pg, pi);    
+  
   if (!pg->quiet)
     Eprintf ("\nReading HPGL file\n");
 
@@ -3775,13 +3819,15 @@ read_HPGL (GEN_PAR * pg, const IN_PAR * pi)
 	      break;
 	    }
 	  cmd |= (c & 0xFF);
+	n_commands++;
 	  read_HPGL_cmd (pg, cmd, pi->hd);
 	}
     }
 END:    
-  if (!pg->quiet && vec_cntr_w+n_unknown+n_unexpected>1)
+  if (!pg->quiet && n_commands>0)
     {
-      Eprintf ("\nHPGL command(s) ignored: %d\n", n_unknown);
+      Eprintf ("\nHPGL commands read: %d\n",n_commands);
+      Eprintf ("HPGL command(s) ignored: %d\n", n_unknown);
       Eprintf ("Unexpected event(s):  %d\n", n_unexpected);
       Eprintf ("Internal command(s):  %ld\n", vec_cntr_w);
       Eprintf ("Pens used: ");

@@ -143,6 +143,8 @@ copies.
 #define	LF	'\012'
 #define	BEL	'\007'
 
+#define MM_TO_PS_POINT 2.834646
+
 #define	MAX_LB_LEN	150	/* Max num of chars per label	*/
 
 #define MAXPOLY 20480  /* Size of polygon vertex buffer */
@@ -337,6 +339,7 @@ void	NormalWait	(void);
 
 void	plot_user_char	(FILE *);
 void	read_HPGL	(GEN_PAR*, const IN_PAR*);
+void	adjust_input_transform	(const GEN_PAR*, const IN_PAR*, OUT_PAR*);
 void	adjust_input_transform	(const GEN_PAR*, const IN_PAR*, OUT_PAR*);
 PlotCmd	PlotCmd_from_tmpfile	(void);
 void	HPGL_Pt_from_tmpfile	(HPGL_Pt *);

@@ -183,7 +183,7 @@ void print_line_style(void) {
 void set_line_attr_defaults(void){
    PlotCmd_to_tmpfile (DEF_LA);
    Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
-
+#define LA_JOINS_LIMIT_SUPPORT 1
 #ifdef LA_JOINS_LIMIT_SUPPORT
    PlotCmd_to_tmpfile (DEF_LA);
    Line_Attr_to_tmpfile(LineAttrJoin,LAJ_plain_miter);

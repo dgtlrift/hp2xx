@@ -120,6 +120,7 @@ Cmd  | i |
      |   |
  LA  |*  | Line [ends and joins] Attributes
  LB  |+  | Label
+ LM  | - | Label mode (for two-byte character sets)
  LO  |+  | Label origin
  LT  |+  | Line type
      |   |
@@ -144,7 +145,7 @@ Cmd  | i |
  OP  |+  | Output P1 and P2
  OS  | - | Output status
  OT  |  .| Output carousel type
- OW  | - | Output window
+ OW  |+  | Output window
      |   |
  PA  |+  | Plot absolute
  PB  |+  | Print buffered label
@@ -152,6 +153,8 @@ Cmd  | i |
  PD  |+  | Pen down
  PE  |+  | Polyline Encoded 
  PG  |+  | Page feed
+ PM  |+  | Polygon mode
+ PP  | - | Pixel placement
  PR  |+  | Plot relative
  PS  |+  | Plot Size
  PT  |+  | Pen thickness
@@ -199,5 +202,5 @@ Cmd  | i |
  YT  |+  | Y-Tick
 
 Useless statistics : this makes currently (3.4.3) 
-70 fully supported, 3 partially supported, 24 not-applicable 
+72 fully supported, 3 partially supported, 24 not-applicable 
 and 23 unsupported commands.
