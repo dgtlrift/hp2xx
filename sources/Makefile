@@ -46,7 +46,7 @@ infodir  = $(prefix)/info
 # For non-gcc compilers, simply set CFLAGS = -O (to start with)
 #
 CC       = gcc
-CFLAGS	= -O2 -g -I/usr/X11R6/include $(DEFINES) $(EX_DEFS) -Wall -pedantic -Wuninitialized -Wunused -Wreturn-type -Wmissing-prototypes -Wstrict-prototypes  
+CFLAGS	= -O2 -m486 -I/usr/X11R6/include $(DEFINES) $(EX_DEFS) -Wall -pedantic -Wuninitialized -Wunused -Wreturn-type -Wmissing-prototypes -Wstrict-prototypes  
 
 #CFLAGS   = +O1 -Aa -D_HPUX_SOURCE -DSYSV -I/usr/include/X11R5 -I/usr/include/X11R4 $(DEFINES)
 
@@ -67,7 +67,7 @@ BINDCMD  =                # only needed for EMX and DJGPP DOS extenders
 #
 DEFINES   = -DUNIX -DHAS_UNIX_X11 
 PREVIEWER = to_x11
-ALL_LIBS  = -L/usr/lib/X11R6 -lX11 -lm     
+ALL_LIBS  = -L/usr/lib/X11R6 -lpng -ltiff -ljpeg -lz -lX11 -lm     
 #
 # Generic UNIX, no previewer
 #
@@ -179,19 +179,23 @@ EX_DEFS =
 #
 # Epson Esc/P2 support 
 #
-#EX_SRC	 += to_escp2.c
-#EX_OBJ	 += to_escp2.o
-#EX_DEFS += -DEPSON
+EX_SRC	 += to_escp2.c
+EX_OBJ	 += to_escp2.o
+EX_DEFS += -DEPSON
 #
 # Include PNG support:
-#EX_SRC  += png.c to_png.c
-#EX_OBJ  += png.o to_png.o
-#EX_DEFS += -DPNG
+EX_SRC  += png.c to_png.c
+EX_OBJ  += png.o to_png.o
+EX_DEFS += -DPNG
 #
 # Include TIFF support:
-#EX_SRC  +=  to_tif.c
-#EX_OBJ  += to_tif.o
-#EX_DEFS += -DTIF
+EX_SRC  +=  to_tif.c
+EX_OBJ  += to_tif.o
+EX_DEFS += -DTIF
+#
+EX_SRC  += to_jpg.c
+EX_OBJ  += to_jpg.o
+EX_DEFS += -DJPG
 #
 # Include ATARI extras:
 # EX_SRC	+= to_pic.c to_pac.c

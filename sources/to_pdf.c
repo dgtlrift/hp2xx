@@ -64,20 +64,6 @@ void	pdf_end (PDF *fd)
 }
 
 
-
-/**
- ** Flush old path and move
- **/
-/*void	ps_stroke_and_move_to (HPGL_Pt *ppt, PDF *fd)
-{
-  fprintf(fd, " S\n%6.2f %6.2f M",	/ * S: Start a new path	* /
-		(ppt->x-xmin) * xcoord2mm, (ppt->y-ymin) * ycoord2mm);
-  linecount = 0;
-}
-*/
-
-
-
 /**
  ** Set line width
  **/
@@ -98,50 +84,8 @@ PDF_setrgbcolor(fd,red,green,blue);
 }
 
 
-
-
-/*
-void	ps_line_to (HPGL_Pt *ppt, char mode, PDF *fd)
-{
-  if (linecount > 3)
-  {
-      putc('\n', fd);
-      linecount = 0;
-  }
-  else
-      putc(' ', fd);
-
-  fprintf(fd, "%6.2f %6.2f %c",
-		(ppt->x-xmin) * xcoord2mm, (ppt->y-ymin) * ycoord2mm, mode);
-  linecount++;
-}
-*/
-
-
-
-
 /**
- ** Get the date and time: This is optional, since its result only
- ** appeares in the PS header.
- **/
-/*
-char	*Getdate (void)
-{
-int len;
-long t;
-char *p;
-
-  t = time((long *) 0);
-  p = ctime(&t);
-  len = strlen(p);
-  *(p + len - 1) = '\0';  / * zap the newline character * /
-  return p;
-}
-*/
-
-
-/**
- ** PostScript definitions
+ ** basic PDF definitions
  **/
 
 void	pdf_init (const GEN_PAR *pg, const OUT_PAR *po, PDF *fd,
@@ -157,8 +101,7 @@ double	hmxpenw;
   right = (long) ceil ((po->xoff   + po->width+hmxpenw)	    * 2.834646);
   high  = (long) ceil ((po->yoff+po->height+hmxpenw)	    * 2.834646);
 
-/*fprintf(stderr,"po width, height: %f %f, xmin,ymin %f %f\n",po->width,po->height,po->xmin,po->ymin);*/
-PDF_begin_page(fd, po->width,po->height);
+  PDF_begin_page(fd, right,high);
   PDF_setlinewidth(fd, pensize/10.);
 
 }
@@ -166,7 +109,7 @@ PDF_begin_page(fd, po->width,po->height);
 
 
 /**
- ** Higher-level interface: Output Encapsulated PostScript format
+ ** Higher-level interface: Output Portable Document Format
  **/
 
 int
@@ -184,7 +127,7 @@ int firstmove;
 	Eprintf ("\n\n- Writing PDF code to \"%s\"\n",
 		*po->outfile == '-' ? "stdout" : po->outfile);
 
-  /* Init. of PostScript file: */
+  /* Init. of PDF file: */
   
   md=PDF_new();
   if (PDF_open_file(md, po->outfile) == -1) {
@@ -192,7 +135,7 @@ int firstmove;
 		return ERROR;
 	}
 
-  /* PS header */
+  /* header */
 
   pensize = pt.width[DEFAULT_PEN_NO]; /* Default pen	*/
   pdf_init (pg, po, md, pensize);
@@ -200,8 +143,8 @@ int firstmove;
 
   /* Factor for transformation of HP coordinates to mm	*/
 
-  xcoord2mm = po->width  / (po->xmax - po->xmin);
-  ycoord2mm = po->height / (po->ymax - po->ymin);
+  xcoord2mm = po->width  / (po->xmax - po->xmin) * 2.834646;
+  ycoord2mm = po->height / (po->ymax - po->ymin) * 2.834646;
   xmin	    = po->xmin;
   ymin	    = po->ymin;
 
@@ -227,6 +170,8 @@ int firstmove;
 		 if(!firstmove){PDF_stroke(md);
 		 	firstmove=1;
 		 	}
+                    if (pensize != 0)
+		pdf_set_linewidth ((double) pensize/10.0, &pt1, md);
 		pdf_set_color (  pt.clut[pencolor][0]/255.0,
 				pt.clut[pencolor][1]/255.0,
 				pt.clut[pencolor][2]/255.0,

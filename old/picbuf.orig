@@ -233,7 +233,7 @@ Byte	*addr;
 		color_index <<= 7;
 	addr = rowbuf->buf + (x >> 3);
   }
-  else if (depth==4)
+  else
   {
 	Mask = 0xF0;
 	if ((x & 0x01) != 0)
@@ -242,16 +242,9 @@ Byte	*addr;
 		color_index <<= 4;
 	addr = rowbuf->buf + (x >> 1);
   }
-  else 
-	{
-	addr = rowbuf->buf +x;
-	Mask= 0x00;
-	}
-	if (depth<8){
+
   *addr &= ~Mask;
   *addr |=  color_index;
-  }else
-  *addr = color_index;
 }
 
 
@@ -275,7 +268,7 @@ Byte	*addr;
 	addr = rowbuf->buf + (x >> 3);
 	return (*addr & Mask) ? xxForeground : xxBackground;
   }
-  else if (pb->depth ==4)
+  else
   {
 	Mask = 0xF0;
 	if ((x & 0x01) != 0)
@@ -286,14 +279,7 @@ Byte	*addr;
 		color_index >>= 4;
 	return color_index;
   }
-  else
-  {
-	addr = rowbuf->buf+x;
-	color_index= *addr;
-	return color_index;
-  }	
 }
-
 
 
 
@@ -387,10 +373,7 @@ int	nr, not_allocated;
  **/
 
   pb->depth = (pg->is_color) ? 4 : 1;
-  if (pg->is_color && pg->maxpens > 15) {
-                        pb->depth = 8;
-                        if (!pg->quiet) fprintf(stderr,"using 8bpp picbuf for NP>15\n");
-			 }
+
 /**
  ** Allocate a (large) array of RowBuf structures: One for each scan line.
  ** !!! The NULL initialization done implicitly by calloc() is crucial !!!

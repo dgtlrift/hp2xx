@@ -170,7 +170,7 @@ typedef unsigned char	Byte;
 
 typedef	enum{
 	XX_CAD, XX_CS, XX_DXF, XX_EM, XX_EMF, XX_EMP, XX_EPIC, XX_EPS, XX_ESC2, XX_FIG, XX_GPT, XX_HPGL, 
-        XX_ILBM, XX_IMG,
+        XX_ILBM, XX_IMG, XX_JPG,
 	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PDF, XX_PIC, XX_PNG, XX_PRE, 
 	XX_RGIP, XX_SVG, XX_TIFF, XX_TERM	/* Dummy: terminator	*/
 } hp2xx_mode;
@@ -365,6 +365,9 @@ RowBuf	*get_RowBuf	(const PicBuf*, int);
 int	PicBuf_to_PCL	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_PCX	(const GEN_PAR*, const OUT_PAR*);
 int     PicBuf_to_PNG   (const GEN_PAR*, const OUT_PAR*);
+#ifdef JPG
+int	PicBuf_to_JPG  (const GEN_PAR*, const OUT_PAR*);
+#endif
 int     PicBuf_to_TIF   (const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_IMG	(const GEN_PAR*, const OUT_PAR*);
 int	PicBuf_to_PBM	(const GEN_PAR*, const OUT_PAR*);

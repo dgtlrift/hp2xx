@@ -176,9 +176,11 @@ static short polygon_mode = FALSE;
 static int filltype = 1;
 static float hatchspace = 0.;
 static float hatchangle = 0.;
+static float saved_hatchspace[2]={0.,0.};
+static float saved_hatchangle[2]={0.,0.};
 static float thickness = 0.;
 static short polygon_penup = FALSE;
-
+static HPGL_Pt anchor = {0.0 , 0.0};
 static float rot_cos, rot_sin;
 
 static short rotate_flag = FALSE;	/* Flags tec external to HP-GL  */
@@ -187,6 +189,7 @@ static double rot_ang = 0.;
 static double rot_tmp = 0.;	/* saved RO value for resetting after drawing */
 short scale_flag = FALSE;
 static short mv_flag = FALSE;
+static short ct_dist = FALSE;
 #ifdef	ATARI
 extern short silent_mode = FALSE;	/* Don't clobber ATARI preview! */
 #else
@@ -206,6 +209,7 @@ static short pen = -1;
 static short pens_in_use[NUMPENS];
 static short pen_down = FALSE;	/* Internal HP-GL book-keeping: */
 static short plot_rel = FALSE;
+static short saved_penstate = FALSE; /* to track penstate over polygon mode */
 static short wu_relative = FALSE;
 static int again=FALSE;
 static char StrTerm = ETX;	/* String terminator char       */
@@ -219,6 +223,7 @@ static FILE *td;
 /* Known HPGL commands, ASCII-coded as High-byte/low-byte int's */
 
 #define AA	0x4141
+#define AC	0x4143
 #define AD      0x4144
 #define AF	0x4146
 #define AH	0x4148
@@ -233,6 +238,7 @@ static FILE *td;
 #define CO	0x434F /*AJB*/
 #define CP	0x4350
 #define CS      0x4353		/*MK */
+#define CT	0x4354
 #define DF	0x4446
 #define DI	0x4449
 #define DR	0x4452
@@ -339,6 +345,7 @@ reset_HPGL (void)
   n_unknown = 0;*/
   mv_flag = FALSE;
   wu_relative = FALSE;
+  ct_dist = FALSE;
   CurrentLineType = LT_solid;
 
   set_line_style_defaults ();
@@ -1675,7 +1682,8 @@ line (int relative, HPGL_Pt p)
 	}
 
     }
-  if (polygon_mode && polygon_penup)
+
+  if (polygon_mode && polygon_penup) 
     pen_down = FALSE;
 
   if (pen_down && !outside)
@@ -1709,6 +1717,7 @@ line (int relative, HPGL_Pt p)
       polygons[++vertices] = p_last;
       polygons[++vertices] = p;
     }
+
   if (polygon_mode && polygon_penup)
     {
       polygon_penup = FALSE;
@@ -1914,6 +1923,7 @@ tarcs (int relative, FILE * hd)
     default:			/* Illegal state        */
       par_err_exit (99, AT);
     }
+     if (ct_dist == FALSE)
   eps *= M_PI / 180.0;		/* Deg-to-Rad           */
 
   d = p_last;
@@ -1948,6 +1958,8 @@ h = ( 2*p2.y*(p2.x^2 + p2.y^2) -2*p3.y*p2.x^2 - 2*p3.y*p2.y^2 )  / 2*p3.x-4*p2.x
 
   r = sqrt (center.x * center.x + center.y * center.y);
 
+  if (ct_dist == TRUE)
+	eps = 2. * acos((r-eps)/r);
   center.x = center.x + p_last.x;
   center.y = center.y + p_last.y;
 
@@ -2030,7 +2042,9 @@ arcs (int relative, FILE * hd)
     default:			/* Illegal state        */
       par_err_exit (99, AA);
     }
-  eps *= M_PI / 180.0;		/* Deg-to-Rad           */
+
+	if (ct_dist == FALSE)
+  	eps *= M_PI / 180.0;		/* Deg-to-Rad           */
 
 
   if (relative)			/* Process coordinates  */
@@ -2049,6 +2063,8 @@ arcs (int relative, FILE * hd)
 
   if (((r = sqrt (d.x * d.x + d.y * d.y)) == 0.0) || (alpha == 0.0))
     return;			/* Zero radius or zero arc angle given  */
+
+  if (ct_dist == TRUE) eps = 2.* acos((r-eps/r));
 
   phi0 = atan2 (-d.y, -d.x);
 
@@ -2111,7 +2127,11 @@ fwedges (FILE * hd, float cur_pensize)	/*derived from circles */
     default:			/* Illegal state        */
       par_err_exit (99, EW);
     }
-  eps *= M_PI / 180.0;		/* Deg-to-Rad           */
+
+	if (ct_dist == TRUE)
+	eps = 2.*acos((r-eps)/r);
+	else
+ 	 eps *= M_PI / 180.0;		/* Deg-to-Rad           */
   start *= M_PI / 180.0;	/* Deg-to-Rad           */
   sweep *= M_PI / 180.0;	/* Deg-to-Rad           */
 
@@ -2171,7 +2191,7 @@ fwedges (FILE * hd, float cur_pensize)	/*derived from circles */
     hatchspace = cur_pensize;
   if (filltype < 3 && thickness > 0.)
     hatchspace = thickness;
-  fill (wpolygon, i, P1, P2, scale_flag, filltype, hatchspace, hatchangle);
+  fill (wpolygon, i, anchor, P2, scale_flag, filltype, hatchspace, hatchangle);
 
   CurrentLinePatLen = SafeLinePatLen;	/* Restore */
 
@@ -2205,7 +2225,11 @@ circles (FILE * hd)
     default:			/* Illegal state        */
       par_err_exit (99, CI);
     }
-  eps *= M_PI / 180.0;		/* Deg-to-Rad           */
+
+	if (ct_dist == TRUE)
+	eps = 2.*acos((r-eps)/r);
+	else
+	  eps *= M_PI / 180.0;		/* Deg-to-Rad           */
 
 
   center = p_last;
@@ -2317,7 +2341,11 @@ wedges (FILE * hd)		/*derived from circles */
     default:			/* Illegal state        */
       par_err_exit (99, EW);
     }
-  eps *= M_PI / 180.0;		/* Deg-to-Rad           */
+
+	if (ct_dist == TRUE)
+	eps = 2.*acos((r-eps)/r);
+	else
+  	eps *= M_PI / 180.0;		/* Deg-to-Rad           */
   start *= M_PI / 180.0;	/* Deg-to-Rad           */
   sweep *= M_PI / 180.0;	/* Deg-to-Rad           */
 
@@ -2432,7 +2460,7 @@ rect (int relative, int filled, float cur_pensize, FILE * hd)
 	    hatchspace = cur_pensize;
 	  if (filltype < 3 && thickness > 0.)
 	    hatchspace = thickness;
-	  fill (polygons, vertices, P1, P2, scale_flag, filltype, hatchspace,
+	  fill (polygons, vertices, anchor, P2, scale_flag, filltype, hatchspace,
 		hatchangle);
 	}
       Pen_action_to_tmpfile (MOVE_TO, &p_last, scale_flag);
@@ -2535,6 +2563,19 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
     case BZ:			/* cubic bezier curve, absolute control points */
       bezier (FALSE, hd);
       break;
+    case AC:			/* anchor corner of fill patterns */
+    	if (read_float(&ftmp, hd)){ /* just AC - default 0,0 */
+    	  anchor.x=0.;
+    	  anchor.y=0.;
+    	  break;
+    	  }else{
+    	anchor.x=ftmp;
+    	}
+    	if (read_float(&ftmp,hd))
+    	  anchor.y=0.;
+    	  else
+    	  anchor.y=ftmp;
+    	break;  
     case AD:
 	if (read_float(&ftmp, hd)) /* just AD - defaults */
 	tp->altfont = 0;
@@ -2591,6 +2632,12 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	tp->font = csfont;
       tp->stdfont = csfont;
       break;
+    case CT:			/* chord tolerance */
+	if (read_float (&ftmp,hd) || ftmp != 1.)
+		ct_dist = FALSE;
+	else
+		ct_dist = TRUE;
+      break;
     case EP:			/* edge polygon */
       for (i = 0; i < vertices; i = i + 2)
 	{			/*for all polygon edges */
@@ -2623,7 +2670,7 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	hatchspace = pt.width[pen] / 10.;
       if (filltype < 3 && thickness > 0.)
 	hatchspace = thickness;
-      fill (polygons, vertices, P1, P2, scale_flag, filltype, hatchspace,
+      fill (polygons, vertices, anchor, P2, scale_flag, filltype, hatchspace,
 	    hatchangle);
       Pen_action_to_tmpfile (MOVE_TO, &p_last, scale_flag);
       break;
@@ -2646,17 +2693,30 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	    fprintf (stderr,
 		     "No support for user-defined fill types, using type 1 instead\n");
 	  filltype = 1;
+	  break;
 	}
 
-      if (read_float (&ftmp, hd))
+      if (read_float (&ftmp, hd)){
+      	hatchspace = saved_hatchspace[filltype-3];
+	if (hatchspace == 0.) hatchspace = 0.01*Diag_P1_P2;
+        hatchangle = saved_hatchangle[filltype-3];
 	break;
+	}
       else
+        {
+	if (ftmp<=0.) ftmp=0.01*Diag_P1_P2;
 	hatchspace = ftmp;
-
-      if (read_float (&ftmp, hd))
+	saved_hatchspace[filltype-3] = hatchspace;
+	}
+      if (read_float (&ftmp, hd)){
+        hatchangle = saved_hatchangle[filltype-3];
 	break;
+	}
       else
+        {
 	hatchangle = ftmp;
+	saved_hatchangle[filltype-3] = hatchangle;
+	}
       break;
     case NP:			/* Number of Pens                    */
       if (read_float (&ftmp, hd) || ftmp > NUMPENS)	/* invalid or missing */
@@ -2718,18 +2778,20 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	{			/* no parameters or PM0 */
 	  polygon_mode = TRUE;
 	  polygon_penup = FALSE;
+	  saved_penstate = pen_down;
 	  vertices = -1;
 	  break;
 	}
       if (ftmp == 1)
 	{
-	  polygon_penup = TRUE;
+	  if(vertices>0)polygon_penup = TRUE;
 	  pen_down = FALSE;
 	  break;
 	}
       if (ftmp == 2)
 	{
 	  polygon_mode = FALSE;
+	  pen_down = saved_penstate;	  
 	}
       break;
     case PR:			/* Plot Relative                */
@@ -2954,6 +3016,15 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 
 
     IP_Exit:
+/*L+M      if (rotate_flag!=0){
+      ftmp=P2.x;
+      P2.x=P1.x;
+      P1.x=ftmp;
+      ftmp=P2.y;
+      P2.y=P1.y;
+      P1.y=ftmp;
+      }
+*/      
       Q.x = (P2.x - P1.x) / (S2.x - S1.x);
       Q.y = (P2.y - P1.y) / (S2.y - S1.y);
       Diag_P1_P2 = HYPOT (P2.x - P1.x, P2.y - P1.y);
@@ -2986,10 +3057,17 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	    }
 	  else
 	    {
+		if (rotate_flag) {
+		C1.x= P1.y;
+		C1.y= P1.x;
+		C2.x= P2.y;
+		C2.y= P2.x;
+		}else{	
 	      C1.x = P1.x;
 	      C1.y = P1.y;
 	      C2.x = P2.x;
 	      C2.y = P2.y;
+	      } 
 /*fprintf (stderr," clip limits (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);*/
 	    }
 	}

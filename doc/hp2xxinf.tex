@@ -178,7 +178,7 @@ output format.
 The format of the @code{hp2xx} command is:
 
 @example
-hp2xx [@var{options}] [@var{input-file(s)}]
+hp2xx [@var{options}] [@var{input-file/s}]
 @end example
 
 It follows the UNIX System V tradition of a filter, i. e., options begin
@@ -206,7 +206,7 @@ This section is intended to give those of you a quick-start who are
 quite familiar with traditional UNIX-style programs and with HP-GL and
 other graphics formats.
 The following examples will give you a good idea of @code{hp2xx}'s
-functionality. @xref{Appendix B} for further details.
+functionality. @xref{Appendix B}, the Option Summary, for further details.
 
 
 @example
@@ -379,7 +379,7 @@ pens.
 
 Pen colors and sizes are represented by digits to allow for a compact
 option list. There are 8 colors including @var{background} (usually white).
-@xref{Appendix B} for a list of all colors. E.g., color 3 is green,
+@xref{Appendix B}, the Option Summary, for a list of all colors. E.g., color 3 is green,
 and color 7 means yellow. Permitted pen sizes are 0 ... 9 units.
 WARNING: In raster modes, all pen sizes are approximated by double, triple,
 etc. width, and lines wider than 4 will probably not give useful results.
@@ -455,7 +455,10 @@ Encapsulated PostScript (EPS). (In fact, it is much more than just a
 vector graphics format, but @code{hp2xx} uses only EPS's line drawing
 features.) Many programs allow importation of EPS files, and PostScript
 gives excellent printing results, so @samp{-m @code{eps}} is highly
-recommended.
+recommended. Recently, Adobe's Portable Document Format (PDF) has mostly taken
+its place for formatted online documentation. For Web-based applications,
+the Scalable Vector Graphics (SVG) format, a W3C standard, holds some promise
+as a non-proprietary, XML-based format for vector images, not only on web pages.
 
 Unix users may also want to use either @code{Gnuplot} or especially @code{XFig}
 to annotate their plots. The native formats of these programs are directly
@@ -488,7 +491,7 @@ direction.
 
 There are plenty of raster formats on various platforms, much more
 than @code{hp2xx} will ever handle. The supported raster formats
-IMG, PBM/PPM, PCL, PCX, PNG and TIFF were chosen for their widespread use, their simplicity,
+IMG, JPG, PBM/PPM, PCL, PCX, PNG and TIFF were chosen for their widespread use, their simplicity,
 for actual demand, and for accessibility of specifications.
 If your desired format is not supported, look for a converter. E.g., the
 Portable Bitmap (PBM) project and more recently, the ImageMagick package 
@@ -1178,7 +1181,7 @@ that @code{hp2xx} will give you the picture you want!
 @code{Cmd  | i |}
 @code{=====|===|========================================================}
 @code{AA   |+  | Arc Absolute}
-@code{AC   | - | Anchor corner}
+@code{AC   |+  | Anchor corner}
 @code{AD   | - | Alternate font Definition}
 @code{AF   |+  | Advance Full page [same as PG]}
 @code{AH   |+  | Advance Half page [same as PG]}
@@ -1202,7 +1205,7 @@ that @code{hp2xx} will give you the picture you want!
 @code{CP   |+  | Character plot}
 @code{CR   | - | Color Range}
 @code{CS   |+  | Designate standard character set}
-@code{CT   | - | Chord tolerance}
+@code{CT   |+  | Chord tolerance}
 @code{CV   |  .| Curved line generator}
 @code{-----|---|--------------------------------------------------------}
 @code{DC   |  .| Digitize clear}
@@ -1373,17 +1376,22 @@ Name of log file. If given, diagnostics go into this file, else to
 Mode string. Valid: @var{string} =
 @display
   @samp{cad}  (@TeX{}cad-compatible line generation using @code{\special@{em:...@}}),
+  @samp{dxf}  (Autocad Drawing Exchange Format),
   @samp{em}   (more efficient line drawing with E. Mattes's @TeX{}@ @code{\special@{em:...@}}),
   @samp{eps}  (Encapsulated PostScript),
+  @samp{gpt}  (Gnuplot input file),
   @samp{hpgl} (simplified HP-GL, useful for imports),
   @samp{img}  (e.g., GEM's Image format),
+  @samp{jpg}  (JPEG image format),
   @samp{mf}   (Metafont source),
   @samp{pbm}  (Portable Bitmap (monochrome) or Portable Pixmap (color plots)),
   @samp{pcl}  (HP-PCL Level 3),
   @samp{pcx}  (Paintbrush format),
+  @samp{pdf}  (Adobe Portable Document Format),
   @samp{png}  (Portable Network Graphics format),
   @samp{pre}  (Preview mode; no output!),
   @samp{rgip} (Uniplex RGIP vector format),
+  @samp{svg}  (Scalable Vector Graphics, for XML web pages)
   @samp{tex}  (line drawing with @TeX{}@ / @code{epic} macros)
   @samp{fig}  (for Brian Smith's XFIG vector drawing program)
   @samp{tiff} (TIFF tagged image file format)
@@ -1398,6 +1406,11 @@ Occasionally available (unsupported) modes:
 @end display
 
 Default: @samp{pre}.
+
+@item --nofill (-n)
+Ignore all polygon fill commands in the HPGL file(s). This may sometimes
+be necessary to improve readability of images at small scales (e.g. thumbnails in
+an overview listing), or to work around problems in the polygon fill code. 
 
 @item --pensize (-p) @var{string}
 Pensize(s), a string of 1 to 8 digits.
@@ -1517,6 +1530,12 @@ Set y resolution (see above). Invalid here!
 Center the picture within the frame defined by options @samp{-w -h} by
 adding to the left or upper margin. Null effect if the width/height
 ratio of the picture matches that of options @samp{-w -h}.
+
+@item --no_ps (-N)
+Ignore papersize definition given by a PS command in the HPGL file, and
+calculate the actual image size. This may be necessary to avoid unnecessary
+margins (with programs that write a standard header regardless of the true
+size of the drawing).
 
 @item --xoffset (-o) @var{float}
 X offset of picture (left  margin) in mm.

@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.1";
-char	*VERS_DATE = "02/01/28";
+char	*VERS_NO = "3.4.2";
+char	*VERS_DATE = "02/04/15";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -156,7 +156,7 @@ char	*VERS_ADDITIONS =
 char	*VERS_ADDITIONS =
 	"\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n";
 #else
-char	*VERS_ADDITIONS = "                              (c) 1999 - 2002 Martin Kroeker\n";
+char	*VERS_ADDITIONS = "                                (c) 1999 - 2002 Martin Kroeker\n";
 #endif
 
 
@@ -200,6 +200,9 @@ mode_list  ModeList[] =
 	{XX_ILBM,	"ilbm"},/* Special AMIGA format			*/
 #endif
 	{XX_IMG,	"img"},	/* Digital Research IMG raster format	*/
+#ifdef	JPG
+	{XX_JPG,	"jpg"},	/* Joint Photography Expert Group JPEG  */
+#endif
 	{XX_MF,		"mf"},	/* Metafont source output		*/
 	{XX_PBM,	"pbm"},	/* Portable Bitmap			*/
 	{XX_PCL,	"pcl"},	/* HP-PCL Level 5 printer code		*/
@@ -216,6 +219,7 @@ mode_list  ModeList[] =
 #endif
 	{XX_PRE,	"pre"},	/* DEFAULT: Preview on screen		*/
         {XX_RGIP,       "rgip"},/* Uniplex RGIP vector format           */
+	{XX_SVG,	"svg"}, /* W3C Scalable vector graphics		*/
 #ifdef TIF
         {XX_TIFF,        "tiff"}, /* Tagged image file format            */
 #endif
@@ -737,7 +741,11 @@ int	TMP_to_VEC (const GEN_PAR *pg, const OUT_PAR *po)
     case XX_DXF:
     	to_mftex(pg, po, 7);
     	return 0;
-
+ 
+    case XX_SVG:
+    	to_mftex(pg, po, 8);
+    	return 0;
+    	
     case XX_EPS:
 	to_eps	(pg, po);
 	return 0;
@@ -854,7 +862,10 @@ int	BUF_to_RAS (const GEN_PAR *pg, OUT_PAR *po)
 
 	case XX_IMG:		/* GEM's IMG format	*/
 		return PicBuf_to_IMG (pg, po);
-
+#ifdef JPG
+	case XX_JPG:           /* JPEG image format */
+		return PicBuf_to_JPG (pg, po);
+#endif
 	case XX_PBM:		/* Portable BitMap fmt	*/
 		return PicBuf_to_PBM (pg, po);
 #ifdef PNG

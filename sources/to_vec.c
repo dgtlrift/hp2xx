@@ -68,7 +68,7 @@ PlotCmd         cmd;
 HPGL_Pt         pt1;
 float           xcoord2mm, ycoord2mm;
 FILE            *md = NULL;
-int             pensize, pen_no, chars_out = 0, max_chars_out = 210;
+int             pensize, pencolor,pen_no, chars_out = 0, max_chars_out = 210;
 int		np = 1, err = 0;
 char            *ftype="", *scale_cmd="", *pen_cmd="",
 		*poly_start="", *poly_next="", *poly_last="", *poly_end="",
@@ -168,7 +168,7 @@ HPGL_Pt         old_pt;
 	ftype		= "DXF";
 	scale_cmd	= "  0\nSECTION\n  2\nENTITIES\n  0\n";
 	pen_cmd		= ""; /*FIXME*/
-	poly_start	= "LINE\n  8\n  0\n 10\n%g\n 20\n%g\n 30\n0.0\n";
+	poly_start	= "LINE\n  8\n0\n 10\n%g\n 20\n%g\n 30\n0.0\n";
 	poly_next	= " 11\n%g\n 21\n%g\n 31\n0.0\n  0\n";
 	poly_last	= poly_next;
 	poly_end	= "";
@@ -178,12 +178,12 @@ HPGL_Pt         old_pt;
     case 8: /* SVG */
 	ftype		= "SVG";
 	scale_cmd	= "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n<svg width=\"100%%\" height=\"100%%\" viewBox=\"0 0 %4.3f %4.3f\" xmlns=\"http://www.w3.org/2000/svg\"><g>\n";
-	pen_cmd		= "</g><g style=\"stroke:black; fill:none; stroke-width:%d\" >\n";
+	pen_cmd		= "</g><g style=\"stroke:rgb(%d,%d,%d); fill:none; stroke-width:%d\" >\n";
 	poly_start	= "<path d=\"M %4.3f, %4.3f \n";
 	poly_next	= "	L %4.3f, %4.3f \n";
 	poly_last	= "	L %4.3f, %4.3f \n\" />\n";
 	poly_end	= "\" />\n";
-	draw_dot	= "";
+	draw_dot	= "<path d=\"M %4.3f,%4.3f L %4.3f %4.3f\" />\n";
 	exit_cmd	= "</g>\n</svg>\n";
 	break;
 }
@@ -314,6 +314,7 @@ HPGL_Pt         old_pt;
 
   pen_no  = DEFAULT_PEN_NO;
   pensize = pt.width[pen_no];
+                                                                                                 
   if (pensize != 0)
 	switch (mode) {
 	   case 3:
@@ -324,6 +325,9 @@ HPGL_Pt         old_pt;
 		break;
 	   case 7:
 	   	break;
+	   case 8:
+	   	fprintf(md, pen_cmd, 0,0,0,pensize);
+		break;
 	   default:
 		fprintf(md, pen_cmd, pensize);
 		break;
@@ -341,6 +345,10 @@ HPGL_Pt         old_pt;
 	  ycoord2mm = po->height / ( po->ymax - po->ymin);
   }
 
+  if (mode ==8) {
+  	xcoord2mm *= 2.83;
+  	ycoord2mm *= 2.83;
+  	}
 
   while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
 	switch (cmd)
@@ -370,6 +378,12 @@ HPGL_Pt         old_pt;
 			   case 5:
 				fprintf(md, pen_cmd, pen_no);
 				break;
+			   case 8:
+			        pencolor=pt.color[pen_no];
+			   	fprintf(md, pen_cmd, pt.clut[pencolor][0],
+			   	pt.clut[pencolor][1],pt.clut[pencolor][2],
+			   	pensize);
+			        break;	
 			   default:
 				fprintf(md, pen_cmd, pensize);
 				break;
@@ -481,7 +495,7 @@ HPGL_Pt         old_pt;
 
 		else
 #endif
-			if (mode == 5)
+			if (mode == 5 || mode == 8)
 				fprintf(md, draw_dot,
 					(pt1.x - po->xmin) * xcoord2mm,
 					(pt1.y - po->ymin) * ycoord2mm,

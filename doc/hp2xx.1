@@ -17,7 +17,7 @@ General options:
   -f   char *  ""        Name of output file. "" = autom., "-" = stdout
   -l   char *  ""        Name of optional log file
   -m   char *  pre       Mode. Valid:
-                         mf,cad,dxf,em,emf,epic,eps,escp2,fig,gpt,hpgl,rgip,pcl,pcx,pic,img,pbm,png,pre,svg
+                         mf,cad,dxf,em,emf,epic,eps,escp2,fig,jpg,gpt,hpgl,rgip,pcl,pcx,pic,img,pbm,png,pre,svg
   -p   char *  11111111  Pensize(s) [dots] (default), [1/10 mm] (mf, ps).
                          Valid: 1 to 8 digits of 0-9 each.
   -P   int     0:0       Selected page range (m:n) (0 = 0:0 = all pages)
@@ -153,7 +153,7 @@ in Windows-built executables only), "svg" (Scalable Vector Graphics),
 e.g. for import tasks), "pcl" (HP-PCL Level 3 format (suitable for printing 
 on a HP Laserjet II, DeskJet, or compatible printer), "escp2" (Epson Esc/P2
 printer commands, suitable for printing on Epson Stylus models),
-"img" (GEMs IMG format), "pdf" (Adobe Portable Document format),
+"img" (GEMs IMG format), "jpg" (JPEG image), "pdf" (Adobe Portable Document format),
 "pbm" (Portable Bit Map / Portable PixMap for color plots), "pcx" (PC-Paintbrush format, also accepted by 
 MS-Paintbrush / Windows 3.0 and many other PC based pixel renderers), 
 "png" (Portable Network Graphics format), or "rgip" (Uniplex RGIP).
@@ -252,14 +252,14 @@ The same applies to
 
 In PostScript mode
 .I (-m eps),
-you also need to use options -o and -O (see below)
+you may also need to use options -o and -O (see below)
 for proper margins on paper since
 .I hp2xx
 puts your picture "flush" to the left and upper paper limit by default.
 .LP
 .SH RASTER FORMATS
 .LP
-The following formats are supported: HP-PCL, Esc/P2, PCX, PIC, IMG, PBM/PPM, PNG, TIFF, and previews. (PNG and TIFF formats rely on external libpng,zlib and libtiff. Versions built on MS windows systems may additionally 
+The following formats are supported: HP-PCL, Esc/P2, PCX, PIC, IMG, JPG, PBM/PPM, PNG, TIFF, and previews. (PNG and TIFF formats rely on external libpng,zlib and libtiff, JPG relies on libjpeg. Versions built on MS windows systems may additionally 
 support EMF generation and printing.)
 However, generation of
 other formats is made easy for programmers because of

@@ -200,6 +200,16 @@ EX_DEFS	=
 #EX_OBJ	= to_tif.o
 #EX_DEFS	= -DTIF
 #
+# JPEG support (requires -ljpeg)
+#EX_SRC += to_jpg.c
+#EX_OBJ += to_jpg.o
+#EX_DEFS += -DJPG
+#
+# PDF support (requires -lpdf)
+#EX_SRC += to_pdf.c
+#EX_OBJ += to_pdf.o
+#EX_DEFS += -DUSEPDF
+#
 # Include extras:
 # EX_SRC	= to_pic.c to_pac.c
 # EX_OBJ	= to_pic.o to_pac.o

@@ -56,7 +56,7 @@ HP-GL|s n| Description & Remarks
 Cmd  | i |
 =====|===|========================================================
  AA  |+  | Arc Absolute
- AC  | - | Anchor Corner (for fills)
+ AC  |+  | Anchor Corner (for fills)
  AD  |*  | Alternate font Definition
  AF  |+  | Advance Full page [same as PG]
  AH  |+  | Advance Half page [same as PG]
@@ -79,7 +79,7 @@ Cmd  | i |
  CP  |+  | Character plot
  CR  | - | Color Range for relative color data
  CS  |+  | Designate standard character set
- CT  | - | Chord tolerance
+ CT  |+  | Chord tolerance
  CV  |  .| Curved line generator
      |   |
  DC  |  .| Digitize clear
@@ -198,6 +198,6 @@ Cmd  | i |
      |   |
  YT  |+  | Y-Tick
 
-Useless statistics : this makes currently (3.4.1) 
-66 fully supported, 2 partially supported, 24 not-applicable 
-and 28 unsupported commands.
+Useless statistics : this makes currently (3.4.2) 
+68 fully supported, 2 partially supported, 24 not-applicable 
+and 26 unsupported commands.

@@ -27,11 +27,11 @@
 #include "bresnham.h"
 #include "hp2xx.h"
 #include "to_png.h"
-
+#include "pendef.h"
 #define GGE >>=
 #define MAXOUTPUTROWS 70
 
-#define PDNCOL 8 
+#define PDNCOL 256 
 
 int pdImageColorAllocate(pdImagePtr, int, int , int);
 
@@ -42,8 +42,10 @@ FILE           *fd;
 int             row_c, /*byte_c,*/ x;
 const RowBuf   *row;
 const PicBuf   *pb;
-int	       ppm[][3] = { {255, 255, 255}, {0,0,0}, {255,0,0}, {0,255,0},
+int	       ppm[][3] = { {255, 255, 255}, {0,0,0} };
+/*, {255,0,0}, {0,255,0},
 		{0,0,255},{0,255,255},{255,0,255},{255,255,0}};
+*/
 int		colour;
 
 /**
@@ -88,9 +90,11 @@ int pdcol;
  ** allocate some colors ( ?? eight colors supported by hp2xx ?? )
  **/
   for ( colour = 0; colour < PDNCOL; colour++ ) 
-  pdcol = pdImageColorAllocate(im, ppm[colour][0], ppm[colour][1], 
+/*  pdcol = pdImageColorAllocate(im, ppm[colour][0], ppm[colour][1], 
 				    ppm[colour][2]);
-
+*/
+	pdcol = pdImageColorAllocate(im, pt.clut[colour][0],pt.clut[colour][1],
+					pt.clut[colour][2]);
     for (row_c = 0; row_c < pb->nr; row_c++)
     {
 	row = get_RowBuf(pb, pb->nr - row_c - 1);

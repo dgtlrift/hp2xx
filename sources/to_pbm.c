@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include "bresnham.h"
 #include "hp2xx.h"
-
+#include "pendef.h"
 #define GGE >>=
 #define MAXOUTPUTROWS 70
 
@@ -84,8 +84,11 @@ int		colour;
 #ifdef PBMascii
 	    if (fprintf(fd,"%s",ppm[colour]) == EOF) goto ERROR_EXIT;
 #else
-	    if (fprintf(fd,"%c%c%c",ppm[colour][0],ppm[colour][1],
+/*	    if (fprintf(fd,"%c%c%c",ppm[colour][0],ppm[colour][1],
 		ppm[colour][2]) == EOF) goto ERROR_EXIT;
+*/
+	    if (fprintf(fd,"%c%c%c",pt.clut[colour][0],pt.clut[colour][1],
+		pt.clut[colour][2]) == EOF) goto ERROR_EXIT;
 #endif /* PBMascii */
 #ifdef PBMascii
 	    row_count++;

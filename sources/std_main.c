@@ -508,7 +508,8 @@ struct	option longopts[] =
 	{"VGAmodebyte",	1, NULL,	'V'},
 #endif
 	{"help",	0, NULL,	'H'},
-	{"version",	0, NULL,	'v'}
+	{"version",	0, NULL,	'v'},
+	{NULL,		0, NULL,	'\0'}
 };
 
 

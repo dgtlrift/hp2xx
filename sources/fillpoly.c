@@ -19,7 +19,7 @@ double penwidth = 1.;
 HPGL_Pt p;
 double denominator;
 double tmp,rot_ang;
-float pxdiff=0.,pydiff=0.;
+double pxdiff=0.,pydiff=0.;
 double A1,B1,C1,A2,B2,C2;
 double tmp2;
 
@@ -52,7 +52,8 @@ pymin=MIN(pymin,polygon[i].y);
 pxmax=MAX(pxmax,polygon[i].x);
 pymax=MAX(pymax,polygon[i].y);
 }
-
+pxmin=P1.x;
+pymin=P1.y;
 if (pxmin == pxmax && pymin == pymax){
 /*fprintf(stderr,"zero area polygon\n");*/
 return;
@@ -69,15 +70,14 @@ rot_ang=tan(M_PI*hatchangle/180.);
 pymin=pymin-rot_ang*pxdiff;
 pymax=pymax+rot_ang*pxdiff;
 }
-
+/*********
 pxmin=pxmin-10.;
 pxmax=pxmax+10.;
 pymin=pymin-10.;
 pymax=pymax+10.;
 pydiff=pymax-pymin;
-
+**********/
 numlines = fabs(1. +  ( pymax - pymin +penwidth) / penwidth);
-
 #if 0
 /* debug code to show shade box */
 	p.x=pxmin;
@@ -103,11 +103,14 @@ numlines = fabs(1. +  ( pymax - pymin +penwidth) / penwidth);
 pydiff=0.;
 
 if (hatchangle != 0.) pydiff=tan(M_PI*hatchangle/180.)*pxdiff;
-for (i = 0; i <= numlines; ++i) { /* for all scanlines ...*/ 
+for (i = 0; i <= numlines; i++) { /* for all scanlines ...*/ 
 k=-1;
 scany1 = pymin + (double)i *  penwidth;
 scany2=scany1+pydiff;
-
+if(scany1 >= pymax || scany1<=pymin) {
+/*fprintf(stderr,"zu weit\n");*/
+continue;
+}
 /* coefficients for current scan line */
 A1=scany2-scany1;
 B1=pxmin-pxmax;
@@ -152,8 +155,8 @@ segy= (C1*A2-C2*A1) /denominator;     /*y coordinate of intersection */
 /*fprintf(stderr,"fill: intersection %d with line %d at (%f %f)\n",k,j,segx,segy);*/
 			if (k >0) {
 			for (jj=0;jj<k;jj++){
-if ( (fabs(segment[jj].x-segment[k].x) < 1.e-2 )
-			&& (fabs(segment[jj].y-segment[k].y) < 1.e-2) ){
+if ( (fabs(segment[jj].x-segment[k].x) < 1.e-10 )
+			&& (fabs(segment[jj].y-segment[k].y) < 1.e-10) ){
 			k--;
 			break;
 			}
@@ -172,6 +175,49 @@ if ( (fabs(segment[jj].x-segment[k].x) < 1.e-2 )
 		  } /* if not the first intersection */
           	} /* if crossing withing range */ 
     } /*if not parallel*/
+#if 0    
+else if (scany1 == polygon[j].y) {
+fprintf(stderr,"para\n");
+		segment[++k].x=MAX(polygon[j].x,polygon[j+1].x);
+		segment[k].y=polygon[j].y;
+			for (jj=0;jj<k;jj++){
+if ( (fabs(segment[jj].x-segment[k].x) < 1.e-10 )
+			&& (fabs(segment[jj].y-segment[k].y) < 1.e-10) ){
+			k--;
+			break;
+			}
+		        }
+         		for (jj=0;jj<k;jj++){
+	         		if (segment[k].x<segment[jj].x){
+		          		tmp=segment[jj].x;
+		          		tmp2=segment[jj].y;
+			         	segment[jj].x=segment[k].x;
+			         	segment[jj].y=segment[k].y;
+				        segment[k].x=tmp;
+				        segment[k].y=tmp2;
+				}
+			}
+		segment[++k].x=MIN(polygon[j].x,polygon[j+1].x);
+		segment[k].y=polygon[j].y;
+			for (jj=0;jj<k;jj++){
+if ( (fabs(segment[jj].x-segment[k].x) < 1.e-10 )
+			&& (fabs(segment[jj].y-segment[k].y) < 1.e-10) ){
+			k--;
+			break;
+			}
+		        }
+         		for (jj=0;jj<k;jj++){
+	         		if (segment[k].x<segment[jj].x){
+		          		tmp=segment[jj].x;
+		          		tmp2=segment[jj].y;
+			         	segment[jj].x=segment[k].x;
+			         	segment[jj].y=segment[k].y;
+				        segment[k].x=tmp;
+				        segment[k].y=tmp2;
+				}
+			}
+	}
+#endif
  } /*next edge */   
 
 if (k>0) {
@@ -217,11 +263,13 @@ pxmax=MAX(pxmax,polygon[i].x);
 pymax=MAX(pymax,polygon[i].y);
 }
 
-pxmin=P1.x-1.;pxmax=P2.x+1.;
+/*pxmin=P1.x-1.;pxmax=P2.x+1.;*/
 
 
-pymin=P1.y-10.;pymax=P2.y+10.; /*???*/
+/*pymin=P1.y-10.;pymax=P2.y+10.; ???*/
 
+pxmin=P1.x;
+pymin=P1.y;
 
 pydiff=pymax-pymin;
 if (hatchangle != 0.) {
@@ -296,6 +344,9 @@ if ( (fabs(segment[jj].x-segment[k].x) < 1.e-10 )
 		  } /* if not the first intersection */
           	} /* if crossing withing range */ 
     } /*if not parallel*/
+else if (scanx1 == polygon[j].x) {
+	k=-1;
+	}
  } /*next edge */   
 if (k>0) {
 /* fprintf(stderr, "%d segments for scanline %d\n",k,i);*/

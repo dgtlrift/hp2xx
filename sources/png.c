@@ -7,7 +7,7 @@
 #include "to_png.h"
 #include <png.h>
 
-#define PDNCOL 8 
+#define PDNCOL 256 
 
 void pdImagePNG(im, fd)
         pdImagePtr im;

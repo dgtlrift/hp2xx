@@ -165,13 +165,8 @@ void	ps_init (const GEN_PAR *pg, const OUT_PAR *po, FILE *fd,
 {
 long	left, right, low, high;
 double	hmxpenw;
-double A4_height;
 
-A4_height=297.;
-/*if (po->height >297.) A4_height=584.;*/
-
-
-  hmxpenw = pg->maxpensize / 20.0;	/* Half max. pen width, in mm	*/
+  hmxpenw = pg->maxpensize / 200.0;	/* Half max. pen width, in mm	*/
 
 /**
  ** Header comments into PostScript file
@@ -188,12 +183,6 @@ A4_height=297.;
  **
  ** (hmxpenw & floor/ceil corrections suggested by Eric Norum)
  **/
-/*
-  left  = (long) floor((po->xoff-hmxpenw)		    * 2.834646);
-  low   = (long) floor((A4_height-po->yoff-po->height-hmxpenw)* 2.834646);
-  right = (long) ceil ((po->xoff   + po->width+hmxpenw)	    * 2.834646);
-  high  = (long) ceil ((A4_height - po->yoff+hmxpenw)	    * 2.834646);
-*/
   left  = (long) floor(abs(po->xoff-hmxpenw)		    * 2.834646);
   low   = (long) floor(abs(po->yoff-hmxpenw)* 2.834646);
   right = (long) ceil ((po->xoff   + po->width+hmxpenw)	    * 2.834646);
@@ -264,9 +253,7 @@ A4_height=297.;
   fprintf(fd,"/@SetPlot\n");
   fprintf(fd,"   {\n");
   fprintf(fd,"    2.834646 2.834646 scale\n");	/* 1/72"--> mm */
-/*  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff,
-			A4_height - po->yoff - po->height);*/
-  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff+hmxpenw*20, po->yoff+hmxpenw*20);
+  fprintf(fd,"    %7.3f %7.3f translate\n", po->xoff+hmxpenw, po->yoff+hmxpenw);
   fprintf(fd,"    %6.3f setlinewidth\n", pensize/10.0);
   fprintf(fd,"   } def\n");
   fprintf(fd,"/C {setrgbcolor} def\n");
@@ -358,12 +345,9 @@ int	pen_no=0, pensize, pencolor=0, err;
 			err = ERROR;
 			goto EPS_exit;
 		}
-/*
-		pensize = pensize[pen_no];
+		pensize = pt.width[pen_no];
 		if (pensize != 0)
 			ps_set_linewidth ((double) pensize/10.0, &pt1, md);
-*/
-		pensize = pt.width[pen_no];
 		pencolor = pt.color[pen_no];
 		ps_set_color (  pt.clut[pencolor][0]/255.0,
 				pt.clut[pencolor][1]/255.0,

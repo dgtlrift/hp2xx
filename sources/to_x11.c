@@ -213,11 +213,13 @@ win_open (const GEN_PAR * pg, char *title, int x, int y, int w, int h)
 
       for (i = 1; i <= pg->maxpens; i++)
 	{
-
 	  sprintf (colorname, "#%2.2X%2.2X%2.2X",
 		   pt.clut[i][0], pt.clut[i][1], pt.clut[i][2]);
-	  XParseColor (XDisplay, def_clut, colorname, &Xcol);
-	  XAllocColor (XDisplay, def_clut, &Xcol);
+	  if (XParseColor (XDisplay, def_clut, colorname, &Xcol)==0) fprintf(stderr,"failed tp map color for pen %d\n",i);
+	if (XAllocColor (XDisplay, def_clut, &Xcol)==0) {
+	fprintf(stderr,"failed to alloc X color for pen %d\n",i);
+	col_table[i] = col_table[GRAY];
+	}else
 	  col_table[i] = Xcol.pixel;
 	}
     }
@@ -322,9 +324,9 @@ REDRAW:
 
 	    case xxBackground:
 	      continue;
-	    case xxForeground:
+/*	    case xxForeground:
 	      setXcolor (WHITE);
-	      break;
+	      break;*/
 	    default:
 	      setXcolor (index_from_RowBuf (row, x, pb));
 	      break;

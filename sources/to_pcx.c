@@ -309,7 +309,8 @@ Byte    *p_R=NULL, *p_G=NULL, *p_B=NULL, *p_I=NULL;
 	row = get_RowBuf (po->picbuf, row_c);
 	byte_to_PCX (0, PCX_INIT, fd);
 	pb = row->buf;
-	for (np=0; np < picbuf->depth; np++)
+/*	for (np=0; np < picbuf->depth; np++)*/
+	for (np=0; np < h.planes; np++)
 		for (x=0; x < po->picbuf->nb; x++)
 			byte_to_PCX (~*pb++, PCX_NORMAL, fd);
 	byte_to_PCX (0, PCX_EXIT, fd);  /* Flush        */
