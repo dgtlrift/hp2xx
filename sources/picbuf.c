@@ -589,6 +589,8 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, PEN_C pencolor,
 #if 0
 	consecutive = 0;
 #endif
+	if (linewidth <5) consecutive=0;
+	
 	if (linewidth == 1) {	/* Thin lines of any attitude */
 		p_act = bresenham_init(p0, p1);
 		do {

@@ -1,5 +1,16 @@
 Changes to hp2xx:
 =================
+3.4.4a5:
+Using the -ansi flag with gcc (even suggested by the generic Makefile) would
+make it ignore the prototype of the hypot() function on some if not all 
+platforms, resulting in a practically unusable binary (NaN in calculation
+of image width or height, picbuf overflows in raster modes, etc.). Removed
+-ansi from the gcc CFLAGS in generic.mak and added an #ifdef case for the
+__STRICT_ANSI__ macro that is set by -ansi to the declaration of HYPOT in 
+hpgl.h. Added another workaround for cases (typically labels) where the 
+(stupid) wide line miter code would kick in prematurely, adding spurious
+lines to the image.
+
 3.4.4a4:
 Reduced the default miter limit in the eps and pdf modes from the arbitrary 
 "100" value to 5 to remove strange artefacts particularly visible in text 
@@ -13,6 +24,8 @@ vertical fills) uncovered by Eugene Doudines new fill.plt test case.
 Special flag S=4 in esc/p2 output now invokes the new color selection commands
 for six-color Stylus Photo printers (untested - but a Photo1290 only advances
 paper with the old driver).
+Fixed some cases in the line pattern generator where a double was compared against
+exact zero - which does not work as intended on some platforms such as Solaris.
 
 3.4.4a3:
 

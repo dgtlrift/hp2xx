@@ -45,7 +45,7 @@ infodir  = $(prefix)/info
 # For non-gcc compilers, simply set CFLAGS = -O (to start with)
 #
 CC       = gcc
-CFLAGS   = -O2 -Wall -ansi -fstrength-reduce -finline-functions
+CFLAGS   = -O2 -Wall -finline-functions
 
 LFLAGS   =                # only sometimes needed; see below for examples
 CPPFLAGS = -I.            # only sometimes needed; see below for examples

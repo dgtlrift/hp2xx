@@ -386,8 +386,11 @@ static void reset_HPGL(void)
 
 	P1.x = P1X_default;
 	P1.y = P1Y_default;
+#if 0
 	P2.x = P2X_default;
 	P2.y = P2Y_default;
+#endif
+		
 	Diag_P1_P2 = /*@-unrecog@*/HYPOT(P2.x - P1.x, P2.y - P1.y);
 	CurrentLinePatLen = 0.04 * Diag_P1_P2;
 	pat_pos = 0.0;
@@ -472,6 +475,9 @@ static void init_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 	n_unexpected = 0;
 	n_commands = 0;
 	n_unknown = 0;
+
+	if (pi->hwlimit.x >0.) P2.x=S2.x=pi->hwlimit.x;
+	if (pi->hwlimit.y >0.) P2.y=S2.y=pi->hwlimit.y;
 
 	reset_HPGL();
 }
@@ -1136,14 +1142,18 @@ static void Line_Generator(HPGL_Pt * pa, const HPGL_Pt * pb, int mv_flag)
 	switch (CurrentLineType) {
 
 	case LT_solid:
-		if (seg_len == 0.0)
-			return;
+		if (seg_len < 1.e-8){
+			if (!silent_mode)
+				Eprintf
+				    ("Warning: Zero line segment length -- skipped\n");
+			return;	/* No line to draw ??           */
+		}
 		PlotCmd_to_tmpfile(DRAW_TO);
 		HPGL_Pt_to_tmpfile(pb);
 		return;
 
 	case LT_adaptive:
-		if (seg_len == 0.0) {
+		if (seg_len < 1.e-8) {
 			if (!silent_mode)
 				Eprintf
 				    ("Warning: Zero line segment length -- skipped\n");
@@ -1173,7 +1183,7 @@ static void Line_Generator(HPGL_Pt * pa, const HPGL_Pt * pb, int mv_flag)
 		return;
 
 	case LT_fixed:
-		if (seg_len == 0.0) {
+		if (seg_len < 1.e-8) {
 			if (!silent_mode)
 				Eprintf
 				    ("Warning: Zero line segment length -- skipped\n");

@@ -237,6 +237,7 @@ typedef struct {		/* Corresponding option(s)        */
 	double rotation;	/* -r rotation                  */
 	double x0, x1, y0, y1;	/* -x x0 -X x1 -y y0 -Y y1      */
 	double xoff, yoff;	/* -o xoff  -O yoff             */
+	HPGL_Pt hwlimit;	/* -W p2.x -H p2.y		*/
 	char *in_file;		/* Input file name ("-" = stdin) */
 	FILE *hd;		/* (internally needed)          */
 } IN_PAR;

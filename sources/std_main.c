@@ -509,6 +509,11 @@ char	*p, cdummy;
 		pi->y1 = atof (optarg);
 		break;
 	  case 'H':
+	  	pi->hwlimit.y = atof(optarg);
+	  	break;
+	  case 'W':
+	  	pi->hwlimit.x = atof(optarg);
+	  	break;	
 	  case '?':
 	  default:
 		usage_msg (pg, pi, po);
@@ -530,7 +535,7 @@ OUT_PAR	Po;
 int	i;
 char 	outname[128]="";
 
-char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:z:Z:CFHinqtvNI";
+char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:z:Z:CFH:W:inqtvNI";
 struct	option longopts[] =
 {
 	{"mode",	1, NULL,	'm'},

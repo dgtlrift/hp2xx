@@ -15,7 +15,7 @@ void HPGL_Pt_to_polygon (const HPGL_Pt pf );
 void reset_tmpfile(void);
 #endif
 
-#ifdef __TURBOC__
+#if defined __TURBOC__ || defined __STRICT_ANSI__
 #define	HYPOT(x,y)	sqrt((x)*(x)+(y)*(y))
 #else
 #define	HYPOT(x,y)	hypot(x,y)

@@ -1,3 +1,12 @@
+3.4.4a5
+
+Bug fixes:
+
+- Fixed a potential problem with the -ansi compiler flag leading to missing
+  function prototypes and subsequent runtime errors in image sizing and
+  rendering. Added another workaround for spurious lines appearing especially
+  in characters. 
+
 3.4.4a4
 
 New features:

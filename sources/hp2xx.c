@@ -150,8 +150,8 @@ copies.
  ** 03/02/26	      GV   Add -S option for DXF mode (pen attribute mapping)
  **/
 
-char *VERS_NO = "3.4.4a4";
-char *VERS_DATE = "03/03/03";
+char *VERS_NO = "3.4.4a5";
+char *VERS_DATE = "03/03/14";
 char *VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char *VERS_ADDITIONS =
@@ -378,6 +378,8 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	Eprintf
 	    ("-t         %s\tShow true HPGL size. Disables -a -h -w !\n",
 	     FLAGSTATE(pi->truesize));
+	Eprintf("-H float %5.1f\tHardware X range [1/40 mm] of device\n", pi->hwlimit.x);
+	Eprintf("-W float %5.1f\tHardware Y range [1/40 mm] of device\n", pi->hwlimit.y);
 	Eprintf("-x float   -\tManual HPGL-coord range presetting: x0\n");
 	Eprintf("-X float   -\tManual HPGL-coord range presetting: x1\n");
 	Eprintf("-y float   -\tManual HPGL-coord range presetting: y0\n");
@@ -386,7 +388,7 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 		po->zengage);
 	Eprintf("-Z float %5.1f\t(3d nc output only) Z retract depth\n",
 		po->zretract);
-
+	
 #ifdef DOS
 	Eprintf
 	    ("\n-V int   %d\tVGA mode byte (decimal). Change at own risk!\n",
@@ -458,6 +460,9 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	pi->first_page = 0;
 	pi->last_page = 0;
 
+	pi->hwlimit.x=33600.;
+	pi->hwlimit.y=47520.;
+	
 	po->init_p = FALSE;
 	po->init_p3gui = FALSE;
 	po->formfeed = FALSE;
