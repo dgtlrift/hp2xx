@@ -64,7 +64,7 @@ copies.
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 
-void ASCII_to_font(int);
+void ASCII_to_font(int,int);
 int tt_stroke_moveto(FT_Vector *, void *);
 int tt_stroke_lineto(FT_Vector *, void *);
 int tt_bezier1(FT_Vector *, FT_Vector *, void *);
@@ -75,6 +75,11 @@ int ttfont = 0;
 
 FT_Library library;
 FT_Face face;
+
+#ifdef STROKED_VARFONTS
+FT_Face varface;
+#endif
+
 FT_Vector tt_refpoint;
 
 static const FT_Outline_Funcs my_tt_functions = {
@@ -1088,7 +1093,7 @@ void plot_string(char *txt, LB_Mode mode, short current_pen)
 		default:
 #ifdef STROKED_FONTS
 			if (ttfont)
-				ASCII_to_font((int) *txt);
+				ASCII_to_font((int) *txt,current_pen);
 			else
 #endif
 				ASCII_to_char((int) *txt);
@@ -1201,18 +1206,25 @@ static void set_symbol_center(char c)
 
 
 
-void plot_symbol_char(char c)
+void plot_symbol_char(char c, int current_pen)
 /**
  ** Special case: Symbol plotting. This requires a special
  ** x and y offset (for proper centering) but then simply amounts to
  ** drawing a single character.
  **/
 {
+	double savedwidth=0;
+	
+	if (tp->strokewidth != 9999.) {
+		savedwidth = pt.width[current_pen];
+		PlotCmd_to_tmpfile(DEF_PW);
+		Pen_Width_to_tmpfile(current_pen, tp->strokewidth);
+	}
 	set_symbol_center(c);
 
 #ifdef STROKED_FONTS
 	if (tp->font)
-		ASCII_to_font((int) c);
+		ASCII_to_font((int) c, current_pen);
 	else
 #endif
 		ASCII_to_char((int) c);
@@ -1221,6 +1233,10 @@ void plot_symbol_char(char c)
  ** Move to next reference point, e. g. the next character origin
  **/
 	Pen_action_to_tmpfile(MOVE_TO, &tp->refpoint, FALSE);
+	if (tp->strokewidth != 9999.) {
+		PlotCmd_to_tmpfile(DEF_PW);
+		Pen_Width_to_tmpfile(current_pen, savedwidth);
+	}
 }
 
 
@@ -1319,11 +1335,28 @@ int init_font(int thefont)
 #if 0
 	fprintf(stderr, "init_font ok\n");
 #endif
+#ifdef STROKED_VARFONTS
+	if (varface)
+		return 0;	/* font already open */
+
+	error = FT_New_Face(library,
+			    STROKED_VARFONTS, 0, &varface);
+	if (error) {
+		fprintf(stderr, " ! FT_New_Face \n");
+		return -1;
+	}
+
+	error = FT_Set_Pixel_Sizes(varface, 20, 20);
+	if (error) {
+		fprintf(stderr, " ! FT_Set_Char_Size\n");
+		return -1;
+	}
+#endif
 	return 0;
 }
 
 
-void ASCII_to_font(int c)
+void ASCII_to_font(int c, int curpen)
 {
 	int error;
 	int dummy;
@@ -1376,6 +1409,11 @@ void ASCII_to_font(int c)
 		default:
 			break;
 		}
+#ifdef STROKED_VARFONTS
+	if (tp->variable)
+	error = FT_Load_Char(varface, (FT_ULong) c, FT_LOAD_NO_SCALE);
+	else
+#endif	
 	error = FT_Load_Char(face, (FT_ULong) c, FT_LOAD_NO_SCALE);
 	if (error) {
 		fprintf(stderr, " ! FT_Load_Char %c\n", c);
@@ -1404,7 +1442,12 @@ void ASCII_to_font(int c)
 	boxmin.y = tp->refpoint.y - 150;
 	boxmax.x = boxmin.x + tp->chardiff.x + 5;
 	boxmax.y = boxmin.y + tp->chardiff.y + 5;
-	fill(polygon, numpoints, boxmin, boxmax, 0, 2, 1, 0);
+	fill(polygon, numpoints, boxmin, boxmax, 0, 2, 1, 0,pt.width[curpen]);
+#ifdef STROKED_VARFONTS
+	if (tp->variable)
+	tp->refpoint.x += tp->space/20*slot->advance.x/60;
+	else
+#endif	
 	tp->refpoint.x += tp->chardiff.x;
 	tp->refpoint.y += tp->chardiff.y;
 	tt_refpoint.x = 0;

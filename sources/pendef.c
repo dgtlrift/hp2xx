@@ -153,11 +153,11 @@ int load_pen_color_table(FILE * td,int ignore)
 		return (1);
 	}
 
-	set_color_rgb(tp, (BYTE) r, (BYTE) g, (BYTE) b);
+	set_color_rgb(tp, (Byte) r, (Byte) g, (Byte) b);
 	return ((int) tp);
 }
 
-void set_color_rgb(PEN_N index, BYTE r, BYTE g, BYTE b)
+void set_color_rgb(PEN_N index, Byte r, Byte g, Byte b)
 {
 	pt.clut[index][0] = r;
 	pt.clut[index][1] = g;

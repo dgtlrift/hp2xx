@@ -72,7 +72,7 @@ typedef struct {
 	float dir;		/* Direction to x axis (rad)            */
 	float slant;		/* Character slant (tan angle)          */
 	int font;		/* Active Font number                   */
-	int stdfont;		/* Designated tandard font number       */
+	int stdfont;		/* Designated standard font number       */
 	int altfont;		/* Designated alternate font number     */
 	int orig;		/* Label origin code                    */
 
@@ -94,6 +94,9 @@ typedef struct {
 	double strokewidth;	/* current stroke weight (or 9999. for current PW */
 	double sstrokewidth;	/* stdfont stroke weight (or 9999. for current PW */
 	double astrokewidth;	/* altfont stroke weight (or 9999. for current PW */
+	int variable;		/* fixed or variable width, current */
+	int avariable;		/* same setting, alternate font */
+	int svariable;		/* same setting, standard font */
 } TEXTPAR, *TextPar;
 
 
@@ -107,7 +110,7 @@ typedef enum { LB_direct, LB_buffered, LB_buffered_in_use } LB_Mode;	/* LB and P
  ** currently inactive. Leave it here in case of a future revival
  **/
 
-#ifdef STROKED_FONTS
+#ifdef OLD_STROKED_FONTS
 typedef struct {
 	unsigned int buff[16000];	/* Buffer for font data         */
 	unsigned int vector_off;	/* Offset of start of plot data */
@@ -136,7 +139,7 @@ extern "C" {
 	void adjust_text_par(void);
 /* void	ASCII_to_char	(int);*/
 	void plot_string(char *, LB_Mode, short);
-	void plot_symbol_char(char);
+	void plot_symbol_char(char,int);
 
 #ifdef	__cplusplus
 }

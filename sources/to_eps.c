@@ -67,7 +67,7 @@ static PEN_W lastwidth;
 static int lastcap;
 static int lastjoin;
 static int lastlimit;
-static BYTE lastred, lastgreen, lastblue;
+static Byte lastred, lastgreen, lastblue;
 
 void eps_set_linewidth(PEN_W, HPGL_Pt *, FILE *);
 void eps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt,

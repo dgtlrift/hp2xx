@@ -39,7 +39,7 @@ copies.
 #endif
 #include "bresnham.h"
 #include "hp2xx.h"
-#include "pendef.h"
+/*#include "pendef.h"*/
 #include "lindef.h"
 
 

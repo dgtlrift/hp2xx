@@ -1,4 +1,20 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a10
+
+New features:
+
+- Added experimental support for variable-width fonts (in truetype mode only,
+  and requiring another compile-time fontfile definition in the Makefile)
+
+Bug fixes:
+
+- Polygons were not rendered correctly (or not at all) when polygon mode
+  was entered with the pen up.
+- Clipping of arcs and circles could leave a spurious line behind
+- Some of the not yet supported AD/SD font parameters could change the
+  font linewidth instead.
+
+
 3.5.0a9
 
 New features:

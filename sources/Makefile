@@ -71,9 +71,11 @@ ALL_LIBS  =  -L/usr/lib/X11R6 -lX11 -lm
 #
 # for experimental truetype font support
 #
-#DEFINES   = -DUNIX -DHAS_UNIX_X11 \
-# -DSTROKED_FONTS=\"/usr/X11R6/lib/X11/fonts/truetype/VeraMono.ttf\" `freetype-config --cflags`
-#ALL_LIBS  = `freetype-config --libs` -L/usr/lib/X11R6 -lX11 -lm     
+DEFINES   = -DUNIX -DHAS_UNIX_X11 \
+ -DSTROKED_FONTS=\"/usr/X11R6/lib/X11/fonts/truetype/VeraMono.ttf\" \
+ -DSTROKED_VARFONTS=\"/usr/X11R6/lib/X11/fonts/truetype/LucidaSansRegular.ttf\" \
+ `freetype-config --cflags`
+ALL_LIBS  = `freetype-config --libs` -L/usr/lib/X11R6 -lX11 -lm     
 #
 # Generic UNIX, no previewer
 #

@@ -1953,7 +1953,7 @@ void line(int relative, HPGL_Pt p)
 
 
 	if (symbol_char) {
-		plot_symbol_char(symbol_char);
+		plot_symbol_char(symbol_char,pen);
 		Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
 	}
 	outside = 0;
@@ -2004,8 +2004,8 @@ static void arc_increment(HPGL_Pt * pcenter, double r, double phi)
 	} else {
 		if (pen_down && !outside)
 			Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
-		else if (!outside
-			 && ((p.x != p_last.x) || (p.y != p_last.y)))
+		else if (/*!outside
+			 &&*/ ((p.x != p_last.x) || (p.y != p_last.y)))
 			Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
 	}
 	p_last = p;
@@ -2796,13 +2796,14 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			case 2:	/* fixed or variable spacing */
 				if (read_float(&csfont, hd))
 					par_err_exit(2, cmd, hd);
+#ifdef STROKED_VARFONTS
+				else if ((int) csfont == 1) tp->avariable=csfont;
+#else									
 				else if ((int) csfont == 1 && !silent_mode)
 					fprintf(stderr,
 						"only fixed fonts available\n");
+#endif
 				break;
-			case 3:	/* font pitch */
-			case 4:	/* font height */
-			case 5:	/* posture */
 			case 6:	/* stroke weight */
 				if (read_float(&ftmp, hd))
 					par_err_exit(2, cmd, hd);
@@ -2814,6 +2815,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 					tp->astrokewidth = 0.11 + ftmp / 70.;	/* 0.01 ... 0.21 mm */
 				}
 				break;
+			case 3:	/* font pitch */
+			case 4:	/* font height */
+			case 5:	/* posture */
 			case 7:	/* typeface */
 				if (read_float(&csfont, hd))
 					par_err_exit(2, cmd, hd);
@@ -3082,6 +3086,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			polygon_mode = TRUE;
 			polygon_penup = FALSE;
 			saved_penstate = pen_down;
+			pen_down = TRUE;
 			vertices = -1;
 			break;
 		}
@@ -4047,11 +4052,12 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		adjust_text_par();
 		break;
 	case SA:		/* Select designated alternate charset */
-		if (tp->altfont)
+		if (tp->altfont) 
 			tp->font = tp->altfont;
 		else		/* Was never designated, default to 0 */
 			tp->font = 0;
 		tp->strokewidth = tp->astrokewidth;
+		tp->variable = tp->avariable;
 		break;
 	case SD:
 		if (read_float(&ftmp, hd))	/* just SD - defaults */
@@ -4067,13 +4073,14 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			case 2:	/* fixed or variable spacing */
 				if (read_float(&csfont, hd))
 					par_err_exit(2, cmd, hd);
+#ifdef STROKED_VARFONTS
+				else if ((int) csfont == 1) tp->svariable=csfont;
+#else									
 				else if ((int) csfont == 1 && !silent_mode)
 					fprintf(stderr,
 						"only fixed fonts available\n");
+#endif
 				break;
-			case 3:	/* font pitch */
-			case 4:	/* font height */
-			case 5:	/* posture */
 			case 6:	/* stroke weight */
 				if (read_float(&ftmp, hd))
 					par_err_exit(2, cmd, hd);
@@ -4085,6 +4092,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 					tp->sstrokewidth = 0.11 + ftmp / 70.;	/* 0.01 ... 0.21 mm */
 				}
 				break;
+			case 3:	/* font pitch */
+			case 4:	/* font height */
+			case 5:	/* posture */
 			case 7:	/* typeface */
 				if (read_float(&csfont, hd))
 					par_err_exit(2, cmd, hd);
@@ -4103,6 +4113,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		else		/* Was never designated, default to 0 */
 			tp->font = 0;
 		tp->strokewidth = tp->sstrokewidth;
+		tp->variable = tp->svariable;
 		break;
 	case UC:		/* User defined character       */
 		plot_user_char(hd, pen);

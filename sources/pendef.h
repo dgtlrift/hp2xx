@@ -43,16 +43,16 @@ copies.
 typedef unsigned short int PEN_N;
 typedef unsigned short int PEN_C;
 typedef float PEN_W;
-typedef unsigned char BYTE;
+typedef unsigned char Byte;
 typedef struct {
    PEN_W width[NUMPENS+1];      /* -p xxxxxxxx / PW             */
    PEN_C color[NUMPENS+1];      /* -c xxxxxxxx / PC             */
-   BYTE  clut[NUMPENS+9][3];    /* color lookup table           */
+   Byte  clut[NUMPENS+9][3];    /* color lookup table           */
 } PEN;
 
 extern PEN pt;
 
-void set_color_rgb(PEN_N index,BYTE r,BYTE g, BYTE b);
+void set_color_rgb(PEN_N index,Byte r,Byte g, Byte b);
 void Pen_Width_to_tmpfile (int pen, PEN_W width);
 void Pen_Color_to_tmpfile (int pen, int red, int green, int blue);
 int load_pen_width_table(FILE *td,int ignore);

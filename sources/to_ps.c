@@ -66,7 +66,7 @@ static PEN_W lastwidth;
 static int lastcap;
 static int lastjoin;
 static int lastlimit;
-static BYTE lastred, lastgreen,lastblue;
+static Byte lastred, lastgreen,lastblue;
 
 static short eps=FALSE;
 

@@ -65,8 +65,8 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
-#define VERS_NO        "3.5.0a9"
-#define VERS_DATE      "04/03/06"
+#define VERS_NO        "3.5.0a10"
+#define VERS_DATE      "04/03/29"
 #define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
 #if defined(AMIGA)
 #define VERS_ADDITIONS "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"
@@ -75,8 +75,6 @@ copies.
 #else
 #define VERS_ADDITIONS "                                (c) 1999 - 2004 Martin Kroeker\n"
 #endif
-
-#include "pendef.h"
 
 /**
  ** Working with Pure C (the official descendant of Borland's
@@ -176,8 +174,9 @@ copies.
  ** Misc. typedefs
  **/
 
-typedef unsigned char Byte;
+//typedef unsigned char Byte;
 
+#include "pendef.h"
 
 /**
  ** When adding your special mode, add a symbol here.
@@ -236,6 +235,7 @@ typedef struct {
 	hp2xx_mode mode;
 	char *modestr;
 } mode_list;
+
 
 /**
  ** Input parameters: Used mainly during input file processing
@@ -443,5 +443,7 @@ void action_oldstyle(GEN_PAR *, IN_PAR *, OUT_PAR *);
 void fig_poly_end(PEN_W, int, int, int, FILE *, int, long *, long *);
 /*to_x11*/
 void win_close(void);
+
+
 
 #endif				/*      __HP2XX_H       */

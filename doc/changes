@@ -1,5 +1,14 @@
 Changes to hp2xx:
 =================
+3.5.0a10:
+Need to force pen_down state when entering polygon mode, else polygons drawn
+with pen up will not render correctly or even not at all. Cannot suppress
+MOVE_TO sequences in arc_increment as this would create wrong lines when
+circles are clipped. Wrong ordering of cases caused unsupported AD/SD font
+parameters such as pitch or posture to change the font weight. Changed all
+BYTE types to Byte to avoid clashes with X11's BYTE type. Initial support
+for variable-width fonts (only if truetype support is available).
+
 3.5.0a9:
 Made automatic closing of polygons on PM2 work again for output modes without
 highlevel polygon commands. Fixed several bugs in my wide-line miter code 
