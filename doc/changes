@@ -1,5 +1,11 @@
 Changes to hp2xx:
 =================
+3.5.0a8: 
+raster fills got broken when i added percentage fills shortly before release
+of a7 - some missing parentheses etc. Experimentally added Esc%0A/Esc%1A (RTL
+leave GL mode) commands to the list of 'page breakers' for multi-image files.
+Added to_ps.(c,o) to the generic Makefile.
+
 3.5.0a7:
 changed RA,RR,WG to honor the "no fill" option.
 Added support for filltypes 10 (raster fill percentage) and 11 (user-defined), 

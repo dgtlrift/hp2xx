@@ -1,4 +1,16 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a8
+
+New features:
+
+- The 'leave HPGL mode' Esc sequences Esc%0A,Esc%1A now act as separators
+  for multi-image files.
+
+Bug fixes:
+
+- user defined raster fills were broken before release, when i added the
+  percentage fills without some crucial braces.
+
 3.5.0a7
 
 New features:

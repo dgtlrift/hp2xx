@@ -218,14 +218,15 @@ if (filltype == 11) penwidth=1.69;
 						      scale_flag);
 				switch (filltype){
 				case 11:
-/*				for(ia=0;ia<ph[pat];ia++){
+#if 0
+				for(ia=0;ia<ph[pat];ia++){
 				for(ib=0;ib<pw[pat];ib++)if (pattern [pat][ia][ib]>0) printf("o"); 
 								else
 								printf(" ");
 							printf("\n");
 							 }	
-
-*/
+#endif
+						pati=0;
 						patj=i-(i/ph[pat])*ph[pat];
 						if (patj>ph[pat]) patj=0;
 					do  {
@@ -234,8 +235,8 @@ if (filltype == 11) penwidth=1.69;
 					p.x+=0.001;
 					p.y+=0.001;
 					Pen_action_to_tmpfile(DRAW_TO,&p,scale_flag);
-					p.x-=0.001;
-					p.y-=0.001;
+/*					p.x-=0.001;
+					p.y-=0.001;*/
 					}
 /*					else Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);*/
 					pati++;

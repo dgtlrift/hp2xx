@@ -1744,7 +1744,15 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 						Eprintf
 						    ("leaving HPGL context\n");
 #endif
+				        if (!record_off) cdot(0,NULL,0);
+					page_number++;
+					pg_flag=TRUE;
+					record_off =
+					    (first_page > page_number)
+					    || ((last_page < page_number)
+						&& (last_page > 0));
 						hp = FALSE;
+						return;
 					}
 					continue;
 				case 'B':
@@ -3536,7 +3544,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		tp->CR_point = HP_pos;
 		break;
 	case RF:
-		if (read_float(&ftmp,hd)) 	/* just RF */
+		if (read_float(&ftmp,hd)) {	/* just RF */
 		memset(pattern[0],1,256*256);
 		memset(pattern[1],1,256*256);
 		memset(pattern[2],1,256*256);
@@ -3546,11 +3554,13 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		memset(pattern[6],1,256*256);
 		memset(pattern[7],1,256*256);
 		break;		/* default all patterns to solid*/
+		}
 		if (ftmp <0 || ftmp>7) break; /* we only have 8 patterns - ignore */
 		pat=(int)ftmp;
-		if (read_float(&ftmp,hd))	/* no width */
+		if (read_float(&ftmp,hd)){	/* no width */
 		memset(pattern[pat],1,256*256);
 		break; 		/* default this pattern to solid*/
+		}
 		pw[pat]=(int)ftmp;
 		if (read_float(&ftmp,hd))	/* width but no height -invalid */
 			par_err_exit(3, cmd, hd);
@@ -4120,6 +4130,10 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 #endif
 		case ESC:
 			read_ESC_cmd(pi->hd, TRUE);	/* ESC sequence */
+			if (pg_flag==TRUE) {	/*kludge for Esc%0A as pagebreak */
+			pg_flag=FALSE;
+			goto END;
+			}
 			break;
 		default:
 			if ((c < 'A') || (c > 'z')
