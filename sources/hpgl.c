@@ -180,7 +180,7 @@ static float saved_hatchspace[2]={0.,0.};
 static float saved_hatchangle[2]={0.,0.};
 static float thickness = 0.;
 static short polygon_penup = FALSE;
-static HPGL_Pt anchor = {0.0 , 0.0};
+static HPGL_Pt anchor = {100000.0 , 100000.0};
 static HPGL_Pt polystart = {0.0 , 0.0};
 static float rot_cos, rot_sin;
 
@@ -209,6 +209,12 @@ static char StrTerm = ETX;	/* String terminator char       */
 static char *strbuf = NULL;
 static unsigned int strbufsize = MAX_LB_LEN + 1;
 static char symbol_char = '\0';	/* Char in Symbol Mode (0=off)  */
+static unsigned char r_base=0;
+static unsigned char g_base=0;
+static unsigned char b_base=0;
+static unsigned char r_max=255;
+static unsigned char g_max=255;
+static unsigned char b_max=255;
 
 /* Known HPGL commands, ASCII-coded as High-byte/low-byte int's */
 
@@ -227,6 +233,7 @@ static char symbol_char = '\0';	/* Char in Symbol Mode (0=off)  */
 #define CI	0x4349
 #define CO	0x434F		/*AJB*/
 #define CP	0x4350
+#define CR	0x4352
 #define CS      0x4353		/*MK */
 #define CT	0x4354
 #define DF	0x4446
@@ -397,6 +404,9 @@ init_HPGL (const GEN_PAR * pg, const IN_PAR * pi)
   ymax = pi->y1;
   fixedcolor = pi->hwcolor;
   fixedwidth = pi->hwsize;
+  r_base=g_base=b_base=0;
+  r_max=g_max=b_max=255;
+
 /*  pens_in_use = 0; */
 
   /**
@@ -1499,6 +1509,11 @@ read_ESC_RTL (FILE * hd, int c1, int hp)
 	      break;
 	    }
 	}
+	if (c1 != '%') {
+		ungetc(ctmp,hd);
+		fprintf(stderr,"invalid escape ESC%c%c\n",c1,c2);
+		return;
+		}
     }
 }
 
@@ -2577,6 +2592,46 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
       if (!silent_mode)
 	printf ("\n%s\n", tmpstr);
       break;
+    case CR:	/* color range */
+      if (read_float (&ftmp, hd)){
+          r_base=g_base=b_base=0;
+          r_max=g_max=b_max=255;
+      	  break;
+          }
+      else{
+      	r_base=(unsigned char)ftmp;
+      }
+      if (read_float(&ftmp, hd)){
+        	r_max=255;
+        	break;
+         
+         }else{
+         r_max=(unsigned char)ftmp;
+         }	
+      if (read_float(&ftmp, hd)){
+        	break;
+         
+         }else{
+         g_base=(unsigned char)ftmp;
+         }	
+      if (read_float(&ftmp, hd)){
+        	g_max=255;
+        	break;
+         }else{
+         g_max=(unsigned char)ftmp;
+         }	
+      if (read_float(&ftmp, hd)){
+        	break;
+         }else{
+         b_base=(unsigned char)ftmp;
+         }	
+      if (read_float(&ftmp, hd)){
+        	b_max=255;
+        	break;
+         }else{
+         b_max=(unsigned char)ftmp;
+         break;
+         }
     case CS:			/*character set selection       */
       if (read_float (&csfont, hd))	/* just CS;     */
 	tp->font = 0;
@@ -2632,6 +2687,10 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	hatchspace = pt.width[pen] ;
       if (filltype < 3 && thickness > 0.)
 	hatchspace = thickness;
+	if (anchor.x==100000. && anchor.y==100000.){
+		anchor.x=xmin;
+		anchor.y=ymin;
+	}
       fill (polygons, vertices, anchor, P2, scale_flag, filltype, hatchspace,
 	    hatchangle);
       Pen_action_to_tmpfile (MOVE_TO, &p_last, scale_flag);
@@ -2710,15 +2769,15 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 	  if (read_float (&ftmp, hd))	/* no red component  */
 	    myred = 0;
 	  else
-	    myred = ftmp;
+	    myred = 255*r_max/(ftmp-r_base);
 	  if (read_float (&ftmp, hd))	/* no green component  */
 	    mygreen = 0;
 	  else
-	    mygreen = ftmp;
+	    mygreen = 255*g_max/(ftmp-g_base);
 	  if (read_float (&ftmp, hd))	/* no blue component  */
 	    myblue = 0;
 	  else
-	    myblue = ftmp;
+	    myblue = 255*b_max/(ftmp-b_base);
 	  pg->is_color = TRUE;
 	  PlotCmd_to_tmpfile (DEF_PC);
 	  Pen_Color_to_tmpfile (mypen, myred, mygreen, myblue);
@@ -3055,8 +3114,14 @@ if (rotate_flag){
 		C2.y=ftmp;
 		}	
 #endif
+if (rotate_flag&&!scale_flag){
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
+	  }
+	C1.x -= pg->extraclip;
+	C1.y -= pg->extraclip;
+	C2.x += pg->extraclip;
+	C2.y += pg->extraclip;
 
       break;
 

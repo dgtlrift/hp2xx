@@ -49,6 +49,11 @@ if (hatchangle >89.9 && hatchangle < 180.) {
 
 pxmin=point1.x;
 pymin=point1.y;
+/*
+pxmin=polyxmin;
+pymin=polyymin;
+*/
+fprintf(stderr,"anchor %f %f , minpoly %f %f\n",point1.x,point1.y,polyxmin,polyymin);
 pxmax=polyxmax;
 pymax=polyymax;
 if (polyxmin == polyxmax && polyymin == polyymax){

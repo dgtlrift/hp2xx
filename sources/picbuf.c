@@ -79,7 +79,7 @@ swapout_RowBuf (RowBuf *row, const PicBuf *picbuf)
 	exit	(ERROR);
   }
 
-  if (fwrite((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
+  if ((int)fwrite((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
 	!= picbuf->depth)
   {
 	PError	("swapout_RowBuf (on write)");
@@ -98,7 +98,7 @@ swapin_RowBuf (RowBuf *row, const PicBuf *picbuf)
 	exit	(ERROR);
   }
 
-  if (fread ((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
+  if ((int)fread ((char *) row->buf, picbuf->nb, picbuf->depth, picbuf->sd)
 	!= picbuf->depth)
   {
 	PError	("swapin_RowBuf (on read)");
@@ -474,7 +474,7 @@ int	nr, not_allocated;
  **/
 
 	for (nr=0; nr < pb->nr; nr++)
-	    if (fwrite((char *) pb->row[0].buf, pb->nb, pb->depth, pb->sd)
+	    if ((int)fwrite((char *) pb->row[0].buf, pb->nb, pb->depth, pb->sd)
 		!= pb->depth)
 	    {
 			Eprintf ("Couldn't clear swap file!\n");

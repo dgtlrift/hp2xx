@@ -58,20 +58,20 @@ void set_line_style(SCHAR index, ...){
       if(val < 0) {
          break;
       } else  {
-          lt[index-LT_MIN][count] = val;
+          lt[index - LT_MIN][count] = val;
           percentage += val;
       }
    } 
 
-   lt[index-LT_MIN][count] = -1;
+   lt[index - LT_MIN][count] = -1;
 
    if(fabs(percentage - 100.) > 0.5) {
       factor=100.0/percentage;
       for(count=0;count < LT_ELEMENTS;count++) {
-        if(lt[index-LT_MIN][count] < 0) {
+        if(lt[index - LT_MIN][count] < 0) {
            break;
         } else  {
-            lt[index-LT_MIN][count] *= factor;
+            lt[index - LT_MIN][count] *= factor;
         }
       }
    }

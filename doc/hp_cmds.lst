@@ -77,7 +77,7 @@ Cmd  | i |
  CM  | - | Character selection mode
  CO  |+  | Comment
  CP  |+  | Character plot
- CR  | - | Color Range for relative color data
+ CR  |+  | Color Range for relative color data
  CS  |+  | Designate standard character set
  CT  |+  | Chord tolerance
  CV  |  .| Curved line generator
@@ -118,7 +118,7 @@ Cmd  | i |
      |   |
  KY  |  .| Define key
      |   |
- LA  | - | Line [ends and joins] Attributes
+ LA  |*  | Line [ends and joins] Attributes
  LB  |+  | Label
  LO  |+  | Label origin
  LT  |+  | Line type
@@ -198,6 +198,6 @@ Cmd  | i |
      |   |
  YT  |+  | Y-Tick
 
-Useless statistics : this makes currently (3.4.2) 
-68 fully supported, 2 partially supported, 24 not-applicable 
-and 26 unsupported commands.
+Useless statistics : this makes currently (3.4.3) 
+69 fully supported, 3 partially supported, 24 not-applicable 
+and 24 unsupported commands.

@@ -199,7 +199,7 @@ int
 to_rgip (const GEN_PAR* pg, const OUT_PAR* po)
 {
 PlotCmd  cmd;
-HPGL_Pt  pt1 = {0};
+HPGL_Pt  pt1 = {0,0};
 FILE  *md;
 int  pensize, pencolor, pen_no=0, err = 0;
 

@@ -290,6 +290,7 @@
  Option Format  Default   Description
    -d   int     75        DPI value (x or both x&y)
    -"D" int     75        DPI value (y only)
+   -e   int     0         Extra clipping space
 
  If you use a raster format, the picture is rasterized by default into a
  75 DPI resolution image. Use option
@@ -298,6 +299,13 @@
  300 dpi rasterization. There is a way of specifying a different
  resolution for y direction:
         -D DPI_y_value
+ Some programs were found, which generate HPGL output with too tight clipping
+ bounds, which lead, for example, to some parts of text characters clipped off.
+ Use option
+        -e extraclip
+ to add some extra amount of space to clip areas to workaround such mistakes.
+ For example, -e 40 will add 40 extra plotter units to every side of clipping
+ box which is 1 mm in true size.
 2 PCL_only
  Option Format  Default   Description
    -"F"         off       Send a FormFeed after graphics data

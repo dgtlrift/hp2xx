@@ -257,6 +257,10 @@ char	*p, cdummy;
 			"Different DPI for x & y is invalid for PCL mode");
 		break;
 
+	  case 'e':
+		pg->extraclip = atoi (optarg);
+		break;
+
 	  case 'F':
 		po->formfeed = TRUE;
 		break;
@@ -467,7 +471,7 @@ IN_PAR	Pi;
 OUT_PAR	Po;
 int	i;
 
-char	*shortopts = "a:c:d:D:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtvN";
+char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtvN";
 struct	option longopts[] =
 {
 	{"mode",	1, NULL,	'm'},
@@ -481,6 +485,7 @@ struct	option longopts[] =
 	{"DPI",		1, NULL,	'd'},
 	{"DPI_x",	1, NULL,	'd'},
 	{"DPI_y",	1, NULL,	'D'},
+	{"extraclip",	1, NULL,	'e'},
 
 	{"PCL_formfeed",0, NULL,	'F'},
 	{"PCL_init",	0, NULL,	'i'},

@@ -9,6 +9,10 @@ void PlotCmd_to_tmpfile (PlotCmd cmd);
 
 void HPGL_Pt_to_tmpfile (const HPGL_Pt * pf);
 
+#ifdef EMF
+void reset_tmpfile(void);
+#endif
+
 #ifdef __TURBOC__
 #define	HYPOT(x,y)	sqrt((x)*(x)+(y)*(y))
 #else

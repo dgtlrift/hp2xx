@@ -138,7 +138,7 @@ copies.
 #endif
 
 #define	ESC	'\033'
-#define	CR	'\015'
+#define	_CR	'\015'
 #define	FF	'\014'
 #define	LF	'\012'
 #define	BEL	'\007'
@@ -275,6 +275,7 @@ typedef struct			/* Corresponding option(s)	*/
    int	 quiet;			/* -q				*/
    int   nofill;		/* -n				*/
    int   no_ps;			/* -N				*/
+   int         extraclip;       /* -e extraclip                 */
    PEN_W maxpensize;		/* (internally needed)		*/
    int	 is_color;		/* (internally needed)		*/
    int	 maxcolor;		/* (internally needed)		*/

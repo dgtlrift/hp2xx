@@ -7,10 +7,19 @@ New features:
   Bresenham' algorithm by Alan Murphy of IBM that was released into the public 
   domain through an IBM Technical Bulletin
 - Added support for (most of) the LA command (Andrew J. Bird)
+- Added support for the CR (relative color range) command
 - hp2xx now recognizes (and ignores) the VS command to reduce number of
   runtime warnings
+- hp2xx now ignores stray Escape characters among HPGL commands
 - EMF export is now also available as an option on non-Windows builds if
   Allen Barnetts libEMF (http://libemf.sourceforge.net) is installed
+- hp2xx now translates FP commands into EP to show the outlines when the
+  -n, --nofill option is used. (Previously polygon commands were ignored 
+  unless in that case unless they contained an explicit EP as well. This was
+  particularly unfortunate in the case of polygon-derived text)
+- Added new commandline option -e, --extraclip <unit> for additional margin
+  around clip regions. Some programs apparently miscalculate their frames.
+  (Georgy Salnikov)
 
 Bug fixes:
 
@@ -34,7 +43,10 @@ Bug fixes:
   with 'Esc-12345X') are now handled gracefully
 - Removed memory leak in the X11 previewers' zoom function
 - PDF output could omit lines in some cases
-- PM2 did not close the current polygon if necessary
+- PM2 did not close the current polygon if necessary (Piotr Szwed)
+- Polygon fill range was not always initialized correctly (Bill Marr)
+- Compile fix for HPUX11 ansi compiler (add whitespace to work around
+  what is probably a compiler bug) (Glen Stewart)
 
 Changes from 3.4.1 to 3.4.2
 

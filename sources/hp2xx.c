@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a6";
-char	*VERS_DATE = "02/06/23";
+char	*VERS_NO = "3.4.3a7";
+char	*VERS_DATE = "02/07/04";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -310,6 +310,7 @@ print_supported_modes();
 	po->dpi_x);
   Eprintf ("-D int    %d\t\tDPI value for y ONLY\n", po->dpi_x);
 	 /* x, not y! */
+  Eprintf ("-e int    %d\t\tExtra clipping space\n", pg->extraclip);
 NormalWait();
 
   Eprintf ("\nPCL-exclusive options:\n");
@@ -353,7 +354,7 @@ NormalWait();
   Eprintf ("\t[--nofill] [--width] [--height] [--aspectfactor] [--truesize]\n");
   Eprintf ("\t[--x0] [--x1] [--y0] [--y1]\n");
   Eprintf ("\t[--xoffset] [--yoffset] [--center]\n");
-  Eprintf ("\t[--DPI] [--DPI_x] [--DPI_y]\n");
+  Eprintf ("\t[--DPI] [--DPI_x] [--DPI_y] [--extraclip]\n");
   Eprintf ("\t[--outfile] [--logfile] [--swapfile]\n");
   Eprintf ("\t[--PCL_formfeed] [--PCL_init] [--PCL_Deskjet]\n");
 #ifdef DOS
@@ -425,6 +426,7 @@ int	i;
   pg->nofill	= FALSE;
   pg->no_ps	= FALSE;
   pg->quiet	= FALSE;
+  pg->extraclip = 0;
   pg->maxpensize= 0.1;		/* 1/10 mm		*/
   pg->maxcolor	= 1;		/* max. color index		*/
   pg->maxpens=8;

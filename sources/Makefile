@@ -173,37 +173,37 @@ EX_DEFS =
 EX_LIBS =
 #
 # Include PDF support
-EX_SRC	+= to_pdf.c
-EX_OBJ += to_pdf.o
-EX_DEFS += -DUSEPDF
-EX_LIBS += -lpdf
+#EX_SRC	+= to_pdf.c
+#EX_OBJ += to_pdf.o
+#EX_DEFS += -DUSEPDF
+#EX_LIBS += -lpdf
 #
 # Epson Esc/P2 support 
-EX_SRC	+= to_escp2.c
-EX_OBJ	+= to_escp2.o
-EX_DEFS += -DEPSON
+#EX_SRC	+= to_escp2.c
+#EX_OBJ	+= to_escp2.o
+#EX_DEFS += -DEPSON
 #
 # Include PNG support:
-EX_SRC  += png.c to_png.c
-EX_OBJ  += png.o to_png.o
-EX_DEFS += -DPNG
-EX_LIBS += -lpng -lz
+#EX_SRC  += png.c to_png.c
+#EX_OBJ  += png.o to_png.o
+#EX_DEFS += -DPNG
+#EX_LIBS += -lpng -lz
 #
 # Include TIFF support:
-EX_SRC  += to_tif.c
-EX_OBJ  += to_tif.o
-EX_DEFS += -DTIF
-EX_LIBS += -ltiff
+#EX_SRC  += to_tif.c
+#EX_OBJ  += to_tif.o
+#EX_DEFS += -DTIF
+#EX_LIBS += -ltiff
 #
-EX_SRC  += to_jpg.c
-EX_OBJ  += to_jpg.o
-EX_DEFS += -DJPG
-EX_LIBS += -ljpeg
+#EX_SRC  += to_jpg.c
+#EX_OBJ  += to_jpg.o
+#EX_DEFS += -DJPG
+#EX_LIBS += -ljpeg
 #
-EX_SRC += to_emf.c
-EX_OBJ += to_emf.o
-EX_DEFS += -DEMF
-EX_LIBS += -lEMF -lstdc++
+#EX_SRC += to_emf.c
+#EX_OBJ += to_emf.o /usr/local/lib/libEMF.a
+#EX_DEFS += -DEMF -I/usr/local/include/libEMF
+#EX_LIBS += -lstdc++
 #
 # Include ATARI extras:
 # EX_SRC	+= to_pic.c to_pac.c
@@ -298,7 +298,7 @@ check:
 
 clean:
 	-make mostlyclean
-	-$(RMCMD) core a.out ./hp2xx.texinfo ./hp2xx.info $(PROGRAM)
+	-$(RMCMD) core a.out *~ ./hp2xx.texinfo ./hp2xx.info $(PROGRAM)
 
 distclean:
 	@echo make distclean -- not supported yet.

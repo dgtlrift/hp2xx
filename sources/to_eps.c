@@ -338,7 +338,7 @@ int
 to_eps (const GEN_PAR *pg, const OUT_PAR *po)
 {
   PlotCmd	cmd;
-  HPGL_Pt	pt1 = {0};
+  HPGL_Pt	pt1 = {0,0};
   FILE		*md;
   int		pen_no=0, pencolor=0, err;
   PEN_W		pensize;

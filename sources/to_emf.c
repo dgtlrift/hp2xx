@@ -90,11 +90,11 @@ emf_new_pen(PEN_W pensize,double red, double green, double blue,
 {
 	HANDLE pen;
 	emf_move_to (ppt, outDC);
-#ifdef UNIX
-	pen=CreatePen( PS_SOLID,pensize*5.,RGB((int)red,(int)green,(int)blue));
-#else
-	pen=CreatePen( pensize?PS_SOLID:PS_NULL,pensize*50,RGB((int)red,(int)green,(int)blue));
-#endif
+	if (pensize >0.)
+	pen = CreatePen ( PS_SOLID, (int)(5.*pensize), RGB((int)red,(int)green,(int)blue));
+	else
+	pen = CreatePen ( PS_NULL, (int)(5.*pensize), RGB((int)red, (int)green,(int)blue));
+
 	DeleteObject(SelectObject(outDC,pen));
 }
 
@@ -235,6 +235,7 @@ emf_exit:
 	return err;
 }
 
+#ifndef UNIX
 //*******************************************************************
 // helper to set scaling for print/preview
 static void
@@ -271,7 +272,6 @@ SetScale(HDC dc,int uthei,int utwi,const OUT_PAR *po)
 	SetViewportOrgEx(dc,0,0,NULL); // where do i want origo
 }
 
-#ifndef UNIX
 //*******************************************************************
 // Mesage handler for Preview Dialog.
 static INT_PTR CALLBACK

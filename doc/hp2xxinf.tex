@@ -489,6 +489,12 @@ the DPI value (an integer). if @samp{-D @var{num_y}} is also specified,
 @var{num_y} will override the @var{num} DPI value, but only for the y
 direction.
 
+Some programs were found, which generate HPGL output with too tight clipping
+bounds, which lead, for example, to some parts of text characters clipped off.
+Use option @samp{-e @var{num}} to add some extra amount of space to clip areas
+to workaround such mistakes. For example, @samp{-e @var{40}} will add 40 extra
+plotter units to every side of clipping box which is @code{1 mm} in true size.
+
 There are plenty of raster formats on various platforms, much more
 than @code{hp2xx} will ever handle. The supported raster formats
 IMG, JPG, PBM/PPM, PCL, PCX, PNG and TIFF were chosen for their widespread use, their simplicity,
@@ -1488,6 +1494,9 @@ Same as @samp{--DPI}
 @item --DPI_y (-D) @var{int}
 Set y resolution to @var{int} DPI. @var{int} integer and > 0.
 Default: @var{int} = 75.
+
+@item --extraclip (-e) @var{int}
+Set extra clipping space to @var{int} plotter units. Default: @var{int} = 0.
 @end table
 
 

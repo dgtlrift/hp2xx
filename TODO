@@ -7,3 +7,5 @@
 - Allow redefinition of PenColor in raster graphics modes
 - Optionally use an output formats' text commands where available, instead 
   of converting LB characters to line drawings
+- Optionally use an output formats' polygon commands
+
