@@ -174,9 +174,9 @@ EX_LIBS =
 #
 # Include PDF support
 EX_SRC	+= to_pdf.c
-EX_OBJ += to_pdf.o /usr/local/lib/libpdf.a
+EX_OBJ += to_pdf.o
 EX_DEFS += -DUSEPDF
-#EX_LIBS += -lpdf
+EX_LIBS += -lpdf
 #
 # Epson Esc/P2 support 
 #EX_SRC	+= to_escp2.c

@@ -62,6 +62,12 @@ static int linecount = 0;
 static float xcoord2mm, ycoord2mm;
 static float xmin, ymin;
 
+/* globals for states since we have to init them for each file now */
+static PEN_W lastwidth;
+static int lastcap;
+static int lastjoin;
+static int lastlimit;
+static int lastred, lastgreen,lastblue;
 
 void ps_set_linewidth(PEN_W, HPGL_Pt *, FILE *);
 void ps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt, FILE * fd);
@@ -107,8 +113,6 @@ void ps_stroke_and_move_to(HPGL_Pt * ppt, FILE * fd)
  **/
 void ps_set_linewidth(PEN_W width, HPGL_Pt * ppt, FILE * fd)
 {
-   static PEN_W lastwidth = -1.0;
-
    if ((fabs(width - lastwidth) >= 0.01) && (width >= 0.05)) {
       ps_stroke_and_move_to(ppt, fd);   /* MUST start a new path!      */
       fprintf(fd, " %6.3f W\n", width);
@@ -122,8 +126,6 @@ void ps_set_linewidth(PEN_W width, HPGL_Pt * ppt, FILE * fd)
  **/
 void ps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt, FILE * fd)
 {
-
-   static int lastcap = -1;
    int newcap;
 
    if (pensize > 0.35) {
@@ -163,9 +165,6 @@ void ps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt, FILE * fd)
 void ps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize, HPGL_Pt * ppt,
                      FILE * fd)
 {
-
-   static int lastjoin = -1;
-   static int lastlimit = -1;
    int newjoin;
    int newlimit = lastlimit;
 
@@ -220,8 +219,6 @@ void ps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize, HPGL_Pt * p
  **/
 void ps_set_color(int pencolor, HPGL_Pt * ppt, FILE * fd)
 {
-   static int lastred = -1, lastgreen = -1, lastblue = -1;
-
    if ((pt.clut[pencolor][0] != lastred) ||
        (pt.clut[pencolor][1] != lastgreen) || (pt.clut[pencolor][2] != lastblue)) {
 
@@ -287,6 +284,10 @@ void ps_init(const GEN_PAR * pg, const OUT_PAR * po, FILE * fd, PEN_W pensize)
 {
    long left, right, low, high;
    double hmxpenw;
+
+   lastwidth = -1.0;
+   lastcap = lastjoin = lastlimit = -1;
+   lastred = lastgreen = lastblue = -1;
 
    hmxpenw = pg->maxpensize / 2.0;      /* Half max. pen width, in mm   */
 

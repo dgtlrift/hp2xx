@@ -394,12 +394,19 @@ char	*p, cdummy;
 		{
 			if ((*p < '0') || (*p > '9'))
 			{
+			if ((*p<'A') || (*p > 'Z')){
 				Eprintf("Invalid size of pen %d: %c\n",	j, *p);
 				exit(ERROR);
-			}
+			}else{
+			pt.width[j] = 1+(*p - 'A')/10.0;
+			if (pg->maxpensize < pt.width[j])
+				pg->maxpensize = pt.width[j];
+			continue;
+			}		
 			pt.width[j] = (*p - '0') / 10.0;
 			if (pg->maxpensize < pt.width[j])
 				pg->maxpensize = pt.width[j];
+			}
 		}
 		pi->hwsize=TRUE;
 		break;

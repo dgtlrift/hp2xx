@@ -35,7 +35,7 @@ void Pen_Width_to_tmpfile (int pen, PEN_W width) {
 
   tp = pen;
   tw = width;
-
+  
   if (record_off)		/* Wrong page!  */
     return;
 

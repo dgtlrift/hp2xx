@@ -43,6 +43,12 @@ static int linecount = 0;
 static float xcoord2mm, ycoord2mm;
 static float xmin, ymin;
 
+/* globals for states since we have to init them for each file now */
+static PEN_W lastwidth;
+static int lastcap;
+static int lastjoin;
+static int lastlimit;
+static int lastred, lastgreen,lastblue;
 
 int to_pdf(const GEN_PAR *, const OUT_PAR *);
 void pdf_init(const GEN_PAR *, const OUT_PAR *, PDF *, PEN_W);
@@ -73,8 +79,6 @@ void pdf_end(PDF * fd)
  **/
 void pdf_set_linewidth(double width, PDF * fd)
 {
-
-   static double lastwidth = -1;
    double newwidth;
 
    if (width == 0.0) {
@@ -95,8 +99,6 @@ void pdf_set_linewidth(double width, PDF * fd)
  **/
 void pdf_set_linecap(LineEnds type, double pensize, PDF * fd)
 {
-
-   static int lastcap = -1;
    int newcap;
 
    if (pensize > 0.35) {
@@ -133,9 +135,6 @@ void pdf_set_linecap(LineEnds type, double pensize, PDF * fd)
  **/
 void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize, PDF * fd)
 {
-
-   static int lastjoin = -1;
-   static int lastlimit = -1;
    int newjoin;
    int newlimit = lastlimit;
 
@@ -188,8 +187,6 @@ void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize, PDF * fd)
  **/
 void pdf_set_color(int pencolor, PDF * fd)
 {
-   static int lastred = -1, lastgreen = -1, lastblue = -1;
-
    if ((pt.clut[pencolor][0] != lastred) ||
        (pt.clut[pencolor][1] != lastgreen) || (pt.clut[pencolor][2] != lastblue)) {
 
@@ -215,6 +212,10 @@ void pdf_init(const GEN_PAR * pg, const OUT_PAR * po, PDF * fd, PEN_W pensize)
 {
    long left, right, low, high;
    double hmxpenw;
+
+   lastwidth = -1.0;
+   lastcap = lastjoin = lastlimit = -1;
+   lastred = lastgreen = lastblue = -1;
 
    hmxpenw = pg->maxpensize / 20.0;     /* Half max. pen width, in mm   */
 

@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a15";
-char	*VERS_DATE = "02/08/15";
+char	*VERS_NO = "3.4.3a16";
+char	*VERS_DATE = "02/08/27";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -644,7 +644,7 @@ HPGL_to_TMP (GEN_PAR *pg, IN_PAR *pi)
 #endif	  
 	if ((pi->hd=fopen (pi->in_file, READ_BIN)) == NULL)
 	{
-		PError("hp2xx");
+		PError("hp2xx (while opening HPGL file)");
 		return ERROR;
 	}
 #if 1
@@ -676,12 +676,12 @@ HPGL_to_TMP (GEN_PAR *pg, IN_PAR *pi)
    ** Convert HPGL data into compact temporary binary file, and obtain
    ** scaling data (xmin/xmax/ymin/ymax in plotter coordinates)
    **/
-
+n_commands=0;
   read_HPGL (pg, pi); 
 #if 1
-	if (n_commands <= 1) {
+	if (n_commands <= 1 && n_commands >=0) {
 #endif	
-  if (pi->hd != stdin)
+  if (pi->hd != stdin )
   {
 	fclose (pi->hd);
 	pi->hd = NULL;
@@ -712,8 +712,8 @@ int	TMP_to_VEC (const GEN_PAR *pg, const OUT_PAR *po)
 {
   if (pg->td == NULL)
 	return ERROR;
-
   rewind (pg->td);		/* Rewind temp file for re-reading	*/
+if (n_commands <0) return 0;
 
   switch (pg->xx_mode)
   {
@@ -816,7 +816,7 @@ int	n_rows, n_cols;
 
   if (pg->td == NULL)
 	return ERROR;
-
+if (n_commands <0)return 0;
   rewind (pg->td);		/* Rewind temp file for re-reading	*/
 
   cleanup_o (po);
@@ -861,7 +861,7 @@ int	BUF_to_RAS (const GEN_PAR *pg, OUT_PAR *po)
 {
   if (po->picbuf == NULL)
 	return ERROR;
-
+  if (n_commands <0) return 0;
   switch (pg->xx_mode)
   {
 	case XX_PCL:		/* HP PCL Level 3	*/

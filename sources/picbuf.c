@@ -585,21 +585,25 @@ static void dot_PicBuf (DevPt *p0, int pensize, int pencolor, PicBuf* pb) {
 
 
 static void
-  line_PicBuf (DevPt *p0, DevPt *p1, int pensize, int pencolor, PicBuf* pb)
+  line_PicBuf (DevPt *p0, DevPt *p1, PEN_W pensize, int pencolor, const OUT_PAR* po)
     /**
      ** Rasterize a vector (draw a line in the picture buffer), using the
      ** Bresenham algorithm.
      **/
 {
-   DevPt	*p_act;
+   PicBuf *pb = po->picbuf;
+   DevPt *p_act;
+   int linewidth = ceil(pensize*po->HP_to_xdots/0.025);                                  /* convert to pixel space */
+
+/*   printf("pensize = %0.3f mm, linewidth = %d pixels\n",pensize,linewidth);*/
    
-   if (pensize == 0)		/* No pen selected!	*/
+   if (linewidth == 0)		/* No pen selected!	*/
      return;
    
    if (pencolor == xxBackground)	/* No drawable color!	*/
      return;
    
-   if (pensize == 1) {                                                               /* Thin lines of any attitude */
+   if (linewidth == 1) {                                                             /* Thin lines of any attitude */
       p_act = bresenham_init (p0, p1);
       do {                
 	 plot_PicBuf (pb, p_act, pencolor);
@@ -607,15 +611,15 @@ static void
       return;
    } 
 
-   if( ( (p1->x - p0->x) == 0) && ((p1->y - p0->y) == 0) ) {                               /* No Movement Dot Only */
-      dot_PicBuf(p0,pensize,pencolor,pb);
+   if( (p1->x == p0->x)  && (p1->y == p0->y) ) {                                           /* No Movement Dot Only */
+      dot_PicBuf(p0,linewidth,pencolor,pb);
       return;
    }
 
    murphy_init(pb,pencolor);                                                                         /* Wide Lines */
-   murphy_wideline(*p0,*p1, pensize);
+   murphy_wideline(*p0,*p1, linewidth);
 
-   if ( pensize > 0.35 ) {
+   if ( linewidth > 0.35 ) {
       switch (CurrentLineAttr.End) {
          case LAE_square:        /* square not implemented yet */
          case LAE_butt:
@@ -623,13 +627,13 @@ static void
             break;
          case LAE_triangular:    /* triangular not implemented yet */
          case LAE_round:
-            dot_PicBuf(p0,pensize,pencolor,pb);
-            dot_PicBuf(p1,pensize,pencolor,pb);
+            dot_PicBuf(p0,linewidth,pencolor,pb);
+            dot_PicBuf(p1,linewidth,pencolor,pb);
             break;
       }
    } else {
-      dot_PicBuf(p0,pensize,pencolor,pb);                                /* lines upto 0.35 always have round ends */
-      dot_PicBuf(p1,pensize,pencolor,pb);
+      dot_PicBuf(p0,linewidth,pencolor,pb);                               /* lines upto 0.35 always have round ends */
+      dot_PicBuf(p1,linewidth,pencolor,pb);
    }
 
 }
@@ -694,19 +698,13 @@ int		pen_no = 1;
 	  case DRAW_TO:
 		HPGL_Pt_from_tmpfile(&pt1);
 		HPcoord_to_dotcoord (&pt1, &next, po);
-		line_PicBuf (&ref, &next,
-			ceil(pt.width[pen_no]*po->HP_to_xdots/0.025), 
-			pt.color[pen_no], 
-			po->picbuf);
+		line_PicBuf (&ref, &next,pt.width[pen_no],pt.color[pen_no],po);
 		memcpy (&ref, &next, sizeof(ref));
 		break;
 	  case PLOT_AT:
 		HPGL_Pt_from_tmpfile(&pt1);
 		HPcoord_to_dotcoord (&pt1, &ref, po);
-		line_PicBuf (&ref, &ref,
-			ceil(pt.width[pen_no]*po->HP_to_xdots/0.025), 
-			pt.color[pen_no],
-			po->picbuf);
+		line_PicBuf (&ref, &ref,pt.width[pen_no],pt.color[pen_no],po); 
 		break;
 
 	  default:

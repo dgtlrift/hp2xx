@@ -57,8 +57,7 @@ void print_line_style(void);
 typedef enum { LAE_butt          = 1,
                LAE_square        = 2,
                LAE_triangular    = 3,
-               LAE_round         = 4, 
-	       LAE_default	 = 5 /*round for <0.35mm, butt above */
+               LAE_round         = 4 
 } LineEnds;
 
 typedef enum { LAJ_plain_miter   = 1,

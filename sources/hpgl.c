@@ -366,7 +366,7 @@ int i;
   set_line_style_defaults();
 /*  set_line_attr_defaults();*/
   CurrentLineAttr.Join=LAJ_plain_miter;
-  CurrentLineAttr.End=LAE_default;
+  CurrentLineAttr.End=LAE_butt;
   CurrentLineAttr.Limit=5;
   
   StrTerm = ETX;
@@ -454,7 +454,7 @@ memset(pens_in_use,0,NUMPENS*sizeof(short));
    **/
   first_page = pi->first_page;	/* May be 0     */
   last_page = pi->last_page;	/* May be 0     */
-  page_number = 1;
+/*  page_number = 1;*/
   record_off = (first_page > page_number)
     || ((last_page < page_number) && (last_page > 0));
 
@@ -2042,7 +2042,8 @@ arcs (int relative, FILE * hd)
   float alpha, eps;
   double phi, phi0, r;
   double SafeLinePatLen = CurrentLinePatLen;
-
+  LineEnds SafeLineEnd=CurrentLineEnd;
+ 
   if (read_float (&p.x, hd))	/* No number found      */
     return;
 
@@ -2071,7 +2072,6 @@ arcs (int relative, FILE * hd)
 
 	if (ct_dist == FALSE)
   	eps *= M_PI / 180.0;		/* Deg-to-Rad           */
-
 
   if (relative)			/* Process coordinates  */
     {
@@ -2104,20 +2104,24 @@ arcs (int relative, FILE * hd)
       /*      Pattern length = chord length           */
       CurrentLinePatLen = HYPOT (p.x, p.y);
     }
-
+PlotCmd_to_tmpfile(DEF_LA);
+Line_Attr_to_tmpfile(LineAttrEnd,LAE_round);
   if (alpha > 0.0)
     {
       for (phi = phi0 + MIN (eps, alpha); phi < phi0 + alpha; phi += eps)
 	arc_increment (&center, r, phi);
+PlotCmd_to_tmpfile(DEF_LA);
+Line_Attr_to_tmpfile(LineAttrEnd,SafeLineEnd);
       arc_increment (&center, r, phi0 + alpha);	/* to endpoint */
     }
   else
     {
       for (phi = phi0 - MIN (eps, -alpha); phi > phi0 + alpha; phi -= eps)
 	arc_increment (&center, r, phi);
+PlotCmd_to_tmpfile(DEF_LA);
+Line_Attr_to_tmpfile(LineAttrEnd,SafeLineEnd);
       arc_increment (&center, r, phi0 + alpha);	/* to endpoint */
     }
-
   CurrentLinePatLen = SafeLinePatLen;	/* Restore */
 }
 
@@ -2722,6 +2726,9 @@ read_HPGL_cmd (GEN_PAR * pg, short cmd, FILE * hd)
 		ct_dist = TRUE;
       break;
     case EP:			/* edge polygon */
+      if (polygon_penup==TRUE)
+      	if (p_last.x!= polystart.x || p_last.y !=polystart.y) vertices-=2;
+      	 
       for (i = 0; i < vertices; i = i + 2)
 	{			/*for all polygon edges */
 	  p1.x = polygons[i].x;
@@ -3005,6 +3012,7 @@ if (rotate_flag){
 	}
     case PU:			/* Pen  Up                      */
       pen_down = FALSE;
+      if (polygon_mode)polygon_penup=TRUE;
       lines (plot_rel, hd);
       tp->CR_point = HP_pos;
       break;
@@ -3182,12 +3190,28 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
       iwflag = 1;
       if (read_float (&C1.x, hd))	/* No number found  */
 	{
-	      C1.x = P1.x;
-	      C1.y = P1.y;
-	      C2.x = P2.x;
-	      C2.y = P2.y;
-	    }
-
+	      		C1 = P1;
+	      		C2 = P2;
+	      	if (scale_flag){
+	      			C1=S1;
+	      			C2=S2;
+	      			}
+		if (rotate_flag && !ps_flag){
+			switch((int)fabs(rot_tmp)){
+			case 90:
+			case 270:
+			ftmp = C1.x;
+			C1.x = C1.y;
+			C1.y = ftmp;
+			ftmp = C2.x;
+			C2.x = C2.y;
+			C2.y = ftmp;
+			break;
+			default:
+			break;
+			}
+		}
+	}	
 /*fprintf (stderr," clip limits (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);*/
       else
 	{
@@ -3199,40 +3223,10 @@ fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
 	    par_err_exit (4, cmd);
 	}
 
-#if 0
-	if ( C1.x > C2.x && P1.x<P2.x) {
-		ftmp=C1.x;
-		C1.x=C2.x;
-		C2.x=ftmp;
-		}
-	if ( C1.y > C2.y && P1.y<P2.y) {	
-		ftmp=C1.y;
-		C1.y=C2.y;
-		C2.y=ftmp;
-		}
-#endif
-
-#if 0		
-	if (P2.y < P1.y && C1.y <C2.y){
-                ftmp=C1.y;
-                C1.y=C2.y;
-                C2.y=ftmp;
-                }
-#endif
-#if 0
-	if (P2.x < P1.x && C2.x < C1.x ){
-		ftmp=C2.x;
-		C2.x=C1.x;
-		C1.x=ftmp;
-		}
-#endif
-
-
-
-if (scale_flag){
+	  if (scale_flag){
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
-	}
+	  }
 	
 	C1.x -= pg->extraclip;
 	C1.y -= pg->extraclip;
@@ -3249,23 +3243,6 @@ if (scale_flag){
 		C2.y=C1.y;
 		C1.y=ftmp;
 		}
-
-#if 0
-      if (rotate_flag)		/* hp2xx-specific global rotation       */
-	{
-fprintf(stderr," P1,P2 C1,C2: %f %f %f %f - %f %f %f %f\n",P1.x,P1.y,P2.x,P2.y,C1.x,C1.y,C2.x,C2.y);
-  if ((rot_ang-rot_tmp)==0.) break;
-      p1.x = cos (M_PI * (rot_ang-rot_tmp) / 180.0);
-      p1.y = sin (M_PI * (rot_ang-rot_tmp) / 180.0);
-	  ftmp = p1.x * C1.x - p1.y * C1.y;
-	  C1.y = p1.y * C1.x + p1.x * C1.y;
-	  C1.x = ftmp;
-	  ftmp = p1.x * C2.x - p1.y * C2.y;
-	  C2.y = p1.y * C2.x + p1.x * C2.y;
-	  C2.x = ftmp;
-fprintf(stderr," P1,P2 C1,C2: %f %f %f %f - %f %f %f %f\n",P1.x,P1.y,P2.x,P2.y,C1.x,C1.y,C2.x,C2.y);
-	}
-#endif
       break;
 
     case OP:			/* Output reference Points P1,P2 */
@@ -3288,6 +3265,7 @@ fprintf(stderr," P1,P2 C1,C2: %f %f %f %f - %f %f %f %f\n",P1.x,P1.y,P2.x,P2.y,C
     case PG:			/* new PaGe                     */
       /* record ON happens only once! */
       page_number++;
+      fprintf(stderr,"PG: page_number now %d\n",page_number);
       record_off = (first_page > page_number)
 	|| ((last_page < page_number) && (last_page > 0));
 #if 1
@@ -3851,6 +3829,7 @@ read_HPGL (GEN_PAR * pg, const IN_PAR * pi)
 	if (c=='P'){
 	 if ( (cmd = getc(pi->hd)) == 'G') {
 /*	  fprintf(stderr,"***PG***\n");'*/
+	page_number++;
 	goto END;
 	 }else{
          if (cmd==EOF) return;
@@ -3861,6 +3840,7 @@ read_HPGL (GEN_PAR * pg, const IN_PAR * pi)
 		cmd=getc(pi->hd);
 	 if ( cmd  == 'F' || cmd == 'H') {
 /*	  fprintf(stderr,"***AF/AH***\n");*/
+	page_number++;
 	goto END;
 	 }else{
          if (cmd==EOF) return;
@@ -3888,7 +3868,12 @@ END:
       Eprintf ("HPGL command(s) ignored: %d\n", n_unknown);
       Eprintf ("Unexpected event(s):  %d\n", n_unexpected);
       Eprintf ("Internal command(s):  %ld\n", vec_cntr_w);
-      Eprintf ("Pens used: ");
+	if ((pi->first_page > page_number-1)
+    || ((pi->last_page < page_number-1) && (pi->last_page > 0))){
+    	n_commands=-1;
+    	Eprintf ("Page %d not drawn (outside selected range %d-%d)\n",page_number-1,pi->first_page,pi->last_page);
+	}
+          Eprintf ("Pens used: ");
 /*      for (c=0; c < NUMPENS; c++, pens_in_use >>= 1)
    if (pens_in_use & 1)
  */

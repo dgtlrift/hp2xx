@@ -7,6 +7,7 @@
 #include "hp2xx.h"
 #include "hpgl.h"
 #include "lindef.h"
+#include "pendef.h"
 
 void fill(HPGL_Pt polygon[MAXPOLY], int numpoints,HPGL_Pt point1, HPGL_Pt point2,
 int scale_flag,int filltype,float spacing,float hatchangle)
@@ -26,18 +27,23 @@ double tmp,rot_ang;
 double pxdiff=0.,pydiff=0.;
 double A1,B1,C1,A2,B2,C2;
 double tmp2;
+PEN_W SafePenW=pt.width[1];
 LineEnds SafeLineEnd=CurrentLineEnd;
-/*CurrentLineEnd=LAE_butt;*/
+CurrentLineEnd=LAE_butt;
 
-penwidth=1.;
+penwidth=0.2;
 if (filltype >2) penwidth=spacing;
+	PlotCmd_to_tmpfile(DEF_PW);
+	Pen_Width_to_tmpfile(1,penwidth);
 
 polyxmin=100000.;
 polyymin=100000.;
 polyxmax=-100000.;
 polyymax=-100000.;
 for (i = 0 ; i <= numpoints; i++ ) {
-/*fprintf(stderr,"%d: %f %f \n",i,polygon[i].x,polygon[i].y);*/
+#if 0
+fprintf(stderr,"%d: %f %f \n",i,polygon[i].x,polygon[i].y);
+#endif
 
 polyxmin=MIN(polyxmin,polygon[i].x);
 polyymin=MIN(polyymin,polygon[i].y);
@@ -246,11 +252,14 @@ if (k>0) {
 
 } /* next scanline */
 
-/*	PlotCmd_to_tmpfile(DEF_LA);
+if (filltype !=4){
+	CurrentLineEnd=SafeLineEnd;
+	PlotCmd_to_tmpfile(DEF_PW);
+	Pen_Width_to_tmpfile(1,SafePenW);
+	PlotCmd_to_tmpfile(DEF_LA);
 	Line_Attr_to_tmpfile(LineAttrEnd,SafeLineEnd);
-*/
-if (filltype !=4) return;
-
+	return;
+}
 
 FILL_VERT:
 
@@ -270,9 +279,9 @@ pxmax=pxmax+rot_ang*pydiff;
 pymin=pymin-1.;
 pymax=pymax+1.;
 
-/*	PlotCmd_to_tmpfile(DEF_LA);
+	PlotCmd_to_tmpfile(DEF_LA);
 	Line_Attr_to_tmpfile(LineAttrEnd,LAE_butt);
-*/
+
 numlines = fabs(1. + ( pxmax - pxmin  +penwidth) / penwidth);
 /*fprintf(stderr,"numlines = %d\n",numlines);*/
 
@@ -365,9 +374,11 @@ if (k>0) {
 }
 
 } /* next scanline */
-
-/*	PlotCmd_to_tmpfile(DEF_LA);
+	CurrentLineEnd=SafeLineEnd;
+	PlotCmd_to_tmpfile(DEF_PW);
+	Pen_Width_to_tmpfile(1,SafePenW);
+	PlotCmd_to_tmpfile(DEF_LA);
 	Line_Attr_to_tmpfile(LineAttrEnd,SafeLineEnd);
-*/
+
 }
 

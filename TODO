@@ -10,3 +10,5 @@
 - Optionally use an output formats' polygon commands
 - Optionally collect all plots from a multi-file or multi-plot run in a 
   single output file if the format allows this (particulary PDF)
+- Add miter support in the raster modes, now that we have true wide line
+  support
