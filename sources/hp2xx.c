@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a22";
-char	*VERS_DATE = "02/10/27";
+char	*VERS_NO = "3.4.3a24";
+char	*VERS_DATE = "02/11/24";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -310,17 +310,17 @@ print_supported_modes();
   Eprintf ("-r float%5.1f\t\tRotation angle [deg]. -r90 = landscape\n",
 	pi->rotation);
   Eprintf ("-s strg   %s\tName of swap file\n", pg->swapfile);
-
+NormalWait();
   Eprintf ("\nBitmap controls:\n");
   Eprintf ("-d int    %d\t\tDPI value for x or x&y, if -D unused.\n",
 	po->dpi_x);
   Eprintf ("-D int    %d\t\tDPI value for y ONLY\n", po->dpi_x);
 	 /* x, not y! */
   Eprintf ("-e int    %d\t\tExtra clipping space\n", pg->extraclip);
-NormalWait();
 
   Eprintf ("\nPCL-exclusive options:\n");
   Eprintf ("-i         %s\tPre-initialize printer\n", FLAGSTATE (po->init_p));
+  Eprintf ("-I         %s\tInitialize using PCL3GUI commands\n",FLAGSTATE(po->init_p3gui));
   Eprintf ("-F         %s\tSend a FormFeed at end\n", FLAGSTATE(po->formfeed));
   Eprintf ("-S int     %d\tUse Deskjet special commands (0=off, 1=B/W, 3=CMY, 4=CMYK)\n",
 	po->specials);
@@ -335,6 +335,8 @@ NormalWait();
   Eprintf ("-S int     %d\tUse Tiff Compression Format (0/1=None, 2=RLE, 3=G3Fax, 4=G4Fax, 5=LZW, 6=OJpeg, 7=Jpeg, 8=Deflate)\n",
 	po->specials);
 
+  NormalWait();
+  
   Eprintf ("\nSize controls:\n");
 
   Eprintf ("-a float %5.1f\tAspect factor (x/y correction). Valid: > 0.0\n",
@@ -362,7 +364,7 @@ NormalWait();
   Eprintf ("\t[--xoffset] [--yoffset] [--center]\n");
   Eprintf ("\t[--DPI] [--DPI_x] [--DPI_y] [--extraclip]\n");
   Eprintf ("\t[--outfile] [--logfile] [--swapfile]\n");
-  Eprintf ("\t[--PCL_formfeed] [--PCL_init] [--PCL_Deskjet]\n");
+  Eprintf ("\t[--PCL_formfeed] [--PCL_init] [--PCL_Deskjet] [--PCL_PCL3GUI]\n");
 #ifdef DOS
   Eprintf ("\t[--VGAmodebyte]");
 #endif
@@ -416,6 +418,7 @@ int	i;
   pi->last_page	= 0;
 
   po->init_p	= FALSE;
+  po->init_p3gui= FALSE;
   po->formfeed	= FALSE;
   po->specials	= 0;
   po->dpi_x	= 75;

@@ -590,7 +590,7 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, int pencolor, int consecutive
            t3.y = p0->y - (linewidth - 1) * xoff;
            t2.x = t3.x - (linewidth - 1) * xoff;
            t2.y = t3.y + (linewidth - 1) * yoff;
-           polygon_PicBuf(t0, t1, t3, t2,pencolor,pb);
+           polygon_PicBuf(t1, t3, t0, t2,pencolor,pb);
            t0.x = p1->x + (linewidth - 1) * yoff;
            t0.y = p1->y + (linewidth - 1) * xoff;
            t1.x = t0.x + (linewidth - 1) * xoff;
@@ -599,7 +599,7 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, int pencolor, int consecutive
            t3.y = p1->y - (linewidth - 1) * xoff;
            t2.x = t3.x + (linewidth - 1) * xoff;
            t2.y = t3.y + (linewidth - 1) * yoff;
-           polygon_PicBuf(t0, t1, t3, t2,pencolor,pb);
+           polygon_PicBuf(t1, t3, t0, t2,pencolor,pb);
            break;
         case LAE_butt:
         default:
@@ -618,7 +618,7 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, int pencolor, int consecutive
            t2.y = p0->y + (linewidth - 1) * yoff;
            t3.x = p0->x - (linewidth - 1) * yoff;
            t3.y = p0->y + (linewidth - 1) * xoff;
-           polygon_PicBuf(t0, t1, t3, t2,pencolor,pb);
+           polygon_PicBuf(t1, t3, t0, t2,pencolor,pb);
            t0.x = p1->x - (linewidth - 1) * xoff;
            t0.y = p1->y - (linewidth - 1) * yoff;
            t1.x = p1->x + (linewidth - 1) * yoff;
@@ -627,7 +627,7 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, int pencolor, int consecutive
            t2.y = p1->y + (linewidth - 1) * yoff;
            t3.x = p1->x - (linewidth - 1) * yoff;
            t3.y = p1->y + (linewidth - 1) * xoff;
-           polygon_PicBuf(t0, t1, t3, t2,pencolor,pb);
+           polygon_PicBuf(t1, t3, t0, t2,pencolor,pb);
            break;
         case LAE_round:
            dot_PicBuf(p0, linewidth, pencolor, pb);
@@ -641,7 +641,7 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, int pencolor, int consecutive
 
 }
 
-void polygon_PicBuf(DevPt p1, DevPt p4, DevPt p2, DevPt p3, int pencolor, PicBuf * pb) {
+void polygon_PicBuf(DevPt p4, DevPt p2, DevPt p1, DevPt p3, int pencolor, PicBuf * pb) {
 
    DevPt polygon[8];
    int xmin, ymin, xmax, ymax;
@@ -709,6 +709,9 @@ continue;
       C1 = scany * (xmax - xmin);
 
       for (j = 0; j <= 6; j = j + 2) {  /*for all polygon edges */
+		if (
+            	(scany < MIN(polygon[j].y,polygon[j +1].y)) ||
+            	(scany > MAX(polygon[j].y,polygon[j +1].y)) ) continue;
 
 /* coefficients for this edge */
          A2 = polygon[j + 1].y - polygon[j].y;
@@ -725,8 +728,6 @@ continue;
 
 /*fprintf(stderr,"seg x,y= %d %d\n",segx,segy);*/
             if ((segx > xmax) || (segx < xmin) ||
-            	(scany < MIN(polygon[j].y,polygon[j +1].y)) ||
-            	(scany > MAX(polygon[j].y,polygon[j +1].y)) ||
                 (segx < MIN(polygon[j].x, polygon[j + 1].x)) ||
                 (segx > MAX(polygon[j].x, polygon[j + 1].x))) {
 /*fprintf(stderr,"intersection  at %d %d is not within (%d,%d)-(%d,%d)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y )
@@ -751,11 +752,11 @@ continue;
 	start=tmp;
 	}
 /*fprintf(stderr,"fillline %d %d - %d %d\n",start.x,start.y,end.x,end.y);*/
+#if 1
       for (p_act.x = start, p_act.y = scany; p_act.x <= end; p_act.x++)
          plot_PicBuf(pb, &p_act, pencolor);
-
-      }
-
+#endif
+	}
    }                            /* next scanline */
 
 }

@@ -337,8 +337,10 @@ HPGL_Pt         old_pt;
 
   if (mode == 5)
   {
-	xcoord2mm = 1.0;
-	ycoord2mm = 1.0;
+/*	xcoord2mm = 1.0;
+	ycoord2mm = 1.0;*/
+	xcoord2mm = po->width  / (po->xmax - po->xmin) * 40.;
+	ycoord2mm = po->height / (po->ymax - po->ymin) * 40.;
   }
   else
   {

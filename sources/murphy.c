@@ -63,7 +63,9 @@ void murphy_paraline(DevPt pt, int d1)
    d1 = -d1;
 
    for (p = 0; p <= murphy.u; p++) {    /* test for end of parallel line */
+#if 1
       plot_PicBuf(murphy.pb, &pt, murphy.color);
+#endif      
       if (d1 <= murphy.kt) {    /* square move */
          if (murphy.oct2 == 0) {
             pt.x++;
@@ -282,28 +284,6 @@ DevPt ml1b, ml2b, ml1, ml2;
 
    if (miter > 1) {
 	if (murphy.first1.x != -10000000) {
-/*
-      ftmp2 = (murphy.last2.x - ml2b.x) * (murphy.last2.x - ml2b.x) 
-            + (murphy.last2.y - ml2b.y) * (murphy.last2.y - ml2b.y);
-      ftmp1 = (murphy.first2.x - ml2b.x) * (murphy.first2.x - ml2b.x)
-            + (murphy.first2.y - ml2b.y) * (murphy.first2.y - ml2b.y);
-
-      if (fabs(ftmp2) < fabs(ftmp1))
-         m2 = murphy.last2;
-      else
-         m2 = murphy.first2;
-
-      ftmp2 = (murphy.last1.x - ml1b.x) * (murphy.last1.x - ml1b.x)
-            + (murphy.last1.y - ml1b.y) * (murphy.last1.y - ml1b.y);
-
-      ftmp1 = (murphy.first1.x - ml1b.x) * (murphy.first1.x - ml1b.x)
-            + (murphy.first1.y - ml1b.y) * (murphy.first1.y - ml1b.y);
-
-      if (fabs(ftmp2) < fabs(ftmp1))
-         m1 = murphy.last1;
-      else
-         m1 = murphy.first1;
-*/
 	fi.x=(murphy.first1.x+murphy.first2.x)/2;
 	fi.y=(murphy.first1.y+murphy.first2.y)/2;
 	la.x=(murphy.last1.x+murphy.last2.x)/2;
@@ -337,23 +317,7 @@ DevPt ml1b, ml2b, ml1, ml2;
          ml1.x = ftmp1;
          ml1.y = ftmp2;
       }
-#if 1
-      if ((m1.x < ml1b.x && m2.x > ml2b.x) || (m1.x > ml1b.x && m2.x < ml2b.x)) {
-#endif
-         ftmp1 = ml2b.x;
-         ftmp2 = ml2b.y;
-         ml2b.x = m2.x;
-         ml2b.y = m2.y;
-         m2.x = ftmp1;
-         m2.y = ftmp2;
 
-#if 1
-      }
-#endif
-#if 0
-ftmp1=(m2.x-ml2b.x)*(m2.x-ml2b.x)+(m2.y-ml2b.y)*(m2.y-ml2b.y);
-if (ftmp1 >0 && ftmp1<1200) {
-#endif
 /*draw outline of miter segment */
          p_act = bresenham_init(&m2, &m1);
          do {
@@ -375,9 +339,6 @@ if (ftmp1 >0 && ftmp1<1200) {
             plot_PicBuf(murphy.pb, p_act, murphy.color);
          } while (bresenham_next() != BRESENHAM_ERR);
          polygon_PicBuf(m1, m2, ml1b, ml2b,murphy.color,murphy.pb);
-#if 0
-   }      
-#endif
   } 
  }
    murphy.last2 = ml2;

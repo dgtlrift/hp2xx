@@ -1,5 +1,14 @@
 Recent changes :
 =================
+3.4.3a24:
+Yet more fixes to the 'wide line miter' stuff (the previous code sometimes
+added extraneous lines in characters). The PCL3GUI code definitely does not
+work, and i do not yet know why.
+
+3.4.3a23:
+Simplified HPGL output (-mhpgl) did not honor any rescaling done with -h,-w.
+Added experimental initialization code for HP 'PCL3GUI' devices, and new -I
+command to select it.
 
 3.4.3a22:
 Fixed a bug in the miter fill code that could cause gaps in the filled area.

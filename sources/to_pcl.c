@@ -368,6 +368,11 @@ int size;
    /*  \033&l0E   no top margin            */
    /*  \0339      no side margins          */
    /*  \033&a0V   vertical position  0     */
+	if (po->init_p3gui){
+	fprintf(fd,"%crbC%cE",ESC,ESC);
+	fprintf(fd,"%c%%-12345X@PJL ENTER LANGUAGE=PCL3GUI",ESC);
+	fprintf(fd,"%c&l%dA%c&l0L%c&l0E%c9%c&a0V%c*p0Y",ESC, size, ESC, ESC, ESC, ESC,ESC);
+	}else
    fprintf(fd,"%cE%c&l%dA%c&l0L%c&l0E%c9%c&a0V", ESC, ESC, size, ESC, ESC, ESC, ESC);
  }
 

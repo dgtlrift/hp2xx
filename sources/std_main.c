@@ -317,6 +317,11 @@ char	*p, cdummy;
 		po->init_p = TRUE;
 		break;
 
+          case 'I':
+          	po->init_p = TRUE;
+          	po->init_p3gui = TRUE;
+          	break;
+          	
 	  case 'l':
 		pg->logfile = optarg;
 		if (freopen(pg->logfile, "w", stderr) == NULL)
@@ -519,7 +524,7 @@ OUT_PAR	Po;
 int	i;
 char 	outname[128]="";
 
-char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtvN";
+char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtvNI";
 struct	option longopts[] =
 {
 	{"mode",	1, NULL,	'm'},
@@ -538,6 +543,7 @@ struct	option longopts[] =
 	{"PCL_formfeed",0, NULL,	'F'},
 	{"PCL_init",	0, NULL,	'i'},
 	{"PCL_Deskjet",	1, NULL,	'S'},
+	{"PCL_PCL3GUI", 0, NULL,	'I'},
 
 	{"outfile",	1, NULL,	'f'},
 	{"logfile",	1, NULL,	'l'},

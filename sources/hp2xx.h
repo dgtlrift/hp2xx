@@ -252,6 +252,7 @@ typedef struct			/* Corresponding option(s)	*/
    int	vga_width;		/* (internally needed)		*/
    int	dpi_x, dpi_y;		/* -d dpi_x  -y dpi_y		*/
    int	init_p;			/* -i  (PCL only)		*/
+   int  init_p3gui;		/* -I  (PCL only)		*/
    int	formfeed;		/* -F  (PCL only)		*/
    int  specials;		/* -s specials  (PCL only)	*/
    int  pagecount;		/* for naming multi-page output */

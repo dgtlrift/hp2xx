@@ -1,5 +1,17 @@
 Changes to hp2xx:
 =================
+3.4.3a24:
+Wide line miter code still swapped near and far end of preceding line at
+will. Hopefully fixed for good now. PCL3GUI does not work yet - best result
+had the designjet500 move its printhead across the page several times without
+printing or even advancing the page.
+
+3.4.3a23:
+Simplified HPGL output (-mhpgl) did not honor any rescaling done with -h,-w.
+Added experimental initialization code for HP 'PCL3GUI' devices, and new -I
+command to select it (spells taken from gimp-print, incantation possibly not
+quite right).
+
 3.4.3a22:
 Fixed a bug in the miter fill code that could cause gaps in the filled area.
 Modified circle drawing code to create an overlapping segment to join the
