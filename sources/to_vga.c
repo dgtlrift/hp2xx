@@ -59,164 +59,156 @@ copies.
 #include "bresnham.h"
 #include "hp2xx.h"
 #include "pendef.h"
-#endif	/* !OS2	*/
+#endif				/* !OS2 */
 
 
-static Byte	buf[256][3];
-static unsigned	bufaddr_lo,  bufaddr_hi;
+static Byte buf[256][3];
+static unsigned bufaddr_lo, bufaddr_hi;
 
 
 
-static Byte
-get_VGAmode (void)
+static Byte get_VGAmode(void)
 {
-union	REGS	inregs;
-union	REGS	outregs;
+	union REGS inregs;
+	union REGS outregs;
 
-  inregs.x.ax = 0x0f00;	/* get VGA mode	*/
-  int86 (0x10, &inregs, &outregs);
-  return (outregs.x.ax & 0xff);
+	inregs.x.ax = 0x0f00;	/* get VGA mode */
+	int86(0x10, &inregs, &outregs);
+	return (outregs.x.ax & 0xff);
 }
 
 
-static void
-set_VGAmode (Byte mode)
+static void set_VGAmode(Byte mode)
 {
-union	REGS	inregs;
-union	REGS	outregs;
+	union REGS inregs;
+	union REGS outregs;
 
-  bufaddr_lo = (unsigned) ((long) buf		& 0xffff);
-  bufaddr_hi = (unsigned) (((long)buf >>16)	& 0xffff);
+	bufaddr_lo = (unsigned) ((long) buf & 0xffff);
+	bufaddr_hi = (unsigned) (((long) buf >> 16) & 0xffff);
 
-  inregs.x.ax = 0x0000 | mode;	/* set VGA mode	*/
-  int86 (0x10, &inregs, &outregs);
+	inregs.x.ax = 0x0000 | mode;	/* set VGA mode */
+	int86(0x10, &inregs, &outregs);
 }
 
 
 
-#if 0	/* Not needed anymore	*/
+#if 0				/* Not needed anymore   */
 static void
-get_color_regs (short codenum,
-		Byte *p_red, Byte *p_green, Byte *p_blue)
+get_color_regs(short codenum, Byte * p_red, Byte * p_green, Byte * p_blue)
 {
-union	REGS	inregs;
-union	REGS	outregs;
+	union REGS inregs;
+	union REGS outregs;
 
-  inregs.x.ax = 0x1015;
-  inregs.x.bx = codenum;
-  int86 (0x10, &inregs, &outregs);	/* get color codes */
-  *p_red   = outregs.x.dx >> 8;
-  *p_green = outregs.x.cx >> 8;
-  *p_blue  = outregs.x.cx & 0xff;
+	inregs.x.ax = 0x1015;
+	inregs.x.bx = codenum;
+	int86(0x10, &inregs, &outregs);	/* get color codes */
+	*p_red = outregs.x.dx >> 8;
+	*p_green = outregs.x.cx >> 8;
+	*p_blue = outregs.x.cx & 0xff;
 }
 #endif
 
 
-static void
-set_color_regs (short codenum,
-		Byte red, Byte green, Byte blue)
+static void set_color_regs(short codenum, Byte red, Byte green, Byte blue)
 {
-union	REGS	inregs;
-union	REGS	outregs;
+	union REGS inregs;
+	union REGS outregs;
 
-  inregs.x.ax = 0x1010;
-  inregs.x.bx = codenum;
-  inregs.x.dx =  red << 8;
-  inregs.x.cx = (green << 8) | blue;
-  int86 (0x10, &inregs, &outregs);
+	inregs.x.ax = 0x1010;
+	inregs.x.bx = codenum;
+	inregs.x.dx = red << 8;
+	inregs.x.cx = (green << 8) | blue;
+	int86(0x10, &inregs, &outregs);
 }
 
 
 
 
-static void
-set_pixel (unsigned x, unsigned y, Byte colorcode)
+static void set_pixel(unsigned x, unsigned y, Byte colorcode)
 {
-union	REGS	inregs;
-union	REGS	outregs;
+	union REGS inregs;
+	union REGS outregs;
 
-  inregs.x.ax = 0x0c00 | colorcode;	/* Write dot */
-  inregs.x.bx = 0;
-  inregs.x.cx = x;
-  inregs.x.dx = y;
-  int86 (0x10, &inregs, &outregs);
+	inregs.x.ax = 0x0c00 | colorcode;	/* Write dot */
+	inregs.x.bx = 0;
+	inregs.x.cx = x;
+	inregs.x.dx = y;
+	int86(0x10, &inregs, &outregs);
 }
 
 
 
 
-int
-PicBuf_to_VGA (const GEN_PAR *pg, const OUT_PAR *po)
+int PicBuf_to_VGA(const GEN_PAR * pg, const OUT_PAR * po)
 {
-int	row_c, x, y, xoff, yoff, color_index, err;
-RowBuf	*row;
-Byte	orig_mode;
-short	i;
-char	c;
+	int row_c, x, y, xoff, yoff, color_index, err;
+	RowBuf *row;
+	Byte orig_mode;
+	short i;
+	char c;
 
-  err = 0;
-  if (!pg->quiet)
-  {
-	Eprintf ( "\nVGA preview follows.\n");
-	Eprintf ( "Press <return> to start and end graphics mode\n");
-	SilentWait();
-  }
-
-  xoff = po->xoff * po->dpi_x / 25.4;
-  yoff = po->yoff * po->dpi_y / 25.4;
-
-  if ((!pg->quiet) &&
-      (((po->picbuf->nb << 3) + xoff > 639) || (po->picbuf->nr + yoff > 480)) )
-  {
-	Eprintf ( "\n\007WARNING: Picture won't fit on a standard VGA!\n");
-	Eprintf ( "Current range: (%d..%d) x (%d..%d) pels\n",
-		xoff, (po->picbuf->nb << 3) + xoff, yoff, po->picbuf->nr + yoff);
-	Eprintf ( "Continue anyway (y/n)?: ");
-	c = toupper(getchar());
-	if (c != '\n')
+	err = 0;
+	if (!pg->quiet) {
+		Eprintf("\nVGA preview follows.\n");
+		Eprintf("Press <return> to start and end graphics mode\n");
 		SilentWait();
-	if (c == 'N')
-		return 1;
-  }
+	}
 
-  orig_mode = get_VGAmode();
-  set_VGAmode (po->vga_mode);
+	xoff = po->xoff * po->dpi_x / 25.4;
+	yoff = po->yoff * po->dpi_y / 25.4;
+
+	if ((!pg->quiet) &&
+	    (((po->picbuf->nb << 3) + xoff > 639)
+	     || (po->picbuf->nr + yoff > 480))) {
+		Eprintf
+		    ("\n\007WARNING: Picture won't fit on a standard VGA!\n");
+		Eprintf("Current range: (%d..%d) x (%d..%d) pels\n", xoff,
+			(po->picbuf->nb << 3) + xoff, yoff,
+			po->picbuf->nr + yoff);
+		Eprintf("Continue anyway (y/n)?: ");
+		c = toupper(getchar());
+		if (c != '\n')
+			SilentWait();
+		if (c == 'N')
+			return 1;
+	}
+
+	orig_mode = get_VGAmode();
+	set_VGAmode(po->vga_mode);
 
 
 /**
  ** CLUT setting & special VGA adjustment
  **/
-  if (pg->is_color)	/* Darker background for higher color contrast	*/
-  {
-	for (i=xxBackground; i <= xxYellow; i++)
-		set_color_regs (i, pt.clut[i][0],pt.clut[i][1],pt.clut[i][2]);
-	set_color_regs((short) xxBackground, 160, 160, 160); /* GRAY	*/
-  }
-  else
-  {
-	set_color_regs((short) xxBackground, 180, 180, 180); /* LIGHT GRAY*/
-	set_color_regs((short) xxForeground,   0,   0,   0); /* BLACK	*/
-  }
-
-  for (row_c=0, y=po->picbuf->nr+yoff-1; row_c < po->picbuf->nr; row_c++, y--)
-  {
-	row = get_RowBuf (po->picbuf, row_c);
-	for (x=0; x < po->picbuf->nc; x++)
-	{
-		color_index = index_from_RowBuf(row, x, po->picbuf);
-		if (color_index != xxBackground)
-			set_pixel(x+xoff, y, (Byte) color_index);
+	if (pg->is_color) {	/* Darker background for higher color contrast    */
+		for (i = xxBackground; i <= xxYellow; i++)
+			set_color_regs(i, pt.clut[i][0], pt.clut[i][1],
+				       pt.clut[i][2]);
+		set_color_regs((short) xxBackground, 160, 160, 160);	/* GRAY    */
+	} else {
+		set_color_regs((short) xxBackground, 180, 180, 180);	/* LIGHT GRAY */
+		set_color_regs((short) xxForeground, 0, 0, 0);	/* BLACK   */
 	}
-  }
 
-  SilentWait();
-  /*
-  while (kbhit())
-	getch();
-  getch();
-  */
+	for (row_c = 0, y = po->picbuf->nr + yoff - 1;
+	     row_c < po->picbuf->nr; row_c++, y--) {
+		row = get_RowBuf(po->picbuf, row_c);
+		for (x = 0; x < po->picbuf->nc; x++) {
+			color_index =
+			    index_from_RowBuf(row, x, po->picbuf);
+			if (color_index != xxBackground)
+				set_pixel(x + xoff, y, (Byte) color_index);
+		}
+	}
 
-  set_VGAmode (orig_mode);
-  return err;
+	SilentWait();
+	/*
+	   while (kbhit())
+	   getch();
+	   getch();
+	 */
+
+	set_VGAmode(orig_mode);
+	return err;
 }
 #endif

@@ -59,20 +59,20 @@ copies.
 
 
 
-#define	PCL_FIRST 	1			/* Bit mask! 	*/
-#define	PCL_LAST 	2			/* Bit mask!	*/
+#define	PCL_FIRST 	1	/* Bit mask!    */
+#define	PCL_LAST 	2	/* Bit mask!    */
 
 
 /**
  ** Used for compression ON/off switch:
  **/
-static	int	Deskjet_specials = FALSE;
+static int Deskjet_specials = FALSE;
 
 
 /**
  ** Buffers for color treatment
  **/
-static	Byte	*p_K, *p_C, *p_M, *p_Y;		/* Buffer ptrs (CMYK bits) */
+static Byte *p_K, *p_C, *p_M, *p_Y;	/* Buffer ptrs (CMYK bits) */
 
 
 
@@ -86,133 +86,125 @@ static	Byte	*p_K, *p_C, *p_M, *p_Y;		/* Buffer ptrs (CMYK bits) */
  **	  "n_B" keeps track of the amount of extra buffer space left.
  **/
 #define	B_EXTRASPACE	16
-static	Byte	*p_B;				/* Buffer for compression  */
-static	int	n_B;				/* Counter for extra space */
+static Byte *p_B;		/* Buffer for compression  */
+static int n_B;			/* Counter for extra space */
 
 
 
 
-static int
-TIFF_n_repeats(Byte *p1, int nb)
+static int TIFF_n_repeats(Byte * p1, int nb)
 /**
  **	There are "nb" bytes in buffer "p1"
  **	Return number of identical bytes in a sequence (0, 2 ... nb)
  **/
 {
-int	i;
-Byte	*p2;
+	int i;
+	Byte *p2;
 
-   p2 = p1+1;
-   if (nb < 2 || *p2 != *p1)
-	return 0;
-   for (i=1; i < nb && *p1 == *p2; p1++, p2++)
-	i++;
-   return i;
+	p2 = p1 + 1;
+	if (nb < 2 || *p2 != *p1)
+		return 0;
+	for (i = 1; i < nb && *p1 == *p2; p1++, p2++)
+		i++;
+	return i;
 }
 
 
 
-static int
-TIFF_n_irregs (Byte *p1, int nb)
+static int TIFF_n_irregs(Byte * p1, int nb)
 /**
  **	There are "nb" bytes in buffer "p1"
  **	Return number of irregular (non-identical) bytes
  **	   in a sequence (0, 1, 2 ... nb)
  **/
 {
-int	i;
-Byte	*p2;
+	int i;
+	Byte *p2;
 
-   if (nb < 2)
-	return nb;	/* 0 or 1 */
-   p2 = p1+1;
-   for (i=1; i < nb && *p1 != *p2; p1++, p2++)
-	i++;
-   return (i == nb) ? nb : i-1;
+	if (nb < 2)
+		return nb;	/* 0 or 1 */
+	p2 = p1 + 1;
+	for (i = 1; i < nb && *p1 != *p2; p1++, p2++)
+		i++;
+	return (i == nb) ? nb : i - 1;
 }
 
 
 
-static int
-TIFF_compress (Byte *src, Byte *dst, int nb)
+static int TIFF_compress(Byte * src, Byte * dst, int nb)
 {
   /**
    ** Either there is a block of repetitions or non-repeating bytes
    ** at the buffer start. If repetitions, compress them. If not,
    ** buffer them and compress next block of repetitions.
    **/
-int	i, l, count=0;
+	int i, l, count = 0;
 
-  l = TIFF_n_repeats (src, nb);	/* l == 0 or  l >= 2	*/
-  while (l > 128 )
-  {
-	*dst++ = (-127);	/* 128 repetitions	*/
-	*dst++ = *src;
-	count += 2;
-	l   -= 128;
-	nb  -= 128;
-	src += 128;
-	n_B += 126;		/* 128 bytes coded as 2	*/
+	l = TIFF_n_repeats(src, nb);	/* l == 0 or  l >= 2    */
+	while (l > 128) {
+		*dst++ = (-127);	/* 128 repetitions      */
+		*dst++ = *src;
+		count += 2;
+		l -= 128;
+		nb -= 128;
+		src += 128;
+		n_B += 126;	/* 128 bytes coded as 2 */
 
-  }
-  if (l > 0)
-  {
-	*dst++ = (Byte) (1 - l)	;	/* l repetitions	*/
-	*dst++ = *src;
-	count += 2;
-	src += l;
-	nb  -= l;
-	n_B += (l - 2);		/* l bytes coded as 2	*/
-  }
+	}
+	if (l > 0) {
+		*dst++ = (Byte) (1 - l);	/* l repetitions        */
+		*dst++ = *src;
+		count += 2;
+		src += l;
+		nb -= l;
+		n_B += (l - 2);	/* l bytes coded as 2   */
+	}
 
-  if (nb < 0)
-	return -1;		/* should never happen	*/
-  if (nb == 0)
-	return count;		/* "count" bytes buffered*/
+	if (nb < 0)
+		return -1;	/* should never happen  */
+	if (nb == 0)
+		return count;	/* "count" bytes buffered */
 
 
-  /* Irregular sequence	*/
+	/* Irregular sequence */
 
-  l = TIFF_n_irregs (src, nb);	/* l == 0 or  l >= 2	*/
-  while (l > 128 )
-  {
-	n_B -= 1;
-	if (n_B < 0)
-		return -1;	/* Buffer overflow!	*/
+	l = TIFF_n_irregs(src, nb);	/* l == 0 or  l >= 2    */
+	while (l > 128) {
+		n_B -= 1;
+		if (n_B < 0)
+			return -1;	/* Buffer overflow!     */
 
-	*dst++ = 127;		/* 128 repetitions	*/
-	for (i=0; i < 128; i++)
-		*dst++ = *src++;
-	count += 129;
-	l   -= 128;
-	nb  -= 128;
+		*dst++ = 127;	/* 128 repetitions      */
+		for (i = 0; i < 128; i++)
+			*dst++ = *src++;
+		count += 129;
+		l -= 128;
+		nb -= 128;
 
-  }
-  if (l > 0)
-  {
-	n_B -= 1;
-	if (n_B < 0)
-		return -1;	/* Buffer overflow!	*/
+	}
+	if (l > 0) {
+		n_B -= 1;
+		if (n_B < 0)
+			return -1;	/* Buffer overflow!     */
 
-	*dst++ = (Byte)(l - 1)	;	/* l repetitions	*/
-	for (i=0; i < l; i++)
-		*dst++ = *src++;
-	count += (l+1);
-	nb  -= l;
-  }
+		*dst++ = (Byte) (l - 1);	/* l repetitions        */
+		for (i = 0; i < l; i++)
+			*dst++ = *src++;
+		count += (l + 1);
+		nb -= l;
+	}
 
-  if (nb < 0)
-	return -1;		/* should never happen		*/
+	if (nb < 0)
+		return -1;	/* should never happen          */
 
-  if (nb == 0)			/* At end-of-buffer: evaluate	*/
-  {
-	if (n_B > B_EXTRASPACE)	/* Regular exit: Return		*/
-		return count;	/*   number of compressed bytes	*/
-	else
-		return -1;	/* Nothing gained !		*/
-  }
-  i = TIFF_compress (src, dst, nb);	/* Recursion for rest	*/
-  return (i == -1) ? -1 : i + count;
+	if (nb == 0) {		/* At end-of-buffer: evaluate     */
+		if (n_B > B_EXTRASPACE)	/* Regular exit: Return             */
+			return count;	/*   number of compressed bytes */
+		else
+			return -1;	/* Nothing gained !             */
+	}
+	i = TIFF_compress(src, dst, nb);	/* Recursion for rest   */
+	return (i == -1) ? -1 : i + count;
 }
 
 
@@ -225,376 +217,391 @@ int	i, l, count=0;
  ** Return -1 if no compression done.
  **/
 
-static int
-compress_buf_TIFF (Byte *buf, int nb)
+static int compress_buf_TIFF(Byte * buf, int nb)
 {
-  if (Deskjet_specials == FALSE)
-	return -1;		/* Plain PLC L3 does not support compression! */
+	if (Deskjet_specials == FALSE)
+		return -1;	/* Plain PLC L3 does not support compression! */
 
-  if (p_B == NULL)		/* No buffer for compression!	*/
-	return -1;
+	if (p_B == NULL)	/* No buffer for compression!       */
+		return -1;
 
-  n_B = B_EXTRASPACE;		/* Init. extra space counter	*/
-  return TIFF_compress (buf, p_B, nb);	/* Recursive function!	*/
+	n_B = B_EXTRASPACE;	/* Init. extra space counter    */
+	return TIFF_compress(buf, p_B, nb);	/* Recursive function!  */
 }
 
 
 
 
-static void
-Buf_to_PCL (Byte *buf, int nb, int mode, FILE *fd)
+static void Buf_to_PCL(Byte * buf, int nb, int mode, FILE * fd)
 /**
  ** Output the raw bit stream
  **   (This should be an ideal place for data compression)
  **/
 {
-int	ncb;	/* Number of compressed bytes	*/
-Byte	*p;	/* Buffer pointer		*/
+	int ncb;		/* Number of compressed bytes   */
+	Byte *p;		/* Buffer pointer               */
 
-  if (mode & PCL_FIRST)
-	fprintf(fd,"\033*b");
+	if (mode & PCL_FIRST)
+		fprintf(fd, "\033*b");
 
-  ncb = compress_buf_TIFF (buf, nb);
-  if (ncb == -1)
-  {
-	ncb = nb;
-	p = buf;		/* Use original buffer & length	*/
-	fprintf(fd,"0m");	/* No compression		*/
-  }
-  else
-  {
-	p = p_B;		/* Use compression buffer	*/
-	fprintf(fd,"2m");	/* Compression method 2 (TIFF)	*/
-  }
+	ncb = compress_buf_TIFF(buf, nb);
+	if (ncb == -1) {
+		ncb = nb;
+		p = buf;	/* Use original buffer & length */
+		fprintf(fd, "0m");	/* No compression               */
+	} else {
+		p = p_B;	/* Use compression buffer       */
+		fprintf(fd, "2m");	/* Compression method 2 (TIFF)  */
+	}
 
-  if (mode & PCL_LAST)
-	fprintf(fd,"%dW", ncb);
-  else
-	fprintf(fd,"%dv", ncb);
+	if (mode & PCL_LAST)
+		fprintf(fd, "%dW", ncb);
+	else
+		fprintf(fd, "%dv", ncb);
 
 /*  Following change keeps the VAX people happy:	*/
 /*fwrite (p, 1, ncb, fd);		*/
-  (void)fwrite (p, (size_t)ncb, 1, fd);
+	(void) fwrite(p, (size_t) ncb, 1, fd);
 }
 
 
 
 
-static void
-KCMY_Buf_to_PCL (int nb, int is_KCMY, FILE *fd)
+static void KCMY_Buf_to_PCL(int nb, int is_KCMY, FILE * fd)
 {
-  if (is_KCMY)
-  {
-	Buf_to_PCL (p_K, nb, PCL_FIRST, fd);
-	Buf_to_PCL (p_C, nb, 0,         fd);
-  }
-  else			/* is only CMY:	*/
-	Buf_to_PCL (p_C, nb, PCL_FIRST, fd);
+	if (is_KCMY) {
+		Buf_to_PCL(p_K, nb, PCL_FIRST, fd);
+		Buf_to_PCL(p_C, nb, 0, fd);
+	} else			/* is only CMY:     */
+		Buf_to_PCL(p_C, nb, PCL_FIRST, fd);
 
-  Buf_to_PCL (p_M, nb, 0,        fd);
-  Buf_to_PCL (p_Y, nb, PCL_LAST, fd);
+	Buf_to_PCL(p_M, nb, 0, fd);
+	Buf_to_PCL(p_Y, nb, PCL_LAST, fd);
 }
 
 
 
 
-static void
-KCMY_to_K (int nb)
+static void KCMY_to_K(int nb)
 /**
  ** Color -> B/W conversion:
  ** Any set bit will show up black
  **/
 {
-int	i;
-Byte	*pK = p_K, *pC = p_C, *pM = p_M, *pY = p_Y;
+	int i;
+	Byte *pK = p_K, *pC = p_C, *pM = p_M, *pY = p_Y;
 
-  for (i=0; i < nb; i++)
-	*pK++ |= ((*pC++ | *pM++) | *pY++);
+	for (i = 0; i < nb; i++)
+		*pK++ |= ((*pC++ | *pM++) | *pY++);
 }
 
 
 
 
-static void
-K_to_CMY (int nb)
+static void K_to_CMY(int nb)
 /**
  ** CMYK-to-CMY conversion:
  ** Any set bit in the "black" layer sets all C,M,Y bits to emulate "black"
  **/
 {
-int	i;
-Byte	*pK = p_K, *pC = p_C, *pM = p_M, *pY = p_Y;
+	int i;
+	Byte *pK = p_K, *pC = p_C, *pM = p_M, *pY = p_Y;
 
-  for (i=0; i < nb; i++, pK++)
-  {
-	*pC++ |= *pK;
-	*pM++ |= *pK;
-	*pY++ |= *pK;
-  }
+	for (i = 0; i < nb; i++, pK++) {
+		*pC++ |= *pK;
+		*pM++ |= *pK;
+		*pY++ |= *pK;
+	}
 }
 
 
 
 
-static void
-init_printer (const OUT_PAR *po, FILE *fd)
+static void init_printer(const OUT_PAR * po, FILE * fd)
 {
-int size;
+	int size;
 
 
-	size=26; /* default to A4 paper */
-	
- if ((po->width >= po->height && (po->width > 297. || po->height >210.)) || 
-    (po->width < po->height && (po->height >297. || po->width >210.))) 
- 	size=27; /* A3 format */
-	
- if ((po->width >= po->height && (po->width > 420. || po->height >297.)) || 
-    (po->width < po->height && (po->height >420. || po->width >297.))) 
- 	size=28; /* A2 format */
+	size = 26;		/* default to A4 paper */
 
- if ((po->width >= po->height && (po->width > 584. || po->height >420.)) || 
-    (po->width < po->height && (po->height >584. || po->width >420.))) 
- 	size=29; /* A1 format */
+	if ((po->width >= po->height
+	     && (po->width > 297. || po->height > 210.))
+	    || (po->width < po->height
+		&& (po->height > 297. || po->width > 210.)))
+		size = 27;	/* A3 format */
 
+	if ((po->width >= po->height
+	     && (po->width > 420. || po->height > 297.))
+	    || (po->width < po->height
+		&& (po->height > 420. || po->width > 297.)))
+		size = 28;	/* A2 format */
 
- if ((po->width >= po->height && (po->width > 820. || po->height >584.)) || 
-    (po->width < po->height && (po->height >820. || po->width >584.))) 
- 	size=30; /* A0 format :-) */
-
-
-   /*  \033E      reset printer            */
-   /*  \033&l26A  select paper size        */
-   /*  \033&l0L   perforation skip off     */
-   /*  \033&l0E   no top margin            */
-   /*  \0339      no side margins          */
-   /*  \033&a0V   vertical position  0     */
-	if (po->init_p3gui){
-	fprintf(fd,"%crbC%cE",ESC,ESC);
-	fprintf(fd,"%c%%-12345X@PJL ENTER LANGUAGE=PCL3GUI\n",ESC);
-	
-	fprintf(fd,"%c&l%dA%c&l0L%c&l0E%c*o0M%c*o2D",ESC, size, ESC, ESC, ESC, ESC);
-	}else
-   fprintf(fd,"%cE%c&l%dA%c&l0L%c&l0E%c9%c&a0V", ESC, ESC, size, ESC, ESC, ESC, ESC);
- }
+	if ((po->width >= po->height
+	     && (po->width > 584. || po->height > 420.))
+	    || (po->width < po->height
+		&& (po->height > 584. || po->width > 420.)))
+		size = 29;	/* A1 format */
 
 
+	if ((po->width >= po->height
+	     && (po->width > 820. || po->height > 584.))
+	    || (po->width < po->height
+		&& (po->height > 820. || po->width > 584.)))
+		size = 30;	/* A0 format :-) */
+
+
+	/*  \033E      reset printer            */
+	/*  \033&l26A  select paper size        */
+	/*  \033&l0L   perforation skip off     */
+	/*  \033&l0E   no top margin            */
+	/*  \0339      no side margins          */
+	/*  \033&a0V   vertical position  0     */
+	if (po->init_p3gui) {
+		fprintf(fd, "%crbC%cE", ESC, ESC);
+		fprintf(fd, "%c%%-12345X@PJL ENTER LANGUAGE=PCL3GUI\n",
+			ESC);
+
+		fprintf(fd, "%c&l%dA%c&l0L%c&l0E%c*o0M%c*o2D", ESC, size,
+			ESC, ESC, ESC, ESC);
+	} else
+		fprintf(fd, "%cE%c&l%dA%c&l0L%c&l0E%c9%c&a0V", ESC, ESC,
+			size, ESC, ESC, ESC, ESC);
+}
 
 
 
-static void
-start_graphmode (const OUT_PAR *po, FILE *fd)
+
+
+static void start_graphmode(const OUT_PAR * po, FILE * fd)
 {
 	typedef struct init_s {
 		unsigned char a[26];
-		}init_t;
-	init_t init= 
-	{{0x02,0x04,0x01,0x2c,0x01,0x2c,0x00,0x02,
-			0x01,0x2c,0x01,0x2c,0x00,0x02,
-			0x01,0x2c,0x01,0x2c,0x00,0x02,
-			0x01,0x2c,0x01,0x2c,0x00,0x02}} ;	
+	} init_t;
+	init_t init = { {0x02, 0x04, 0x01, 0x2c, 0x01, 0x2c, 0x00, 0x02,
+			 0x01, 0x2c, 0x01, 0x2c, 0x00, 0x02,
+			 0x01, 0x2c, 0x01, 0x2c, 0x00, 0x02,
+			 0x01, 0x2c, 0x01, 0x2c, 0x00, 0x02}
+	};
 	typedef struct init_bw {
 		unsigned char a[8];
-		}init_tb;
-	init_tb init_bw= 
-	{{0x02,0x04,0x01,0x2c,0x01,0x2c,0x00,0x02}};
-		
+	} init_tb;
+	init_tb init_bw =
+	    { {0x02, 0x04, 0x01, 0x2c, 0x01, 0x2c, 0x00, 0x02} };
+
 /**
  ** X & Y offsets: Use "decipoints" as unit to stick to PCL level 3
  **		1 dpt = 0.1 pt = 1/720 in
  **/
-  if (po->yoff != 0.0)
-	fprintf(fd,"\033&a+%dV",(int)(po->yoff * 720.0 / 25.4) );
-  if (po->xoff != 0.0)
-	fprintf(fd,"\033&a+%dH",(int)(po->xoff * 720.0 / 25.4) );
+	if (po->yoff != 0.0)
+		fprintf(fd, "\033&a+%dV", (int) (po->yoff * 720.0 / 25.4));
+	if (po->xoff != 0.0)
+		fprintf(fd, "\033&a+%dH", (int) (po->xoff * 720.0 / 25.4));
 /**
  ** Set Graphics Resolution (300 / 150 / 100 / 75):
  ** This is NO PCL level 3 feature, but LaserjetII and compatibles
  ** seem to accept it.
  **/
-  fprintf(fd,"\033*t%dR", po->dpi_x);
+	fprintf(fd, "\033*t%dR", po->dpi_x);
 
 /**
  ** Set Raster Width (in dots)
  **	Deskjet feature, good for saving internal memory!
  **/
-  if (po->specials)
-  {
-	fprintf(fd,"\033*r%dS", po->picbuf->nc);
-	if (po->init_p3gui) fprintf(fd,"\033*r%dT", po->picbuf->nr);
-	
-	switch (po->specials)
-	{
-	  case 4:	/* KCMY				*/
-		if (po->init_p3gui) {
-	if (po->dpi_x == 600) { /* update resolution info in colorplane data*/
-		init.a[2]=0x02;
-		init.a[3]=0x58;
-		init.a[4]=0x02;
-		init.a[5]=0x58;
-		init.a[8]=0x02;
-		init.a[9]=0x58;
-		init.a[10]=0x02;
-		init.a[11]=0x58;
-		init.a[14]=0x02;
-		init.a[15]=0x58;
-		init.a[16]=0x02;
-		init.a[17]=0x58;
-		init.a[20]=0x02;
-		init.a[21]=0x58;
-		init.a[22]=0x02;
-		init.a[23]=0x58;
-	}
-		fprintf(fd,"\033*g%dW",(int)sizeof(init));
-		(void)fwrite(init.a,sizeof(unsigned char),sizeof(init.a),fd);	
+	if (po->specials) {
+		fprintf(fd, "\033*r%dS", po->picbuf->nc);
+		if (po->init_p3gui)
+			fprintf(fd, "\033*r%dT", po->picbuf->nr);
+
+		switch (po->specials) {
+		case 4:	/* KCMY                         */
+			if (po->init_p3gui) {
+				if (po->dpi_x == 600) {	/* update resolution info in colorplane data */
+					init.a[2] = 0x02;
+					init.a[3] = 0x58;
+					init.a[4] = 0x02;
+					init.a[5] = 0x58;
+					init.a[8] = 0x02;
+					init.a[9] = 0x58;
+					init.a[10] = 0x02;
+					init.a[11] = 0x58;
+					init.a[14] = 0x02;
+					init.a[15] = 0x58;
+					init.a[16] = 0x02;
+					init.a[17] = 0x58;
+					init.a[20] = 0x02;
+					init.a[21] = 0x58;
+					init.a[22] = 0x02;
+					init.a[23] = 0x58;
+				}
+				fprintf(fd, "\033*g%dW",
+					(int) sizeof(init));
+				(void) fwrite(init.a,
+					      sizeof(unsigned char),
+					      sizeof(init.a), fd);
+			}
+			fprintf(fd, "\033*r-4U");
+			break;
+		case 3:	/* CMY                          */
+			fprintf(fd, "\033*r-3U");
+			break;
+		default:	/* Single color plane           */
+			if (po->init_p3gui) {
+				if (po->dpi_x == 600) {	/* update resolution info in colorplane data */
+					init_bw.a[2] = 0x02;
+					init_bw.a[3] = 0x58;
+					init_bw.a[4] = 0x02;
+					init_bw.a[5] = 0x58;
+				}
+				fprintf(fd, "\033*g%dW",
+					(int) sizeof(init_bw));
+				(void) fwrite(init_bw.a,
+					      sizeof(unsigned char),
+					      sizeof(init_bw.a), fd);
+			}
+			fprintf(fd, "\033*r1U");
+			break;
 		}
-		fprintf(fd,"\033*r-4U");
-		break;
-	  case 3:	/* CMY				*/
-		fprintf(fd,"\033*r-3U");
-		break;
-	  default:	/* Single color plane		*/
-		if (po->init_p3gui) {
-		if (po->dpi_x == 600) { /* update resolution info in colorplane data*/
-		init_bw.a[2]=0x02;
-		init_bw.a[3]=0x58;
-		init_bw.a[4]=0x02;
-		init_bw.a[5]=0x58;}
-		fprintf(fd,"\033*g%dW",(int)sizeof(init_bw));
-		(void)fwrite(init_bw.a,sizeof(unsigned char),sizeof(init_bw.a),fd);	
-		}
-		fprintf(fd,"\033*r1U");
-		break;
 	}
-  }
 
 	if (po->init_p3gui) {
-		fprintf(fd,"\033*p%ddY",0);
-		fprintf(fd,"\033*p%ddX",0);
-		}
+		fprintf(fd, "\033*p%ddY", 0);
+		fprintf(fd, "\033*p%ddX", 0);
+	}
 /**
  ** Start Raster Graphics at current position
  ** This is NO PCL level 3 feature, but LaserjetII and compatibles
  ** seem to accept it.
  **/
-  fprintf(fd,"\033*r1A");
+	fprintf(fd, "\033*r1A");
 }
 
 
 
 
-static void
-end_graphmode (FILE *fd)
+static void end_graphmode(FILE * fd)
 {
 /**
  ** End Raster Graphics
  **/
-	fprintf(fd,"\033*rbC");
+	fprintf(fd, "\033*rbC");
 }
 
 
 
 
 
-int
-PicBuf_to_PCL (const GEN_PAR *pg, const OUT_PAR *po)
+int PicBuf_to_PCL(const GEN_PAR * pg, const OUT_PAR * po)
 /**
  ** Main interface routine
  **/
 {
-FILE	*fd = stdout;
-RowBuf	*row;
-int	row_c, i, x, color_index, offset, err;
-Byte	mask;
+	FILE *fd = stdout;
+	RowBuf *row;
+	int row_c, i, x, color_index, offset, err;
+	Byte mask;
 
-  err = 0;
-  if (!pg->quiet)
-	Eprintf ("\nWriting PCL output\n");
+	err = 0;
+	if (!pg->quiet)
+		Eprintf("\nWriting PCL output\n");
 
-  if (po->picbuf->depth > 1 && po->specials < 3)
-	Eprintf ("\nWARNING: Monochrome output despite active colors selected!\n");
+	if (po->picbuf->depth > 1 && po->specials < 3)
+		Eprintf
+		    ("\nWARNING: Monochrome output despite active colors selected!\n");
 
-  Deskjet_specials = (po->specials != 0) ? TRUE : FALSE;
+	Deskjet_specials = (po->specials != 0) ? TRUE : FALSE;
 
   /**
    ** Allocate buffers for CMYK conversion
    **/
-  if (po->picbuf->depth > 1)
-  {
-	p_K = calloc ((size_t)po->picbuf->nb, sizeof(Byte));
-	p_C = calloc ((size_t)po->picbuf->nb, sizeof(Byte));
-	p_M = calloc ((size_t)po->picbuf->nb, sizeof(Byte));
-	p_Y = calloc ((size_t)po->picbuf->nb, sizeof(Byte));
-	if (p_K == NULL || p_C == NULL || p_M == NULL || p_Y == NULL)
-	{
-		Eprintf ("\nCannot 'calloc' CMYK memory -- sorry, use B/W!\n");
-		goto PCL_exit;
+	if (po->picbuf->depth > 1) {
+		p_K = calloc((size_t) po->picbuf->nb, sizeof(Byte));
+		p_C = calloc((size_t) po->picbuf->nb, sizeof(Byte));
+		p_M = calloc((size_t) po->picbuf->nb, sizeof(Byte));
+		p_Y = calloc((size_t) po->picbuf->nb, sizeof(Byte));
+		if (p_K == NULL || p_C == NULL || p_M == NULL
+		    || p_Y == NULL) {
+			Eprintf
+			    ("\nCannot 'calloc' CMYK memory -- sorry, use B/W!\n");
+			goto PCL_exit;
+		}
 	}
-  }
   /**
    ** Optional memory; for compression
    **/
-  n_B = B_EXTRASPACE;
-  p_B = calloc ((size_t)(po->picbuf->nb + n_B), sizeof(Byte));
+	n_B = B_EXTRASPACE;
+	p_B = calloc((size_t) (po->picbuf->nb + n_B), sizeof(Byte));
 
 
-  if (*po->outfile != '-')
-  {
+	if (*po->outfile != '-') {
 #ifdef VAX
-	if ((fd = fopen(po->outfile, WRITE_BIN, "rfm=var","mrs=512")) == NULL)
-	{
+		if ((fd =
+		     fopen(po->outfile, WRITE_BIN, "rfm=var",
+			   "mrs=512")) == NULL) {
 #else
-	if ((fd = fopen(po->outfile, WRITE_BIN)) == NULL)
-	{
+		if ((fd = fopen(po->outfile, WRITE_BIN)) == NULL) {
 #endif
-		PError ("hp2xx -- opening output file");
-		goto PCL_exit;
+			PError("hp2xx -- opening output file");
+			goto PCL_exit;
+		}
 	}
-  }
 
-  if (po->init_p)
-	init_printer (po, fd);
+	if (po->init_p)
+		init_printer(po, fd);
 
-  start_graphmode (po, fd);
+	start_graphmode(po, fd);
 
   /**
    ** Loop for all rows:
    ** Counting back since highest index is lowest line on paper...
    **/
 
-  for (row_c = po->picbuf->nr - 1; row_c >= 0; row_c--)
-  {
-	if ((!pg->quiet) && (row_c % 10 == 0))
-		  /* For the impatients among us ...	*/
-		Eprintf(".");
+	for (row_c = po->picbuf->nr - 1; row_c >= 0; row_c--) {
+		if ((!pg->quiet) && (row_c % 10 == 0))
+			/* For the impatients among us ...    */
+			Eprintf(".");
 
-	row = get_RowBuf(po->picbuf, row_c);
+		row = get_RowBuf(po->picbuf, row_c);
 
-	if (po->picbuf->depth == 1)
-		Buf_to_PCL (row->buf, po->picbuf->nb, PCL_FIRST | PCL_LAST, fd);
-	else
-	{
-		for (x=0; x < po->picbuf->nb; x++)
-			p_K[x] = p_C[x] = p_M[x] = p_Y[x] = 0;
+		if (po->picbuf->depth == 1)
+			Buf_to_PCL(row->buf, po->picbuf->nb,
+				   PCL_FIRST | PCL_LAST, fd);
+		else {
+			for (x = 0; x < po->picbuf->nb; x++)
+				p_K[x] = p_C[x] = p_M[x] = p_Y[x] = 0;
 
-		for (x=offset=0; x < (po->picbuf->nb << 3); x++, offset = (x >> 3))
-		{
-			color_index = index_from_RowBuf(row, x, po->picbuf);
+			for (x = offset = 0; x < (po->picbuf->nb << 3);
+			     x++, offset = (x >> 3)) {
+				color_index =
+				    index_from_RowBuf(row, x, po->picbuf);
 
-			if (color_index == xxBackground)
-				continue;
-			else
-			{
-				mask = 0x80;
-				if ((i = x & 0x07) != 0)
-					mask >>= i;
-					
-if (pt.clut[color_index][0]+pt.clut[color_index][1]+pt.clut[color_index][2] == 0){
-                *(p_K +offset) |= mask;
-}else{					
-		*(p_C + offset ) |= ( mask ^ ( pt.clut[color_index][0] & mask ) );
-		*(p_M + offset ) |= ( mask ^ ( pt.clut[color_index][1] & mask ) );
-		*(p_Y + offset ) |= ( mask ^ ( pt.clut[color_index][2] & mask ) );
-}					                        
+				if (color_index == xxBackground)
+					continue;
+				else {
+					mask = 0x80;
+					if ((i = x & 0x07) != 0)
+						mask >>= i;
+
+					if (pt.clut[color_index][0] +
+					    pt.clut[color_index][1] +
+					    pt.clut[color_index][2] == 0) {
+						*(p_K + offset) |= mask;
+					} else {
+						*(p_C + offset) |=
+						    (mask ^
+						     (pt.
+						      clut[color_index][0]
+						      & mask));
+						*(p_M + offset) |=
+						    (mask ^
+						     (pt.
+						      clut[color_index][1]
+						      & mask));
+						*(p_Y + offset) |=
+						    (mask ^
+						     (pt.
+						      clut[color_index][2]
+						      & mask));
+					}
 /*					
 				switch (color_index)
 				{
@@ -626,41 +633,47 @@ if (pt.clut[color_index][0]+pt.clut[color_index][1]+pt.clut[color_index][2] == 0
 					break;
 				}
 */
+				}
+			}
+
+			switch (po->specials) {
+			case 3:
+				K_to_CMY(po->picbuf->nb);
+				/* drop thru    */
+			case 4:
+				KCMY_Buf_to_PCL(po->picbuf->nb,
+						(po->specials == 4), fd);
+				break;
+			default:
+				KCMY_to_K(po->picbuf->nb);
+				Buf_to_PCL(p_K, po->picbuf->nb,
+					   PCL_FIRST | PCL_LAST, fd);
+				break;
 			}
 		}
-
-		switch (po->specials)
-		{
-		  case 3:
-			K_to_CMY (po->picbuf->nb);
-			/* drop thru	*/
-		  case 4:
-			KCMY_Buf_to_PCL (po->picbuf->nb, (po->specials == 4), fd);
-			break;
-		  default:
-			KCMY_to_K (po->picbuf->nb);
-			Buf_to_PCL (p_K, po->picbuf->nb, PCL_FIRST | PCL_LAST, fd);
-			break;
-		}
 	}
-  }
 
-  end_graphmode (fd);
-  if (po->formfeed)
-	putc (FF, fd);
-  if (!pg->quiet)
-	Eprintf ("\n");
-  if (fd != stdout)
-	fclose (fd);
+	end_graphmode(fd);
+	if (po->formfeed)
+		putc(FF, fd);
+	if (!pg->quiet)
+		Eprintf("\n");
+	if (fd != stdout)
+		fclose(fd);
 
-PCL_exit:
-  if (p_Y != NULL)	free(p_Y);
-  if (p_M != NULL)	free(p_M);
-  if (p_C != NULL)	free(p_C);
-  if (p_K != NULL)	free(p_K);
+      PCL_exit:
+	if (p_Y != NULL)
+		free(p_Y);
+	if (p_M != NULL)
+		free(p_M);
+	if (p_C != NULL)
+		free(p_C);
+	if (p_K != NULL)
+		free(p_K);
 
-  if (p_B != NULL)	free(p_B);
+	if (p_B != NULL)
+		free(p_B);
 
-  p_K = p_C = p_M = p_Y = NULL;
-  return err;
+	p_K = p_C = p_M = p_Y = NULL;
+	return err;
 }

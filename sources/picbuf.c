@@ -586,11 +586,9 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, PEN_C pencolor,
 	if (pencolor == xxBackground)	/* No drawable color!       */
 		return;
 
-#if 0
-	consecutive = 0;
-#endif
-	if (linewidth <5) consecutive=0;
-	
+	if (linewidth < 5)
+		consecutive = 0;
+
 	if (linewidth == 1) {	/* Thin lines of any attitude */
 		p_act = bresenham_init(p0, p1);
 		do {
@@ -792,11 +790,9 @@ continue;
 				start = tmp;
 			}
 /*fprintf(stderr,"fillline %d %d - %d %d\n",start.x,start.y,end.x,end.y);*/
-#if 1
 			for (p_act.x = start, p_act.y = scany;
 			     p_act.x <= end; p_act.x++)
 				plot_PicBuf(pb, &p_act, pencolor);
-#endif
 		}
 	}			/* next scanline */
 

@@ -1,4 +1,4 @@
-hp2xx-3.4.4 (probably mid- to end-june 2003)
+hp2xx-3.4.4 
 
 This is mainly a bugfix release to correct some problems found in 3.4.3.
 In addition, it provides a tentative framework for truetype font support
@@ -51,6 +51,7 @@ Bug fixes:
   the conventional values between 1 and 9 
 - PJL parser now handles input lines of up to 256 characters 
 - polygon sides could escape clipping in some circumstances
+- WG support was broken in 3.4.3 (coordinate error resulted in odd shapes)
 - simplified HPGL output would write very small numbers in exponential
   notation, which is not allowed by any HPGL standard.
 - DT handling was both incorrect and incomplete
@@ -62,4 +63,5 @@ Bug fixes:
 - PNG export of color graphics was broken in 3.4.3
 - SP command in PE mode did not update the internal pencount, potentially
   leading to use of a reduced color palette in the raster modes.
-
+- Using -h,-? or even -help no longer generates an error message before the
+  usage text is shown.

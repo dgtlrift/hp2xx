@@ -7,16 +7,16 @@
 #include "to_png.h"
 #include <png.h>
 
-#define PDNCOL 256 
+#define PDNCOL 256
 
 void pdImagePNG(im, fd)
-        pdImagePtr im;
-        FILE *fd;
+pdImagePtr im;
+FILE *fd;
 {
 	png_structp png_ptr;
-	png_infop   info_ptr;
+	png_infop info_ptr;
 	png_uint_32 width, height;
-	int bit_depth /*, color_type, interlace_type*/;
+	int bit_depth /*, color_type, interlace_type */ ;
 /*	png_uint_32 num_palette; */
 	struct png_color_struct *palette;
 	int ci;
@@ -24,32 +24,31 @@ void pdImagePNG(im, fd)
 
 	/* allocate and init png_struct */
 	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-			NULL, NULL, NULL);
+					  NULL, NULL, NULL);
 	if (!png_ptr)
 		return;
 
 	/* allocate and init png_info */
 	info_ptr = png_create_info_struct(png_ptr);
-	if (!info_ptr)
-	{
-		png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+	if (!info_ptr) {
+		png_destroy_write_struct(&png_ptr, (png_infopp) NULL);
 		return;
 	}
 
 	/* set up error handlimg for libpng */
-	if (setjmp(png_ptr->jmpbuf))
-	{    
+	if (setjmp(png_ptr->jmpbuf)) {
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		return;
 	}
 
-	png_data_freer(png_ptr,info_ptr,PNG_DESTROY_WILL_FREE_DATA,-1);
+	png_data_freer(png_ptr, info_ptr, PNG_DESTROY_WILL_FREE_DATA, -1);
 	/* initialize I/O */
 	png_init_io(png_ptr, fd);
-	
+
 	/* turn on or off filtering, and/or choose specific filters */
 	png_set_filter(png_ptr, 0,
-		PNG_FILTER_NONE | PNG_FILTER_SUB | PNG_FILTER_PAETH);
+		       PNG_FILTER_NONE | PNG_FILTER_SUB |
+		       PNG_FILTER_PAETH);
 
 	/* set the zlib compression level */
 	png_set_compression_level(png_ptr, Z_BEST_COMPRESSION);
@@ -59,26 +58,26 @@ void pdImagePNG(im, fd)
 	png_set_compression_strategy(png_ptr, Z_DEFAULT_STRATEGY);
 	png_set_compression_window_bits(png_ptr, 15);
 	png_set_compression_method(png_ptr, 8);
-	png_set_compression_buffer_size(png_ptr,8192);
-	
-	width     = (png_uint_32)im->sx;
-	height    = (png_uint_32)im->sy;
-	bit_depth = 8; /* for now */
+	png_set_compression_buffer_size(png_ptr, 8192);
+
+	width = (png_uint_32) im->sx;
+	height = (png_uint_32) im->sy;
+	bit_depth = 8;		/* for now */
 
 	/* write the image header */
 	png_set_IHDR(png_ptr, info_ptr, width, height, bit_depth,
-		PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
-		PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
+		     PNG_COLOR_TYPE_PALETTE, PNG_INTERLACE_NONE,
+		     PNG_COMPRESSION_TYPE_DEFAULT,
+		     PNG_FILTER_TYPE_DEFAULT);
 
 	/* allocate palette */
-	palette = png_malloc(png_ptr, PDNCOL * sizeof (png_color));
+	palette = png_malloc(png_ptr, PDNCOL * sizeof(png_color));
 
 	/* copy palette data */
-	for (ci = 0; ci < PDNCOL; ci++) 
-	{
-		palette[ci].red   = (png_byte)im->red[ci];
-		palette[ci].green = (png_byte)im->green[ci];
-		palette[ci].blue  = (png_byte)im->blue[ci];
+	for (ci = 0; ci < PDNCOL; ci++) {
+		palette[ci].red = (png_byte) im->red[ci];
+		palette[ci].green = (png_byte) im->green[ci];
+		palette[ci].blue = (png_byte) im->blue[ci];
 	}
 
 	/* set palette */
@@ -106,8 +105,7 @@ void pdImagePNG(im, fd)
 	/* clean up after the write, and free any memory allocated */
 /*	png_destroy_write_struct(&png_ptr, (png_infopp)NULL);*/
 	png_destroy_write_struct(&png_ptr, &info_ptr);
-	png_free_data(png_ptr,info_ptr,PNG_FREE_ALL,-1);
+	png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
 	return;
 
 }
-

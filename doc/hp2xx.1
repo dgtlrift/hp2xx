@@ -43,6 +43,7 @@ HPGL handling controls:
   -n           off	 No filling of polygons; draws outline instead
   -N           off	 Ignore PS commands, calculate plot size as needed
   -e   int 	0	 Extend IW clipping limits by given amount
+  -M   int      0        Remap pen no.0 commands to given pen
 
 Raster format controls:
   -d   int     75        DPI value (x or both x&y)
@@ -205,9 +206,10 @@ and
 "string" must consist of 1..8 digits (0-9 for size, 0-7 for color).
 Digit number n (counting from left) corresponds to pen number n.
 The digit value is this pen's color or size in internal units.
-For raster formats, a unit is a pixel, and
-for vector format, it corresponds to 1/10 mm (see below). The default
-size is 1 for all pens. Colors are assigned according to:
+The pen width unit corresponds to 1/10 mm - using pen widths beyond 0.9mm
+is possible by using the letters of the latin alphabet, so that A=1mm,
+B=1.1mm etc. The default size is 1 for all pens. 
+Colors are assigned according to:
 0=off, 1=black, 2=red, 3=green, 4=blue, 5=cyan, 6=magenta, 7=yellow.
 Examples of use:
 .I -p22222222 -c33333333
@@ -221,7 +223,7 @@ Setting either -p or -c will override the equivalent HPGL/2 commands
 
 Sometimes, HP-GL files contain several pages of plotter output.
 .I hp2xx
-recognizes the HP-GL commands for "feed-forward" or "new page", and by
+recognizes the HP-GL commands for "feed-forward", "pause" or "new page", and by
 default draws each image as a separate page (saving to sequentially numbered
 output files, or opening a new preview window for each). You can select any
 particular page range by using option
@@ -372,6 +374,15 @@ will make hp2xx ignore any polygon filling commands, rendering only their
 outlines. This may serve both as a work-around for hp2xx' limited polyfill
 support, and improve clarity of thumbnail images of PCB designs and the like.
  
+The option
+.I -M pennumber
+will remap any color or drawing commands from pen 0 to the specified pen
+(which should typically be otherwise unused in the drawing). Historically,
+selecting pen 0 instructed a pen plotter to put away the pen and stop
+drawing, while modern inkjet plotters can use it like any other color. Due
+to this ambiguity, hp2xx will draw the background of raster graphics in the
+pen 0 color, unless this option is used.
+
 For DeskJet / DeskJet Plus / DeskJet 500 / Deskjet 550 printers, there are
 some special printer commands. Activate them with option
 .I -S n.

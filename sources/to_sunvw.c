@@ -67,157 +67,193 @@ copies.
 #define	DestY		30
 
 
-static Frame	frame;
-static Canvas	canvas;
+static Frame frame;
+static Canvas canvas;
 
-static	Pixwin	*pw;
-static	int	my_op;
-
-
+static Pixwin *pw;
+static int my_op;
 
 
-static void
-setcolor (col)
-int	col;
+
+
+static void setcolor(col)
+int col;
 {
-  if (col == BLACK)
-	my_op = PIX_COLOR (col) | PIX_CLR;
-  else
-	my_op = PIX_COLOR (col) | (PIX_SRC ^ PIX_DST);
+	if (col == BLACK)
+		my_op = PIX_COLOR(col) | PIX_CLR;
+	else
+		my_op = PIX_COLOR(col) | (PIX_SRC ^ PIX_DST);
 }
 
 
 #if 0
-void	PointW (x0, y0, color)
+void PointW(x0, y0, color)
 double x0, y0;
 int color;
 {
-  pw_put (pw, TransX (x0), TransY (y0), color);
+	pw_put(pw, TransX(x0), TransY(y0), color);
 }
 
 
-void	FillBoxW ( x0,  y0,  x1,  y1)
+void FillBoxW(x0, y0, x1, y1)
 double x0, y0, x1, y1;
 {
-int	i0,i1, j0,j1;
+	int i0, i1, j0, j1;
 
-  i0 = TransX (x0);	i1 = TransX (x1);
-  j0 = TransY (y0);	j1 = TransY (y1);
-  pw_rop (pw, i0,j1, i1-i0, j0-j1, my_op, NULL, 0, 0);
+	i0 = TransX(x0);
+	i1 = TransX(x1);
+	j0 = TransY(y0);
+	j1 = TransY(y1);
+	pw_rop(pw, i0, j1, i1 - i0, j0 - j1, my_op, NULL, 0, 0);
 }
 #endif
 
 
-static void
-Init_SunView (int xoff, int yoff, int width, int height)
+static void Init_SunView(int xoff, int yoff, int width, int height)
 {
-char	st1 [100];
-Rect    r;
-u_char	red[CMS_SIZE], green[CMS_SIZE], blue[CMS_SIZE];
+	char st1[100];
+	Rect r;
+	u_char red[CMS_SIZE], green[CMS_SIZE], blue[CMS_SIZE];
 
-	sprintf ((char *) st1, "hp2xx Sunview previewer");
+	sprintf((char *) st1, "hp2xx Sunview previewer");
 	frame = window_create(NULL, FRAME,
-			WIN_X,		xoff,
-			WIN_Y,		yoff,
-			WIN_ERROR_MSG,	"Cannot create frame",
-			FRAME_LABEL,	st1,
-			0);
+			      WIN_X, xoff,
+			      WIN_Y, yoff,
+			      WIN_ERROR_MSG, "Cannot create frame",
+			      FRAME_LABEL, st1, 0);
 
 	canvas = window_create(frame, CANVAS,
-			WIN_WIDTH,	width,
-			WIN_HEIGHT,	height,
-			0);
+			       WIN_WIDTH, width, WIN_HEIGHT, height, 0);
 	pw = canvas_pixwin(canvas);
-	window_fit (frame);
+	window_fit(frame);
 
-	/* Init. color map	*/
+	/* Init. color map      */
 
-	red[BLACK] = 0;		green[BLACK] = 0;	blue[BLACK] = 0;
-	red[GRAY] = 100;	green[GRAY] = 100;	blue[GRAY] = 100;
-	red[RED] = 128;		green[RED] = 0;		blue[RED] = 0;
-	red[GREEN]= 0;		green[GREEN]= 128;	blue[GREEN]= 0;
-	red[BLUE] = 0;		green[BLUE] = 0;	blue[BLUE] = 128;
-	red[CYAN] = 0;		green[CYAN] = 128;	blue[CYAN] = 128;
-	red[MAGENTA] = 128;	green[MAGENTA] = 0;	blue[MAGENTA] = 128;
-	red[YELLOW] = 255;	green[YELLOW] = 255;	blue[YELLOW] = 0;
-	red[LIGHTGRAY] = 200;	green[LIGHTGRAY] = 200;	blue[LIGHTGRAY] = 200;
-	red[LIGHTRED] = 255;	green[LIGHTRED] = 0;	blue[LIGHTRED] = 0;
-	red[LIGHTGREEN]= 0;	green[LIGHTGREEN]= 255;	blue[LIGHTGREEN]= 0;
-	red[LIGHTBLUE] = 0;	green[LIGHTBLUE] = 0;	blue[LIGHTBLUE] = 255;
-	red[LIGHTCYAN] = 0;	green[LIGHTCYAN] = 255;	blue[LIGHTCYAN] = 255;
-	red[LIGHTMAGENTA]=255;	green[LIGHTMAGENTA]=0;	blue[LIGHTMAGENTA] = 255;
-	red[WHITE] = 255;	green[WHITE] = 255;	blue[WHITE] = 255;
+	red[BLACK] = 0;
+	green[BLACK] = 0;
+	blue[BLACK] = 0;
+	red[GRAY] = 100;
+	green[GRAY] = 100;
+	blue[GRAY] = 100;
+	red[RED] = 128;
+	green[RED] = 0;
+	blue[RED] = 0;
+	red[GREEN] = 0;
+	green[GREEN] = 128;
+	blue[GREEN] = 0;
+	red[BLUE] = 0;
+	green[BLUE] = 0;
+	blue[BLUE] = 128;
+	red[CYAN] = 0;
+	green[CYAN] = 128;
+	blue[CYAN] = 128;
+	red[MAGENTA] = 128;
+	green[MAGENTA] = 0;
+	blue[MAGENTA] = 128;
+	red[YELLOW] = 255;
+	green[YELLOW] = 255;
+	blue[YELLOW] = 0;
+	red[LIGHTGRAY] = 200;
+	green[LIGHTGRAY] = 200;
+	blue[LIGHTGRAY] = 200;
+	red[LIGHTRED] = 255;
+	green[LIGHTRED] = 0;
+	blue[LIGHTRED] = 0;
+	red[LIGHTGREEN] = 0;
+	green[LIGHTGREEN] = 255;
+	blue[LIGHTGREEN] = 0;
+	red[LIGHTBLUE] = 0;
+	green[LIGHTBLUE] = 0;
+	blue[LIGHTBLUE] = 255;
+	red[LIGHTCYAN] = 0;
+	green[LIGHTCYAN] = 255;
+	blue[LIGHTCYAN] = 255;
+	red[LIGHTMAGENTA] = 255;
+	green[LIGHTMAGENTA] = 0;
+	blue[LIGHTMAGENTA] = 255;
+	red[WHITE] = 255;
+	green[WHITE] = 255;
+	blue[WHITE] = 255;
 
-	pw_setcmsname (pw, "MyColorMap");
+	pw_setcmsname(pw, "MyColorMap");
 	pw_putcolormap(pw, 0, CMS_SIZE, red, green, blue);
-	pw_get_region_rect (pw,&r);
+	pw_get_region_rect(pw, &r);
 }
 
 
 
 #if 0
-int	user_alert (msg)
-char	*msg;
+int user_alert(msg)
+char *msg;
 {
-int	result;
+	int result;
 
-  result = alert_prompt (frame, (Event *)NULL,
-		ALERT_MESSAGE_STRINGS, "ERROR: ", msg,
-		0,
-		ALERT_BUTTON_YES, "Please acknowledge",
-		0);
-  return (result);
+	result = alert_prompt(frame, (Event *) NULL,
+			      ALERT_MESSAGE_STRINGS, "ERROR: ", msg,
+			      0,
+			      ALERT_BUTTON_YES, "Please acknowledge", 0);
+	return (result);
 }
 #endif
 
 
 
 
-int
-PicBuf_to_Sunview (const GEN_PAR *pg, const OUT_PAR* po)
+int PicBuf_to_Sunview(const GEN_PAR * pg, const OUT_PAR * po)
 {
-int		row_c, byte_c, bit, x, xoff, y, yoff;
-const RowBuf	*row;
-const PicBuf	*pb;
+	int row_c, byte_c, bit, x, xoff, y, yoff;
+	const RowBuf *row;
+	const PicBuf *pb;
 
-  if (pg == NULL || po == NULL)
-	return ERROR;
-  pb = po->picbuf;
-  if (pb == NULL)
-	return ERROR;
+	if (pg == NULL || po == NULL)
+		return ERROR;
+	pb = po->picbuf;
+	if (pb == NULL)
+		return ERROR;
 
-  xoff = po->xoff * po->dpi_x / 25.4;
-  yoff = po->yoff * po->dpi_y / 25.4;
-  if (!pg->quiet)
-  {
-	Eprintf ("\nStarting preview. Use menu bar to quit!\n");
-  }
-  Init_SunView (xoff, yoff, pb->nc, pb->nr);
-  pw_writebackground (pw, 0, 0, pb->nc, pb->nr, PIX_CLR);
-  setcolor (WHITE);
+	xoff = po->xoff * po->dpi_x / 25.4;
+	yoff = po->yoff * po->dpi_y / 25.4;
+	if (!pg->quiet) {
+		Eprintf("\nStarting preview. Use menu bar to quit!\n");
+	}
+	Init_SunView(xoff, yoff, pb->nc, pb->nr);
+	pw_writebackground(pw, 0, 0, pb->nc, pb->nr, PIX_CLR);
+	setcolor(WHITE);
 
-  /* Backward since highest index is lowest line on screen! */
-  for (row_c=0, y=pb->nr-1; row_c < pb->nr; row_c++, y--)
-  {
-	row = get_RowBuf (pb, row_c);
-	if (row == NULL)
-		continue;
-	for (x=0; x < pb->nc; x++)
-	{
-		switch (index_from_RowBuf(row, x, pb))
-		{
-		case xxBackground:break;
-		case xxForeground:pw_put (pw, x, y, WHITE);	break;
-		case xxRed:	pw_put (pw, x, y, LIGHTRED);	break;
-		case xxGreen:	pw_put (pw, x, y, LIGHTGREEN);	break;
-		case xxBlue:	pw_put (pw, x, y, LIGHTBLUE);	break;
-		case xxCyan:	pw_put (pw, x, y, LIGHTCYAN);	break;
-		case xxMagenta:	pw_put (pw, x, y, LIGHTMAGENTA);break;
-		case xxYellow:	pw_put (pw, x, y, YELLOW);	break;
+	/* Backward since highest index is lowest line on screen! */
+	for (row_c = 0, y = pb->nr - 1; row_c < pb->nr; row_c++, y--) {
+		row = get_RowBuf(pb, row_c);
+		if (row == NULL)
+			continue;
+		for (x = 0; x < pb->nc; x++) {
+			switch (index_from_RowBuf(row, x, pb)) {
+			case xxBackground:
+				break;
+			case xxForeground:
+				pw_put(pw, x, y, WHITE);
+				break;
+			case xxRed:
+				pw_put(pw, x, y, LIGHTRED);
+				break;
+			case xxGreen:
+				pw_put(pw, x, y, LIGHTGREEN);
+				break;
+			case xxBlue:
+				pw_put(pw, x, y, LIGHTBLUE);
+				break;
+			case xxCyan:
+				pw_put(pw, x, y, LIGHTCYAN);
+				break;
+			case xxMagenta:
+				pw_put(pw, x, y, LIGHTMAGENTA);
+				break;
+			case xxYellow:
+				pw_put(pw, x, y, YELLOW);
+				break;
+			}
 		}
 	}
-  }
-  window_main_loop (frame);
-  return 0;
+	window_main_loop(frame);
+	return 0;
 }
 #endif

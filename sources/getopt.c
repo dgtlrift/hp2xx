@@ -470,8 +470,9 @@ _getopt_internal(int argc, char *const *argv, const char *optstring,
 		/* Test all options for either exact match or abbreviated matches.  */
 		for (p = longopts, option_index = 0; p->name;
 		     p++, option_index++)
-			if (!strncmp(p->name, nextchar, (size_t)(s - nextchar))) {
-				if (s - nextchar == (int)strlen(p->name)) {
+			if (!strncmp
+			    (p->name, nextchar, (size_t) (s - nextchar))) {
+				if (s - nextchar == (int) strlen(p->name)) {
 					/* Exact match found.  */
 					pfound = p;
 					indfound = option_index;

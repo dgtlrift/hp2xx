@@ -14,7 +14,7 @@
 
 @tex
 % \def\$#1${{#1}}  % Kludge: collect RCS revision info without $...$
-\xdef\manvers{$Revision: 1.2 $}  % For use in headers, footers too
+\xdef\manvers{$Revision: 1.4 $}  % For use in headers, footers too
 @end tex
 
 @c HP2XX CHANGE LOG:
@@ -33,6 +33,7 @@
 @c 00/02/06  V 1.12  MK   Added notes on relation between -c/-s and PC/PW
 @c                        and on auto-generation of ppm files in pbm mode
 @c 00/09/20  V 1.2   MK   fixed INFO-DIR-ENTRY, updates for 3.4.0
+@c 03/06/21  V 1.4   MK   updates and fixes for 3.4.4
 @c THIS MANUAL REQUIRES TEXINFO-2 macros and info-makers to format properly.
 
 @ifinfo
@@ -48,7 +49,7 @@ END-INFO-DIR-ENTRY
 This file documents the HP-GL converter HP2XX
 
 @c !!set edition, date, version
-This is Edition 1.2, September 2000,
+This is Edition 1.4, June 2003,
 of @cite{Using HP2XX: A HP-GL Converter}.
 
 Copyright (C) 1998 - 2003 Martin Kroeker
@@ -86,7 +87,7 @@ by the Free Software Foundation instead of in the original English.
 @sp 1
 @c !!set edition, date, version
 @subtitle Edition 1.4, for HP2XX version 3.4.4
-@subtitle February  2003
+@subtitle June  2003
 @author by Martin Kroeker (previously by Heinz W. Werntges)
 @page
 @tex
@@ -129,7 +130,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 
 @c !!set edition, date, version
-This is Edition 1.4, February 2003, for HP2XX Version 3.4.4
+This is Edition 1.4, June 2003, for HP2XX Version 3.4.4
 @end ifinfo
 
 
@@ -1409,6 +1410,7 @@ you should get a good approximation of what a plotter would produce).
 * Raster format controls::
 * PCL specifics::
 * TIFF specifics::
+* DXF specifics::
 * Margins::
 * Preview (DOS only)::
 * Help::

@@ -98,140 +98,152 @@ static VIOMODEINFO graph_mode;
 
 #define put_it(a,b) screen[a] |= (b)
 
-static void
-set_pixel_os2 (unsigned int x, unsigned int y, Byte b)
+static void set_pixel_os2(unsigned int x, unsigned int y, Byte b)
 {
-  if((x<graph_mode.hres)&&(y<graph_mode.vres))
-  {
-    switch(x%8)
-    {
-      case 0: put_it(x/8+graph_mode.hres*y/8,128); break;
-      case 1: put_it(x/8+graph_mode.hres*y/8, 64); break;
-      case 2: put_it(x/8+graph_mode.hres*y/8, 32); break;
-      case 3: put_it(x/8+graph_mode.hres*y/8, 16); break;
-      case 4: put_it(x/8+graph_mode.hres*y/8,  8); break;
-      case 5: put_it(x/8+graph_mode.hres*y/8,  4); break;
-      case 6: put_it(x/8+graph_mode.hres*y/8,  2); break;
-      case 7: put_it(x/8+graph_mode.hres*y/8,  1); break;
-    }
-  }
+	if ((x < graph_mode.hres) && (y < graph_mode.vres)) {
+		switch (x % 8) {
+		case 0:
+			put_it(x / 8 + graph_mode.hres * y / 8, 128);
+			break;
+		case 1:
+			put_it(x / 8 + graph_mode.hres * y / 8, 64);
+			break;
+		case 2:
+			put_it(x / 8 + graph_mode.hres * y / 8, 32);
+			break;
+		case 3:
+			put_it(x / 8 + graph_mode.hres * y / 8, 16);
+			break;
+		case 4:
+			put_it(x / 8 + graph_mode.hres * y / 8, 8);
+			break;
+		case 5:
+			put_it(x / 8 + graph_mode.hres * y / 8, 4);
+			break;
+		case 6:
+			put_it(x / 8 + graph_mode.hres * y / 8, 2);
+			break;
+		case 7:
+			put_it(x / 8 + graph_mode.hres * y / 8, 1);
+			break;
+		}
+	}
 };
 
 #undef put_it
 
 
 
-int
-PicBuf_to_OS2 (const GEN_PAR *pg, const OUT_PAR* po)
+int PicBuf_to_OS2(const GEN_PAR * pg, const OUT_PAR * po)
 {
-int		row_c, x, y, xoff, yoff, color_index;
-const RowBuf	*row;
-const PicBuf	*pb;
+	int row_c, x, y, xoff, yoff, color_index;
+	const RowBuf *row;
+	const PicBuf *pb;
 
-VIOMODEINFO text_mode;
-VIOPHYSBUF  vpb;
-int status;
-unsigned char rubbish;
-KBDKEYINFO kki;
+	VIOMODEINFO text_mode;
+	VIOPHYSBUF vpb;
+	int status;
+	unsigned char rubbish;
+	KBDKEYINFO kki;
 
-  if(_osmode==DOS_MODE)
-	return PicBuf_to_VGA (pg, po);
+	if (_osmode == DOS_MODE)
+		return PicBuf_to_VGA(pg, po);
 
-  if (pg == NULL || po == NULL)
-	return ERROR;
-  pb = po->picbuf;
-  if (pb == NULL)
-	return ERROR;
+	if (pg == NULL || po == NULL)
+		return ERROR;
+	pb = po->picbuf;
+	if (pb == NULL)
+		return ERROR;
 
-  if (!pg->quiet)
-  {
-	Eprintf ("\nVGA preview follows.\n");
-	Eprintf ("Press <return> to start and end graphics mode\n");
-	SilentWait();
-  }
-
-  xoff = po->xoff * po->dpi_x / 25.4;
-  yoff = po->yoff * po->dpi_y / 25.4;
-
-  if ((!pg->quiet) &&
-      (((pb->nb << 3) + xoff > 639) || (pb->nr + yoff > 480)) )
-  {
-	Eprintf ("\n\007WARNING: Picture won't fit on a standard VGA!\n");
-	Eprintf ("Current range: (%d..%d) x (%d..%d) pels\n",
-		xoff, (pb->nb << 3) + xoff, yoff, pb->nr + yoff);
-	Eprintf ("Continue anyway (y/n)?: ");
-	if (toupper(getchar()) == 'N')
-		return 1;
-  }
-
-  status=VIOGETMODE(&text_mode,0);
-  if(status!=0){
-    if (!pg->quiet)
-      Eprintf ("Sorry, I have trouble with the graphics mode(1)!\n");
-    return ERROR;
-  }
-
-  graph_mode.cb=14;
-  graph_mode.fbType=3;
-  graph_mode.color=1;
-  graph_mode.col=80;
-  graph_mode.row=25;
-  graph_mode.hres=640;
-  graph_mode.vres=480;
-  graph_mode.fmt_ID=0;
-  graph_mode.attrib=1;
-  status=VIOSETMODE(&graph_mode,0);
-  if(status!=0)
-  {
-    if (!pg->quiet)
-      Eprintf ("Sorry, I have trouble with the graphics mode(2)!\n");
-    return ERROR;
-  }
-
-  vpb.pBuf=(PBYTE)0xa0000;
-  vpb.cb  =graph_mode.hres*graph_mode.vres/8;
-  vpb.asel[0]=0;
-  status=VIOGETPHYSBUF(&vpb,0);
-  if(status!=0)
-  {
-    if (!pg->quiet)
-      Eprintf ("Sorry, I have trouble with the graphics mode(3)!\n");
-    return ERROR;
-  }
-  VIOSCRLOCK(1,&rubbish,0);
-  screen=MAKEP(vpb.asel[0],0);
-  for(x=0;x<(graph_mode.hres*graph_mode.vres/8);x++){
-    screen[x]=0;
-  }
-
-  for (row_c=0, y=pb->nr+yoff-1; row_c < pb->nr; row_c++, y--)
-  {
-	row = get_RowBuf (pb, row_c);
-	for (x=0; x < pb->nc; x++)
-	{
-		color_index = index_from_RowBuf(row, x, pb);
-		if (color_index != xxBackground)
-			set_pixel_os2 (x+xoff, y, (Byte) color_index);
+	if (!pg->quiet) {
+		Eprintf("\nVGA preview follows.\n");
+		Eprintf("Press <return> to start and end graphics mode\n");
+		SilentWait();
 	}
-  }
 
-  do{
-    KBDCHARIN(&kki,1,0);
-  }while( kki.fbStatus & 64 );
-  KBDCHARIN(&kki,0,0);
-  do{
-    KBDCHARIN(&kki,1,0);
-  }while( kki.fbStatus &64 );
+	xoff = po->xoff * po->dpi_x / 25.4;
+	yoff = po->yoff * po->dpi_y / 25.4;
 
-  VIOSCRUNLOCK(0);
-  status=VIOSETMODE(&text_mode,0);
-  if(status!=0)
-  {
-    if (!pg->quiet)
-      Eprintf ("Sorry, I have trouble with the graphics mode(4)!\n");
-    return ERROR;
-  }
-  return 0;
+	if ((!pg->quiet) &&
+	    (((pb->nb << 3) + xoff > 639) || (pb->nr + yoff > 480))) {
+		Eprintf
+		    ("\n\007WARNING: Picture won't fit on a standard VGA!\n");
+		Eprintf("Current range: (%d..%d) x (%d..%d) pels\n", xoff,
+			(pb->nb << 3) + xoff, yoff, pb->nr + yoff);
+		Eprintf("Continue anyway (y/n)?: ");
+		if (toupper(getchar()) == 'N')
+			return 1;
+	}
+
+	status = VIOGETMODE(&text_mode, 0);
+	if (status != 0) {
+		if (!pg->quiet)
+			Eprintf
+			    ("Sorry, I have trouble with the graphics mode(1)!\n");
+		return ERROR;
+	}
+
+	graph_mode.cb = 14;
+	graph_mode.fbType = 3;
+	graph_mode.color = 1;
+	graph_mode.col = 80;
+	graph_mode.row = 25;
+	graph_mode.hres = 640;
+	graph_mode.vres = 480;
+	graph_mode.fmt_ID = 0;
+	graph_mode.attrib = 1;
+	status = VIOSETMODE(&graph_mode, 0);
+	if (status != 0) {
+		if (!pg->quiet)
+			Eprintf
+			    ("Sorry, I have trouble with the graphics mode(2)!\n");
+		return ERROR;
+	}
+
+	vpb.pBuf = (PBYTE) 0xa0000;
+	vpb.cb = graph_mode.hres * graph_mode.vres / 8;
+	vpb.asel[0] = 0;
+	status = VIOGETPHYSBUF(&vpb, 0);
+	if (status != 0) {
+		if (!pg->quiet)
+			Eprintf
+			    ("Sorry, I have trouble with the graphics mode(3)!\n");
+		return ERROR;
+	}
+	VIOSCRLOCK(1, &rubbish, 0);
+	screen = MAKEP(vpb.asel[0], 0);
+	for (x = 0; x < (graph_mode.hres * graph_mode.vres / 8); x++) {
+		screen[x] = 0;
+	}
+
+	for (row_c = 0, y = pb->nr + yoff - 1; row_c < pb->nr;
+	     row_c++, y--) {
+		row = get_RowBuf(pb, row_c);
+		for (x = 0; x < pb->nc; x++) {
+			color_index = index_from_RowBuf(row, x, pb);
+			if (color_index != xxBackground)
+				set_pixel_os2(x + xoff, y,
+					      (Byte) color_index);
+		}
+	}
+
+	do {
+		KBDCHARIN(&kki, 1, 0);
+	} while (kki.fbStatus & 64);
+	KBDCHARIN(&kki, 0, 0);
+	do {
+		KBDCHARIN(&kki, 1, 0);
+	} while (kki.fbStatus & 64);
+
+	VIOSCRUNLOCK(0);
+	status = VIOSETMODE(&text_mode, 0);
+	if (status != 0) {
+		if (!pg->quiet)
+			Eprintf
+			    ("Sorry, I have trouble with the graphics mode(4)!\n");
+		return ERROR;
+	}
+	return 0;
 }
 
 

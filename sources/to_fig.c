@@ -151,10 +151,10 @@ int to_fig(const GEN_PAR * pg, const OUT_PAR * po)
 				err = ERROR;
 				goto FIG_exit;
 			}
-				if (pg->is_color)
-					colour = 32 + pt.color[pen_no];
-				else
-					colour = -1;
+			if (pg->is_color)
+				colour = 32 + pt.color[pen_no];
+			else
+				colour = -1;
 			break;
 		case DEF_LA:
 			if (load_line_attr(pg->td) < 0) {

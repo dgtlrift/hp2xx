@@ -35,126 +35,93 @@ to_jpg.c - JPEG image converter part of hp2xx
 #include "hp2xx.h"
 #include "jpeglib.h"
 
-int PicBuf_to_JPG (const GEN_PAR *pg, const OUT_PAR *po)
+int PicBuf_to_JPG(const GEN_PAR * pg, const OUT_PAR * po)
 {
-  FILE	*w=NULL;
-  RowBuf	*row=NULL;
-  int		i,x,y, W, H, D, B, S;
-  JSAMPROW row_pointer[1];
-  unsigned char		*jpgbuf;
-  struct jpeg_compress_struct cinfo;
-  struct jpeg_error_mgr jerr;
-        
-  if (!pg->quiet)
-    Eprintf ("\nWriting JPEG output\n");
+	FILE *w = NULL;
+	RowBuf *row = NULL;
+	int i, x, y, W, H, D, B, S;
+	JSAMPROW row_pointer[1];
+	unsigned char *jpgbuf;
+	struct jpeg_compress_struct cinfo;
+	struct jpeg_error_mgr jerr;
 
-  W=po->picbuf->nr;
-  H=po->picbuf->nc;
-  D=po->picbuf->depth;
-  B=po->picbuf->nb;
+	if (!pg->quiet)
+		Eprintf("\nWriting JPEG output\n");
 
-
-  cinfo.err = jpeg_std_error(&jerr);
-  jpeg_create_compress(&cinfo);
-  cinfo.image_width = (JDIMENSION)H;      /* image width and height, in pixels */
-  cinfo.image_height = (JDIMENSION)W;
-  if (D==1){
-  cinfo.input_components = 1;
-  cinfo.in_color_space = JCS_GRAYSCALE;
-  }else{
-  cinfo.input_components = 3;     /* # of color components per pixel */
-  cinfo.in_color_space = JCS_RGB; /* colorspace of input image */
-  }
-  jpeg_set_defaults(&cinfo);
-
-  if (*po->outfile != '-') {    
-     if ((w=fopen(po->outfile,"wb"))==NULL){
-      PError ("hp2xx -- opening output file");
-      return ERROR;
-  	}
-    jpeg_stdio_dest(&cinfo, w); 
-   }else{
-    jpeg_stdio_dest(&cinfo, stdout);
-   }
-  
-#if 0
-     switch(po->specials) {
-     case 0: /* no compression */
-     case 1:
-            TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
-            break;
-     case 2: /* Run Length Encoding */
-            TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_CCITTRLE);
-            D=1;
-            break;
-     case 3: /* Group 3 Fax monochrome */
-            TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_CCITTFAX3);
-            D=1;
-            break;
-     case 4: /* Group 4 Fax monochrome */
-            TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_CCITTFAX4);
-            D=1;
-            break;
-     case 5: /* LZW is patented by Unisys - only license holders should use next line*/ 
-        /*  TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_LZW);*/
-            break;
-     case 6: /* JPEG formats */
-            TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_OJPEG);
-            break;
-     case 7: 
-            TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_JPEG);
-            break;
-     case 8:
-            TIFFSetField(w, TIFFTAG_COMPRESSION, COMPRESSION_DEFLATE);
-            break;
-     default:
-            Eprintf("\nCompression Format - not supported yet\n");
-            break;
-  }
-#endif
-  
-  S=3*po->picbuf->nc;
-  if(D==1)S=po->picbuf->nc; 
-  if ((jpgbuf=malloc(S*sizeof(unsigned char))) == NULL){
-    Eprintf("malloc error!\n");
-    if (*po->outfile != '-' ) fclose(w);
-    return 1;
-  }
-
-jpeg_start_compress(&cinfo, TRUE);
+	W = po->picbuf->nr;
+	H = po->picbuf->nc;
+	D = po->picbuf->depth;
+	B = po->picbuf->nb;
 
 
-  for (y=0; y<W; ++y)
-  {
-    if ((row=get_RowBuf(po->picbuf, (W-1)-y))==NULL)
-      break;
-    memset(jpgbuf,0,(size_t)S);
-    i=0;
-    for (x=0; x<H; ++x){
-      Byte C=(Byte)index_from_RowBuf(row, x, po->picbuf);
-      if (D==1){
-	switch(C){
-	  case xxBackground:
-	jpgbuf[i++]=255;
-	    break;
-	  default:
-	jpgbuf[i++]=0;
-	break;
+	cinfo.err = jpeg_std_error(&jerr);
+	jpeg_create_compress(&cinfo);
+	cinfo.image_width = (JDIMENSION) H;	/* image width and height, in pixels */
+	cinfo.image_height = (JDIMENSION) W;
+	if (D == 1) {
+		cinfo.input_components = 1;
+		cinfo.in_color_space = JCS_GRAYSCALE;
+	} else {
+		cinfo.input_components = 3;	/* # of color components per pixel */
+		cinfo.in_color_space = JCS_RGB;	/* colorspace of input image */
 	}
-      }else{
-	jpgbuf[i++]=pt.clut[C][0];
-	jpgbuf[i++]=pt.clut[C][1];
-	jpgbuf[i++]=pt.clut[C][2];
-    }
-    }
-	row_pointer[0]= &jpgbuf[0];
-    (void)jpeg_write_scanlines(&cinfo, row_pointer, 1);
-  }
+	jpeg_set_defaults(&cinfo);
 
-  free(jpgbuf);
-  jpeg_finish_compress(&cinfo);
-  jpeg_destroy_compress(&cinfo);
-  if (*po->outfile != '-') fclose(w);
-  
-  return 0;
+	if (*po->outfile != '-') {
+		if ((w = fopen(po->outfile, "wb")) == NULL) {
+			PError("hp2xx -- opening output file");
+			return ERROR;
+		}
+		jpeg_stdio_dest(&cinfo, w);
+	} else {
+		jpeg_stdio_dest(&cinfo, stdout);
+	}
+
+	S = 3 * po->picbuf->nc;
+	if (D == 1)
+		S = po->picbuf->nc;
+	if ((jpgbuf = malloc(S * sizeof(unsigned char))) == NULL) {
+		Eprintf("malloc error!\n");
+		if (*po->outfile != '-')
+			fclose(w);
+		return 1;
+	}
+
+	jpeg_start_compress(&cinfo, TRUE);
+
+
+	for (y = 0; y < W; ++y) {
+		if ((row = get_RowBuf(po->picbuf, (W - 1) - y)) == NULL)
+			break;
+		memset(jpgbuf, 0, (size_t) S);
+		i = 0;
+		for (x = 0; x < H; ++x) {
+			Byte C =
+			    (Byte) index_from_RowBuf(row, x, po->picbuf);
+			if (D == 1) {
+				switch (C) {
+				case xxBackground:
+					jpgbuf[i++] = 255;
+					break;
+				default:
+					jpgbuf[i++] = 0;
+					break;
+				}
+			} else {
+				jpgbuf[i++] = pt.clut[C][0];
+				jpgbuf[i++] = pt.clut[C][1];
+				jpgbuf[i++] = pt.clut[C][2];
+			}
+		}
+		row_pointer[0] = &jpgbuf[0];
+		(void) jpeg_write_scanlines(&cinfo, row_pointer, 1);
+	}
+
+	free(jpgbuf);
+	jpeg_finish_compress(&cinfo);
+	jpeg_destroy_compress(&cinfo);
+	if (*po->outfile != '-')
+		fclose(w);
+
+	return 0;
 }

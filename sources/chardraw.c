@@ -1288,8 +1288,9 @@ int init_font(int thefont)
 {
 	int error;
 
-	if (face) return 0; /* font already open */
-	
+	if (face)
+		return 0;	/* font already open */
+
 	error = FT_Init_FreeType(&library);
 	if (error) {
 		fprintf(stderr, " ! FT_Init_FreeType\n");
@@ -1297,8 +1298,7 @@ int init_font(int thefont)
 	}
 	error = FT_New_Face(library,
 /*			    "/usr/X11R6/lib/X11/fonts/truetype/LucidaTypewriterRegular.ttf",*/
-	STROKED_FONTS,
-			    0, &face);
+			    STROKED_FONTS, 0, &face);
 	if (error) {
 		fprintf(stderr, " ! FT_New_Face \n");
 		return -1;
@@ -1327,7 +1327,7 @@ void ASCII_to_font(int c)
 {
 	int error;
 	int dummy;
-	HPGL_Pt boxmin,boxmax;
+	HPGL_Pt boxmin, boxmax;
 	FT_GlyphSlot slot = face->glyph;
 	FT_Outline *theoutline = &slot->outline;
 	int SafeLineType = CurrentLineType;
@@ -1339,44 +1339,44 @@ void ASCII_to_font(int c)
 	if (c < 0)
 		c += 256;
 	if (tp->font == 0 || tp->font == 7)
-	switch(c) { /* HP Roman8 to iso8859 conversion table */
-	case 179:	
-		c=176;
-		break;
-	case 254:
-		c=177;
-		break;
-	case 243:
-		c=181;
-		break;
-	case 216:
-		c=196;
-		break;
-	case 218:
-		c=214;
-		break;
-	case 219:
-		c=220;
-		break;
-	case 222:
-		c=223;
-		break;
-	case 204:
-		c=228;
-		break;
-	case 206:
-		c=246;
-		break;
-	case 214:
-		c=248;
-		break;
-	case 207:
-		c=252;
-		break;
-	default:
-		break;
-	 }												
-	error = FT_Load_Char(face, (FT_ULong)c, FT_LOAD_NO_SCALE);
+		switch (c) {	/* HP Roman8 to iso8859 conversion table */
+		case 179:
+			c = 176;
+			break;
+		case 254:
+			c = 177;
+			break;
+		case 243:
+			c = 181;
+			break;
+		case 216:
+			c = 196;
+			break;
+		case 218:
+			c = 214;
+			break;
+		case 219:
+			c = 220;
+			break;
+		case 222:
+			c = 223;
+			break;
+		case 204:
+			c = 228;
+			break;
+		case 206:
+			c = 246;
+			break;
+		case 214:
+			c = 248;
+			break;
+		case 207:
+			c = 252;
+			break;
+		default:
+			break;
+		}
+	error = FT_Load_Char(face, (FT_ULong) c, FT_LOAD_NO_SCALE);
 	if (error) {
 		fprintf(stderr, " ! FT_Load_Char %c\n", c);
 		return;
@@ -1400,10 +1400,10 @@ void ASCII_to_font(int c)
 		tp->chardiff.y);
 	fprintf(stderr, "numpoints %d\n", numpoints);
 #endif
-	boxmin.x=tp->refpoint.x-5;
-	boxmin.y=tp->refpoint.y-150;
-	boxmax.x=boxmin.x+tp->chardiff.x+5;
-	boxmax.y=boxmin.y+tp->chardiff.y+5;
+	boxmin.x = tp->refpoint.x - 5;
+	boxmin.y = tp->refpoint.y - 150;
+	boxmax.x = boxmin.x + tp->chardiff.x + 5;
+	boxmax.y = boxmin.y + tp->chardiff.y + 5;
 	fill(polygon, numpoints, boxmin, boxmax, 0, 2, 1, 0);
 	tp->refpoint.x += tp->chardiff.x;
 	tp->refpoint.y += tp->chardiff.y;
@@ -1489,7 +1489,7 @@ int tt_stroke_lineto(FT_Vector * to, void *dummy)
 
 int tt_bezier1(FT_Vector * p1, FT_Vector * p3, void *dummy)
 {
-	HPGL_Pt p,pp;
+	HPGL_Pt p, pp;
 	int i, outside;
 	float t;
 	FT_Vector p2;
@@ -1544,7 +1544,7 @@ p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
 			Pen_action_to_tmpfile(MOVE_TO, &pp, FALSE);
 
 		outside = 0;
-	oldp = pp;
+		oldp = pp;
 	}
 
 	/* Update cursor: to next character origin!   */
@@ -1556,7 +1556,7 @@ p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
 
 int tt_bezier2(FT_Vector * p1, FT_Vector * p2, FT_Vector * p3, void *dummy)
 {
-	HPGL_Pt p,pp;
+	HPGL_Pt p, pp;
 	int i, outside;
 	float t;
 
@@ -1604,8 +1604,8 @@ p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
 			Pen_action_to_tmpfile(MOVE_TO, &pp, FALSE);
 
 		outside = 0;
-	oldp = pp;
-	
+		oldp = pp;
+
 	}
 
 	/* Update cursor: to next character origin!   */

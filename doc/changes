@@ -1,5 +1,15 @@
 Changes to hp2xx:
 =================
+3.4.4 : 03/06/22
+
+Source indentation (indent -kr -i8) and removal of some dead code.
+Added missing menu entry for 'DXF specifics' in Appendix B of the texinfo
+source, updated revision number. Updated manpage and reran texi2html to 
+update the html version of the texinfo documentation. Corrected drawing 
+of filled wedges (WG command, broken by polygon buffer rewrite in 3.4.3). 
+Moved version information from hp2xx.c to hp2xx.h to give output drivers
+access to the version number if desired.
+
 3.4.4a9:
 Changing the to_png.c 'colour' to an unsigned char in 3.4.3 broke color
 PNGs. SP commands in PE mode did not yet update the pen count (important

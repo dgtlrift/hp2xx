@@ -150,20 +150,6 @@ copies.
  ** 03/02/26	      GV   Add -S option for DXF mode (pen attribute mapping)
  **/
 
-char *VERS_NO = "3.4.4a9";
-char *VERS_DATE = "03/06/19";
-char *VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
-#if defined(AMIGA)
-char *VERS_ADDITIONS =
-    "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n";
-#elif defined (ATARI)
-char *VERS_ADDITIONS =
-    "\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n";
-#else
-char *VERS_ADDITIONS =
-    "                                 (c) 1999 - 2003 Martin Kroeker\n";
-#endif
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -174,6 +160,8 @@ char *VERS_ADDITIONS =
 #include "hp2xx.h"
 #include "hpgl.h"
 
+/* the version string is now declared in hp2xx.h, so that output modules
+   may easily include the version of hp2xx that generated the file */
 
 /**
  ** When adding your special mode, add a line here.
@@ -361,9 +349,9 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	Eprintf
 	    ("-S int     %d\tUse Tiff Compression Format (0/1=None, 2=RLE, 3=G3Fax, 4=G4Fax, 5=LZW, 6=OJpeg, 7=Jpeg, 8=Deflate)\n",
 	     po->specials);
-	
+
 	NormalWait();
-	
+
 	Eprintf("\nDXF-exclusive options:\n");
 	Eprintf
 	    ("-S int     %d\tMap pens to DXF colors (0=No mapping, 1=use pen no., 2=use width*10 , 3=map widths <0.2 to 1, <0.3 to 2,0.4 to 3 , above 0.4 to 4 )\n",
@@ -379,8 +367,10 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	Eprintf
 	    ("-t         %s\tShow true HPGL size. Disables -a -h -w !\n",
 	     FLAGSTATE(pi->truesize));
-	Eprintf("-H float %5.1f\tHardware X range [1/40 mm] of device\n", pi->hwlimit.x);
-	Eprintf("-W float %5.1f\tHardware Y range [1/40 mm] of device\n", pi->hwlimit.y);
+	Eprintf("-H float %5.1f\tHardware X range [1/40 mm] of device\n",
+		pi->hwlimit.x);
+	Eprintf("-W float %5.1f\tHardware Y range [1/40 mm] of device\n",
+		pi->hwlimit.y);
 	Eprintf("-x float   -\tManual HPGL-coord range presetting: x0\n");
 	Eprintf("-X float   -\tManual HPGL-coord range presetting: x1\n");
 	Eprintf("-y float   -\tManual HPGL-coord range presetting: y0\n");
@@ -389,7 +379,7 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 		po->zengage);
 	Eprintf("-Z float %5.1f\t(3d nc output only) Z retract depth\n",
 		po->zretract);
-	
+
 #ifdef DOS
 	Eprintf
 	    ("\n-V int   %d\tVGA mode byte (decimal). Change at own risk!\n",
@@ -402,7 +392,9 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	Eprintf
 	    ("hp2xx   [--mode] [--colors] [--pensizes] [--pages] [--quiet]\n");
 	Eprintf
-	    ("\t[--nofill] [--width] [--height] [--aspectfactor] [--truesize]\n");
+	    ("\t[--nofill] [--no_ps] [--mapzero]\n");
+	Eprintf
+	    ("\t[--width] [--height] [--aspectfactor] [--truesize]\n");
 	Eprintf("\t[--x0] [--x1] [--y0] [--y1]\n");
 	Eprintf("\t[--xoffset] [--yoffset] [--center]\n");
 	Eprintf("\t[--DPI] [--DPI_x] [--DPI_y] [--extraclip]\n");
@@ -461,9 +453,9 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	pi->first_page = 0;
 	pi->last_page = 0;
 
-	pi->hwlimit.x=33600.;
-	pi->hwlimit.y=47520.;
-	
+	pi->hwlimit.x = 33600.;
+	pi->hwlimit.y = 47520.;
+
 	po->init_p = FALSE;
 	po->init_p3gui = FALSE;
 	po->formfeed = FALSE;
@@ -490,20 +482,20 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	pg->maxpens = 8;
 	pg->is_color = FALSE;
 	pg->mapzero = -1;
-	
+
 	pt.width[0] = 0.0;	/* 1/10 mm              */
 	pt.color[0] = xxBackground;
 	for (i = 1; i <= NUMPENS; i++) {
 		pt.width[i] = 0.1;	/* 1/10 mm              */
 		pt.color[i] = xxForeground;
 	}
-	pt.color[1]=xxForeground;
-	pt.color[2]=xxRed;
-	pt.color[3]=xxGreen;
-	pt.color[4]=xxBlue;
-	pt.color[5]=xxCyan;
-	pt.color[6]=xxMagenta;
-	pt.color[7]=xxYellow;
+	pt.color[1] = xxForeground;
+	pt.color[2] = xxRed;
+	pt.color[3] = xxGreen;
+	pt.color[4] = xxBlue;
+	pt.color[5] = xxCyan;
+	pt.color[6] = xxMagenta;
+	pt.color[7] = xxYellow;
 	set_color_rgb(xxBackground, 255, 255, 255);
 	set_color_rgb(xxForeground, 0, 0, 0);
 	set_color_rgb(xxRed, 255, 0, 0);
@@ -557,17 +549,13 @@ void autoset_outfile_name(const char *mode, const char *in_name,
 	if (*in_name == '-')	/* If input from stdin                              */
 		len = 0;
 	else
-		len = (int)strlen(in_name);
+		len = (int) strlen(in_name);
 
 	if (len == 0) {		/* If input from stdin:                           *//*    then supply a default file name           */
 		*outfile = "hp2xx.out";
 		return;
 	}
-#if 0
-	if (strcmp(mode, "pre") == 0)
-		return;		/* If preview mode:                             */
-	/*    then output file name is unused           */
-#endif
+
 	for (i = len - 1; i; i--)	/* Search for (last) '.' char in path               */
 		if (in_name[i] == '.')
 			break;
@@ -675,26 +663,18 @@ int HPGL_to_TMP(GEN_PAR * pg, IN_PAR * pi)
    **/
 
 	cleanup_g(pg);
-#if 0
-	cleanup_i(pi);
-#endif
   /**
    ** Open HP-GL input file. Use stdin if selected.
    **/
 
 	if (*pi->in_file == '-')
 		pi->hd = stdin;
-	else
-#if 1
-	if (pi->hd == NULL) {
-#endif
+	else if (pi->hd == NULL) {
 		if ((pi->hd = fopen(pi->in_file, READ_BIN)) == NULL) {
 			PError("hp2xx (while opening HPGL file)");
 			return ERROR;
 		}
-#if 1
 	}
-#endif
   /**
    ** Open temporary intermediate file.
    **
@@ -723,17 +703,13 @@ int HPGL_to_TMP(GEN_PAR * pg, IN_PAR * pi)
    **/
 	n_commands = 0;
 	read_HPGL(pg, pi);
-#if 1
 	if (n_commands <= 1 && n_commands >= 0) {
-#endif
 		if (pi->hd != stdin) {
 			fclose(pi->hd);
 			pi->hd = NULL;
 		}
-#if 1
 		return ERROR;
 	}
-#endif
 	return 0;
 }
 
