@@ -146,8 +146,8 @@ copies.
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
  **/
 
-char	*VERS_NO = "3.4.3a9";
-char	*VERS_DATE = "02/07/09";
+char	*VERS_NO = "3.4.3a10";
+char	*VERS_DATE = "02/07/15";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -167,7 +167,7 @@ char	*VERS_ADDITIONS = "                                (c) 1999 - 2002 Martin K
 #include "bresnham.h"
 #include "pendef.h"
 #include "hp2xx.h"
-
+#include "hpgl.h"
 
 
 /**
@@ -625,8 +625,9 @@ HPGL_to_TMP (GEN_PAR *pg, IN_PAR *pi)
    **/
 
   cleanup_g (pg);
+#if 0  
   cleanup_i (pi);
-
+#endif
   /**
    ** Open HP-GL input file. Use stdin if selected.
    **/
@@ -634,12 +635,18 @@ HPGL_to_TMP (GEN_PAR *pg, IN_PAR *pi)
   if (*pi->in_file == '-')
 	pi->hd = stdin;
   else
+#if 1
+	if (pi->hd == NULL) {
+#endif	  
+fprintf(stderr,"open infile\n");
 	if ((pi->hd=fopen (pi->in_file, READ_BIN)) == NULL)
 	{
 		PError("hp2xx");
 		return ERROR;
 	}
-
+#if 1
+}
+#endif
   /**
    ** Open temporary intermediate file.
    **
@@ -668,12 +675,18 @@ HPGL_to_TMP (GEN_PAR *pg, IN_PAR *pi)
    **/
 
   read_HPGL (pg, pi);
-
+#if 1
+	if (vec_cntr_w <= 1) {
+#endif	
   if (pi->hd != stdin)
   {
 	fclose (pi->hd);
 	pi->hd = NULL;
   }
+#if 1
+	return ERROR;
+	}  
+#endif 
   return 0;
 }
 

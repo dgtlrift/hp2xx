@@ -11,16 +11,20 @@
 int PicBuf_to_TIF (const GEN_PAR *pg, const OUT_PAR *po)
 {
   TIFF		*w=NULL;
+#ifdef UNIX
+  int		tifftmp,tiffstdout=0;
+#endif
   RowBuf	*row=NULL;
   int		x,y, W, H, D, B, S;
   float XDPI,YDPI;
   Byte		*tifbuf;
   unsigned short r[256], g[256], b[256];
-  char		tmp[16];
+  char		tmp[16]="/tmp/hpXXXXXX";
 
   if (!pg->quiet)
     Eprintf ("\nWriting TIFF output\n");
   if (*po->outfile == '-'){
+#ifndef UNIX
     if (!(tmpnam(tmp))){
       PError ("hp2xx -- error creating temp file");
       return 1;
@@ -29,6 +33,17 @@ int PicBuf_to_TIF (const GEN_PAR *pg, const OUT_PAR *po)
       PError ("hp2xx -- opening TIFF temp file");
       return ERROR;
     }
+#else
+	if ((tifftmp=mkstemp(tmp))<0) {
+	PError ("hp2xx -- error creating temp file");
+	return 1;
+	}   
+	tiffstdout=dup(tifftmp);
+    if ((w=TIFFFdOpen(tifftmp,tmp,"w"))==NULL){
+      PError ("hp2xx -- opening TIFF temp file");
+      return ERROR;
+    }
+#endif    
   }
   else
     if ((w=TIFFOpen(po->outfile,"w"))==NULL){
@@ -148,8 +163,10 @@ int PicBuf_to_TIF (const GEN_PAR *pg, const OUT_PAR *po)
 
   free(tifbuf);
   TIFFClose(w);
+fprintf(stderr,"tiff closed \n");
   if (*po->outfile == '-'){
     int c;
+#ifndef UNIX
     FILE *r;
 
     if (!(r=fopen(tmp,"rb"))){
@@ -160,6 +177,13 @@ int PicBuf_to_TIF (const GEN_PAR *pg, const OUT_PAR *po)
       fputc(c,stdout);
     fclose(r);
     unlink(tmp);
-  }
+#else
+	lseek(tiffstdout,0,SEEK_SET);
+	while (read(tiffstdout,&c,1)>0)
+		fputc(c,stdout);
+		close(tiffstdout);
+		unlink(tmp);
+#endif
+	}
   return 0;
 }

@@ -112,7 +112,7 @@ Cmd  | i |
  IM  | - | Input error condition reporting Mask 
  IN  |+  | Initialize
  IP  |+  | Input P1 and P2
- IR  | - | Input Relative p1 and p2 locations
+ IR  |+  | Input Relative p1 and p2 locations
  IV  | - | Invoke character slot
  IW  |+  | Input window
      |   |
@@ -199,5 +199,5 @@ Cmd  | i |
  YT  |+  | Y-Tick
 
 Useless statistics : this makes currently (3.4.3) 
-69 fully supported, 3 partially supported, 24 not-applicable 
-and 24 unsupported commands.
+70 fully supported, 3 partially supported, 24 not-applicable 
+and 23 unsupported commands.

@@ -20,6 +20,11 @@ New features:
 - Added new commandline option -e, --extraclip <unit> for additional margin
   around clip regions. Some programs apparently miscalculate their frames.
   (Georgy Salnikov)
+- Input files containing several plots are now rendered as separate images,
+  even if the -P option is not used. Output file names are numbered starting
+  from the second file, i.e. file.plt yields file.png file.1.png file.2.png.
+- TIFF creation on stdout now uses a safer method of generating and accessing
+  its temporary file on Unix.
 
 Bug fixes:
 
@@ -53,6 +58,8 @@ Bug fixes:
 - Dots for PUPDPU got drawn for PDPA as well, which made consecutive dashed
   lines restart the dash pattern for each segment instead of carrying over 
   the remainder of the pattern from the previous one. 
+- Removed the checks preventing negative or large offsets to be defined with
+  the -o and -O commandline options
 
 Changes from 3.4.1 to 3.4.2
 

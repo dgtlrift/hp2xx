@@ -256,6 +256,7 @@ static unsigned char b_max=255;
 #define FT      0x4654
 #define IN	0x494E
 #define IP	0x4950
+#define IR	0x4952
 #define IW      0x4957		/*MK */
 #define LA	0x4C41		/*AJB*/
 #define LB	0x4C42
@@ -395,7 +396,7 @@ reset_HPGL (void)
 
 
 static void
-init_HPGL (const GEN_PAR * pg, const IN_PAR * pi)
+init_HPGL (GEN_PAR * pg, const IN_PAR * pi)
 {
 /**
  ** Re-init. global var's for multiple-file applications
@@ -3071,7 +3072,6 @@ if (rotate_flag){
       P1 = p1;
       P2 = p2;
 
-
     IP_Exit:
       Q.x = (P2.x - P1.x) / (S2.x - S1.x);
       Q.y = (P2.y - P1.y) / (S2.y - S1.y);
@@ -3082,13 +3082,53 @@ if (rotate_flag){
       adjust_text_par ();
       return;
 
+    case IR: /* input reference points P1,P2 as percentages of defaults */
+      if (read_float (&p1.x, hd))	/* No number found  */
+	return;   /* keep defaults*/
+      if (read_float (&p1.y, hd))	/* x without y! */
+	par_err_exit (2, cmd);
+
+fprintf(stderr,"P1,P2 vor IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
+	
+	mywidth=P2.x-P1.x;
+	myheight=P2.y-P1.y;
+	ftmp=p1.x;
+	p1.x=P1.x; /* need old value for computation of new P2 */
+	P1.x=p1.x+ftmp/100.*mywidth;
+	ftmp=p1.y;
+	p1.y=P1.y;
+	P1.y=p1.y+ftmp/100.*myheight;
+      
+      if (read_float (&p2.x, hd)){	/* No number found  */
+	P2.x=P1.x+mywidth;	/* P2 tracks new P1 too keep constant size*/
+	P2.y=P1.y+myheight;
+fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
+	return;
+	}
+      if (read_float (&p2.y, hd))	/* x without y! */
+	par_err_exit (4, cmd);
+	
+	P2.x=p1.x+p2.x/100.*mywidth; 
+	P2.y=p1.y+p2.y/100.*myheight;
+	if (P1.x==P2.x) P2.x=P2.x+1.;
+	if (P1.y==P2.y) P2.y=P2.y+1.;
+fprintf(stderr,"P1,P2 nach IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);
+      Q.x = (P2.x - P1.x) / (S2.x - S1.x);
+      Q.y = (P2.y - P1.y) / (S2.y - S1.y);
+      Diag_P1_P2 = HYPOT (P2.x - P1.x, P2.y - P1.y);
+      CurrentLinePatLen = 0.04 * Diag_P1_P2;
+      tp->width *= (P2.x - P1.x);
+      tp->height *= (P2.y - P1.y);
+      adjust_text_par ();
+      return;
+	    	   
     case IW:
       iwflag = 1;
       if (read_float (&C1.x, hd))	/* No number found  */
 	{
 	  if (scale_flag)
 	    {
-	      if (rotate_flag && ((rot_ang ==90.) || (int)rot_tmp%90 !=0))
+	 if (rotate_flag && ((rot_ang ==90.) || (int)rot_tmp%90 !=0))
 		{   /* FIXME: there must be a more elegant solution for
 			the interactions between -r and RO */
 		  C1.x = S1.y;
@@ -3106,7 +3146,7 @@ if (rotate_flag){
 	    }
 	  else
 	    {
-		if (rotate_flag && ((rot_ang==90. )|| (int)rot_tmp%90 !=0)) {
+		if (rotate_flag &&  ((rot_ang==90. )|| (int)rot_tmp%90 !=0) || rot_tmp ==0.) {
 		C1.x= P1.y;
 		C1.y= P1.x;
 		C2.x= P2.y;
@@ -3139,6 +3179,13 @@ if (rotate_flag){
 		C1.y=C2.y;
 		C2.y=ftmp;
 		}
+#if 1
+	if (P2.y < P1.y){
+                ftmp=C1.y;
+                C1.y=C2.y;
+                C2.y=ftmp;
+                }
+#endif
 	  User_to_Plotter_coord (&C1, &C1);
 	  User_to_Plotter_coord (&C2, &C2);
 
@@ -3164,7 +3211,10 @@ if (rotate_flag){
       page_number++;
       record_off = (first_page > page_number)
 	|| ((last_page < page_number) && (last_page > 0));
-      break;
+#if 1
+	return;
+#endif	
+    break;
 
     case EA:			/* Edge Rectangle absolute */
       rect (plot_rel = FALSE, 0, pt.width[pen] , hd);
@@ -3705,7 +3755,18 @@ read_HPGL (GEN_PAR * pg, const IN_PAR * pi)
 	default:
 	  if ((c < 'A') || (c > 'z') || ((c > 'Z') && (c < 'a')))
 	    break;
-	  cmd = c << 8;
+#if 1	    
+	if (c=='P'){
+	 if ( (cmd = getc(pi->hd)) == 'G') {
+/*	  fprintf(stderr,"***PG***\n");'*/
+	goto END;
+	 }else{
+         if (cmd==EOF) return;
+	 ungetc(cmd,pi->hd);
+	 }
+	}
+#endif		
+	cmd = c << 8;
 	  if ((c = getc (pi->hd)) == EOF)
 	    return;
 	  if ((c < 'A') || (c > 'z') || ((c > 'Z') && (c < 'a')))
@@ -3717,8 +3778,8 @@ read_HPGL (GEN_PAR * pg, const IN_PAR * pi)
 	  read_HPGL_cmd (pg, cmd, pi->hd);
 	}
     }
-
-  if (!pg->quiet)
+END:    
+  if (!pg->quiet && vec_cntr_w+n_unknown+n_unexpected>1)
     {
       Eprintf ("\nHPGL command(s) ignored: %d\n", n_unknown);
       Eprintf ("Unexpected event(s):  %d\n", n_unexpected);

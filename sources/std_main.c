@@ -117,31 +117,52 @@ void
 action_oldstyle (GEN_PAR *pg, IN_PAR *pi, OUT_PAR *po)
 {
 int	err;
+char savedname[100];
+int counter=-1;
+char thepage[4];
+
 
   if (!pg->quiet)
 	Send_version();
-
+#if 1
+strcpy(savedname,po->outfile);
+	for (;;){
+#endif
   /**
    ** Phase 1: HP-GL --> TMP file data
    **/
   err = HPGL_to_TMP (pg, pi);
   if (err)
 	return;
+#if 0	
   cleanup_i (pi);
+#endif
 
-
+#if 1
+counter++;
+if (po->outfile != "-" && counter >0) {
+	sprintf(thepage,"%d",counter);
+strcpy(po->outfile,savedname);
+strcpy(strstr(po->outfile,pg->mode),thepage);
+strcat(po->outfile,".");
+strcat(po->outfile,pg->mode);
+}
+#endif
   /**
    ** Phase 2: TMP file re-scaling
    **/
   adjust_input_transform (pg, pi, po);
-
 
   /**
    ** Phase 3: (a) TMP file --> Vector formats
    **/
   err = TMP_to_VEC (pg, po);
   if (err == 0)
+#if 0  
 	return;
+#else
+	continue;
+#endif	
   if (err == ERROR)
   {
 	cleanup (pg, pi, po);
@@ -164,11 +185,17 @@ int	err;
 
   if (err == 1)
 	Eprintf("%s: Not implemented!\n", pg->mode);
-
+#if 0
   cleanup(pg, pi, po);
+#else
+  cleanup_g(pg);
+  cleanup_o(po);
+#endif
 }
 
-
+#if 1
+}
+#endif
 
 
 static void
@@ -317,6 +344,7 @@ char	*p, cdummy;
 	  		  	
 	  case 'o':
 		pi->xoff = atof (optarg);
+#if 0
 		if (pi->xoff < 0.0)
 		{
 			Eprintf("Illegal X offset: %g < 0\n", pi->xoff);
@@ -327,10 +355,12 @@ char	*p, cdummy;
 			Eprintf("Illegal X offset: %g > 210\n", pi->xoff);
 			exit(ERROR);
 		}
+#endif
 		break;
 
 	  case 'O':
 		pi->yoff = atof (optarg);
+#if 0
 		if (pi->yoff < 0.0)
 		{
 			Eprintf("Illegal Y offset: %g < 0\n", pi->yoff);
@@ -341,6 +371,7 @@ char	*p, cdummy;
 			Eprintf("Illegal Y offset: %g > 300\n", pi->yoff);
 			exit(ERROR);
 		}
+#endif
 		break;
 
 	  case 'p':

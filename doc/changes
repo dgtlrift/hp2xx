@@ -1,5 +1,23 @@
 Changes to hp2xx:
 =================
+3.4.3a10:
+
+another change in the endless RO/IW saga. And a fix for IP with P2.y < P1.y.
+Added a loop in std_main/hp2xx.c to allow dissecting plotfiles that contain
+several images. Previous versions would plot all in the same frame, now you
+get a neat set of numbered output files (or a slideshow-like preview). Replaced
+the tmpnam() in to_tif.c with a mkstemp/dup combination - not sure if anybody
+even wants to send TIFF output to stdout, as most if not all viewers will need
+random access to the image because of its complicated structure (which is also
+the reason why we need a temporary file here at all). This is mostly to silence
+the annoying warning in GNU ld, and non-Unix platforms still use the old,
+potentially insecure code for portability reasons. Added support for IR, but
+this is largely untested as i have yet to find a file that does more than
+the default "IR0,100,0,100". ifdef'd out Werntges' sanity checks on the 
+of -o/-O offsets in std_main.c. There may well be valid reasons for negative
+offsets (printing on DJ970cx is said to be a case), and maybe even for offsets
+bigger than the width or height of an A4 page.
+
 3.4.3a9:
 
 still looking for correct defaults for AC. Reactivated polygon vertex storing
@@ -33,27 +51,36 @@ upside down, and microsoft platforms seem to need a replacement for
 rint/lrint (actually some non-MS platforms may need this as well - not sure 
 if everybody does obey C99 already ?).
 
-3.4.3a6,a7:
-PM2 now closes open polygons automatically. Stray Escape chars in the HPGL
-code are reported and ignored (one guy was trying to use esc-prefixed 
-commands in his code because he was too familiar with PCL). Guess what,
-there was still some brokenness in IW/SC handling. Anchor corners for
-fill patterns were defaulting to a P1 which could be undefined or unsuitable
-at that time. Fixed some wreckage from the penwidth type change in to_emf.c
-and added ability to create EMF files on UNIX with libEMF. Added VS and CR.
+3.4.3a7:
+Stray Escape chars in the HPGL code are reported and ignored (one guy was 
+trying to use esc-prefixed commands in his code because he was too familiar 
+with PCL). Guess what, there was still some brokenness in IW/SC handling.:-(
+Fixed some wreckage from the penwidth type change in to_emf.c and added the
+ability to create EMF files on UNIX with libEMF. Added VS and CR support.
 Added -e for extra margin around IW (at least one commercial code miscalculates
 its clip boxes, cutting of text from spectra). FP with --nofill now does EP,
 so fat lettering done with just FP does not simply vanish.
 
+3.4.3a6:
+PM2 now closes open polygons automatically. Anchor corners for fill patterns
+were defaulting to P1 which could be undefined or unsuitable at that time.
+Added some whitespace between operators and constants to work around what
+is most probably a compiler bug on HPUX 11 with ansi CC.
+ 
 3.4.3a5:
-Most of LA line ending options are now supported, thanks to Andrew Bird.
+Most of the LA line ending options are now supported, thanks to Andrew Bird.
 X11 previewer was leaking memory when zooming, but valgrind found that.
 to_pdf sometimes got confused about when to begin and end its stroke paths.
 
-a2-a4:
-PJL preambles with more than one Esc sequence and some arguments to SD,AD,BP 
-were not handled, causing strange results.  Extremely short lines could 
-confuse the line pattern generator into drawing the gaps instead. 
+3.4.3a4:
+PJL preambles with more than one Esc sequence confused the HPGL parser.
+
+3.4.3a3:
+Several optional arguments to SD,AD and BP were not handled, causing strange 
+results.  Extremely short lines could confuse the line pattern generator 
+into drawing the gaps instead of the lines. 
+
+3.4.3a2:
 Andrew Bird implemented a "fat bresenham" to draw true linewidths in the
 raster modes.
 
