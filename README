@@ -28,6 +28,8 @@ New features:
   DEFINES section of the Makefile) 
 - Support for the rectangle mode of the PE statement (Eugene Doudine)
 - NR is now recognized as an image terminator in multi-plot files.
+- DXF output provides optional translation of pen number and/or width
+  into DXF group 62 line attributes (Georg Viehoever).
 
 Bug fixes:
 
@@ -39,4 +41,7 @@ Bug fixes:
 - forcing penwidth via the -p commandline option no longer worked for 
   the conventional values between 1 and 9 
 - PJL parser now handles input lines of up to 256 characters 
+- polygon sides could escape clipping in some circumstances
+- simplified HPGL output would write very small numbers in exponential
+  notation, which is not allowed by any HPGL standard.
 

@@ -1,6 +1,6 @@
 \input texinfo      @c -*-texinfo-*-
 @c Copyright (c) 1992 - 1994  Heinz W. Werntges
-@c Copyright (c) 1998 - 2000  Martin Kroeker
+@c Copyright (c) 1998 - 2000,2001,2002,2003  Martin Kroeker
 @c %**start of header
 @setfilename hp2xx.info
 @settitle HP2XX, A HP-GL Converter
@@ -51,7 +51,7 @@ This file documents the HP-GL converter HP2XX
 This is Edition 1.2, September 2000,
 of @cite{Using HP2XX: A HP-GL Converter}.
 
-Copyright (C) 1998 - 2002 Martin Kroeker
+Copyright (C) 1998 - 2003 Martin Kroeker
 Copyright (C) 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
@@ -85,8 +85,8 @@ by the Free Software Foundation instead of in the original English.
 @c @subtitle on XXXX Systems
 @sp 1
 @c !!set edition, date, version
-@subtitle Edition 1.3, for HP2XX version 3.4.3
-@subtitle September  2002
+@subtitle Edition 1.4, for HP2XX version 3.4.4
+@subtitle February  2003
 @author by Martin Kroeker (previously by Heinz W. Werntges)
 @page
 @tex
@@ -98,7 +98,7 @@ by the Free Software Foundation instead of in the original English.
 @end tex
 
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1998 - 2002 Martin Kroeker
+Copyright @copyright{} 1998 - 2003 Martin Kroeker
 Copyright @copyright{} 1992 - 1994 Heinz W. Werntges
 
 Permission is granted to make and distribute verbatim copies of
@@ -129,7 +129,7 @@ This file describes HP2XX, a converter of HP-GL plotter data into
 some vector and raster formats
 
 @c !!set edition, date, version
-This is Edition 1.3, September 2002, for HP2XX Version 3.4.3
+This is Edition 1.4, February 2003, for HP2XX Version 3.4.4
 @end ifinfo
 
 
@@ -1230,7 +1230,8 @@ pages 1-2 to 1-4 of [1] and marks them as either
 
 @display
       @code{(.)}  not applicable,
-      @code{(-)}  ignored, or
+      @code{(-)}  ignored, 
+      @code{(*)}  partly supported, or
       @code{(+)}  supported.
 @end display
 
@@ -1348,6 +1349,7 @@ you should get a good approximation of what a plotter would produce).
 @code{PD   |+  | Pen down}
 @code{PE   |+  | Polyline Encoded}
 @code{PG   |+  | Page feed}
+@code{PM   |+  | Polygon mode}
 @code{PR   |+  | Plot relative}
 @code{PS   |+  | Plot Size}
 @code{PT   |+  | Pen thickness}
@@ -1599,7 +1601,7 @@ Set x resolution (see above): Valid here: @var{int} = 75, 100, 150, 300
 Set y resolution (see above). Invalid here!
 @end table
 
-@node TIFF specifics, Margins, PCL specifics, Appendix B
+@node TIFF specifics, DXF specifics, PCL specifics, Appendix B
 @comment  node-name,  next,  previous,  up
 @section TIFF specifics
 
@@ -1615,9 +1617,24 @@ due to Unisys patent), @var{int} = 6 old-style JPEG, @var{int} = 7 JPEG,
 
 @end table
 
+@node DXF specifics, Margins, TIFF specifics, Appendix B
+@comment  node-name,  next,  previous,  up
+@section TIFF specifics
+
+@table @samp
 
 
-@node Margins, Preview (DOS only), TIFF specifics, Appendix B
+@item -S @var{int}
+Select desired translation of HPGL pen attributes to DXF Group 62 line 
+parameters. @var{int} = 0 ignore attributes (use color=1, width=0.1
+throughout), @var{int} = 2 use pen number for color, use actual width, 
+@var{int} = 3 use width-dependent color ( <0.2 == 1, <0.3 == 2 etc.),
+@var{int} = 4 use width-dependent color with upper limit of 4 beyond 0.4.
+
+@end table
+
+
+@node Margins, Preview (DOS only), DXF specifics, Appendix B
 @comment  node-name,  next,  previous,  up
 @section  Margins
 
@@ -1799,6 +1816,10 @@ EMF generation
 
 @item Michael Rooke
 CNC G-code generation
+
+@item Georg Viehoever
+DXF enhancements and bugfixes
+
 @end table
 
 
@@ -1808,7 +1829,7 @@ CNC G-code generation
 @section Copyright notice
 
 @display
-Copyright (c) 1998 - 2002  Martin Kroeker
+Copyright (c) 1998 - 2003  Martin Kroeker
 Copyright (c) 1991 - 1994  Heinz W. Werntges
 All rights reserved.
 

@@ -4,7 +4,7 @@
 #include "hp2xx.h"
 
 int read_float (float *pnum, FILE * hd);
-
+void read_string (char *target, FILE *);
 void PlotCmd_to_tmpfile (PlotCmd cmd);
 
 void HPGL_Pt_to_tmpfile (const HPGL_Pt * pf);

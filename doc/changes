@@ -1,5 +1,16 @@
 Changes to hp2xx:
 =================
+3.4.4a3:
+
+Documentation fixes and updates. Polygon lines were not clipped in some 
+cases. Simplified HPGL output could create illegal HPGL (by using exponential 
+notation for very small coordinates). Added (optional) conversion of pen 
+number and/or width to DXF line color, added more DXF header items
+(Georg Viehoever). Made HPGL error handler print 20 characters around the
+unparseable command before quitting - the sequence number information alone
+was useless for real-world files.
+
+
 3.4.4a2:
 
 Removed a few debug printf statements introduced in a1. 

@@ -1,6 +1,6 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  All rights reserved.
-   Parts Copyright (c) 1998-2002 Martin Kroeker  All rights reserved.
+   Parts Copyright (c) 1998-2002,2003 Martin Kroeker  All rights reserved.
    
    Distributed by Free Software Foundation, Inc.
 
@@ -147,10 +147,11 @@ copies.
  ** 02/..	      MK   Modes "dxf" and "svg" 
  ** 02/12/20		   New mode "nc", G-code for CNC milling with 
  **			   constant, user-defined Z depths (Michael Rooke)
+ ** 03/02/26	      GV   Add -S option for DXF mode (pen attribute mapping)
  **/
 
-char *VERS_NO = "3.4.4a2";
-char *VERS_DATE = "03/02/22";
+char *VERS_NO = "3.4.4a3";
+char *VERS_DATE = "03/02/26";
 char *VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char *VERS_ADDITIONS =
@@ -359,8 +360,13 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	Eprintf
 	    ("-S int     %d\tUse Tiff Compression Format (0/1=None, 2=RLE, 3=G3Fax, 4=G4Fax, 5=LZW, 6=OJpeg, 7=Jpeg, 8=Deflate)\n",
 	     po->specials);
-
+	
 	NormalWait();
+	
+	Eprintf("\nDXF-exclusive options:\n");
+	Eprintf
+	    ("-S int     %d\tMap pens to DXF colors (0=No mapping, 1=use pen no., 2=use width*10 , 3=map widths <0.2 to 1, <0.3 to 2,0.4 to 3 , above 0.4 to 4 )\n",
+	     po->specials);
 
 	Eprintf("\nSize controls:\n");
 

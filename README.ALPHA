@@ -1,3 +1,17 @@
+3.4.4a3
+
+New features:
+
+- Added (optional) support for line color and width in DXF output, expanded
+  the DXF header (Georg Viehoever).
+- The error handler now tries to report the offending HPGL command verbatim
+  in addition to printing its (rather pointless) sequence number.
+
+Bug fixes:
+
+- Polygon sides were not clipped in some cases 
+- Simplified HPGL output could contain coordinates in illegal (exponential)
+  notation.
 
 3.4.4a2
 

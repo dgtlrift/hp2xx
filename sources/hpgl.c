@@ -303,10 +303,11 @@ static unsigned char b_max = 255;
 #define WU      0x5755
 #define XT	0x5854
 #define YT	0x5954
-static void par_err_exit(int code, int cmd)
+static void par_err_exit(int code, int cmd, FILE *hd)
 {
 
 	const char *msg;
+	char tmpstr[21];
 
 	switch (code) {
 	case 0:
@@ -335,6 +336,10 @@ static void par_err_exit(int code, int cmd)
 	Eprintf("\nError in command %c%c: %s\n", cmd >> 8, cmd & 0xFF,
 		msg);
 	Eprintf(" @ Cmd %ld\n", vec_cntr_w);
+	fseek (hd, -10L, SEEK_CUR);
+	read_string(tmpstr,hd);
+	tmpstr[20]='\0';
+	Eprintf(" lately read: %s\n",tmpstr);
 	exit(ERROR);
 }
 
@@ -903,7 +908,7 @@ static void rects(int relative, int filled, float cur_pensize, FILE * hd) {
         		return;
 
       		if (read_float (&p.y, hd))        /* x without y invalid! */
-	        	par_err_exit (2, EA);
+	        	par_err_exit (2, EA, hd);
       		rect (relative, filled, cur_pensize,p);
     	}
 }
@@ -941,7 +946,7 @@ int read_PE_flags(const GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 	case ':':
 		/* select pen */
 		if (EOF == (fl->pen = getc(hd))) {
-			par_err_exit(98, PE);
+			par_err_exit(98, PE, hd);
 		}
 		old_pen = pen;
 		read_PE_coord(fl->pen, hd, fl, &ftmp);
@@ -972,7 +977,7 @@ int read_PE_flags(const GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 		/* fractional data */
 
 		if (EOF == (ctmp = getc(hd))) {
-			par_err_exit(98, PE);
+			par_err_exit(98, PE, hd);
 		}
 		fl->fract = decode_PE_char(ctmp, fl);
 		fl->fract =
@@ -1041,7 +1046,7 @@ int read_PE_coord(int c, FILE * hd, PE_flags * fl, float *fv)
 			break;
 		}
 		if (EOF == (c = getc(hd))) {
-			par_err_exit(98, PE);
+			par_err_exit(98, PE, hd);
 		}
 	}
 	*fv = (float) (((lv >> 1) * ((lv & 0x01) ? -1 : 1)) << fl->fract);
@@ -1054,7 +1059,7 @@ int read_PE_pair(int c, FILE * hd, PE_flags * fl, HPGL_Pt * p)
 	if (!read_PE_coord(c, hd, fl, &(p->x)))
 		return 0;
 	if (EOF == (c = getc(hd))) {
-		par_err_exit(98, PE);
+		par_err_exit(98, PE, hd);
 	}
 	if (!read_PE_coord(c, hd, fl, &(p->y)))
 		return 0;
@@ -1313,7 +1318,7 @@ int read_float(float *pnum, FILE * hd)
 
 
 
-static void read_string(char *buf, FILE * hd)
+void read_string(char *buf, FILE * hd)
 {
 	int c;
 	unsigned int n;
@@ -1740,7 +1745,7 @@ static void lines(int relative, FILE * hd)
 		}
 
 		if (read_float(&p.y, hd))	/* x without y invalid! */
-			par_err_exit(2, PA);
+			par_err_exit(2, PA, hd);
 		line(relative, p);
 		numcmds++;
 	}
@@ -1785,14 +1790,14 @@ void line(int relative, HPGL_Pt p)
 
 		}
 
-	}
+	} else pl = p_last;
 
 	if (polygon_mode && polygon_penup)
 		pen_down = FALSE;
 
 	if (pen_down && !outside) {
 		if (polygon_mode) {
-			HPGL_Pt_to_polygon(p_last);
+			HPGL_Pt_to_polygon(pl);
 			HPGL_Pt_to_polygon(p);
 /*	      fprintf(stderr,"polygon line1: %f %f - %f %f\n",p_last.x,p_last.y,p.x,p.y);*/
 		} else {
@@ -1891,19 +1896,19 @@ static void bezier(int relative, FILE * hd)
 			return;
 
 		if (read_float(&p1.y, hd))	/* x without y invalid! */
-			par_err_exit(2, BZ);
+			par_err_exit(2, BZ, hd);
 
 		if (read_float(&p2.x, hd))	/* No number found      */
 			return;
 
 		if (read_float(&p2.y, hd))	/* x without y invalid! */
-			par_err_exit(2, BZ);
+			par_err_exit(2, BZ, hd);
 
 		if (read_float(&p3.x, hd))	/* No endpoint */
-			par_err_exit(3, BZ);
+			par_err_exit(3, BZ, hd);
 
 		if (read_float(&p3.y, hd))	/* No endpoint */
-			par_err_exit(3, BZ);
+			par_err_exit(3, BZ, hd);
 
 		if (relative) {	/* Transform coordinates  */
 			p1.x = p1.x + p_last.x;
@@ -1983,13 +1988,13 @@ static void tarcs(int relative, FILE * hd)
 		return;
 
 	if (read_float(&p2.y, hd))	/* x without y invalid! */
-		par_err_exit(2, AT);
+		par_err_exit(2, AT,hd);
 
 	if (read_float(&p3.x, hd))	/* No endpoint */
-		par_err_exit(3, AT);
+		par_err_exit(3, AT,hd);
 
 	if (read_float(&p3.y, hd))	/* No endpoint */
-		par_err_exit(3, AT);
+		par_err_exit(3, AT,hd);
 
 	switch (read_float(&eps, hd)) {	/* chord angle is optional */
 	case 0:
@@ -2000,11 +2005,11 @@ static void tarcs(int relative, FILE * hd)
 		eps = 5.0;	/*    so use default!   */
 		break;
 	case 2:		/* Illegal state        */
-		par_err_exit(98, AT);
+		par_err_exit(98, AT,hd);
 	case EOF:
 		return;
 	default:		/* Illegal state        */
-		par_err_exit(99, AT);
+		par_err_exit(99, AT,hd);
 	}
 	if (ct_dist == FALSE)
 		eps *= M_PI / 180.0;	/* Deg-to-Rad           */
@@ -2103,10 +2108,10 @@ static void arcs(int relative, FILE * hd)
 		return;
 
 	if (read_float(&p.y, hd))	/* x without y invalid! */
-		par_err_exit(2, AA);
+		par_err_exit(2, AA,hd);
 
 	if (read_float(&alpha, hd))	/* Invalid without angle */
-		par_err_exit(3, AA);
+		par_err_exit(3, AA,hd);
 	else
 		alpha *= M_PI / 180.0;	/* Deg-to-Rad           */
 
@@ -2119,11 +2124,11 @@ static void arcs(int relative, FILE * hd)
 		eps = 5.0;	/*    so use default!   */
 		break;
 	case 2:		/* Illegal state        */
-		par_err_exit(98, AA);
+		par_err_exit(98, AA,hd);
 	case EOF:
 		return;
 	default:		/* Illegal state        */
-		par_err_exit(99, AA);
+		par_err_exit(99, AA,hd);
 	}
 
 	if (ct_dist == FALSE)
@@ -2198,11 +2203,11 @@ static void fwedges(FILE * hd, float cur_pensize)
 		eps = 5.0;	/*    so use default!   */
 		break;
 	case 2:		/* Illegal state        */
-		par_err_exit(98, EW);
+		par_err_exit(98, EW,hd);
 	case EOF:
 		return;
 	default:		/* Illegal state        */
-		par_err_exit(99, EW);
+		par_err_exit(99, EW,hd);
 	}
 
 	if (ct_dist == TRUE)
@@ -2295,11 +2300,11 @@ static void circles(FILE * hd)
 		eps = 5.0;	/*    so use default!   */
 		break;
 	case 2:		/* Illegal state        */
-		par_err_exit(98, CI);
+		par_err_exit(98, CI,hd);
 	case EOF:
 		return;
 	default:		/* Illegal state        */
-		par_err_exit(99, CI);
+		par_err_exit(99, CI,hd);
 	}
 
 	if (ct_dist == TRUE)
@@ -2427,11 +2432,11 @@ static void wedges(FILE * hd)
 		eps = 5.0;	/*    so use default!   */
 		break;
 	case 2:		/* Illegal state        */
-		par_err_exit(98, EW);
+		par_err_exit(98, EW,hd);
 	case EOF:
 		return;
 	default:		/* Illegal state        */
-		par_err_exit(99, EW);
+		par_err_exit(99, EW,hd);
 	}
 
 	if (ct_dist == TRUE)
@@ -2599,13 +2604,13 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			switch ((int) ftmp) {
 			case 1:	/* charset */
 				if (read_float(&csfont, hd))
-					par_err_exit(2, cmd);
+					par_err_exit(2, cmd,hd);
 				else
 					tp->altfont = (int) csfont;
 				break;
 			case 2:	/* fixed or variable spacing */
 				if (read_float(&csfont, hd))
-					par_err_exit(2, cmd);
+					par_err_exit(2, cmd,hd);
 				else if ((int) csfont == 1 && !silent_mode)
 					fprintf(stderr,
 						"only fixed fonts available\n");
@@ -2615,7 +2620,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			case 5:	/* posture */
 			case 6:	/* stroke weight */
 				if (read_float(&ftmp, hd))
-					par_err_exit(2, cmd);
+					par_err_exit(2, cmd,hd);
 				if (ftmp == 9999)
 					tp->astrokewidth = ftmp;
 				else {
@@ -2626,13 +2631,13 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				break;
 			case 7:	/* typeface */
 				if (read_float(&csfont, hd))
-					par_err_exit(2, cmd);
+					par_err_exit(2, cmd,hd);
 				else if (!silent_mode)
 					fprintf(stderr,
 						"pitch/height/posture/typeface unsupported\n");
 				break;
 			default:
-				par_err_exit(1, cmd);
+				par_err_exit(1, cmd,hd);
 			}
 		}
 		break;
@@ -2873,8 +2878,28 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			pen_down = saved_penstate;
 			if (p_last.x != polystart.x
 			    || p_last.y != polystart.y) {
+			int outside=0;
+			double x1,y1,x2,y2;
+			    if (iwflag) {
+			       x1 = P1.x + (p_last.x - S1.x) * Q.x;
+			       y1 = P1.y + (p_last.y - S1.y) * Q.y;
+			       x2 = P1.x + (polystart.x - S1.x) * Q.x;
+			       y2 = P1.y + (polystart.y - S1.y) * Q.y;
+			       
+			       outside = 
+			       (DtClipLine(C1.x, C1.y, C2.x, C2.y, &x1,&y1, &x2, &y2) == CLIP_NODRAW);
+			       
+			        if (!outside) {
+			        	p_last.x = (x2 - P1.x) / Q.x + S1.x;    
+			       		p_last.y = (y2 - P1.y) / Q.y + S1.y;
+			                polystart.x = (x1 - P1.x) / Q.x + S1.x;
+			                polystart.y = (y1 - P1.y) / Q.y + S1.y;
+			                     }
+			        }
+			        if (!outside) {                                                                               
 				HPGL_Pt_to_polygon(p_last);
 				HPGL_Pt_to_polygon(polystart);	/* force closing of open polygon */
+				}
 			}
 		}
 		break;
@@ -3072,7 +3097,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			goto IP_Exit;
 		}
 		if (read_float(&p1.y, hd))	/* x without y! */
-			par_err_exit(2, cmd);
+			par_err_exit(2, cmd,hd);
 
 		if (read_float(&p2.x, hd)) {	/* No number found  */
 			P2.x += p1.x - P1.x;
@@ -3081,7 +3106,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			goto IP_Exit;
 		}
 		if (read_float(&p2.y, hd))	/* x without y! */
-			par_err_exit(4, cmd);
+			par_err_exit(4, cmd,hd);
 
 		P1 = p1;
 		P2 = p2;
@@ -3104,7 +3129,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		if (read_float(&p1.x, hd))	/* No number found  */
 			return;	/* keep defaults */
 		if (read_float(&p1.y, hd))	/* x without y! */
-			par_err_exit(2, cmd);
+			par_err_exit(2, cmd,hd);
 
 /*fprintf(stderr,"P1,P2 vor IR: %f %f, %f %f\n",P1.x,P1.y,P2.x,P2.y);*/
 
@@ -3124,7 +3149,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			return;
 		}
 		if (read_float(&p2.y, hd))	/* x without y! */
-			par_err_exit(4, cmd);
+			par_err_exit(4, cmd,hd);
 
 		P2.x = p1.x + p2.x / 100. * mywidth;
 		P2.y = p1.y + p2.y / 100. * myheight;
@@ -3175,11 +3200,11 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			}
 		} else {
 			if (read_float(&C1.y, hd))	/* x without y! */
-				par_err_exit(2, cmd);
+				par_err_exit(2, cmd,hd);
 			if (read_float(&C2.x, hd))	/* No number found  */
-				par_err_exit(3, cmd);
+				par_err_exit(3, cmd,hd);
 			if (read_float(&C2.y, hd))	/* x without y! */
-				par_err_exit(4, cmd);
+				par_err_exit(4, cmd,hd);
 		}
 /*fprintf (stderr," clip limits (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);*/
 
@@ -3312,11 +3337,11 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			break;
 		}
 		if (read_float(&p2.x, hd))	/* x without y! */
-			par_err_exit(2, cmd);
+			par_err_exit(2, cmd,hd);
 		if (read_float(&p1.y, hd))	/* No number found  */
-			par_err_exit(3, cmd);
+			par_err_exit(3, cmd,hd);
 		if (read_float(&p2.y, hd))	/* x without y! */
-			par_err_exit(4, cmd);
+			par_err_exit(4, cmd,hd);
 
 		if (p1.x == p2.x || p1.y == p2.y) {	/* min must differ from max */
 			if (!silent_mode)
@@ -3366,7 +3391,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			S2.y = S1.y + (P2.y - P1.y) / Q.y;
 			break;
 		default:
-			par_err_exit(0, cmd);
+			par_err_exit(0, cmd,hd);
 		}
 		scale_flag = TRUE;
 		Plotter_to_User_coord(&p_last, &p_last);
@@ -3524,7 +3549,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			plot_string("\n\r", LB_direct, pen);
 			return;
 		} else if (read_float(&p1.y, hd))
-			par_err_exit(2, cmd);
+			par_err_exit(2, cmd,hd);
 
 		p2.x =
 		    p1.x * tp->chardiff.x - p1.y * tp->linediff.x +
@@ -3542,9 +3567,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			break;
 		}
 		if (read_float(&p1.y, hd))	/* x, but not y */
-			par_err_exit(2, cmd);
+			par_err_exit(2, cmd,hd);
 		if ((p1.x == 0.0) && (p1.y == 0.0))
-			par_err_exit(0, cmd);
+			par_err_exit(0, cmd,hd);
 		tp->dir = atan2(p1.y, p1.x);
 		tp->CR_point = HP_pos;
 		adjust_text_par();
@@ -3557,9 +3582,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			break;
 		}
 		if (read_float(&p1.y, hd))
-			par_err_exit(2, cmd);	/* x, but not y */
+			par_err_exit(2, cmd,hd);	/* x, but not y */
 		if ((p1.x == 0.0) && (p1.y == 0.0))
-			par_err_exit(0, cmd);
+			par_err_exit(0, cmd,hd);
 		tp->dir =
 		    atan2(p1.y * (P2.y - P1.y), p1.x * (P2.x - P1.x));
 		tp->CR_point = HP_pos;
@@ -3617,9 +3642,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			tp->height = 0.269;	/* [cm], A4     */
 		} else {
 			if (read_float(&tp->height, hd))
-				par_err_exit(2, cmd);
+				par_err_exit(2, cmd,hd);
 			if ((tp->width == 0.0) || (tp->height == 0.0))
-				par_err_exit(0, cmd);
+				par_err_exit(0, cmd,hd);
 		}
 		tp->width *= 400.0;	/* [cm] --> [plotter units]        */
 		tp->height *= 400.0;	/* [cm] --> [plotter units]        */
@@ -3639,9 +3664,9 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			tp->height = 1.5;	/* % of (P2-P1)_y    */
 		} else {
 			if (read_float(&tp->height, hd))
-				par_err_exit(2, (short) cmd);
+				par_err_exit(2, (short) cmd,hd);
 			if ((tp->width == 0.0) || (tp->height == 0.0))
-				par_err_exit(0, (short) cmd);
+				par_err_exit(0, (short) cmd,hd);
 		}
 		tp->width *= (P2.x - P1.x) / 100.0;	/* --> [pl. units]     */
 		tp->height *= (P2.y - P1.y) / 100.0;
@@ -3661,13 +3686,13 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			switch ((int) ftmp) {
 			case 1:	/* charset */
 				if (read_float(&csfont, hd))
-					par_err_exit(2, cmd);
+					par_err_exit(2, cmd,hd);
 				else
 					tp->stdfont = (int) csfont;
 				break;
 			case 2:	/* fixed or variable spacing */
 				if (read_float(&csfont, hd))
-					par_err_exit(2, cmd);
+					par_err_exit(2, cmd,hd);
 				else if ((int) csfont == 1 && !silent_mode)
 					fprintf(stderr,
 						"only fixed fonts available\n");
@@ -3677,7 +3702,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			case 5:	/* posture */
 			case 6:	/* stroke weight */
 				if (read_float(&ftmp, hd))
-					par_err_exit(2, cmd);
+					par_err_exit(2, cmd,hd);
 				if (ftmp == 9999)
 					tp->sstrokewidth = ftmp;
 				else {
@@ -3688,13 +3713,13 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				break;
 			case 7:	/* typeface */
 				if (read_float(&csfont, hd))
-					par_err_exit(2, cmd);
+					par_err_exit(2, cmd,hd);
 				else if (!silent_mode)
 					fprintf(stderr,
 						"pitch/height/posture/typeface unsupported\n");
 				break;
 			default:
-				par_err_exit(1, cmd);
+				par_err_exit(1, cmd,hd);
 			}
 		}
 		break;

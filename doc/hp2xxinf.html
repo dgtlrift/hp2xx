@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
-<!-- Created on December, 22  2002 by texi2html 1.65 -->
+<!-- Created on February, 26  2003 by texi2html 1.65 -->
 <!-- 
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -46,7 +46,7 @@ This is Edition 1.3, September 2002, for HP2XX Version 3.4.3
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC22">4. Installation and modification notes</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC29">A. Known HP-GL commands</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC30">B. Option summary</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC39">C. Acknowledgements</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">Acknowledgement, Copyright notice</TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC40">C. Acknowledgements</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP">Acknowledgement, Copyright notice</TD></TR>
 </TABLE></BLOCKQUOTE>
 <P>
 
@@ -1571,7 +1571,8 @@ pages 1-2 to 1-4 of [1] and marks them as either
 </P><P>
 
 <TABLE><tr><td>&nbsp;</td><td class=display><pre style="font-family: serif">      <CODE>(.)</CODE>  not applicable,
-      <CODE>(-)</CODE>  ignored, or
+      <CODE>(-)</CODE>  ignored, 
+      <CODE>(*)</CODE>  partly supported, or
       <CODE>(+)</CODE>  supported.
 </pre></td></tr></table></P><P>
 
@@ -1690,6 +1691,7 @@ you should get a good approximation of what a plotter would produce).
 <CODE>PD   |+  | Pen down</CODE>
 <CODE>PE   |+  | Polyline Encoded</CODE>
 <CODE>PG   |+  | Page feed</CODE>
+<CODE>PM   |+  | Polygon mode</CODE>
 <CODE>PR   |+  | Plot relative</CODE>
 <CODE>PS   |+  | Plot Size</CODE>
 <CODE>PT   |+  | Pen thickness</CODE>
@@ -1745,7 +1747,7 @@ you should get a good approximation of what a plotter would produce).
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC31"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC29"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top"> Up </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
@@ -1761,9 +1763,9 @@ you should get a good approximation of what a plotter would produce).
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC33">B.3 Raster format controls</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC34">B.4 PCL specifics</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 <TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC35">B.5 TIFF specifics</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC36">B.6 Margins</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC37">B.7 Preview (DOS/PC's only)</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC38">B.8 Help</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC37">B.7 Margins</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC38">B.8 Preview (DOS/PC's only)</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC39">B.9 Help</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 </TABLE></BLOCKQUOTE>
 <P>
 
@@ -1788,7 +1790,7 @@ corresponding short form `<SAMP>-r</SAMP>' expect a parameter of type `<SAMP>flo
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC32"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> Up </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
@@ -1890,7 +1892,7 @@ Valid: <VAR>int</VAR> integer and &#62;= 0. Default: <VAR>int</VAR> = 0 (all pag
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC33"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> Up </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
@@ -1959,7 +1961,7 @@ sizes.
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC34"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> Up </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
@@ -1999,7 +2001,7 @@ Default: <VAR>int</VAR> = 75.
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC35"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> Up </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
@@ -2042,7 +2044,7 @@ Default: <VAR>int</VAR> = 75.
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC36"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> Up </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
@@ -2065,7 +2067,7 @@ due to Unisys patent), <VAR>int</VAR> = 6 old-style JPEG, <VAR>int</VAR> = 7 JPE
 </DL>
 <P>
 
-<A NAME="Margins"></A>
+<A NAME="DXF specifics"></A>
 <HR SIZE="6">
 <A NAME="SEC36"></A>
 <TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
@@ -2073,14 +2075,45 @@ due to Unisys patent), <VAR>int</VAR> = 6 old-style JPEG, <VAR>int</VAR> = 7 JPE
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC37"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> Up </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_About"> ? </A>]</TD>
 </TR></TABLE>
-<H2> B.6 Margins </H2>
+<H2> B.6 TIFF specifics </H2>
 <!--docid::SEC36::-->
+<P>
+
+<DL COMPACT>
+
+<DT>`<SAMP>-S <VAR>int</VAR></SAMP>'
+<DD>Select desired translation of HPGL pen attributes to DXF Group 62 line 
+parameters. <VAR>int</VAR> = 0 ignore attributes (use color=1, width=0.1
+throughout), <VAR>int</VAR> = 2 use pen number for color, use actual width, 
+<VAR>int</VAR> = 3 use width-dependent color ( &#60;0.2 == 1, &#60;0.3 == 2 etc.),
+<VAR>int</VAR> = 4 use width-dependent color with upper limit of 4 beyond 0.4.
+<P>
+
+</DL>
+<P>
+
+<A NAME="Margins"></A>
+<HR SIZE="6">
+<A NAME="SEC37"></A>
+<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC36"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC38"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_About"> ? </A>]</TD>
+</TR></TABLE>
+<H2> B.7 Margins </H2>
+<!--docid::SEC37::-->
 <P>
 
 (Apply to modes `<SAMP>eps</SAMP>', `<SAMP>pcl</SAMP>', `<SAMP>pre</SAMP>' ONLY)
@@ -2114,20 +2147,20 @@ Valid: <VAR>float</VAR> &#62;= 0.0, default: <VAR>float</VAR>=0.0
 
 <A NAME="Preview (DOS only)"></A>
 <HR SIZE="6">
-<A NAME="SEC37"></A>
+<A NAME="SEC38"></A>
 <TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
-<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC36"> &lt; </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC38"> &gt; </A>]</TD>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC37"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> Up </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_About"> ? </A>]</TD>
 </TR></TABLE>
-<H2> B.7 Preview (DOS/PC's only) </H2>
-<!--docid::SEC37::-->
+<H2> B.8 Preview (DOS/PC's only) </H2>
+<!--docid::SEC38::-->
 <P>
 
 <DL COMPACT>
@@ -2141,20 +2174,20 @@ especially your monitor!
 
 <A NAME="Help"></A>
 <HR SIZE="6">
-<A NAME="SEC38"></A>
+<A NAME="SEC39"></A>
 <TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
-<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC37"> &lt; </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt; </A>]</TD>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC38"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> Up </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &gt;&gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt;&gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[Index]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_About"> ? </A>]</TD>
 </TR></TABLE>
-<H2> B.8 Help </H2>
-<!--docid::SEC38::-->
+<H2> B.9 Help </H2>
+<!--docid::SEC39::-->
 <DL COMPACT>
 <DT>`<SAMP>--help (-H)</SAMP>'
 <DD>(or calling <CODE>hp2xx</CODE> without any arguments)  Show on-line help.
@@ -2163,10 +2196,10 @@ especially your monitor!
 
 <A NAME="Appendix C"></A>
 <HR SIZE="6">
-<A NAME="SEC39"></A>
+<A NAME="SEC40"></A>
 <TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
-<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC38"> &lt; </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &gt; </A>]</TD>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC41"> &gt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC30"> &lt;&lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top"> Up </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
@@ -2176,23 +2209,23 @@ especially your monitor!
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_About"> ? </A>]</TD>
 </TR></TABLE>
 <H1> C. Acknowledgements </H1>
-<!--docid::SEC39::-->
+<!--docid::SEC40::-->
 <P>
 
 <BLOCKQUOTE><TABLE BORDER=0 CELLSPACING=0> 
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC40">C.1 Acknowledgement</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
-<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC41">C.2 Copyright notice</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC41">C.1 Acknowledgement</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
+<TR><TD ALIGN="left" VALIGN="TOP"><A HREF="hp2xxinf.html#SEC42">C.2 Copyright notice</A></TD><TD>&nbsp;&nbsp;</TD><TD ALIGN="left" VALIGN="TOP"></TD></TR>
 </TABLE></BLOCKQUOTE>
 <P>
 
 <A NAME="Acknowledgement"></A>
 <HR SIZE="6">
-<A NAME="SEC40"></A>
+<A NAME="SEC41"></A>
 <TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
-<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &lt; </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC41"> &gt; </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &lt;&lt; </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> Up </A>]</TD>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC42"> &gt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> Up </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
@@ -2200,7 +2233,7 @@ especially your monitor!
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_About"> ? </A>]</TD>
 </TR></TABLE>
 <H2> C.1 Acknowledgement </H2>
-<!--docid::SEC40::-->
+<!--docid::SEC41::-->
 <P>
 
 Since <CODE>hp2xx</CODE> first became publicly available (in its early days, as 
@@ -2356,12 +2389,12 @@ TIFF enhancements
 
 <A NAME="Copyright note"></A>
 <HR SIZE="6">
-<A NAME="SEC41"></A>
+<A NAME="SEC42"></A>
 <TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0>
-<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &lt; </A>]</TD>
+<TR><TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC41"> &lt; </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt; ]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> &lt;&lt; </A>]</TD>
-<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC39"> Up </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> &lt;&lt; </A>]</TD>
+<TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC40"> Up </A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[ &gt;&gt; ]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT"> &nbsp; <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Top">Top</A>]</TD>
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_Contents">Contents</A>]</TD>
@@ -2369,7 +2402,7 @@ TIFF enhancements
 <TD VALIGN="MIDDLE" ALIGN="LEFT">[<A HREF="hp2xxinf.html#SEC_About"> ? </A>]</TD>
 </TR></TABLE>
 <H2> C.2 Copyright notice </H2>
-<!--docid::SEC41::-->
+<!--docid::SEC42::-->
 <P>
 
 <TABLE><tr><td>&nbsp;</td><td class=display><pre style="font-family: serif">Copyright (c) 1998 - 2002  Martin Kroeker
@@ -2479,19 +2512,21 @@ FOR A PARTICULAR PURPOSE.
 <BR>
 <A NAME="TOC35" HREF="hp2xxinf.html#SEC35">B.5 TIFF specifics</A>
 <BR>
-<A NAME="TOC36" HREF="hp2xxinf.html#SEC36">B.6 Margins</A>
+<A NAME="TOC36" HREF="hp2xxinf.html#SEC36">B.6 TIFF specifics</A>
 <BR>
-<A NAME="TOC37" HREF="hp2xxinf.html#SEC37">B.7 Preview (DOS/PC's only)</A>
+<A NAME="TOC37" HREF="hp2xxinf.html#SEC37">B.7 Margins</A>
 <BR>
-<A NAME="TOC38" HREF="hp2xxinf.html#SEC38">B.8 Help</A>
+<A NAME="TOC38" HREF="hp2xxinf.html#SEC38">B.8 Preview (DOS/PC's only)</A>
+<BR>
+<A NAME="TOC39" HREF="hp2xxinf.html#SEC39">B.9 Help</A>
 <BR>
 </BLOCKQUOTE>
-<A NAME="TOC39" HREF="hp2xxinf.html#SEC39">C. Acknowledgements</A>
+<A NAME="TOC40" HREF="hp2xxinf.html#SEC40">C. Acknowledgements</A>
 <BR>
 <BLOCKQUOTE>
-<A NAME="TOC40" HREF="hp2xxinf.html#SEC40">C.1 Acknowledgement</A>
+<A NAME="TOC41" HREF="hp2xxinf.html#SEC41">C.1 Acknowledgement</A>
 <BR>
-<A NAME="TOC41" HREF="hp2xxinf.html#SEC41">C.2 Copyright notice</A>
+<A NAME="TOC42" HREF="hp2xxinf.html#SEC42">C.2 Copyright notice</A>
 <BR>
 </BLOCKQUOTE>
 </BLOCKQUOTE>
@@ -2517,7 +2552,7 @@ FOR A PARTICULAR PURPOSE.
 <BR>
 <A NAME="TOC30" HREF="hp2xxinf.html#SEC30">B. Option summary</A>
 <BR>
-<A NAME="TOC39" HREF="hp2xxinf.html#SEC39">C. Acknowledgements</A>
+<A NAME="TOC40" HREF="hp2xxinf.html#SEC40">C. Acknowledgements</A>
 <BR>
 
 </BLOCKQUOTE>
@@ -2692,7 +2727,7 @@ the following structure:
 <BR>  
 <FONT SIZE="-1">
 This document was generated
-on <I>December, 22  2002</I>
+on <I>February, 26  2003</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
 </FONT>
