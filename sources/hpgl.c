@@ -1555,7 +1555,7 @@ read_ESC_RTL (FILE * hd, int c1, int hp)
 		    }
 		  break;
 		default:
-		  Eprintf ("unknown escape: ESC%%%s%c%c\n", nf ? "-" : "", c2,
+		  if (!silent_mode)Eprintf ("unknown escape: ESC%%%s%c%c\n", nf ? "-" : "", c2,
 			   ctmp);
 		  ungetc (ctmp, hd);
 		  if (hp)
@@ -1563,7 +1563,7 @@ read_ESC_RTL (FILE * hd, int c1, int hp)
 		}
 	      break;
 	    default:
-	      Eprintf ("unknown escape: ESC%%%s%c", nf ? "-" : "", c2);
+	      if (!silent_mode)Eprintf ("unknown escape: ESC%%%s%c", nf ? "-" : "", c2);
 	      ungetc (ctmp, hd);
 	      if (hp)
 		return;
@@ -1572,7 +1572,7 @@ read_ESC_RTL (FILE * hd, int c1, int hp)
 	}
 	if (hp==TRUE &&!nf && c1 != '%' && c1 != 'E') {
 		ungetc(ctmp,hd);
-		fprintf(stderr,"invalid escape ESC%c%c\n",c1,c2);
+		if (!silent_mode)Eprintf("invalid escape ESC%c%c\n",c1,c2);
 		return;
 		}
     }

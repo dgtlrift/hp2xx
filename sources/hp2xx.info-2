@@ -1,0 +1,637 @@
+Dies ist hp2xx.info, hergestellt von Makeinfo Version 4.0 aus
+hp2xx.texinfo.
+
+START-INFO-DIR-ENTRY
+* HP2XX:(hp2xx).  Conversion of HP-GL graphics into raster and
+                  vector graphics formats
+END-INFO-DIR-ENTRY
+   This file documents the HP-GL converter HP2XX
+
+   This is Edition 1.2, September 2000, of `Using HP2XX: A HP-GL
+Converter'.
+
+   Copyright (C) 1998 - 2002 Martin Kroeker Copyright (C) 1992 - 1994
+Heinz W. Werntges
+
+   Permission is granted to make and distribute verbatim copies of this
+manual provided the copyright notice and this permission notice are
+preserved on all copies.
+
+   Permission is granted to copy and distribute modified versions of
+this manual under the conditions for verbatim copying, provided also
+that the accompanying file named COPYING which contains the "GNU
+General Public License" is included exactly as in the original, and
+provided that the entire resulting derived work is distributed under
+the terms of a permission notice identical to this one.
+
+   Permission is granted to copy and distribute translations of this
+manual into another language, under the above conditions for modified
+versions, except that the abovementioned file COPYING containing the
+"GNU General Public License" may be included in a translation approved
+by the Free Software Foundation instead of in the original English.
+
+
+File: hp2xx.info,  Node: Appendix A,  Next: Appendix B,  Prev: Installation and modification notes,  Up: Top
+
+Known HP-GL commands
+********************
+
+   `hp2xx' originally emulated a subset of the Hewlett-Packard 7550A
+plotter.  The following manual was used as reference for command
+definitions: `[1] HP 7550A Interfacing and Programming Manual'. This
+has gradually been expanded to include almost all of what is now known
+as HPGL/1, and most of the commands from HPGL/2.
+
+   Not all commands are supported. Among the non-supported commands are
+those which do not really apply to a software emulator, like:
+
+     commands affecting the communication between plotter and host computer,
+     commands for changing the behaviour of a real plotter, like plotting speed etc.,
+     commands for the control of plotter memory allocation,
+     commands causing various plotter display outputs.
+
+   Other non-supported commands would be desirable, but were left out
+due to their inherent complexity (or just because nobody had an
+immediate need for them yet).
+
+   Programmers intending to add more HP-GL features should ideally take
+care to implement the less-than-obvious side effects of existing
+commands on the new features, too (and vice versa). E. g., line types
+(`LT;') affect most but not all drawing commands: While the `ER;'
+command (edge rectangle relative) uses the current line type, its
+counterpart `EA;' (edge rectangle absolute) always draws solid lines.
+However, both `PR;' and `PA;' use the current line type! In addition,
+new features may need initializations by the already supported codes
+`IN;' or `DF;', so these may have to be expanded.
+
+   The remainder of this section lists all HP-GL commands given on
+pages 1-2 to 1-4 of [1] and marks them as either
+
+           `(.)'  not applicable,
+           `(-)'  ignored, or
+           `(+)'  supported.
+
+   The label "supported" is used when I think the command is fully
+supported in the context of the already implemented commands. In
+general, you should have absolutely no problem with this class of
+commands.
+
+   Though there still are unsupported commands, this does not mean that
+you might have trouble using `hp2xx'. Nowadays, most HP-GL files are
+machine-generated, e.g. by CAD or DTP programs. These tend to make use
+of just a subset of HP-GL. To my experience, chances are high that
+`hp2xx' will give you the picture you want! (Areas where hp2xx is
+definitely lacking are font support and polygon fills, but even there
+you should get a good approximation of what a plotter would produce).
+
+     `HP-GL|s n| Description & Remarks'
+     `Cmd  | i |'
+     `=====|===|========================================================'
+     `AA   |+  | Arc Absolute'
+     `AC   |+  | Anchor corner'
+     `AD   | - | Alternate font Definition'
+     `AF   |+  | Advance Full page [same as PG]'
+     `AH   |+  | Advance Half page [same as PG]'
+     `AP   |  .| Automatic pen operations'
+     `AR   |+  | Arc Relative'
+     `AS   |  .| Acceleration select'
+     `AT   |+  | Arc through three points'
+     `-----|---|--------------------------------------------------------'
+     `BF   | - | Buffer Plot [maybe not a valid hpgl command]'
+     `BL   |+  | Buffer Label'
+     `BP   |+  | Begin Plot'
+     `BR   |+  | Bezier curve, Relative'
+     `BZ   |+  | Bezier curve, Absolute'
+     `-----|---|--------------------------------------------------------'
+     `CA   |+  | Designate alternate character set'
+     `CC   | - | Character Chord angle'
+     `CF   | - | Character Fill mode'
+     `CI   |+  | Circle'
+     `CM   |  .| Character selection mode'
+     `CO   |+  | File comment'
+     `CP   |+  | Character plot'
+     `CR   |+  | Color Range'
+     `CS   |+  | Designate standard character set'
+     `CT   |+  | Chord tolerance'
+     `CV   |  .| Curved line generator'
+     `-----|---|--------------------------------------------------------'
+     `DC   |  .| Digitize clear'
+     `DF   |+  | Default'
+     `DI   |+  | Absolute direction'
+     `DL   | - | Define downloadable character'
+     `DP   |  .| Digitize point'
+     `DR   |+  | Relative direction'
+     `DS   | - | Designate character into slot'
+     `DT   |+  | Define label terminator'
+     `DV   |+  | text Direction Vertical'
+     `-----|---|--------------------------------------------------------'
+     `EA   |+  | Edge rectangle absolute'
+     `EC   |  .| Enable paper Cutter'
+     `EP   |+  | Edge polygon'
+     `ER   |+  | Edge rectangle relative'
+     `ES   |+  | Extra space'
+     `EW   |+  | Edge wedge'
+     `-----|---|--------------------------------------------------------'
+     `FI   | - | pcl Font ID'
+     `FN   | - | pcl secondary Font Number'
+     `FP   |+  | Fill polygon'
+     `FR   | - | FRame advance'
+     `FS   |  .| Force select'
+     `FT   |+  | Fill type'
+     `-----|---|--------------------------------------------------------'
+     `GC   |  .| Group count'
+     `GM   |  .| Graphics memory'
+     `-----|---|--------------------------------------------------------'
+     `IM   | - | Input error reporting mask'
+     `IN   |+  | Initialize'
+     `IP   |+  | Input P1 and P2'
+     `IR   |+  | Input Relative P1 and P2'
+     `IV   | - | Invoke character slot'
+     `IW   |+  | Input window'
+     `-----|---|--------------------------------------------------------'
+     `KY   |  .| Define key'
+     `-----|---|--------------------------------------------------------'
+     `LA   |*  | Line Attributes'
+     `LB   |+  | Label'
+     `LO   |+  | Label origin'
+     `LT   |+  | Line type'
+     `-----|---|--------------------------------------------------------'
+     `MC   | - | Merge Control'
+     `MG   |+  | Message [same as WD]'
+     `MT   | . | Media Type'
+     `-----|---|--------------------------------------------------------'
+     `NP   |+  | Number of Pens'
+     `NR   |  .| Not ready (unload page and go offline)'
+     `-----|---|--------------------------------------------------------'
+     `OA   |  .| Output actual position and pen status'
+     `OC   |  .| Output commanded position and pen status'
+     `OD   |  .| Output digitized point and pen status'
+     `OE   | - | Output error'
+     `OF   | - | Output factors'
+     `OG   |  .| Output group count'
+     `OH   | - | Output hard-clip limits'
+     `OI   |  .| Output identification'
+     `OK   |  .| Output key'
+     `OL   | - | Output label length'
+     `OO   |  .| Output options'
+     `OP   |+  | Output P1 and P2'
+     `OS   | - | Output status'
+     `OT   |  .| Output carousel type'
+     `OW   |+  | Output window'
+     `-----|---|--------------------------------------------------------'
+     `PA   |+  | Plot absolute'
+     `PB   |+  | Print buffered label'
+     `PC   |+  | Pen Color'
+     `PD   |+  | Pen down'
+     `PE   |+  | Polyline Encoded'
+     `PG   |+  | Page feed'
+     `PR   |+  | Plot relative'
+     `PS   |+  | Plot Size'
+     `PT   |+  | Pen thickness'
+     `PU   |+  | Pen up'
+     `PW   |+  | Pen Width'
+     `-----|---|--------------------------------------------------------'
+     `QL   |  .| Quality Level'
+     `-----|---|--------------------------------------------------------'
+     `RA   |+  | Fill rectangle absolute'
+     `RF   | - | Raster Fill pattern'
+     `RO   |+  | Rotate coordinate system'
+     `RP   | - | Replot'
+     `RR   |+  | Fill rectangle relative'
+     `RT   |+  | Relative arc through Three points'
+     `-----|---|--------------------------------------------------------'
+     `SA   |+  | Select alternate character set'
+     `SB   | - | Scalable or Bitmap font selection'
+     `SC   |+  | Scale'
+     `SD   | - | Standard font attribute Definition'
+     `SI   |+  | Absolute character size'
+     `SL   |+  | Character slant'
+     `SM   |+  | Symbol mode'
+     `SP   |+  | Select pen'
+     `SR   |+  | Relative character size'
+     `SS   |+  | Select standard character set'
+     `ST   |  .| Sort vectors'
+     `SV   | - | Screened Vectors'
+     `-----|---|--------------------------------------------------------'
+     `TD   | - | Transparent Data'
+     `TL   |+  | Tick length'
+     `TR   | - | Transparency mode'
+     `-----|---|--------------------------------------------------------'
+     `UC   |+  | User-defined character'
+     `UF   | - | User-defined fill type'
+     `UL   |+  | User-defined line type'
+     `-----|---|--------------------------------------------------------'
+     `VS   |  .| Velocity select'
+     `-----|---|--------------------------------------------------------'
+     `WD   |+  | Write to display'
+     `WG   |+  | Fill wedge'
+     `WU   |+  | pen Width Unit'
+     `-----|---|--------------------------------------------------------'
+     `XT   |+  | X-Tick'
+     `-----|---|--------------------------------------------------------'
+     `YT   |+  | Y-Tick'
+
+
+File: hp2xx.info,  Node: Appendix B,  Next: Appendix C,  Prev: Appendix A,  Up: Top
+
+Option summary
+**************
+
+* Menu:
+
+* General options::
+* Size controls::
+* Raster format controls::
+* PCL specifics::
+* TIFF specifics::
+* Margins::
+* Preview (DOS only)::
+* Help::
+
+   In the following, options are grouped into subjects and are listed
+alphabetically within each subject. Both long options and short
+(one-letter) options are listed, where short options appear in
+parentheses. Except for the +DPI option, there is a one-to-one
+correspondence between long and short options. You may use either long
+or short options.  Mixing long and short options is acceptable.
+
+   Option parameter names suggest the expected data type, e. g.,
+`--rotate (-r) FLOAT' means that option `--rotate' or its corresponding
+short form `-r' expect a parameter of type `float'.
+
+
+File: hp2xx.info,  Node: General options,  Next: Size controls,  Up: Appendix B
+
+General options
+===============
+
+`--pencolors (-c) STRING'
+     Pen color(s), a string of 1 to 8 digits.  Valid digits: 0...7
+     (0=Background or off, 1=Foreground, 2=Red, 3=Green, 4=Blue,
+     5=Cyan, 6=Magenta, 7=Yellow). Default: `11111111'
+
+`--outfile (-f) STRING'
+     Name of output file. If omitted, `hp2xx' generates the name from
+     the input file name and the current mode string. `-f-' causes
+     `hp2xx' to write to `stdout'. Default: none.
+
+`--logfile (-l) STRING'
+     Name of log file. If given, diagnostics go into this file, else to
+     `stderr'. Remark: `-q' inhibits all diagnostics!
+
+`--mode (-m) STRING'
+     Mode string. Valid: STRING =
+            `cad'  (TeXcad-compatible line generation using `\special{em:...}'),
+            `dxf'  (Autocad Drawing Exchange Format),
+            `em'   (more efficient line drawing with E. Mattes's TeX `\special{em:...}'),
+            `eps'  (Encapsulated PostScript),
+            `gpt'  (Gnuplot input file),
+            `hpgl' (simplified HP-GL, useful for imports),
+            `img'  (e.g., GEM's Image format),
+            `jpg'  (JPEG image format),
+            `mf'   (Metafont source),
+            `nc'   (G code for CNC engraving tools)
+            `pbm'  (Portable Bitmap (monochrome) or Portable Pixmap (color plots)),
+            `pcl'  (HP-PCL Level 3),
+            `pcx'  (Paintbrush format),
+            `pdf'  (Adobe Portable Document Format),
+            `png'  (Portable Network Graphics format),
+            `pre'  (Preview mode; no output!),
+            `rgip' (Uniplex RGIP vector format),
+            `svg'  (Scalable Vector Graphics, for XML web pages)
+            `tex'  (line drawing with TeX / `epic' macros)
+            `fig'  (for Brian Smith's XFIG vector drawing program)
+            `tiff' (TIFF tagged image file format)
+            `esc2' (Epson Stylus printers)
+
+     Occasionally available (currently unsupported) modes:
+            `ilbm' (e.g., for AMIGA: ILBM/IFF format),
+            `pac'  (e.g., for ATARI/STAD),
+            `pic'  (e.g., for ATARI/Signum).
+
+     Default: `pre'.
+
+`--nofill (-n)'
+     Ignore all polygon fill commands in the HPGL file(s). This may
+     sometimes be necessary to improve readability of images at small
+     scales (e.g. thumbnails in an overview listing), or to work around
+     problems in the polygon fill code.
+
+`--pensize (-p) STRING'
+     Pensize(s), a string of 1 to 8 digits.  Valid digits: 0...9 (unit
+     = 1/10 mm) for vector modes, 0...4 (unit = pixel) for raster
+     modes. Default: `11111111'
+
+`--pages (-P) INT[:[INT]]'
+     Select HP-GL page INT or a page range.  Valid: INT integer and >=
+     0. Default: INT = 0 (all pages).
+
+`--quiet (-q)'
+     Quiet mode (no diagnostic output).
+
+`--rotation (-r) FLOAT'
+     Rotation angle [deg]. E.g., `-r90' gives landscape. Default: 0.0
+
+`--swapfile (-s) STRING'
+     Name of swap file. Default: STRING = `hp2xx.swp'.
+
+
+File: hp2xx.info,  Node: Size controls,  Next: Raster format controls,  Prev: General options,  Up: Appendix B
+
+Size controls
+=============
+
+`--aspectfactor (-a) FLOAT'
+     Aspect factor. Valid: FLOAT > 0.0. Use FLOAT > 1.0 for landscape
+     and FLOAT < 1.0 for portrait deformations. Default: FLOAT = 1.0
+
+`--height (-h) FLOAT'
+     (Upper limit of) height of picture in mm. Default: FLOAT=200.0
+
+`--width (-w) FLOAT'
+     (Upper limit of) width of picture in mm. Default: FLOAT=200.0
+
+`--x0 (-x) FLOAT'
+     Pre-set left limit of HP-GL coordinate range to FLOAT (rarely
+     used).
+
+`--x1 (-X) FLOAT'
+     Pre-set right limit of HP-GL coordinate range to FLOAT (rarely
+     used).
+
+`--y0 (-y) FLOAT'
+     Pre-set lower limit of HP-GL coordinate range to FLOAT (rarely
+     used).
+
+`--y1 (-Y) FLOAT'
+     Pre-set upper limit of HP-GL coordinate range to FLOAT (rarely
+     used).
+
+`--zengange (-z FLOAT'
+     This option is only relevant for CNC G-code generation (` -m nc',
+     where it sets the working depth of the tool.
+
+`--zretract (-Z FLOAT'
+     This option is only relevant for CNC G-code generation (` -m nc',
+     where it sets the retraction level of the tool.
+
+`--truesize (-t)'
+     Ignore options `-a -h -w' (aspect factor, height, width). Size
+     information will come from the HP-GL intrinsic data. WARNING:
+     Avoid using option `-r' (rotate) as it works on top of HP-GL and
+     thus will distort the detected HP-GL sizes.
+
+
+File: hp2xx.info,  Node: Raster format controls,  Next: PCL specifics,  Prev: Size controls,  Up: Appendix B
+
+Raster format controls
+======================
+
+`--DPI (-d) INT'
+     Set x resolution to INT dots per inch (DPI). If not overridden by
+     `-D', sets also y resolution to INT DPI.  Valid: INT integer and >
+     0. Default: INT = 75.
+
+`--DPI_x (-d) INT'
+     Same as `--DPI'
+
+`--DPI_y (-D) INT'
+     Set y resolution to INT DPI. INT integer and > 0.  Default: INT =
+     75.
+
+`--extraclip (-e) INT'
+     Set extra clipping space to INT plotter units. Default: INT = 0.
+
+
+File: hp2xx.info,  Node: PCL specifics,  Next: TIFF specifics,  Prev: Raster format controls,  Up: Appendix B
+
+PCL specifics
+=============
+
+`--PCL_formfeed (-F)'
+     Send a FormFeed after graphics data. Default: No FormFeed.
+
+`--PCL_init (-i)'
+     Pre-initialize printer. Default: No pre-init
+
+`--PCL_Deskjet (-S) INT'
+     Use (Deskjet) Special commands. INT = 0 deactivates this option,
+     INT = 1 enables b/w mode, INT = 3 is intended for DJ500C (CMY)
+     color support, INT = 4 supports DJ550C (CMYK mode).
+
+`--DPI_x (-d) INT'
+     Set x resolution (see above): Valid here: INT = 75, 100, 150, 300
+
+`--DPI_y (-D) INT'
+     Set y resolution (see above). Invalid here!
+
+
+File: hp2xx.info,  Node: TIFF specifics,  Next: Margins,  Prev: PCL specifics,  Up: Appendix B
+
+TIFF specifics
+==============
+
+`-S INT'
+     Select TIFF compression algorithm. INT = 0 or 1 no compression,
+     INT = 2 run length encoding (RLE), INT = 3 Group 3 FAX, INT = 4
+     Group 4 FAX; INT = 5 LZW (normally disabled in to_tiff.c due to
+     Unisys patent), INT = 6 old-style JPEG, INT = 7 JPEG, INT = 8
+     Deflate.
+
+
+File: hp2xx.info,  Node: Margins,  Next: Preview (DOS only),  Prev: TIFF specifics,  Up: Appendix B
+
+Margins
+=======
+
+   (Apply to modes `eps', `pcl', `pre' ONLY)
+
+`--center (-C)'
+     Center the picture within the frame defined by options `-w -h' by
+     adding to the left or upper margin. Null effect if the width/height
+     ratio of the picture matches that of options `-w -h'.
+
+`--no_ps (-N)'
+     Ignore papersize definition given by a PS command in the HPGL
+     file, and calculate the actual image size. This may be necessary
+     to avoid unnecessary margins (with programs that write a standard
+     header regardless of the true size of the drawing).
+
+`--xoffset (-o) FLOAT'
+     X offset of picture (left  margin) in mm.  Valid: FLOAT >= 0.0,
+     default: FLOAT=0.0
+
+`--yoffset (-O) FLOAT'
+     Y offset of picture (upper  margin) in mm.  Valid: FLOAT >= 0.0,
+     default: FLOAT=0.0
+
+
+File: hp2xx.info,  Node: Preview (DOS only),  Next: Help,  Prev: Margins,  Up: Appendix B
+
+Preview (DOS/PC's only)
+=======================
+
+`--VGAmodebyte (-V) INT'
+     VGA mode byte (decimal). Default: INT = 18.  WARNING: Setting
+     inappropriate VGA modes may damage your hardware, especially your
+     monitor!
+
+
+File: hp2xx.info,  Node: Help,  Prev: Preview (DOS only),  Up: Appendix B
+
+Help
+====
+
+`--help (-H)'
+     (or calling `hp2xx' without any arguments)  Show on-line help.
+
+
+File: hp2xx.info,  Node: Appendix C,  Prev: Appendix B,  Up: Top
+
+Acknowledgements
+****************
+
+* Menu:
+
+* Acknowledgement::
+* Copyright note::
+
+
+File: hp2xx.info,  Node: Acknowledgement,  Next: Copyright note,  Up: Appendix C
+
+Acknowledgement
+===============
+
+   Since `hp2xx' first became publicly available (in its early days, as
+binaries on several platforms), many people contributed to this project
+by supplying first HWW and now MK with valuable suggestions, code
+patches and reports. Many thanks to all of them!  It is a pleasure to
+especially thank the following people for their outstanding
+contributions:
+
+   HWW's Versions up to 3.2.0 (mid-1994):
+
+`Nelson Beebe'
+     Help with the new generic makefile (easier configuration); clean
+     selection mechanism for previewer suggested; suggestions for an
+     improved X.11 previewer
+
+`Elisabeth Dregger-Cappel'
+     Network and host resources for original `hp2xx' distribution
+
+`Joern Eggers'
+     New ATARI format "cs" for CS-TeX; bug fixes for arcs / circles
+
+`Roland Emmerich'
+     DOS betatests and suggestions; `showit'
+
+`R. Frahm'
+     PCX color improvements
+
+`Jonathan M. Gillian'
+     DOS betatests and suggestions
+
+`Gilles Gravier'
+     RGIP converter
+
+`Thomas Hiller'
+     Code for EA support
+
+`Claus H. Langhans'
+     AMIGA portation; pbm, ilbm formats
+
+`Lawrence Lowe'
+     Many helpful suggestions and improvements, e.g. for pcl format
+
+`Ian MacPhedran'
+     Color / binary format for pbm/ppm
+
+`Norbert Meyer'
+     ATARI portation; img, pic, pac formats; first ATARI previewer
+
+`Michael Schmitz'
+     Many VAX & MACH tests
+
+`Michael Schoene'
+     X11 stuff; many tests
+
+`Andreas Schwab'
+     Improved ATARI previewer
+
+`Friedhelm Sowa'
+     Many DOS tests and suggestions for cooperation of `hp2xx' with TeX
+     figure generation
+
+`Gerhard Steger'
+     Many VAX tests; VAX scripts; access to MicroVAX platforms
+
+`Horst Szillat'
+     OS/2 support, OS/2 full-screen previewer & help
+
+`Alois Treindl'
+     Code for UC support
+
+`Versions since 3.3.0 (mid-1999):'
+
+`Emmanuel Bigler'
+     xfig and gnuplot ascii support
+
+`Ian MacPhedran'
+     XFig output
+
+`Michael Schmitz'
+     PNG output
+
+`Rolf Schreck'
+     PS/RO fixes
+
+`Eugene Doudine'
+     PE command support
+
+`Georgy Salnikov'
+     Improvements for character commands (LB,DI,DR)
+
+`Michele Liberi'
+     TIFF output
+
+`Lars Erikson'
+     EPS plotsize bug fixes
+
+`Gerhard Buergmann'
+     bug fixes for plot scaling and PE support
+
+`James Shaw'
+     polygon mode testing and examples, WinNT building instructions
+
+`Andrew Bird'
+     enhanced PW support raster-mode linewidth rendering TIFF
+     enhancements
+
+`Bengt-Arne Fjellner'
+     EMF generation
+
+`Michael Rooke'
+     CNC G-code generation
+
+
+File: hp2xx.info,  Node: Copyright note,  Prev: Acknowledgement,  Up: Appendix C
+
+Copyright notice
+================
+
+     Copyright (c) 1998 - 2002  Martin Kroeker
+     Copyright (c) 1991 - 1994  Heinz W. Werntges
+     All rights reserved.
+     
+     Redistribution and use in source and binary forms are permitted provided that
+     the above copyright notice and this paragraph are duplicated in all such forms
+     and that any documentation, advertising materials, and other materials related
+     to such distribution and use acknowledge that the software was developed
+     by the abovementioned author(s).
+     
+     THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS
+     OR IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION,
+     THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND FITNESS
+     FOR A PARTICULAR PURPOSE.
+
+

@@ -333,6 +333,13 @@ char	*p, cdummy;
 		else
 			Logfile_flag = TRUE;
 		break;
+/*MJR These are NOT sanity checked, GIGO*/
+	  case 'z':
+		po->zengage = atof (optarg); 
+		break;
+	  case 'Z':
+		po->zretract = atof (optarg);
+		break;
 
 	  case 'm':
 		pg->mode = optarg;
@@ -501,7 +508,6 @@ char	*p, cdummy;
 	  case 'Y':
 		pi->y1 = atof (optarg);
 		break;
-
 	  case 'H':
 	  case '?':
 	  default:
@@ -524,7 +530,7 @@ OUT_PAR	Po;
 int	i;
 char 	outname[128]="";
 
-char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:CFHinqtvNI";
+char	*shortopts = "a:c:d:D:e:f:h:l:m:o:O:p:P:r:s:S:V:w:x:X:y:Y:z:Z:CFHinqtvNI";
 struct	option longopts[] =
 {
 	{"mode",	1, NULL,	'm'},
@@ -558,6 +564,8 @@ struct	option longopts[] =
 	{"x1",		1, NULL,	'X'},
 	{"y0",		1, NULL,	'y'},
 	{"y1",		1, NULL,	'Y'},
+	{"zengage",	1, NULL,	'z'},
+	{"zretract",	1, NULL,	'Z'},
 
 	{"xoffset",	1, NULL,	'o'},
 	{"yoffset",	1, NULL,	'O'},

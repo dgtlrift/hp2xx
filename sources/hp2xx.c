@@ -144,10 +144,13 @@ copies.
  ** 00/02/12  V 3.32  MK   Mode "tiff" added by M.Liberi (changed to use ZIP
  **                        instead of patented LZW compression; needs libtiff)
  ** 00/02/26          MK   Mode "escp" (Epson Esc/P2 printer language)
+ ** 02/..	      MK   Modes "dxf" and "svg" 
+ ** 02/12/20		   New mode "nc", G-code for CNC milling with 
+ **			   constant, user-defined Z depths (Michael Rooke)
  **/
 
-char	*VERS_NO = "3.4.3a24";
-char	*VERS_DATE = "02/11/24";
+char	*VERS_NO = "3.4.3a26";
+char	*VERS_DATE = "02/12/21";
 char	*VERS_COPYRIGHT = "(c) 1991 - 1994 (V3.20) Heinz W. Werntges";
 #if defined(AMIGA)
 char	*VERS_ADDITIONS =
@@ -206,6 +209,7 @@ mode_list  ModeList[] =
 	{XX_JPG,	"jpg"},	/* Joint Photography Expert Group JPEG  */
 #endif
 	{XX_MF,		"mf"},	/* Metafont source output		*/
+	{XX_NC,		"nc"},	/* G code for CNC milling               */
 	{XX_PBM,	"pbm"},	/* Portable Bitmap			*/
 	{XX_PCL,	"pcl"},	/* HP-PCL Level 5 printer code		*/
 	{XX_PCX,	"pcx"},	/* Paintbrush's PCX raster format	*/
@@ -225,7 +229,7 @@ mode_list  ModeList[] =
 #ifdef TIF
         {XX_TIFF,        "tiff"}, /* Tagged image file format            */
 #endif
-	{XX_TERM,	""},	/* Dummy: List terminator		*/
+	{XX_TERM,	""}	/* Dummy: List terminator		*/
 };
 
 
@@ -349,6 +353,8 @@ NormalWait();
   Eprintf ("-X float   -\tManual HPGL-coord range presetting: x1\n");
   Eprintf ("-y float   -\tManual HPGL-coord range presetting: y0\n");
   Eprintf ("-Y float   -\tManual HPGL-coord range presetting: y1\n");
+  Eprintf ("-z float %5.1f\t(3d nc output only) Z engage depth\n",po->zengage);
+  Eprintf ("-Z float %5.1f\t(3d nc output only) Z retract depth\n",po->zretract);
 
 #ifdef DOS
   Eprintf ("\n-V int   %d\tVGA mode byte (decimal). Change at own risk!\n",
@@ -426,6 +432,8 @@ int	i;
   po->vga_mode	= 18;		/* 0x12: VGA 640x480, 16 colors */
   po->picbuf	= NULL;
   po->outfile	= "";
+  po->zengage	= -1.;
+  po->zretract  = 1.;
 
   pg->logfile	= "";
   pg->swapfile	= "hp2xx.swp";
@@ -789,7 +797,11 @@ if (n_commands <0) return 0;
     case XX_FIG:
         to_fig (pg, po);
         return 0;
-        
+       
+    case XX_NC:
+	to_mftex(pg, po, 9);
+ 	return 0;
+
     default:
 	return 1;
   }

@@ -17,7 +17,8 @@ General options:
   -f   char *  ""        Name of output file. "" = autom., "-" = stdout
   -l   char *  ""        Name of optional log file
   -m   char *  pre       Mode. Valid (some are compile-time options):
-                         mf,cad,dxf,em,emf,epic,eps,escp2,fig,jpg,gpt,hpgl,rgip,pcl,pcx,pic,img,pbm,png,pre,svg,tiff,pdf 
+                         mf,cad,dxf,em,emf,epic,eps,escp2,fig,jpg,gpt,hpgl,
+			 rgip,pcl,pcx,pic,img,pbm,png,pre,svg,tiff,pdf,nc 
   -p   char *  11111111  Pensize(s) [dots] (default), [1/10 mm] (mf, ps).
                          Valid: 1 to 8 digits of 0-9 (or characters A-Z for
 			 widths beyond 0.9mm) each.
@@ -34,6 +35,8 @@ Size controls:
   -X   double   -        Preset xmax value of HPGL coordinate range
   -y   double   -        Preset ymin value of HPGL coordinate range
   -Y   double   -        Preset ymax value of HPGL coordinate range
+  -z   double  1.0       Z engagement (working depth) (used in nc output only)
+  -Z   double -1.0       Z retraction depth (used in nc output only)
   -t           off       True size mode. Inhibits effects of -a -h -w
 
 HPGL handling controls:
@@ -162,7 +165,8 @@ printer commands, suitable for printing on Epson Stylus models),
 "img" (GEMs IMG format), "jpg" (JPEG image), "pdf" (Adobe Portable Document format),
 "pbm" (Portable Bit Map / Portable PixMap for color plots), "pcx" (PC-Paintbrush format, also accepted by 
 MS-Paintbrush / Windows 3.0 and many other PC based pixel renderers), 
-"png" (Portable Network Graphics format), or "rgip" (Uniplex RGIP).
+"png" (Portable Network Graphics format), "nc" (CNC G-code, for engravings),
+or "rgip" (Uniplex RGIP).
 There is also a preview option "pre" which supports VGA cards (DOS),
 ATARI, AMIGA, X11 servers, and Sunview. Default mode is "pre".
 (As some of these modes rely on external libraries, they may not be builtin
@@ -238,6 +242,7 @@ Supported vector formats are:
 .I emTex-specials,
 .I TeX/epic-Macros,
 .I Autocad DXF
+.I CNC G-code
 .I XFig 3.2,
 .I GnuPlot ASCII,
 .I Simplified HP_GL,

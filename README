@@ -1,4 +1,4 @@
-hp2xx-3.4.3 (to be released sometime in october 2002)
+hp2xx-3.4.3 (to be released sometime by the end of december 2002)
 
 Besides fixing a number of bugs in 3.4.2 (related to polygon drawing, image
 rotation and some output modes), this version adds support for the HPGL
@@ -9,7 +9,7 @@ separate multi-frame files into sets of output files instead of overlaying
 all figures in a single plot. Support for the EMF output file format has been
 extended to non-MS platforms using Allen Barnetts libEMF library, and the
 headers of generated TIFF and DXF files have been made more standard-conforming.
-
+A new vector mode for driving CNC engraving machines has been added.
 
 I would greatly appreciate receiving bug reports, patches or even sample 
 HPGL files. (In the latter case, please make sure that no copyright or 
@@ -58,6 +58,7 @@ New features:
   from the second file, i.e. file.plt yields file.png file.1.png file.2.png.
 - TIFF creation on stdout now uses a safer method of generating and accessing
   its temporary file on Unix.
+- A new output format, G-code for CNC engraving machines (Michael Rooke).
 
 Bug fixes:
 
@@ -93,4 +94,15 @@ Bug fixes:
   the remainder of the pattern from the previous one. 
 - Removed the checks preventing negative or large offsets to be defined with
   the -o and -O commandline options
+- The viewbox given in the SVG header was too small (Robert Hancock).
+- Closed several memory leaks (mainly important for multi-file operation).
+- The documentation was outdated in several aspects.
+- The SVG output used integral linewidths only roughly corresponding to the 
+  original values.
+- Files that explicitly asked for default arc precision (by providing a zero
+  tolerance value) were not handled correctly (Steve Edmonds).
+- Text penwidth was always the same as that in use for linedrawing. This is
+  now fixed, and the SD option for forcing this behaviour is now honored.
+- Some warning messages were emitted even in quiet mode.
+
 

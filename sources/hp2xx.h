@@ -174,7 +174,7 @@ typedef unsigned char	Byte;
 typedef	enum{
 	XX_CAD, XX_CS, XX_DXF, XX_EM, XX_EMF, XX_EMP, XX_EPIC, XX_EPS, XX_ESC2, XX_FIG, XX_GPT, XX_HPGL, 
         XX_ILBM, XX_IMG, XX_JPG,
-	XX_MF, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PDF, XX_PIC, XX_PNG, XX_PRE, 
+	XX_MF, XX_NC, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PDF, XX_PIC, XX_PNG, XX_PRE, 
 	XX_RGIP, XX_SVG, XX_TIFF, XX_TERM	/* Dummy: terminator	*/
 } hp2xx_mode;
 
@@ -263,6 +263,7 @@ typedef struct			/* Corresponding option(s)	*/
    double HP_to_xdots;		/* (internally needed)		*/
    double HP_to_ydots;		/* (internally needed)		*/
    PicBuf *picbuf;		/* (internally needed)		*/
+   double zengage,zretract;	/* z min/max for 3d (currently only nc) */
 }	OUT_PAR;
 
 

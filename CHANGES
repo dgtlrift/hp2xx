@@ -29,6 +29,7 @@ New features:
   from the second file, i.e. file.plt yields file.png file.1.png file.2.png.
 - TIFF creation on stdout now uses a safer method of generating and accessing
   its temporary file on Unix.
+- Added a new output format, G-code for CNC engraving (Michael Rooke).
 
 Bug fixes:
 
@@ -71,6 +72,13 @@ Bug fixes:
 - The viewbox given in the SVG header was too small (Robert Hancock).
 - Closed several memory leaks (mainly important for multi-file operation).
 - The documentation was outdated in several aspects.
+- The SVG output used integral linewidths only roughly corresponding to the 
+  original values.
+- Files that explicitly asked for default arc precision (by providing a zero
+  tolerance value) were not handled correctly (Steve Edmonds).
+- Text penwidth was always the same as that in use for linedrawing. This is
+  now fixed, and the SD option for forcing this behaviour is now honored.
+- Some warning messages were emitted even in quiet mode.
 
 Changes from 3.4.1 to 3.4.2
 

@@ -1,5 +1,9 @@
 Changes to hp2xx:
 =================
+3.4.3a26:
+Silenced the "unknown escape sequence" warnings in quiet mode. Added new
+output mode for CNC G-code (experimental, constant depth)(Michael Rooke).
+
 3.4.3a25:
 Small improvements in PCL3GUI support (still not really working, best result
 had the designjet500 print strips of the desired image separated by equally 

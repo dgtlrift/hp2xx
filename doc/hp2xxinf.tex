@@ -472,7 +472,13 @@ its place for formatted online documentation. For Web-based applications,
 the Scalable Vector Graphics (SVG) format, a W3C standard, holds some promise
 as a non-proprietary, XML-based format for vector images, not only on web pages.
 In the engineering community, the 2D DXF format originally used by AutoCAD has
-become a common denominator for the exchange of vector data.
+become a common denominator for the exchange of vector data. In the
+machine-tooling community, a standardized vector format knows as G code
+is widely used (though machine-specific limitations and extensions make it
+not truely universal). Its implementation in @code{hp2xx}, selectable via
+the @samp{-m @code{nc}} option, should be suitable for hobbyists wishing to 
+do engraving, but it would not be wise to use it in professional
+machine tooling.
 
 Unix users may also want to use either @code{Gnuplot} or especially @code{XFig}
 to annotate their plots. The native formats of these programs are directly
@@ -564,7 +570,8 @@ does not know about compression. NOTE: Some recent low-end Designjet
 plotters (if ordered without the HPGL processor board) and probably also 
 some models of Deskjet use a sparsely documented variant called PCL3GUI
 which appears to differ at least in the initialization sequence used. 
-Currently @code{hp2xx} will not work with such printers.
+Currently @code{hp2xx} will not work well -- maybe even not at all -- with 
+such printers.
 
 A driver for the Esc/P2 raster language used by the Epson Stylus series
 of inkjet printers has been added in @code{hp2xx-3.4.0}. This should work 
@@ -1448,6 +1455,7 @@ Mode string. Valid: @var{string} =
   @samp{img}  (e.g., GEM's Image format),
   @samp{jpg}  (JPEG image format),
   @samp{mf}   (Metafont source),
+  @samp{nc}   (G code for CNC engraving tools)
   @samp{pbm}  (Portable Bitmap (monochrome) or Portable Pixmap (color plots)),
   @samp{pcl}  (HP-PCL Level 3),
   @samp{pcx}  (Paintbrush format),
@@ -1524,6 +1532,14 @@ Pre-set lower limit of HP-GL coordinate range to @var{float} (rarely used).
 
 @item --y1 (-Y) @var{float}
 Pre-set upper limit of HP-GL coordinate range to @var{float} (rarely used).
+
+@item --zengange (-z @var{float}
+This option is only relevant for CNC G-code generation (@samp{ -m nc}, where
+it sets the working depth of the tool.
+
+@item --zretract (-Z @var{float}
+This option is only relevant for CNC G-code generation (@samp{ -m nc}, where
+it sets the retraction level of the tool.
 
 @item --truesize (-t)
 Ignore options @samp{-a -h -w} (aspect factor, height, width). Size information
@@ -1775,7 +1791,14 @@ WinNT building instructions
 
 @item Andrew Bird
 enhanced PW support
+raster-mode linewidth rendering
 TIFF enhancements
+
+@item Bengt-Arne Fjellner
+EMF generation
+
+@item Michael Rooke
+CNC G-code generation
 @end table
 
 

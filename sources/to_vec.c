@@ -1,6 +1,7 @@
 /*
    Copyright (c) 1991 - 1994 Heinz W. Werntges.  
-   Parts Copyright (c) 1995 Emmanuel Bigler, (c) 1999 Martin Kroeker.
+   Parts Copyright (c) 1995 Emmanuel Bigler, (c)2002 Michael Rooke,
+   (c) 1999,2001,2002 Martin Kroeker.
    All rights reserved. Distributed by Free Software Foundation, Inc.
 
 This file is part of HP2xx.
@@ -43,6 +44,8 @@ copies.
  ** 93/12/30  V 1.09b HWW  Mode 5: Pen number preserved
  ** 94/02/14  V 1.10a HWW  Adapted to changes in hp2xx.h
  ** 95/03/23  V 1.11  E.B. new mode 6 gnuplot ascii format
+ ** 02/..     V 1.12  MK   new modes 7, DXF, and 8, Scalable Vector Graphics
+ ** 02/12/20  V 1.13  MJR  new mode 9 to generic CNC G Code
  **/
 
 #include <stdio.h>
@@ -71,6 +74,7 @@ float           xcoord2mm, ycoord2mm;
 FILE            *md = NULL;
 PEN_W           pensize; 
 int		pencolor,pen_no, chars_out = 0, max_chars_out = 210;
+int             toolz=0 ;
 int		np = 1, err = 0;
 char            *ftype="", *scale_cmd="", *pen_cmd="",
 		*poly_start="", *poly_next="", *poly_last="", *poly_end="",
@@ -188,6 +192,18 @@ HPGL_Pt         old_pt;
 	draw_dot	= "<path d=\"M %4.3f,%4.3f L %4.3f %4.3f\" />\n";
 	exit_cmd	= "</g>\n</svg>\n";
 	break;
+    case 9:     /* MJR- Test G Code */
+  	ftype           = "Test G-Code";
+  	scale_cmd       = "";
+  	pen_cmd         = "M06 T%2d\n";	/* pen is tool number ? */
+  	poly_start      = "; Tool Up\nG01 Z%g\nG00 X %g Y %g\n";
+  	poly_next       = "G01 X %g Y %g\n" ;  /* Note tool handling (Z) is done in the writer */
+  	poly_last       = poly_next;
+  	poly_end        = ";\n"; /* not sure what to do with this ? */
+  	draw_dot        = "\nG81 X%g Y%G Z%g R%g  ; Drill Hole\nG81\n";
+  	exit_cmd        = "\nM02\n";
+  	break;
+
 }
 
 #ifdef ATARI
@@ -270,9 +286,11 @@ HPGL_Pt         old_pt;
 		Eprintf ("\n\n- Writing %s code to \"%s\"\n", ftype,
 			*po->outfile == '-' ? "stdout" : po->outfile);
 #else
-  if (!pg->quiet)
+  if (!pg->quiet){
 	Eprintf ("\n\n- Writing %s code to \"%s\"\n", ftype,
 		*po->outfile == '-' ? "stdout" : po->outfile);
+        if (mode==9) Eprintf ("  using engage depth %f, retract depth %f\n",po->zengage,po->zretract);
+	}
 #endif
 
   if (pg->is_color)
@@ -329,6 +347,9 @@ HPGL_Pt         old_pt;
 	   	break;
 	   case 8:
 	   	fprintf(md, pen_cmd, 0,0,0,10*pensize);
+		break;
+          case 9:
+         	Eprintf ( "\nWARNING: Pensize Ignored!\n");
 		break;
 	   default:
 		fprintf(md, pen_cmd, pensize);
@@ -388,7 +409,9 @@ HPGL_Pt         old_pt;
 			   	pt.clut[pencolor][1],pt.clut[pencolor][2],
 			   	pensize);
 			        break;	
-			   default:
+			case 9: fprintf(md, pen_cmd, pen_no);   /* Tool No */
+     				break;
+		   default:
 				fprintf(md, pen_cmd, pensize);
 				break;
 			}
@@ -412,6 +435,8 @@ HPGL_Pt         old_pt;
 		break;
 	   case 8:
 		break;
+	   case 9:
+	        break;
 	   default:
 		fprintf(md, pen_cmd, pensize);
 		break;
@@ -423,11 +448,21 @@ HPGL_Pt         old_pt;
 			break;
 		if (chars_out)          /* Finish up old polygon */
 			fprintf(md, poly_end);
-    if (mode == 8) pt1.y = po->ymax -pt1.y;
+                if (mode == 8) pt1.y = po->ymax -pt1.y;
 
-		chars_out =  fprintf(md, poly_start,
-			(pt1.x - po->xmin) * xcoord2mm,
-			(pt1.y - po->ymin) * ycoord2mm);
+		if (mode == 9) /* Special handling for tool depth */
+		{	
+			chars_out =  fprintf(md, poly_start,
+			             po->zretract,
+			            (pt1.x - po->xmin) * xcoord2mm,
+                                    (pt1.y - po->ymin) * ycoord2mm);
+			toolz=0;		/* Up */
+			break;
+		}
+		
+               chars_out =  fprintf(md, poly_start,
+			   (pt1.x - po->xmin) * xcoord2mm,
+		   	   (pt1.y - po->ymin) * ycoord2mm);
 
 		break;
 
@@ -441,6 +476,29 @@ HPGL_Pt         old_pt;
 			chars_out += fprintf(md, poly_next,
 			  (pt1.x - po->xmin) * xcoord2mm,
 			  (pt1.y - po->ymin) * ycoord2mm, np++);
+			break;
+		}
+		else if (mode == 9 && toolz==0)  /* Tool still up!  */
+		{
+			chars_out =  fprintf(md, "; Tool Down\nG01 Z%g\nG01 X %g Y %g\n",
+			  po->zengage,
+			  (pt1.x - po->xmin) * xcoord2mm,
+			  (pt1.y - po->ymin) * ycoord2mm);
+			np++;
+			HPGL_Pt_from_tmpfile (&pt1);
+			chars_out += fprintf(md, poly_next,
+			  (pt1.x - po->xmin) * xcoord2mm,
+			  (pt1.y - po->ymin) * ycoord2mm, np++);
+			toolz=1;		/* Down */
+			break;
+		}
+		else if (mode == 9 && toolz==1 )  /* Tool already down skip the lower  */
+		{
+			HPGL_Pt_from_tmpfile (&pt1);
+			chars_out =  fprintf(md, poly_next,
+			  (pt1.x - po->xmin) * xcoord2mm,
+			  (pt1.y - po->ymin) * ycoord2mm, np++);
+			
 			break;
 		}
 #ifdef ATARI

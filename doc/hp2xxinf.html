@@ -1,6 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <HTML>
-<!-- Created on September, 1  2002 by texi2html 1.65 -->
+<!-- Created on December, 22  2002 by texi2html 1.65 -->
 <!-- 
 Written by: Lionel Cons <Lionel.Cons@cern.ch> (original author)
             Karl Berry  <karl@freefriends.org>
@@ -510,7 +510,13 @@ its place for formatted online documentation. For Web-based applications,
 the Scalable Vector Graphics (SVG) format, a W3C standard, holds some promise
 as a non-proprietary, XML-based format for vector images, not only on web pages.
 In the engineering community, the 2D DXF format originally used by AutoCAD has
-become a common denominator for the exchange of vector data.
+become a common denominator for the exchange of vector data. In the
+machine-tooling community, a standardized vector format knows as G code
+is widely used (though machine-specific limitations and extensions make it
+not truely universal). Its implementation in <CODE>hp2xx</CODE>, selectable via
+the `<SAMP>-m <CODE>nc</CODE></SAMP>' option, should be suitable for hobbyists wishing to 
+do engraving, but it would not be wise to use it in professional
+machine tooling.
 </P><P>
 
 Unix users may also want to use either <CODE>Gnuplot</CODE> or especially <CODE>XFig</CODE>
@@ -637,7 +643,8 @@ does not know about compression. NOTE: Some recent low-end Designjet
 plotters (if ordered without the HPGL processor board) and probably also 
 some models of Deskjet use a sparsely documented variant called PCL3GUI
 which appears to differ at least in the initialization sequence used. 
-Currently <CODE>hp2xx</CODE> will not work with such printers.
+Currently <CODE>hp2xx</CODE> will not work well -- maybe even not at all -- with 
+such printers.
 </P><P>
 
 A driver for the Esc/P2 raster language used by the Epson Stylus series
@@ -1821,6 +1828,7 @@ the input file name and the current mode string. `<SAMP>-f-</SAMP>' causes
   `<SAMP>img</SAMP>'  (e.g., GEM's Image format),
   `<SAMP>jpg</SAMP>'  (JPEG image format),
   `<SAMP>mf</SAMP>'   (Metafont source),
+  `<SAMP>nc</SAMP>'   (G code for CNC engraving tools)
   `<SAMP>pbm</SAMP>'  (Portable Bitmap (monochrome) or Portable Pixmap (color plots)),
   `<SAMP>pcl</SAMP>'  (HP-PCL Level 3),
   `<SAMP>pcx</SAMP>'  (Paintbrush format),
@@ -1921,6 +1929,16 @@ and <VAR>float</VAR> &#60; 1.0 for portrait deformations. Default: <VAR>float</V
 
 <DT>`<SAMP>--y1 (-Y) <VAR>float</VAR></SAMP>'
 <DD>Pre-set upper limit of HP-GL coordinate range to <VAR>float</VAR> (rarely used).
+<P>
+
+<DT>`<SAMP>--zengange (-z <VAR>float</VAR></SAMP>'
+<DD>This option is only relevant for CNC G-code generation (`<SAMP> -m nc</SAMP>', where
+it sets the working depth of the tool.
+<P>
+
+<DT>`<SAMP>--zretract (-Z <VAR>float</VAR></SAMP>'
+<DD>This option is only relevant for CNC G-code generation (`<SAMP> -m nc</SAMP>', where
+it sets the retraction level of the tool.
 <P>
 
 <DT>`<SAMP>--truesize (-t)</SAMP>'
@@ -2323,7 +2341,16 @@ WinNT building instructions
 
 <DT><CODE>Andrew Bird</CODE>
 <DD>enhanced PW support
+raster-mode linewidth rendering
 TIFF enhancements
+<P>
+
+<DT><CODE>Bengt-Arne Fjellner</CODE>
+<DD>EMF generation
+<P>
+
+<DT><CODE>Michael Rooke</CODE>
+<DD>CNC G-code generation
 </DL>
 <P>
 
@@ -2665,7 +2692,7 @@ the following structure:
 <BR>  
 <FONT SIZE="-1">
 This document was generated
-on <I>September, 1  2002</I>
+on <I>December, 22  2002</I>
 using <A HREF="http://www.mathematik.uni-kl.de/~obachman/Texi2html
 "><I>texi2html</I></A>
 </FONT>

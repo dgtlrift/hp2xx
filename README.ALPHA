@@ -1,5 +1,9 @@
 Recent changes :
 =================
+3.4.3a26:
+Silenced a few more warning messages in quiet mode. Added a new output mode
+generating G code for CNC engraving (Michael Rooke).
+ 
 3.4.3a25:
 Added support for the stroke-width subcommand of the SD/AD command, made
 character stroke width independent of penwidth (unless explicitly set).
