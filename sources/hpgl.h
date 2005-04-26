@@ -24,7 +24,6 @@ void reset_tmpfile(void);
 extern short silent_mode;
 
 extern long vec_cntr_w;
-extern long n_commands;
 extern short record_off;
 extern FILE *td;
 

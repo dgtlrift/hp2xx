@@ -9,7 +9,7 @@
 #include "lindef.h"
 #include "pendef.h"
 #include <assert.h>
-void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
+void fill(GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	  HPGL_Pt point2, int scale_flag, int filltype, float spacing,
 	  float hatchangle,float curwidth)
 {
@@ -58,8 +58,9 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	if (filltype > 2 && filltype <5)
 		penwidth = spacing;
 
-if (filltype == 10) penwidth=4.;
 if (filltype == 11) penwidth=1.69;
+if (filltype==10) penwidth= pg->dpi*curwidth;
+
 	polyxmin = 100000.;
 	polyymin = 100000.;
 	polyxmax = -100000.;
@@ -72,7 +73,6 @@ if (filltype == 11) penwidth=1.69;
 		polyxmax = MAX(polyxmax, polygon[i].x);
 		polyymax = MAX(polyymax, polygon[i].y);
 	}
-
 	if (hatchangle > 89.9 && hatchangle < 180.) {
 		hatchangle = hatchangle - 90.;
 /*fprintf(stderr,"vertical fill\n");*/
@@ -281,7 +281,7 @@ continue;
 				ib=0;
 				do {
 				ib = 1 + (int) (100.0 *rand()/(RAND_MAX+1.0));
-				if ( ib <=  (int)spacing ) {
+				if ( ib <  (int)spacing ) {
 					hit++;
 					Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);
 					p.x+=0.001;
@@ -293,11 +293,12 @@ continue;
 					miss++;
 /*					Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);*/
 					}
-				p.x+=1.68;	
+//				p.x+=1.68;	
+p.x +=penwidth;
 				} while (p.x < segment[j+1].x);			
-/*
-		fprintf(stderr,"scanline hits %d percentage %f\n",hit,(float)hit/(float)(hit+miss));
-*/
+
+//		fprintf(stderr,"scanline hits %d percentage %f (%f)\n",hit,(float)hit/(float)(hit+miss),spacing);
+
 				break;
 
 				default:	

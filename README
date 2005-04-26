@@ -7,10 +7,10 @@ confidentiality agreements are violated before sending any materials.)
 Martin Kroeker, 
 mk@daveg.com OR martin@ruby.chemie.uni-freiburg.de
 
-Disclaimer: while i currently work for Daveg GmbH and they have generously 
+Disclaimer: while i currently work for daveg GmbH and they have generously 
             waived their rights (as per German employment laws) on the code 
             i wrote for hp2xx, this software is totally unrelated to, and 
-            not endorsed by, Daveg GmbH. 
+            not endorsed by, daveg GmbH. 
 See the file 'copying' (i.e. the GNU GPL) for license and warranty
 information.
 
@@ -27,6 +27,12 @@ New features:
 - PDF output generator can optionally be built using Takeshi Kanno's 
   libharu (sourceforge.net), which has a much less restrictive license 
   than PDFLIB.
+- GIF output module
+- much improved, plotter-like HP-GL error handling (ignoring malformed commands
+  and parameters that are out of range; setting/querying of error status) 
+- Optional support for the old, simple method of drawing wider lines through
+  the -u commandline parameter. 
+
 
 Bug fixes:
 
@@ -48,4 +54,7 @@ Bug fixes:
 - Clipping of circles and arcs added a line from the center to the new
   starting point in some cases.
 - IW sometimes clipped labels when it should not.
+- When PG was encountered before any actual drawing commands had been 
+  received (i.e., a file started with only a few escape sequences for hardware
+  setup), hp2xx would terminate even if there was more input available.
 

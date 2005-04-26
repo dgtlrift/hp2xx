@@ -1,5 +1,23 @@
 Changes to hp2xx:
 =================
+3.5.0a17:
+hp2xx no longer terminates when it encounters an empty (sub)drawing, unless
+the end of the input file has been reached. It also does a better job of 
+suppressing empty drawings. The 'simplified hpgl' sub-mode of to_vec.c no
+longer outputs an SP for the current pen in response to a penwidth change.
+
+3.5.0a16:
+hp2xx no longer aborts on HP-GL syntax errors. Instead, the appropriate
+HP-GL error code is set (and may be queried by OE or OS), and the offending 
+command is ignored. Reporting of the offending instruction can now be 
+suppressed by the "-q/--quiet" option. The OI (output identification) 
+command is now supported, it returns HP2XX- and the version number.
+
+3.5.0a15:
+Fixed segfault on exit when writing image to stdout. Changed line drawing
+(PU/PD/PA) code to ignore invalid coordinates (as required by the HP-GL
+documentation) instead of aborting.
+
 3.5.0a14:
 Polygons went into the image extents calculation without scaling, which 
 could cause strange side-effects such as an increase in "canvas" size

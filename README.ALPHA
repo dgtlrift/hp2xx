@@ -1,4 +1,43 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a17
+
+Bug fixes:
+
+- hp2xx no longer terminates if the first plot in a file consists of non-drawing
+  commands only. Suppression of empty images has been made more reliable.
+- removed extraneous SP commands in the 'simplified hpgl' output 
+
+3.5.0a16
+
+Bug fixes:
+
+- all invalid HP-GL instructions are now reported and ignored, instead of
+  causing an immediate abort. Additionally, the appropriate error condition
+  code is set for querying with the OE and OS instructions, and OI reports
+  the hp2xx version number as its "plotter model identification".
+
+3.5.0a15
+
+Bug fixes:
+
+- hp2xx now ignores invalid move/draw coordinates (as a plotter would) instead
+  of aborting.
+- Fixed segmentation fault on exit if output was sent to stdout.
+
+3.5.0a14
+
+New features:
+
+- added a new option "-u", "--uniform_width" to re-enable the simple wide-line 
+  drawing algorithm of pre-3.4.3 versions, as the new code can create ragged-looking
+  lines in some circumstances
+ 
+Bug fixes:
+
+- Circles were sometimes not clipped correctly, causing extra borders around plot
+- Polygons entered into the canvas size calculation unscaled, causing excessive 
+  borders and images that grew when rotated.
+
 3.5.0a13
 
 New features:

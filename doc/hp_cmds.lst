@@ -134,16 +134,16 @@ Cmd  | i |
  OA  |  .| Output actual position and pen status
  OC  |  .| Output commanded position and pen status
  OD  |  .| Output digitized point and pen status
- OE  | - | Output error
+ OE  |+  | Output error
  OF  | - | Output factors
  OG  |  .| Output group count
  OH  | - | Output hard-clip limits
- OI  |  .| Output identification
+ OI  |+  | Output identification
  OK  |  .| Output key
  OL  | - | Output label length
  OO  |  .| Output options
  OP  |+  | Output P1 and P2
- OS  | - | Output status
+ OS  |+  | Output status
  OT  |  .| Output carousel type
  OW  |+  | Output window
      |   |
@@ -201,5 +201,5 @@ Cmd  | i |
  YT  |+  | Y-Tick
 
 Useless statistics : this makes currently (3.5.0) 
-73 fully supported, 3 partially supported, 24 not-applicable 
-and 21 unsupported commands.
+76 fully supported, 3 partially supported, 23 not-applicable 
+and 19 unsupported commands.

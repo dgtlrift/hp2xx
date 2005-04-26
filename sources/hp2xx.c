@@ -500,7 +500,7 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	pg->maxpens = 8;
 	pg->is_color = FALSE;
 	pg->mapzero = -1;
-
+pg->dpi=75.;
 	pt.width[0] = 0.0;	/* 1/10 mm              */
 	pt.color[0] = xxBackground;
 	for (i = 1; i <= NUMPENS; i++) {
@@ -557,7 +557,6 @@ void autoset_outfile_name(const char *mode, const char *in_name,
 			  char **outfile)
 {
 	int len, i;
-
 	if (**outfile == '-')	/* If output explicitly to stdout:          */
 		return;		/*    then nothing's to do here                 */
 
@@ -645,6 +644,10 @@ void cleanup_o(OUT_PAR * po)
 	if (po != NULL && po->picbuf != NULL) {
 		free_PicBuf(po->picbuf);
 		po->picbuf = NULL;
+		po->xmax=1.e-10;
+		po->ymax=1.e-10;
+		po->xmin=1.e10;
+		po->ymin=1.e10;
 	}
 }
 
@@ -719,9 +722,9 @@ int HPGL_to_TMP(GEN_PAR * pg, IN_PAR * pi)
    ** Convert HPGL data into compact temporary binary file, and obtain
    ** scaling data (xmin/xmax/ymin/ymax in plotter coordinates)
    **/
-	n_commands = 0;
+	pg->n_commands = 0;
 	read_HPGL(pg, pi);
-	if (n_commands <= 1 && n_commands >= 0) {
+	if (pg->n_commands <= 1 && pg->n_commands >= 0 && feof(pi->hd)) {
 		if (pi->hd != stdin) {
 			fclose(pi->hd);
 			pi->hd = NULL;
@@ -751,7 +754,7 @@ int TMP_to_VEC(const GEN_PAR * pg, const OUT_PAR * po)
 	if (pg->td == NULL)
 		return ERROR;
 	rewind(pg->td);		/* Rewind temp file for re-reading      */
-	if (n_commands < 0)
+	if (pg->n_commands < 0)
 		return 0;
 
 	switch (pg->xx_mode) {
@@ -863,7 +866,7 @@ int TMP_to_BUF(const GEN_PAR * pg, OUT_PAR * po)
 
 	if (pg->td == NULL)
 		return ERROR;
-	if (n_commands < 0)
+	if (pg->n_commands < 0)
 		return 0;
 	rewind(pg->td);		/* Rewind temp file for re-reading      */
 
@@ -909,7 +912,7 @@ int BUF_to_RAS(const GEN_PAR * pg, OUT_PAR * po)
 {
 	if (po->picbuf == NULL)
 		return ERROR;
-	if (n_commands < 0)
+	if (pg->n_commands < 0)
 		return 0;
 	switch (pg->xx_mode) {
 	case XX_PCL:		/* HP PCL Level 3       */

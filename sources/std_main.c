@@ -125,7 +125,10 @@ void action_oldstyle(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 		err = HPGL_to_TMP(pg, pi);
 		if (err) {
 /*	po->outfile=realloc(po->outfile,2*sizeof(char));*/
+			if (strcmp(po->outfile,"hp2xx.out"))
 			strcpy(po->outfile, "");
+			else
+			po->outfile="";
 			cleanup_i(pi);
 			cleanup_g(pg);
 			cleanup_o(po);
@@ -151,7 +154,7 @@ void action_oldstyle(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
    **/
 		adjust_input_transform(pg, pi, po);
 				
-		if (po->xmax == -1.e10 || po->ymax == -1.e10) {
+		if (po->xmax == -1.e10 || po->ymax == -1.e10 || pg->n_commands <2) {
 			Eprintf("Warning: skipping empty drawing !\n");
 			cleanup_g(pg);
 			cleanup_o(po);
@@ -283,6 +286,7 @@ process_opts(int argc, char *argv[],
 					     po->dpi_x);
 				break;
 			}
+			pg->dpi=po->dpi_x;
 			break;
 
 		case 'D':
@@ -572,7 +576,7 @@ int main(int argc, char *argv[])
 		{"height", 1, NULL, 'h'},
 		{"width", 1, NULL, 'w'},
 		{"truesize", 0, NULL, 't'},
-		{"uniform_width,0,NULL,'u'},
+		{"uniform_width",0,NULL,'u'},
 		
 		{"x0", 1, NULL, 'x'},
 		{"x1", 1, NULL, 'X'},

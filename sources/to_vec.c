@@ -445,7 +445,7 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 						pensize);
 					break;
 				case 5:
-					fprintf(md, pen_cmd, pen_no);
+					/* fprintf(md, pen_cmd, pen_no); */
 					break;
 				case 8:
 					break;
