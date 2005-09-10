@@ -693,26 +693,14 @@ line_PicBuf(DevPt * p0, DevPt * p1, PEN_W pensize, PEN_C pencolor,
 			dx = p0->x - p1->x;
 			dy = p0->y - p1->y;
 			len = HYPOT(dx, dy);
-			xoff = 0.5 * fabs(dx / len);
-			yoff = 0.5 * fabs(dy / len);
-			t0.x = p0->x - (linewidth - 1) * yoff;
-			t0.y = p0->y + (linewidth - 1) * xoff;
-			t1.x = t0.x - (linewidth - 1) * xoff;
-			t1.y = t0.y + (linewidth - 1) * yoff;
-			t3.x = p0->x - (linewidth - 1) * yoff;
-			t3.y = p0->y - (linewidth - 1) * xoff;
-			t2.x = t3.x - (linewidth - 1) * xoff;
-			t2.y = t3.y + (linewidth - 1) * yoff;
-			polygon_PicBuf(t1, t3, t0, t2, pencolor, pb);
-			t0.x = p1->x + (linewidth - 1) * yoff;
-			t0.y = p1->y + (linewidth - 1) * xoff;
-			t1.x = t0.x + (linewidth - 1) * xoff;
-			t1.y = t0.y + (linewidth - 1) * yoff;
-			t3.x = p1->x + (linewidth - 1) * yoff;
-			t3.y = p1->y - (linewidth - 1) * xoff;
-			t2.x = t3.x + (linewidth - 1) * xoff;
-			t2.y = t3.y + (linewidth - 1) * yoff;
-			polygon_PicBuf(t1, t3, t0, t2, pencolor, pb);
+			xoff = 0.5 *(dx / len);
+			yoff = 0.5 *(dy / len);
+			t0.x = p0->x + linewidth*xoff;
+			t0.y = p0->y + linewidth*yoff;
+                	murphy_wideline(*p0, t0, linewidth, 0);
+			t1.x = p1->x - linewidth*xoff;
+			t1.y = p1->y - linewidth*yoff;
+			murphy_wideline(*p1, t1, linewidth, 0);
 			break;
 		case LAE_butt:
 		default:

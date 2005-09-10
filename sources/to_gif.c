@@ -120,7 +120,7 @@ int PicBuf_to_GIF(const GEN_PAR * pg, const OUT_PAR * po)
 
 	pdImageGIF(im, fd);
 
-//	pdImageDestroy(im);
+/*	pdImageDestroy(im);*/
 
 	fflush(fd);
 

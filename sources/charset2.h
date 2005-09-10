@@ -206,6 +206,6 @@ char *charset2[128] = {
 	"\054\253\114\313",	/* (BS) diaresis (caps) */
 	"\072\253\274\313\272",	/* (BS) ring */
 	"\052\251\112\311",	/* (BS) diaresis (lowercase) */
-	"\111\312"		/* single quote */
+	"\111\312",		/* single quote */
 	""
 };

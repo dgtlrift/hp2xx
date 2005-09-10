@@ -1,5 +1,16 @@
 Changes to hp2xx:
 =================
+3.5.0a18:
+fixed some typos (missing commas) in the initializing lists of character
+sets 2 and 3 (Anton Hadinger). Suppressed wide-line miter filling if the
+calculated miter length exceeds the penwidth (basically just a stupid sanity 
+check to cover an unfound bug). Removed the noisy-and-useless "zero linelength"
+warning. Corrected parsing of Esc-E (PCL reset) sequences in preambles.
+Corrected calculation of "square" line ends. Replaced individual epsilon
+values in the scanline fill code with a single variable that defaults to zero.
+Replaced several C++ comment characters with their standard-conforming C 
+equivalent.
+
 3.5.0a17:
 hp2xx no longer terminates when it encounters an empty (sub)drawing, unless
 the end of the input file has been reached. It also does a better job of 

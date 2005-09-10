@@ -48,6 +48,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "bresnham.h"
 #include "hp2xx.h"
 #include "pendef.h"
@@ -982,7 +983,7 @@ GIFEncode(FILE * const fp,
     fputc( ';', fp );
 
     /* And close the file */
-//    fclose( fp );
+/*    fclose( fp );*/
 }
 
 
@@ -1091,25 +1092,27 @@ char *comment="created by hp2xx";
         */
 
 
-//    get_alpha(cmdline.alpha_filespec, cols, rows, &alpha, &alpha_maxval);
+#if 0    
+      get_alpha(cmdline.alpha_filespec, cols, rows, &alpha, &alpha_maxval);
 
-//    compute_ppm_colormap(pixels, cols, rows, input_maxval, (alpha != NULL), 
-//                         cmdline.mapfile, 
-//                         &chv, &cmap.cht, &cmap.maxval, &cmap.cmapsize);
+      compute_ppm_colormap(pixels, cols, rows, input_maxval, (alpha != NULL), 
+                           cmdline.mapfile, 
+                           &chv, &cmap.cht, &cmap.maxval, &cmap.cmapsize);
 
     /* Now turn the ppm colormap into the appropriate GIF colormap. */
 
-//    normalize_to_255(chv, &cmap);
+      normalize_to_255(chv, &cmap);
 
-//    ppm_freecolorhist(chv);
+      ppm_freecolorhist(chv);
 
     if (alpha) {
         /* Add a fake entry to the end of the colormap for transparency.  
            Make its color black. 
         */
-//        add_to_colormap(&cmap, cmdline.alphacolor, &fake_transparent);
+          add_to_colormap(&cmap, cmdline.alphacolor, &fake_transparent);
     }
-//    sort_colormap(cmdline.sort, &cmap);
+    sort_colormap(cmdline.sort, &cmap);
+#endif
 
     BitsPerPixel = im->colorsTotal >2 ? 8:1 ;
 	for (i=0;i<im->colorsTotal;i++) {

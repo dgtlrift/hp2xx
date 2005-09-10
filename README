@@ -57,4 +57,6 @@ Bug fixes:
 - When PG was encountered before any actual drawing commands had been 
   received (i.e., a file started with only a few escape sequences for hardware
   setup), hp2xx would terminate even if there was more input available.
-
+- Square line ends were not rendered correctly.
+- The Esc-E PCL reset sequence was not recognized and could cause further
+  mis-reading of subsequent commands 

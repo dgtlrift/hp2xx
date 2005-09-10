@@ -1,4 +1,17 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a18
+
+Bug fixes:
+
+- "square" line ends were incorrectly calculated in most cases
+- the Esc-E plotter reset sequence was not recognized
+- tightened some limits that could cause extraneous lines in polygon fills
+  and objects drawn with wide pens
+- corrected typing errors that lead to incorrect definition of some
+  characters in sets 2 and 3 (patch by Anton Hadinger)
+
+- removed the "degenerate line" warning message
+
 3.5.0a17
 
 Bug fixes:

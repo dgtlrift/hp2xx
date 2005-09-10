@@ -369,7 +369,7 @@ static void par_err_exit(int code, int cmd, FILE * hd)
 	}
 	
 	return;
-//	exit(ERROR);
+/*	exit(ERROR);*/
 }
 
 
@@ -1313,9 +1313,6 @@ static void Line_Generator(HPGL_Pt * pa, const HPGL_Pt * pb, int mv_flag)
 
 	case LT_solid:
 		if (seg_len < 1.e-8) {
-			if (!silent_mode)
-				Eprintf
-				    ("Warning: Zero line segment length -- skipped\n");
 			return;	/* No line to draw ??           */
 		}
 		PlotCmd_to_tmpfile(DRAW_TO);
@@ -1324,9 +1321,6 @@ static void Line_Generator(HPGL_Pt * pa, const HPGL_Pt * pb, int mv_flag)
 
 	case LT_adaptive:
 		if (seg_len < 1.e-8) {
-			if (!silent_mode)
-				Eprintf
-				    ("Warning: Zero line segment length -- skipped\n");
 			return;	/* No line to draw ??           */
 		}
 		pat_pos = 0.0;	/* Reset to start-of-pattern    */
@@ -1354,9 +1348,6 @@ static void Line_Generator(HPGL_Pt * pa, const HPGL_Pt * pb, int mv_flag)
 
 	case LT_fixed:
 		if (seg_len < 1.e-8) {
-			if (!silent_mode)
-				Eprintf
-				    ("Warning: Zero line segment length -- skipped\n");
 			return;	/* No line to draw ??           */
 		}
 		if (mv_flag)	/* Last move ends old line pattern      */
@@ -1855,6 +1846,12 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				break;
 			}
 		}
+		if ((ESC == c0) && (c1 == 'E')) {
+		fprintf(stderr,"Esc+E\n");
+		ungetc(c2,hd);
+		return;
+		}
+		
 		if (hp == TRUE && !nf && c1 != '%' && c1 != 'E') {
 			ungetc(ctmp, hd);
 			if (!silent_mode) {
@@ -1969,12 +1966,6 @@ void line(int relative, HPGL_Pt p)
 	} else
 		pl = p_last;
 
-//	if (polygon_mode && polygon_penup)
-//		pen_down = FALSE;
-
-//	if (polygon_mode && polygon_penup)
-//		pen_down = TRUE;
-
 	if (polygon_mode) {
 		if (!outside && !pm1_flag) {
 			HPGL_Pt_to_polygon(pl);
@@ -1982,16 +1973,7 @@ void line(int relative, HPGL_Pt p)
 		}
 	}	else {
 	if (pen_down && !outside) {
-//		if (polygon_mode) {
-//			if (!pm1_flag) {
-//			HPGL_Pt_to_polygon(pl);
-//			HPGL_Pt_to_polygon(p);
-/*	      fprintf(stderr,"polygon line1: %f %f - %f %f\n",p_last.x,p_last.y,p.x,p.y);*/
-//			}
-//		} else {
 			Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
-/*	      fprintf(stderr,"std line1: %f %f - %f %f\n",p_last.x,p_last.y,p.x,p.y); */
-//		}
 	} else {
 		if (iwflag) {
 			Pen_action_to_tmpfile(MOVE_TO, &porig, scale_flag);
@@ -2000,13 +1982,7 @@ void line(int relative, HPGL_Pt p)
 		}
 	}
        }
-//	if (polygon_mode && polygon_penup && vertices<0) {
-//		polygon_penup = FALSE;
-//		polystart = p;
-//		pen_down = TRUE;
-//	}
 	if (polygon_mode && pm1_flag) {
-//	polygon_penup=FALSE;
 	pm1_flag=FALSE;
 	polystart=p;
 	}
@@ -2047,18 +2023,13 @@ static void arc_increment(HPGL_Pt * pcenter, double r, double phi)
 	}
 
 	if (polygon_mode) {
-//		if (polygon_penup)
-//			polygon_penup = FALSE;
-		/*else*/ if (pen_down && !outside) {
+	        if (pen_down && !outside) {
 			HPGL_Pt_to_polygon(p_last);
 			HPGL_Pt_to_polygon(p);
-/*fprintf(stderr,"arcpoint %f %f\n",p.x,p.y);*/
 
 		} else if ((p.x != p_last.x) || (p.y != p_last.y)) {
-			/*polygon_penup=TRUE; */
 			HPGL_Pt_to_polygon(p_last);
 			HPGL_Pt_to_polygon(p);
-/*fprintf(stderr,"final arcpoint %f %f\n",p.x,p.y);*/
 		}
 	} else {
 		if (pen_down && !outside)
@@ -2525,9 +2496,9 @@ static void fwedges(FILE * hd, float cur_pensize)
 		anchor.y = ymin;
 		if (scale_flag) Plotter_to_User_coord(&anchor,&anchor);	
 	}
-//	fill(pg,polygons, vertices, anchor, P2, scale_flag, filltype,
-//FIXME	     hatchspace, hatchangle,pt.width[pen]);
-
+/*	fill(pg,polygons, vertices, anchor, P2, scale_flag, filltype,
+FIXME	     hatchspace, hatchangle,pt.width[pen]);
+*/
 
 	CurrentLinePatLen = SafeLinePatLen;	/* Restore */
 
@@ -3243,7 +3214,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			}
 			if (vertices > 0)
 				pm1_flag = TRUE;
-//			pen_down = FALSE;
+/*			pen_down = FALSE;*/
 			break;
 		}
 		if (ftmp == 2) {
@@ -3615,14 +3586,17 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				break;
 				}
 		}
-//fprintf (stderr," clip limits1 (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);
-//fprintf (stderr," sc limits1 (%f,%f)(%f,%f)\n",S1.x,S1.y,S2.x,S2.y);
+/*
+  fprintf (stderr," clip limits1 (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);
+  fprintf (stderr," sc limits1 (%f,%f)(%f,%f)\n",S1.x,S1.y,S2.x,S2.y);
+*/  
 		if (scale_flag ) {
 			User_to_Plotter_coord(&C1, &C1);
 			User_to_Plotter_coord(&C2, &C2);
 		}
-//fprintf (stderr," clip limits2 (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);
-
+/*
+  fprintf (stderr," clip limits2 (%f,%f)(%f,%f)\n",C1.x,C1.y,C2.x,C2.y);
+*/
 
 		if (C2.x < C1.x) {
 			ftmp = C2.x;
@@ -3848,7 +3822,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				Eprintf
 				    ("Warning: Invalid SC command parameters -- ignored\n");
 			lasterror = 3;
-//			Q.x = Q.y = 1.0;
+/*			Q.x = Q.y = 1.0;*/
 			break;
 		}
 		S1.x = p1.x;

@@ -1449,10 +1449,7 @@ void ASCII_to_font(int c, int curpen)
 int tt_stroke_moveto(FT_Vector * to, void *dummy)
 {
 	HPGL_Pt p;
-#if 0
-	fprintf(stderr, "TT move to %ld %ld (oder ists %d %d ??)\n", to->x,
-		to->y, (int) (to->x / 64.), (int) (to->y / 64.));
-#endif
+
 	p.x = tp->Txx * to->x + tp->Txy * to->y;
 	p.y = tp->Tyx * to->x + tp->Tyy * to->y;
 	p.x = p.x / 200. + tp->refpoint.x + tp->offset.x;

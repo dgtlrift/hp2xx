@@ -49,7 +49,7 @@ static struct {
 
 #define my_lrint(a) ((long)(a+0.5))
 
-static void do_miter(int, DevPt, DevPt, DevPt, DevPt);
+static void do_miter(int, DevPt, DevPt, DevPt, DevPt, int);
 
 void murphy_init(PicBuf * pb, PEN_C color)
 {
@@ -233,7 +233,7 @@ void murphy_wideline(DevPt p0, DevPt p1, int width, int miter)
 				d1 += murphy.kd;
 				if (dd > tk) {
 					do_miter(miter, ml1b, ml2b, ml1,
-						 ml2);
+						 ml2,width);
 					return;	/* breakout on the extra line */
 				}
 				murphy_paraline(pt, d1);
@@ -253,12 +253,12 @@ void murphy_wideline(DevPt p0, DevPt p1, int width, int miter)
 		d0 += murphy.kv;
 	}
 
-	do_miter(miter, ml1b, ml2b, ml1, ml2);
+	do_miter(miter, ml1b, ml2b, ml1, ml2,width);
 
 }
 
-static void do_miter(miter, ml1b, ml2b, ml1, ml2)
-int miter;
+static void do_miter(miter, ml1b, ml2b, ml1, ml2,width)
+int miter,width;
 DevPt ml1b, ml2b, ml1, ml2;
 
 {
@@ -293,6 +293,8 @@ DevPt ml1b, ml2b, ml1, ml2;
 				m1 = murphy.last1;
 				m2 = murphy.last2;
 			}
+			if (ftmp1 > (float)width || ftmp2 >(float)width) return;
+			
 			c1=ml1;
 			c2=ml2;
 			cur2.x = (ml1b.x + ml2b.x) / 2.;

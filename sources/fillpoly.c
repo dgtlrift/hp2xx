@@ -9,7 +9,7 @@
 #include "lindef.h"
 #include "pendef.h"
 #include <assert.h>
-void fill(GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
+void fill(const GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	  HPGL_Pt point2, int scale_flag, int filltype, float spacing,
 	  float hatchangle,float curwidth)
 {
@@ -37,8 +37,11 @@ void fill(GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	double avx, avy, bvx, bvy, ax, ay, bx, by, atx, aty, btx, bty, mu;
 				int hit=0;
 				int miss=0;
-
-
+#if 0
+	double my_eps=1.e-8;
+#else
+	double my_eps=0.;
+#endif
 	PEN_W SafePenW = curwidth;
 	LineEnds SafeLineEnd = CurrentLineEnd;
 
@@ -114,9 +117,10 @@ if (filltype==10) penwidth= pg->dpi*curwidth;
 	fprintf(stderr,"scaled penwidth: %f\n",penwidth);
 #endif
 	}
-//	fprintf(stderr,"pymax-pymin = %f\n",(pymax-pymin));
+/*	fprintf(stderr,"pymax-pymin = %f\n",(pymax-pymin));*/
+
 	numlines = (int) fabs(1. + (pymax - pymin + penwidth) / penwidth);
-//fprintf(stderr,"running %d scanlines across %d polygon\n",numlines,numpoints);
+/*fprintf(stderr,"running %d scanlines across %d polygon\n",numlines,numpoints);*/
 #if 0
 /* debug code to show shade box */
 	p.x = pxmin;
@@ -154,7 +158,7 @@ if (filltype==10) penwidth= pg->dpi*curwidth;
 		if (scany1 >= pymax) {
 /*fprintf(stderr,"zu weit i=%d\n",i);*/
 continue;
-//			break;
+/*			break; */
 		}
 		if (scany2 < polyymin)
 			continue;
@@ -189,9 +193,10 @@ continue;
 			p.y = polygon[j + 1].y;
 			Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
 #endif
-
+			segx=0.;
+			segy=0.;
 /*determine coordinates of intersection */
-			if (mu >= 0. && mu <= 1.01) {
+			if (mu >= 0.0 && mu <= 1.01) {
 				segx = bx + mu * bvx;	/*x coordinate of intersection */
 				segy = by + mu * bvy;	/*y coordinate of intersection */
 			} else
@@ -199,23 +204,24 @@ continue;
 
 			if ((segy <
 			     MIN((double) polygon[j].y,
-				 (double) polygon[j + 1].y) - 0.0000001)
+				 (double) polygon[j + 1].y) - my_eps)
 			    || (segy >
 				MAX((double) polygon[j].y,
 				    (double) polygon[j + 1].y) +
-				0.000000001)
+				my_eps)
 			    || (segx <
 				MIN((double) polygon[j].x,
 				    (double) polygon[j + 1].x) -
-				0.000000001)
+				my_eps)
 			    || (segx >
 				MAX((double) polygon[j].x,
-				    (double) polygon[j + 1].x))) {
+				    (double) polygon[j + 1].x)
+				    +my_eps)) {
 /* fprintf(stderr,"intersection  at %f %f is not within (%f,%f)-(%f,%f)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ) ; */
 			} else {
 				for (kk = 0; kk <= k; kk++) {
 					if (fabs(segment[kk].x - segx) <
-					    1.e-8)
+					    my_eps)
 						goto BARF;
 				}
 				k++;
@@ -293,11 +299,11 @@ continue;
 					miss++;
 /*					Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);*/
 					}
-//				p.x+=1.68;	
+/*				p.x+=1.68;	*/
 p.x +=penwidth;
 				} while (p.x < segment[j+1].x);			
 
-//		fprintf(stderr,"scanline hits %d percentage %f (%f)\n",hit,(float)hit/(float)(hit+miss),spacing);
+/*		fprintf(stderr,"scanline hits %d percentage %f (%f)\n",hit,(float)hit/(float)(hit+miss),spacing);*/
 
 				break;
 
