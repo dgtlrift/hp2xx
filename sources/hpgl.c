@@ -1139,7 +1139,7 @@ int read_PE_flags(GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 			pens_in_use[pen] = 1;
 		pg->maxcolor = MAX(pg->maxcolor, (int) pen);
 /*MK */
-	fprintf(stderr,"PE: pen %d\n",pen);
+/*	fprintf(stderr,"PE: pen %d\n",pen);*/
 		break;
 
 	case 190:
@@ -1847,7 +1847,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 			}
 		}
 		if ((ESC == c0) && (c1 == 'E')) {
-		fprintf(stderr,"Esc+E\n");
+/*		fprintf(stderr,"Esc+E\n");*/
 		ungetc(c2,hd);
 		return;
 		}
@@ -3556,7 +3556,10 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			}
 			C1 = P1;
 			C2 = P2;
-
+if (scale_flag){
+C1=S1;
+C2=S2;
+}
 			if (rotate_flag && !ps_flag) {
 				switch ((int) fabs(rot_tmp)) {
 				case 90:

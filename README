@@ -60,3 +60,5 @@ Bug fixes:
 - Square line ends were not rendered correctly.
 - The Esc-E PCL reset sequence was not recognized and could cause further
   mis-reading of subsequent commands 
+- Polygon fills sometimes had lines "leaking out" due to missing support
+  for special cases (intersecting at vertices) in the scanline renderer.

@@ -21,7 +21,8 @@ void fill(const GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	double polyxmin, polyymin, polyxmax, polyymax;
 	double scanx1, scanx2, scany1, scany2;
 	HPGL_Pt2 segment[MAXPOLY], tmp;
-	double segx, segy;
+	double iy[MAXPOLY];
+	double segx, segy, segiy;
 	static int i;		/* to please valgrind when debugging memory accesses */
 	int j, k, jj, kk;
 	int ib,pati;
@@ -219,17 +220,28 @@ continue;
 				    +my_eps)) {
 /* fprintf(stderr,"intersection  at %f %f is not within (%f,%f)-(%f,%f)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ) ; */
 			} else {
+				segiy=0;
+				if (segx == polygon[j].x && segy==polygon[j].y) segiy=polygon[j+1].y;
+				else if (segx == polygon[j].x+1 && segy==polygon[j].y+1) segiy=polygon[j].y;
+
 				for (kk = 0; kk <= k; kk++) {
-					if (fabs(segment[kk].x - segx) <
-					    my_eps)
+		/* if two intersections are identical (at same x), check if they are on the
+		   same or on opposite sides of the scanline :
+		   if on the same side, the scanline must be tangential to a
+		   vertex, so count both intersections to avoid filling the 
+		   outside regions. if both lines terminate on opposite sides
+		   of the scanline, it enters or leaves the polygon at this 
+		   vertex, so this counts as one intersection only */
+					if ((fabs(segment[kk].x - segx) <
+					    my_eps)  && ((segiy-scany1)*(iy[kk]-scany1)<0)) 
 						goto BARF;
 				}
 				k++;
 				segment[k].x = segx;
 				segment[k].y = segy;
-
+				iy[k] = segiy;
 /*fprintf(stderr,"fill: intersection %d with line %d at (%f %f)\n",k,j,segx,segy);*/
-				if (k > 0) {
+		if (k > 0) {
 					for (jj = 0; jj < k; jj++) {
 						if (segment[k].x <
 						    segment[jj].x) {
@@ -239,7 +251,7 @@ continue;
 							segment[k] = tmp;
 						}
 					}
-				}	/* if not the first intersection */
+				}	
 			}	/* if crossing withing range */
 		      BARF:
 			continue;
@@ -448,25 +460,36 @@ p.x +=penwidth;
 
 
 			if ((segy <
-			     MIN(polygon[j].y, polygon[j + 1].y) - 1.)
+			     MIN(polygon[j].y, polygon[j + 1].y) - my_eps)
 			    || (segy >
-				MAX(polygon[j].y, polygon[j + 1].y) + 1.)
+				MAX(polygon[j].y, polygon[j + 1].y) + my_eps)
 			    || (segx < MIN(polygon[j].x, polygon[j + 1].x))
 			    || (segx >
 				MAX(polygon[j].x, polygon[j + 1].x))) {
 /*fprintf(stderr,"intersection  at %f %f is not within (%f,%f)-(%f,%f)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ) ; */
 			} else {
+				segiy=0;
+				if (segx == polygon[j].x && segy==polygon[j].y) segiy=polygon[j+1].x;
+				else if (segx == polygon[j].x+1 && segy==polygon[j].y+1) segiy=polygon[j].x;
+
 				for (kk = 0; kk <= k; kk++) {
-					if (fabs(segment[kk].y - segy) <
-					    1.e-8)
+		/* if two intersections are identical (at same x), check if they are on the
+		   same or on opposite sides of the scanline :
+		   if on the same side, the scanline must be tangential to a
+		   vertex, so count both intersections to avoid filling the 
+		   outside regions. if both lines terminate on opposite sides
+		   of the scanline, it enters or leaves the polygon at this 
+		   vertex, so this counts as one intersection only */
+					if ((fabs(segment[kk].y - segy) <
+					    my_eps) && ((segiy-scanx1)*(iy[kk]-scanx1)<0)) 
 						goto BARF2;
 				}
 				k++;
 				segment[k].x = segx;
 				segment[k].y = segy;
-
+				iy[k] = segiy;
 /*fprintf(stderr,"fill: intersection %d with line %d at (%f %f)\n",k,j,segx,segy);*/
-				if (k > 0) {
+		if (k > 0) {
 					for (jj = 0; jj < k; jj++) {
 						if (segment[k].y <
 						    segment[jj].y) {
@@ -476,12 +499,11 @@ p.x +=penwidth;
 							segment[k] = tmp;
 						}
 					}
-				}	/* if not the first intersection */
+				}	
 			}	/* if crossing withing range */
 		      BARF2:
 			continue;
 		}		/*next edge */
-
 
 		if (k > 0) {
 /* fprintf(stderr, "%d segments for scanline %d\n",k,i);*/

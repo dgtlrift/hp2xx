@@ -65,7 +65,7 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
-#define VERS_NO        "3.5.0a18"
+#define VERS_NO        "3.5.0a19"
 #define VERS_DATE      "05/09/10"
 #define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
 #if defined(AMIGA)
@@ -73,7 +73,7 @@ copies.
 #elif defined (ATARI)
 #define VERS_ADDITIONS "\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n"
 #else
-#define VERS_ADDITIONS "                                (c) 1999 - 2005 Martin Kroeker\n"
+#define VERS_ADDITIONS "                                 (c) 1999 - 2005 Martin Kroeker\n"
 #endif
 
 /**

@@ -1,4 +1,12 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a19
+
+Bug fixes:
+
+- added handling of special cases (scanline hitting a vertex) in the polygon
+  fill code
+- reinstated a scaling transform in the clipping code
+
 3.5.0a18
 
 Bug fixes:

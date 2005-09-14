@@ -1,5 +1,10 @@
 Changes to hp2xx:
 =================
+3.5.0a19:
+Removed remaining epsilon values from the scanline polygon fill code; added
+proper handling of the special case of intersection at a vertex. Removed some
+debugging printouts. Reinstated scaling transformation in IW code.
+
 3.5.0a18:
 fixed some typos (missing commas) in the initializing lists of character
 sets 2 and 3 (Anton Hadinger). Suppressed wide-line miter filling if the
