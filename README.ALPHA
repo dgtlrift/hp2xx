@@ -1,4 +1,16 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a20
+
+New features:
+
+- line cap and join style support in SVG export
+
+Bug fixes:
+
+- really applied the polygon fill improvements that should have been in a19.
+- suppressed warning about missing color support for modes that do provide
+  color.
+
 3.5.0a19
 
 Bug fixes:

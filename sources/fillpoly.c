@@ -22,10 +22,12 @@ void fill(const GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	double scanx1, scanx2, scany1, scany2;
 	HPGL_Pt2 segment[MAXPOLY], tmp;
 	double iy[MAXPOLY];
+	int endp[MAXPOLY];
 	double segx, segy, segiy;
 	static int i;		/* to please valgrind when debugging memory accesses */
 	int j, k, jj, kk;
 	int ib,pati;
+	int endpoint;
 #if 0
 	int ia,l;
 #endif	
@@ -38,8 +40,8 @@ void fill(const GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	double avx, avy, bvx, bvy, ax, ay, bx, by, atx, aty, btx, bty, mu;
 				int hit=0;
 				int miss=0;
-#if 0
-	double my_eps=1.e-8;
+#if 1
+	double my_eps=1.e-15;
 #else
 	double my_eps=0.;
 #endif
@@ -83,8 +85,8 @@ if (filltype==10) penwidth= pg->dpi*curwidth;
 		goto FILL_VERT;
 	}
 
-	pxmin = MIN(polyxmin,point1.x - 0.5);
-	pymin = MIN(polyymin,point1.y - 0.5);
+	pxmin = MIN(polyxmin,point1.x) - 0.5;
+	pymin = MIN(polyymin,point1.y) - 0.5;
 	pxmax = polyxmax;
 	pymax = polyymax;
 	if (polyxmin == polyxmax && polyymin == polyymax) {
@@ -114,11 +116,7 @@ if (filltype==10) penwidth= pg->dpi*curwidth;
 	User_to_Plotter_coord(&p,&p);
 	spymin=p.y;
 	penwidth *= (pymax-pymin)/(spymax-spymin); 
-#if 0
-	fprintf(stderr,"scaled penwidth: %f\n",penwidth);
-#endif
 	}
-/*	fprintf(stderr,"pymax-pymin = %f\n",(pymax-pymin));*/
 
 	numlines = (int) fabs(1. + (pymax - pymin + penwidth) / penwidth);
 /*fprintf(stderr,"running %d scanlines across %d polygon\n",numlines,numpoints);*/
@@ -152,17 +150,9 @@ if (filltype==10) penwidth= pg->dpi*curwidth;
 		k = -1;
 		scany1 = pymin + (double) i *penwidth;
 		scany2 = scany1 + pydiff;
-		if (scany1 <= pymin) {
-/*fprintf(stderr,"zu weit? i=%d\n",i);*/
-		continue;
-		}
-		if (scany1 >= pymax) {
-/*fprintf(stderr,"zu weit i=%d\n",i);*/
-continue;
-/*			break; */
-		}
-		if (scany2 < polyymin)
-			continue;
+		if (scany1 <= pymin) continue;
+		if (scany1 >= pymax) continue;
+		if (scany2 < polyymin) continue;
 /* coefficients for current scan line */
 		bx = pxmin;
 		btx = pxmax;
@@ -218,11 +208,20 @@ continue;
 				MAX((double) polygon[j].x,
 				    (double) polygon[j + 1].x)
 				    +my_eps)) {
-/* fprintf(stderr,"intersection  at %f %f is not within (%f,%f)-(%f,%f)\n",segx,segy,polygon[j].x,polygon[j].y,polygon[j+1].x,polygon[j+1].y ) ; */
+				/* ignore intersections beyond endpoint of line */
 			} else {
 				segiy=0;
-				if (segx == polygon[j].x && segy==polygon[j].y) segiy=polygon[j+1].y;
-				else if (segx == polygon[j].x+1 && segy==polygon[j].y+1) segiy=polygon[j].y;
+				endpoint=0;
+
+				if (fabs (segx- polygon[j].x)<1.e-3 
+				    && fabs( segy-polygon[j].y)<1.e-3) {
+				    endpoint=1;
+				    segiy=polygon[j+1].y;
+				} else if (fabs(segx-polygon[j+1].x)<1.e-3 
+				           && fabs(segy-polygon[j+1].y)<1.e-3) {
+				           endpoint=1;
+				            segiy=polygon[j].y; 
+				}
 
 				for (kk = 0; kk <= k; kk++) {
 		/* if two intersections are identical (at same x), check if they are on the
@@ -232,15 +231,16 @@ continue;
 		   outside regions. if both lines terminate on opposite sides
 		   of the scanline, it enters or leaves the polygon at this 
 		   vertex, so this counts as one intersection only */
-					if ((fabs(segment[kk].x - segx) <
-					    my_eps)  && ((segiy-scany1)*(iy[kk]-scany1)<0)) 
+					if ((fabs(segment[kk].x - segx) < 1.e-4
+					   )  && (endpoint==0|| endp[kk]==0 || ((segiy-scany1)*(iy[kk]-scany1)<=0.))) 
 						goto BARF;
 				}
 				k++;
 				segment[k].x = segx;
 				segment[k].y = segy;
 				iy[k] = segiy;
-/*fprintf(stderr,"fill: intersection %d with line %d at (%f %f)\n",k,j,segx,segy);*/
+				endp[k]=endpoint;
+
 		if (k > 0) {
 					for (jj = 0; jj < k; jj++) {
 						if (segment[k].x <
@@ -249,9 +249,17 @@ continue;
 							segment[jj] =
 							    segment[k];
 							segment[k] = tmp;
+							segiy = iy[jj];
+							iy[jj] =
+							    iy[k];
+							iy[k] = segiy;
+							endpoint = endp[jj];
+							endp[jj] =
+							    endp[k];
+							endp[k] = endpoint;
 						}
 					}
-				}	
+				}
 			}	/* if crossing withing range */
 		      BARF:
 			continue;
@@ -284,10 +292,7 @@ continue;
 					p.x+=0.001;
 					p.y+=0.001;
 					Pen_action_to_tmpfile(DRAW_TO,&p,scale_flag);
-/*					p.x-=0.001;
-					p.y-=0.001;*/
 					}
-/*					else Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);*/
 					pati++;
 					if (pati >pw[pat])pati=0;
 					p.x+= 1.68;
@@ -309,10 +314,8 @@ continue;
 					p.y-=0.001;
 					}else{
 					miss++;
-/*					Pen_action_to_tmpfile(MOVE_TO,&p,scale_flag);*/
 					}
-/*				p.x+=1.68;	*/
-p.x +=penwidth;
+					p.x +=penwidth;
 				} while (p.x < segment[j+1].x);			
 
 /*		fprintf(stderr,"scanline hits %d percentage %f (%f)\n",hit,(float)hit/(float)(hit+miss),spacing);*/

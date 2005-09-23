@@ -1,5 +1,10 @@
 Changes to hp2xx:
 =================
+3.5.0a20:
+Replaced broken version of fillpoly.c with the copy intended for a19.
+Added line capstyle and joinstyle support to SVG output. Suppressed warning
+about lack of pencolor support for those vector modes that do support colors.
+
 3.5.0a19:
 Removed remaining epsilon values from the scanline polygon fill code; added
 proper handling of the special case of intersection at a vertex. Removed some

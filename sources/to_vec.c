@@ -80,6 +80,9 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 	PEN_W pensize;
 	int pencolor, pen_no, chars_out = 0, max_chars_out = 210;
 	int mapped_pen_no;
+	int linecap=0,linejoin=0;
+	static char *svgcap[3] = {"butt","round","square"};
+	static char *svgjoin[3] = {"miter","round","bevel"};
 	PEN_W mapped_pen_size;	/* for DXF */
 	int toolz = 0;
 	int np = 1, err = 0;
@@ -200,7 +203,7 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 		scale_cmd =
 		    "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>\n<svg width=\"100%%\" height=\"100%%\" viewBox=\"0 0 %4.3f %4.3f\" xmlns=\"http://www.w3.org/2000/svg\"><g>\n";
 		pen_cmd =
-		    "</g><g style=\"stroke:rgb(%d,%d,%d); fill:none; stroke-width:%4.3fmm\" >\n";
+		    "</g><g style=\"stroke:rgb(%d,%d,%d); fill:none; stroke-width:%4.3fmm; stroke-linecap:%s; stroke-linejoin:%s \" >\n";
 		poly_start = "<path d=\"M %4.3f, %4.3f \n";
 		poly_next = "	L %4.3f, %4.3f \n";
 		poly_last = "	L %4.3f, %4.3f \n\" />\n";
@@ -362,7 +365,53 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 		case 7:
 			break;
 		case 8:
-			fprintf(md, pen_cmd, 0, 0, 0, 10 * pensize);
+
+	if (pensize > 0.35) {
+		switch (CurrentLineAttr.End) {
+		case LAE_butt:
+			linecap = 0;
+			break;
+		case LAE_triangular:	/* triangular not implemented in SVG */
+			linecap = 1;
+			break;
+		case LAE_round:
+			linecap = 1;
+			break;
+		case LAE_square:
+			linecap = 2;
+			break;
+		default:
+			linecap = 0;
+			break;
+		}
+		switch (CurrentLineAttr.Join) {
+		case LAJ_plain_miter:
+			linejoin = 0;
+			break;
+		case LAJ_bevel_miter:	/* not available */
+			linejoin = 0;
+			break;
+		case LAJ_triangular:	/* not available */
+			linejoin = 1;
+			break;
+		case LAJ_round:
+			linejoin = 1;
+			break;
+		case LAJ_bevelled:
+			linejoin = 2;
+			break;
+		case LAJ_nojoin:	/* not available */
+			linejoin = 1;
+			break;
+		default:
+			linejoin = 0;
+			break;
+		}
+	} else {
+		linecap = 0;
+		linejoin = 0;
+	}
+			fprintf(md, pen_cmd, 0, 0, 0, 10 * pensize,svgcap[linecap],svgjoin[linejoin]);
 			break;
 		case 9:
 			Eprintf("\nWARNING: Pensize Ignored!\n");
@@ -419,7 +468,7 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 						pt.clut[pencolor][0],
 						pt.clut[pencolor][1],
 						pt.clut[pencolor][2],
-						pensize);
+						pensize,svgcap[linecap],svgjoin[linejoin]);
 					break;
 				case 9:
 					fprintf(md, pen_cmd, pen_no);	/* Tool No */
@@ -663,7 +712,8 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 				err = ERROR;
 				goto MF_exit;
 			}
-			Eprintf("Warning, no PC support in vector modes!");
+			if (mode != 5 && mode != 8) 
+			  Eprintf("Warning, no PC support in this output mode!");
 			break;
 		case DEF_LA:
 			if (load_line_attr(pg->td,0) < 0) {

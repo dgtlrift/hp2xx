@@ -302,7 +302,7 @@ int load_line_attr(FILE * td, int ignore)
 		if (!FoundJoin) {
 			if (!silent_mode)
 				fprintf(stderr,
-					"\nLA - Joins not supported\n");
+					"\nLA - Joins not supported in most output modes\n");
 			FoundJoin = 1;
 		}
 		CurrentLineAttr.Join = value;
