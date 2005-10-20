@@ -179,14 +179,14 @@ ALL_LIBS  =  -L/usr/lib/X11R6 -lX11 -lm
 #
 EX_SRC =
 EX_OBJ =
-EX_DEFS =
+EX_DEFS = #-DDEBUG_ESC
 EX_LIBS =
 #
 # Include PDF support using free (ZLIB/PNG-licensed) libharu
-#EX_SRC	+= to_pdf.c
-#EX_OBJ += to_pdf.o
-#EX_DEFS += -DUSEPDF 
-#EX_LIBS += -lharu
+EX_SRC	+= to_pdf.c
+EX_OBJ += to_pdf.o
+EX_DEFS += -DUSEPDF 
+EX_LIBS += -lharu
 #
 # Include PDF support using commercial PDFLIB
 #EX_SRC	+= to_pdf.c

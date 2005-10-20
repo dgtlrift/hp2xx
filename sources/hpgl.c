@@ -1748,7 +1748,13 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 
 	 */
 	int c0, c2, ctmp = 0, nf;
-
+	unsigned char ptmp;
+	static unsigned char otmp[5000];
+	static int haverow=0,compression=0,rtlgraphics=0;
+        static int sw=1,sh=1,dw=1,dh=1;
+        static double wr=1.,hr=1.;
+	int position,offset,numbytes;
+	
 	for (c0 = ESC, c2 = getc(hd), nf = 0;
 	     EOF != c2; c0 = c1, c1 = c2, c2 = getc(hd)) {
 
@@ -1773,7 +1779,9 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					if (hp && !silent_mode) {
 #ifdef DEBUG_ESC
 						Eprintf
-						    ("leaving HPGL context\n");
+						    ("leaving HPGL context,");
+						Eprintf
+						    ("entering PCL context with CAP set to %s\n",(c2=='1')?"current HPGL position":"previous RTL CAP");    
 #endif
 				        if (!record_off) cdot(0,NULL,0);
 #if 0
@@ -1830,6 +1838,11 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 						    ("unknown escape: ESC%%%s%c%c\n",
 						     nf ? "-" : "", c2,
 						     ctmp);
+				if (rtlgraphics==1) { /* if we are reading RTL data, something went wrong */
+				                   /* try to find the start of the next data block */
+				                   if (!silent_mode) Eprintf("error in RTL data, skipping to next esc\n");
+				while ( (ctmp=fgetc(hd)) != 27){};
+				} 
 					ungetc(ctmp, hd);
 					if (hp)
 						return;
@@ -1840,6 +1853,11 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					Eprintf
 					    ("unknown escape: ESC%%%s%c",
 					     nf ? "-" : "", c2);
+				if (rtlgraphics==1){ /* if we are reading RTL data, something went wrong */
+				                   /* try to find the start of the next data block */
+				if (!silent_mode) Eprintf("error in RTL data, skipping to next esc\n");	
+				while ( (c2=fgetc(hd)) != 27) {};
+				}
 				ungetc(c2, hd);
 				if (hp)
 					return;
@@ -1852,14 +1870,341 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 		return;
 		}
 		
+		if (c1 == '*' ) {
+			if (c2 == 'p') {
+				ctmp=getc(hd);
+#ifdef DEBUG_ESC
+				fprintf(stderr,"%s palette\n",(ctmp==49) ? "Pop" : "Push");
+#endif
+				ctmp=getc(hd); /* fetch terminator*/
+				return;
+				}
+			if (c2 == 'r') {
+			float val;
+				ctmp=getc(hd);
+				if (ctmp=='C'|| ctmp=='c'){
+				if (!silent_mode) Eprintf("end raster graphics, CAP at %f,%f\n",p_last.x,p_last.y);
+				rtlgraphics=0;
+				return;
+				}
+				ungetc(ctmp,hd);
+				read_float(&val,hd);
+				ctmp=getc(hd);
+				if (ctmp=='a' || ctmp=='A'){
+					if (!silent_mode) Eprintf("start raster graphics");
+					switch((int)val) {
+						case 0:
+						default:
+						if (!silent_mode) Eprintf(" at left edge\n");
+						break;
+						case 1:
+						if (!silent_mode) Eprintf(" at current position (%f,%f)\n",p_last.x,p_last.y);
+						break;
+						case 2:
+						if (!silent_mode) Eprintf(" scaled, at left edge\n");
+						break;
+						case 3:
+						if (!silent_mode) Eprintf(" scaled, at current position (%f,%f)\n",p_last.x,p_last.y);
+						wr=dw/sw;
+						hr=dh/sh;	
+						break;
+						}
+					rtlgraphics=1;	
+					return;
+				}	
+#ifdef DEBUG_ESC				
+				fprintf(stderr,"source raster dimensions (pixel):\n");
+#endif
+				if (ctmp=='s' || ctmp=='S'){
+					sw=(int)val;
+#ifdef DEBUG_ESC
+					fprintf(stderr,"width: %d\n",(int)val);	
+#endif
+				}
+				else if (ctmp=='t'|| ctmp=='T'){
+					sh=(int)val;
+#ifdef DEBUG_ESC					
+					fprintf(stderr,"height: %d\n",(int)val);	
+#endif
+				}
+				
+				if (ctmp!='s' && ctmp!='t') return;
+				read_float(&val,hd);
+				ctmp=getc(hd);
+				if (ctmp=='s' || ctmp=='S'){
+					sw=(int)val;
+#ifdef DEBUG_ESC
+					fprintf(stderr,"width: %d\n",(int)val);	
+#endif
+				}
+				else if (ctmp=='t'|| ctmp=='T'){
+					sh=(int)val;
+#ifdef DEBUG_ESC					
+					fprintf(stderr,"height: %d\n",(int)val);	
+#endif
+				}
+				return;				 
+			}
+			if (c2 == 't') {
+			float val;
+#ifdef DEBUG_ESC
+				fprintf(stderr,"destination raster dimensions (1/720 in):\n");
+#endif
+				ungetc(ctmp,hd);
+				read_float(&val,hd);
+				ctmp=getc(hd);
+				if (ctmp=='h' || ctmp=='H'){ 
+					dw=(int)val;
+#ifdef DEBUG_ESC					
+					fprintf(stderr,"width: %d\n",(int)val);	
+#endif
+				}
+				else if (ctmp=='v'|| ctmp=='V'){
+					dh=(int)val;
+#ifdef DEBUG_ESC					
+					fprintf(stderr,"height: %d\n",(int)val);	
+#endif
+				}
+				if (ctmp!='h' && ctmp!='v') return;
+
+				read_float(&val,hd);
+				ctmp=getc(hd);
+				if (ctmp=='h' || ctmp=='H'){
+					dw=(int)val;
+#ifdef DEBUG_ESC					
+					fprintf(stderr,"width: %d\n",(int)val);	
+#endif
+				}
+				else if (ctmp=='v'|| ctmp=='V'){
+					dh=(int)val;
+#ifdef DEBUG_ESC					
+					fprintf(stderr,"height: %d\n",(int)val);	
+#endif
+				}
+				return;				 
+			}
+			if (c2 == 'v') {
+			float val;
+				if (!silent_mode) Eprintf("configure image data:\n");
+				ungetc(ctmp,hd);
+				read_float(&val,hd);
+				ctmp=getc(hd); 
+				if (ctmp!='W')
+					fprintf(stderr,"unexpected terminator :%c",ctmp);	
+				if (val==6) {
+					if (!silent_mode) Eprintf("using default 8-bit color ranges\n");
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("color space: %d\n",(int)ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("pixel encoding: %d",(int)ctmp);
+					switch((int)ctmp){
+					case 0:
+					if (!silent_mode) Eprintf(" (indexed by plane)\n");
+					break;
+					case 1:
+					if (!silent_mode) Eprintf(" (indexed by pixel)\n");
+					break;
+					case 2:
+					if (!silent_mode) Eprintf(" (direct by plane)\n");
+					break;
+					case 3:
+					if (!silent_mode) Eprintf(" (direct by pixel)\n");
+					break;
+					case 4:
+					if (!silent_mode) Eprintf(" (indexed plane-by-plane)\n");
+					}
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("bits per index: %d\n",(int)ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("red bits: %d\n",(int)ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("green bits: %d\n",(int)ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("blue bits: %d\n",(int)ctmp);
+				} else {
+					if (!silent_mode) Eprintf("using explicit color ranges\n");
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("color space: %c\n",ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("color space: %c\n",ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("pixel encoding: %c(%d)\n",ctmp,(int)ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("bits per index: %c\n",ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("red bits: %c\n",ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("green bits: %c\n",ctmp);
+					ctmp=getc(hd);
+					if (!silent_mode) Eprintf("blue bits: %c\n",ctmp);
+				}
+				return;				 
+			}
+			if (c2 == 'b') {
+			float val;
+			int k,kk;
+			double px;
+				ungetc(ctmp,hd);
+				read_float(&val,hd);
+				ctmp=getc(hd); 
+				if (ctmp=='m' || ctmp=='M') {
+				if (!silent_mode) Eprintf("compression: \n");
+				compression=(int)val;
+				switch(compression){
+					case 0:
+					default:
+					if (!silent_mode) Eprintf(" unencoded by row\n");
+					break;
+					case 1:
+					if (!silent_mode) Eprintf(" RLE by row\n");
+					break;
+					case 2:
+					if (!silent_mode) Eprintf(" TIFF packbits by row\n");
+					break;
+					case 3:
+					if (!silent_mode) Eprintf(" delta by row\n");
+					break;
+					case 4:
+					if (!silent_mode) Eprintf(" unencoded by block\n");
+					break;
+					case 5:
+					if (!silent_mode) Eprintf(" adaptive by block\n");
+					break;
+					case 6:
+					if (!silent_mode) Eprintf(" CCITT group 3 one-dim by block\n");
+					break;
+					case 7:
+					if (!silent_mode) Eprintf(" CCITT group 3 two-dim by block\n");
+					break;
+					case 8:
+					if (!silent_mode) Eprintf(" CCITT group 4 by block\n");
+					break;
+					case 9:
+					if (!silent_mode) Eprintf(" replacement delta row\n");
+					break;
+					case 10:
+					if (!silent_mode) Eprintf(" lossless RGB/KCMY replacement delta\n");
+					break;
+					}
+				if (ctmp=='M') return;
+				read_float(&val,hd);
+				ctmp=getc(hd);
+				}
+				if (ctmp=='V') {
+#ifdef DEBUG_ESC				
+				"data by plane: %d bytes\n",(int)val);
+#endif
+				for (k=0;k<(int)val;k++) ctmp=getc(hd);
+				return;
+				}
+				if (ctmp=='W') {
+#ifdef DEBUG_ESC_2
+				  fprintf(stderr,"data by row or block: %d bytes\n",(int)val);
+#endif
+				  if (compression == 0 ) {
+				    haverow = (int)val;
+/*
+				    for (k=0;k<haverow;k++) {
+				      otmp[k]=fgetc(hd);
+				    }
+*/				
+				if (fread(otmp,1,haverow,hd)!= haverow) fprintf(stderr,"short read!\n");
+
+/*
+				fprintf(stderr,"first bytes: %c%c%c,last bytes: %c%c%c\n",otmp[0],otmp[1],otmp[2],
+				otmp[haverow-3],otmp[haverow-2],otmp[haverow-1]);
+*/
+				ctmp=fgetc(hd);
+				if ((int)ctmp!=27) {
+				if (!silent_mode) Eprintf("error in RTL raster data, skipping to next ESC\n");
+				while ( (ctmp=fgetc(hd)) != 27) {};
+				}
+				ungetc(ctmp,hd);
+				  }  
+
+				  if (compression == 3 && (int)val >0 ) {
+				        position=0;
+				 	kk=0;
+					while (kk<(int)val) { 
+					ptmp=getc(hd);
+					kk++;
+				  	offset = ptmp & 31;
+				  	numbytes=(ptmp >> 5)+1;
+				  	if (offset == 31) {
+				  		ptmp = getc(hd);
+				  		kk++;
+				  		offset += (int)ptmp;
+				  		while (ptmp == 255) {
+				  			ptmp = getc(hd);
+				  			offset += (int)ptmp;
+				  			kk++;
+						}
+					}	
+					position += offset;
+					for (k=0;k<numbytes;k++) 
+						otmp[position++]=getc(hd);
+					kk+=numbytes;
+					}
+				  }
+				  
+				  px=p_last.y;
+				  for (k=0;k<haverow;k++){  
+#if 0
+				    for (kk=0;kk<8;kk++) {
+p_last.y++;
+				       int l;
+					for (l=0;l<6;l++){
+				      	p_last.y++;
+				      Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
+				      if(((otmp[k]<<kk)&128)==128) {
+				        p_last.x+=6.;
+				        Pen_action_to_tmpfile(DRAW_TO, &p_last, scale_flag);
+				        p_last.x-=6.;
+				        }
+/*				cdot(0,NULL,0);*/
+				      }
+				    }
+#endif
+				int ir,ig,ib;
+				ir=otmp[k];
+				ig=otmp[k+1];
+				ib=otmp[k+2];
+/*
+			PlotCmd_to_tmpfile(DEF_PC);
+			Pen_Color_to_tmpfile(pen, ir, ig, ib);
+*/
+				p_last.y+=2.*hr;
+				Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
+				if (ir+ig+ib < 3*50) {
+				p_last.x+=2.*wr;
+				Pen_action_to_tmpfile(DRAW_TO, &p_last, scale_flag);
+				p_last.x-=2.*wr;
+				}
+				k+=2;
+				}
+				  p_last.y=px;
+				  p_last.x+=2.*hr;
+				  return;
+				}
+			fprintf(stderr,"unknown subtype %c\n",ctmp);
+			}
+		fprintf(stderr,"unknown graphics command ESC*%c\n",c2);
+		}
 		if (hp == TRUE && !nf && c1 != '%' && c1 != 'E') {
 			ungetc(ctmp, hd);
 			if (!silent_mode) {
 				if ( c1 == '&' && c2 == 'l' )
 				Eprintf("ignoring escape ESC&l... (paper size/orientation/...)\n");
-				else
+				else {
 				Eprintf("invalid escape ESC%c%c (Esc%d%d)\n", c1,
 					c2,c1,c2);
+				if (rtlgraphics==1) {
+				if (!silent_mode) Eprintf("error in RTL data, skipping to next ESC\n");
+				 ctmp=0;
+				 while ( (ctmp=fgetc(hd)) != 27){};
+				 ungetc(ctmp,hd);
+				 }
+				}	
 			}
 			return;
 		}

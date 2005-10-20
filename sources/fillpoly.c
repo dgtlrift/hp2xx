@@ -40,10 +40,10 @@ void fill(const GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	double avx, avy, bvx, bvy, ax, ay, bx, by, atx, aty, btx, bty, mu;
 				int hit=0;
 				int miss=0;
-#if 1
+#if 0
 	double my_eps=1.e-15;
 #else
-	double my_eps=0.;
+	double my_eps=1.e-12;
 #endif
 	PEN_W SafePenW = curwidth;
 	LineEnds SafeLineEnd = CurrentLineEnd;

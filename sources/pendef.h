@@ -43,7 +43,7 @@ copies.
 typedef unsigned short int PEN_N;
 typedef unsigned short int PEN_C;
 typedef float PEN_W;
-#ifndef _ZCONF_H
+#ifndef ZCONF_H
 typedef unsigned char Byte;     /* zconf.h already defines this */
 #endif
 typedef struct {

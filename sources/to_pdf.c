@@ -36,6 +36,7 @@ copies.
 #include <pdflib.h>
 #else
 #include <libharu.h>
+#include <libharuc.h>
 #endif
 #include "bresnham.h"
 #include "hp2xx.h"
@@ -410,7 +411,7 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 #ifdef PDFLIB
 			PDF_moveto(md,
 #else			
-			pdf_contents_moveto(canvas,
+			pdf_contents_move_to(canvas,
 #endif			
 			   		(pt1.x - xmin) * xcoord2mm,
 			   		(pt1.y - ymin) * ycoord2mm);
@@ -432,7 +433,7 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 #ifdef PDFLIB
 			PDF_lineto(md,
 #else			
-			pdf_contents_lineto(canvas,
+			pdf_contents_line_to(canvas,
 #endif			
 					(pt1.x - xmin) * xcoord2mm,
 				   	(pt1.y - ymin) * ycoord2mm);
@@ -456,9 +457,9 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 			PDF_restore(md);
 #else				   
 			pdf_contents_gsave(canvas);
-			pdf_contents_moveto(canvas,(pt1.x-xmin)*xcoord2mm,
+			pdf_contents_move_to(canvas,(pt1.x-xmin)*xcoord2mm,
 				  (pt1.y-ymin)*ycoord2mm); 
-			pdf_contents_lineto(canvas,(pt1.x-xmin+0.00001)*xcoord2mm,
+			pdf_contents_line_to(canvas,(pt1.x-xmin+0.00001)*xcoord2mm,
 				  (pt1.y-ymin+0.00001)*ycoord2mm); 
 			pdf_contents_stroke(canvas);	  
 			pdf_contents_grestore(canvas);

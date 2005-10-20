@@ -1,5 +1,14 @@
 Changes to hp2xx:
 =================
+3.5.0a22:
+Very rudimentary RTL support (only unencoded or delta-encoded, color-by-pixel 
+images are rendered (black and white only), most other formats are at least 
+read and reported).
+
+3.5.0a21:
+Adjusted tolerance factor for polygon outline detection. Updated to_pdf.c
+for current libharu.
+
 3.5.0a20:
 Replaced broken version of fillpoly.c with the copy intended for a19.
 Added line capstyle and joinstyle support to SVG output. Suppressed warning
