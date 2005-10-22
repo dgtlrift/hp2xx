@@ -65,8 +65,8 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
-#define VERS_NO        "3.5.0a22"
-#define VERS_DATE      "05/10/20"
+#define VERS_NO        "3.5.0a23"
+#define VERS_DATE      "05/10/22"
 #define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
 #if defined(AMIGA)
 #define VERS_ADDITIONS "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"

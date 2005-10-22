@@ -1752,7 +1752,8 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 	static unsigned char otmp[5000];
 	static int haverow=0,compression=0,rtlgraphics=0;
         static int sw=1,sh=1,dw=1,dh=1;
-        static double wr=1.,hr=1.;
+        static int wr=1,hr=1;
+        static double sdw,sdh;
 	int position,offset,numbytes;
 	
 	for (c0 = ESC, c2 = getc(hd), nf = 0;
@@ -1877,6 +1878,14 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				fprintf(stderr,"%s palette\n",(ctmp==49) ? "Pop" : "Push");
 #endif
 				ctmp=getc(hd); /* fetch terminator*/
+			if (ctmp!=49){ /* load grayscale palette */ 
+			int k,gray;
+				for (k=0;k<255;k++){
+				PlotCmd_to_tmpfile(DEF_PC);
+				gray=rint(0.3*(double)k+0.59*(double)k+0.11*(double)k);
+				Pen_Color_to_tmpfile(gray+1, gray, gray, gray);
+				}
+			}
 				return;
 				}
 			if (c2 == 'r') {
@@ -1904,9 +1913,11 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 						if (!silent_mode) Eprintf(" scaled, at left edge\n");
 						break;
 						case 3:
-						if (!silent_mode) Eprintf(" scaled, at current position (%f,%f)\n",p_last.x,p_last.y);
-						wr=dw/sw;
-						hr=dh/sh;	
+						wr=(int)(sdw*40)/sw;
+						hr=(int)(sdh*40)/sh;
+						if (!silent_mode) Eprintf(" scaled by (%d,%d), at current position (%f,%f)\n",wr,hr,p_last.x,p_last.y);
+			PlotCmd_to_tmpfile(DEF_PW);
+			Pen_Width_to_tmpfile(pen, 0.025);
 						break;
 						}
 					rtlgraphics=1;	
@@ -1955,14 +1966,16 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				ctmp=getc(hd);
 				if (ctmp=='h' || ctmp=='H'){ 
 					dw=(int)val;
+					sdw=(double)dw/720.*25.4; 
 #ifdef DEBUG_ESC					
-					fprintf(stderr,"width: %d\n",(int)val);	
+					fprintf(stderr,"width: %d dpt (%f mm, %d pixel)\n",dw,sdw,(int)(sdw*40));	
 #endif
 				}
 				else if (ctmp=='v'|| ctmp=='V'){
 					dh=(int)val;
+					sdh=(double)dh/720.*25.4;
 #ifdef DEBUG_ESC					
-					fprintf(stderr,"height: %d\n",(int)val);	
+					fprintf(stderr,"height: %d dpt (%f mm, %d pixel)\n",dh,sdh,(int)(sdh*40));	
 #endif
 				}
 				if (ctmp!='h' && ctmp!='v') return;
@@ -1971,14 +1984,16 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				ctmp=getc(hd);
 				if (ctmp=='h' || ctmp=='H'){
 					dw=(int)val;
+					sdw=(double)dw/720.*25.4; 
 #ifdef DEBUG_ESC					
-					fprintf(stderr,"width: %d\n",(int)val);	
+					fprintf(stderr,"width: %d dpt (%f mm, %d pixel)\n",dw,sdw,(int)(sdw*40));	
 #endif
 				}
 				else if (ctmp=='v'|| ctmp=='V'){
 					dh=(int)val;
+					sdh=(double)dh/720.*25.4;
 #ifdef DEBUG_ESC					
-					fprintf(stderr,"height: %d\n",(int)val);	
+					fprintf(stderr,"height: %d dpt (%f mm, %d pixel)\n",dh,sdh,(int)(sdh*40));	
 #endif
 				}
 				return;				 
@@ -2092,7 +2107,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				}
 				if (ctmp=='V') {
 #ifdef DEBUG_ESC				
-				"data by plane: %d bytes\n",(int)val);
+				fprintf(stderr,"data by plane: %d bytes\n",(int)val);
 #endif
 				for (k=0;k<(int)val;k++) ctmp=getc(hd);
 				return;
@@ -2103,11 +2118,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 #endif
 				  if (compression == 0 ) {
 				    haverow = (int)val;
-/*
-				    for (k=0;k<haverow;k++) {
-				      otmp[k]=fgetc(hd);
-				    }
-*/				
+
 				if (fread(otmp,1,haverow,hd)!= haverow) fprintf(stderr,"short read!\n");
 
 /*
@@ -2147,49 +2158,64 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					}
 				  }
 				  
-				  px=p_last.y;
-				  for (k=0;k<haverow;k++){  
-#if 0
-				    for (kk=0;kk<8;kk++) {
-p_last.y++;
-				       int l;
-					for (l=0;l<6;l++){
-				      	p_last.y++;
-				      Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
-				      if(((otmp[k]<<kk)&128)==128) {
-				        p_last.x+=6.;
-				        Pen_action_to_tmpfile(DRAW_TO, &p_last, scale_flag);
-				        p_last.x-=6.;
-				        }
-/*				cdot(0,NULL,0);*/
-				      }
-				    }
-#endif
-				int ir,ig,ib;
+			if (rot_tmp==90.||rot_tmp==270.) {
+				px=p_last.x; /* save start of line */
+			} else				 
+				px=p_last.y;
+			
+			for (k=0;k<haverow;k++){ /* for each input pixel */  
+				int ir,ig,ib, gray;
 				ir=otmp[k];
 				ig=otmp[k+1];
 				ib=otmp[k+2];
-/*
-			PlotCmd_to_tmpfile(DEF_PC);
-			Pen_Color_to_tmpfile(pen, ir, ig, ib);
-*/
-				p_last.y+=2.*hr;
-				Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
-				if (ir+ig+ib < 3*50) {
-				p_last.x+=2.*wr;
+
+			gray=rint(0.3*ir+0.59*ig+0.11*ib);
+
+			fputc(SET_PEN,td);
+			fputc(gray+1,td);
+
+			if (rot_tmp == 90. || rot_tmp==270.)
+				p_last.x++;
+			else				
+				p_last.y--;
+			for (kk=0;kk<=wr;kk++) { /*for all output pixels resulting from scaling */
+
+				if (rot_tmp == 90. || rot_tmp==270.)
+					p_last.x--;
+				else				
+					p_last.y++;
+			Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
+			
+				if (rot_tmp == 90. || rot_tmp==270.)
+					p_last.y+=hr;
+				else				
+					p_last.x+=hr; /* draw line accoring to vertical scale factor */
+	
 				Pen_action_to_tmpfile(DRAW_TO, &p_last, scale_flag);
-				p_last.x-=2.*wr;
-				}
-				k+=2;
-				}
-				  p_last.y=px;
-				  p_last.x+=2.*hr;
-				  return;
-				}
-			fprintf(stderr,"unknown subtype %c\n",ctmp);
-			}
-		fprintf(stderr,"unknown graphics command ESC*%c\n",c2);
+
+				if (rot_tmp == 90. || rot_tmp==270.)
+					p_last.y-=hr;
+				else				
+					p_last.x-=hr; /* return to baseline of row */
+			} /* for all output pixels */
+			k+=2; /* advance to next input pixel */
 		}
+
+		if (rot_tmp==90.||rot_tmp==270.) {
+			p_last.x=px; 
+			p_last.y+=hr;
+		} else	{			 
+			p_last.y=px; /* first column of next row */
+			p_last.x+=hr; /* one row below previous one */
+		}
+		
+		return; /* completed this command */
+		}
+		
+		fprintf(stderr,"unknown subtype %c\n",ctmp);
+		}
+	fprintf(stderr,"unknown graphics command ESC*%c\n",c2);
+	}
 		if (hp == TRUE && !nf && c1 != '%' && c1 != 'E') {
 			ungetc(ctmp, hd);
 			if (!silent_mode) {

@@ -1,5 +1,10 @@
 Changes to hp2xx:
 =================
+3.5.0a23:
+
+Corrections for image rotation in RTL mode, replaced black-and-white rendering 
+of RTL images by simple luminance-based grayscaling.
+
 3.5.0a22:
 Very rudimentary RTL support (only unencoded or delta-encoded, color-by-pixel 
 images are rendered (black and white only), most other formats are at least 

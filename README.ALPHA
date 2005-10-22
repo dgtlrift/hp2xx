@@ -1,5 +1,10 @@
 Recent changes in the 3.5.0 development ("alpha") series:
 
+3.5.0a23:
+
+- RTL images now respect HPGL ROtation and use a luminance-based grayscale 
+  palette instead of black and white.
+
 3.5.0a22:
 
 New features:
