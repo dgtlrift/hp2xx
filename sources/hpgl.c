@@ -497,7 +497,7 @@ static void init_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 	fixedwidth = (short) pi->hwsize;
 	r_base = g_base = b_base = 0;
 	r_max = g_max = b_max = 255;
-
+	tp->truetype= pg->truetype;
 /*  pens_in_use = 0; */
 	pg->maxpens = 8;
 	pg->maxcolor = 1;
@@ -1002,8 +1002,8 @@ static void rect(const GEN_PAR * pg, int relative, int filled, float cur_pensize
 
 			/*      anchor.y=MIN(P1.y,ymin); */
 		}
-		fill(pg,polygons, vertices, anchor, P2, scale_flag,
-		     filltype, hatchspace, hatchangle,pt.width[pen]);
+		fill(polygons, vertices, anchor, P2, scale_flag,
+		     filltype, hatchspace, hatchangle,pt.width[pen],pg->dpi);
 	}
 	Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 }
@@ -2867,9 +2867,11 @@ static void fwedges(FILE * hd, float cur_pensize)
 		anchor.y = ymin;
 		if (scale_flag) Plotter_to_User_coord(&anchor,&anchor);	
 	}
-/*	fill(pg,polygons, vertices, anchor, P2, scale_flag, filltype,
-FIXME	     hatchspace, hatchangle,pt.width[pen]);
+/*	
+FIXME: add calls for the "haspoly" case
 */
+	fill(polygons, vertices, anchor, P2, scale_flag, filltype,
+	     hatchspace, hatchangle,pt.width[pen],0);
 
 	CurrentLinePatLen = SafeLinePatLen;	/* Restore */
 
@@ -3414,8 +3416,8 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		anchor.y = ymin;
 		if (scale_flag) Plotter_to_User_coord(&anchor,&anchor);	
 		}
-		fill(pg,polygons, vertices, anchor, P2, scale_flag, filltype,
-		     hatchspace, hatchangle,pt.width[pen]);
+		fill(polygons, vertices, anchor, P2, scale_flag, filltype,
+		     hatchspace, hatchangle,pt.width[pen],pg->dpi);
 		Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 		break;
 	case FT:		/* Fill Type */
@@ -4693,7 +4695,9 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 
 	if (!pg_flag)
 		init_HPGL(pg, pi);
-
+else
+	init_text_par();
+	
 	if (!pg->quiet)
 		Eprintf("\nReading HPGL file\n");
 

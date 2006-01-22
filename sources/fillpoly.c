@@ -9,9 +9,9 @@
 #include "lindef.h"
 #include "pendef.h"
 #include <assert.h>
-void fill(const GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
+void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	  HPGL_Pt point2, int scale_flag, int filltype, float spacing,
-	  float hatchangle,float curwidth)
+	  float hatchangle,float curwidth, int curdpi)
 {
 	typedef struct {
 		double x, y;
@@ -54,9 +54,9 @@ void fill(const GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	return;
 	}
 	CurrentLineEnd = LAE_butt;
-	penwidth = 0.1;
+	penwidth = 0.1*10;
 	PlotCmd_to_tmpfile(DEF_PW);
-	Pen_Width_to_tmpfile(1, penwidth);
+	Pen_Width_to_tmpfile(1, penwidth/10.);
 
 	PlotCmd_to_tmpfile(DEF_LA);
 	Line_Attr_to_tmpfile(LineAttrEnd, LAE_round);
@@ -65,7 +65,7 @@ void fill(const GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 		penwidth = spacing;
 
 if (filltype == 11) penwidth=1.69;
-if (filltype==10) penwidth= pg->dpi*curwidth;
+if (filltype==10) penwidth= curdpi*curwidth;
 
 	polyxmin = 100000.;
 	polyymin = 100000.;

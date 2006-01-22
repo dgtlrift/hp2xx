@@ -486,6 +486,14 @@ process_opts(int argc, char *argv[],
 			pi->truesize = TRUE;
 			break;
 
+		case 'T':
+#ifdef STROKED_FONTS
+			pg->truetype = TRUE;
+#else
+			Eprintf("This version of hp2xx was built without TrueType support.\n");
+#endif			
+			break;
+
 		case 'V':
 			po->vga_mode = (Byte) atoi(optarg);
 			break;
@@ -547,7 +555,7 @@ int main(int argc, char *argv[])
 	char outname[128] = "";
 
 	char *shortopts =
-	    "a:c:d:D:e:f:h:l:m:M:o:O:p:P:r:R::s:S:V:w:x:X:y:Y:z:Z:CFH:W:inqtuvNI?";
+	    "a:c:d:D:e:f:h:l:m:M:o:O:p:P:r:R::s:S:V:w:x:X:y:Y:z:Z:CFH:W:inqtTuvNI?";
 	struct option longopts[] = {
 		{"mode", 1, NULL, 'm'},
 		{"pencolors", 1, NULL, 'c'},
@@ -576,6 +584,7 @@ int main(int argc, char *argv[])
 		{"height", 1, NULL, 'h'},
 		{"width", 1, NULL, 'w'},
 		{"truesize", 0, NULL, 't'},
+		{"truetype", 0, NULL, 'T'},
 		{"uniform_width",0,NULL,'u'},
 		
 		{"x0", 1, NULL, 'x'},

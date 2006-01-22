@@ -292,6 +292,11 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	     FLAGSTATE(pg->no_ps));
 	Eprintf
 	    ("-M int	\t\tremap all drawing commands using pen 0 to this pen\n");
+#ifdef STROKED_FONTS
+	Eprintf
+	    ("-T        %s\t\tuse truetype fonts instead of simple stick fonts\n",
+             FLAGSTATE(pg->truetype));
+#endif             
 	Eprintf
 	    ("-f strg   (auto gen.)\tName of output file ('-' = to stdout)\n");
 	Eprintf("-l strg   (stderr)\tName of log file\n");
@@ -404,8 +409,13 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
 	Eprintf("Corresponding long options:\n\n");
 	Eprintf
 	    ("hp2xx   [--mode] [--colors] [--pensizes] [--pages] [--quiet]\n");
+#ifdef STROKED_FONTS
+	Eprintf
+	    ("\t[--nofill] [--no_ps] [--mapzero] [--truetype]\n");
+#else
 	Eprintf
 	    ("\t[--nofill] [--no_ps] [--mapzero]\n");
+#endif
 	Eprintf
 	    ("\t[--width] [--height] [--aspectfactor] [--truesize]\n");
 	Eprintf("\t[--x0] [--x1] [--y0] [--y1]\n");
@@ -458,6 +468,7 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	pi->xoff = 0.0;
 	pi->yoff = 0.0;
 	pi->truesize = FALSE;
+	pg->truetype = FALSE;
 	pi->hwcolor = FALSE;
 	pi->hwsize = FALSE;
 	pi->rotation = 0.0;
@@ -500,7 +511,8 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	pg->maxpens = 8;
 	pg->is_color = FALSE;
 	pg->mapzero = -1;
-pg->dpi=75.;
+	pg->dpi=75.;
+	pg->truetype = FALSE;
 	pt.width[0] = 0.0;	/* 1/10 mm              */
 	pt.color[0] = xxBackground;
 	for (i = 1; i <= NUMPENS; i++) {

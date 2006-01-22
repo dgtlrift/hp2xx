@@ -1,7 +1,13 @@
 Changes to hp2xx:
 =================
+3.5.0a24:
+Fixed nroff syntax errors in manpage. Made optional truetype font support
+compile again and added -T/--truetype option to activate it. Added truetype
+glyph table for HP font 7 (national characters and common symbols).
+Restored wedge filling. Reduced number of lines used for solid fills of 
+polygons a bit.
+ 
 3.5.0a23:
-
 Corrections for image rotation in RTL mode, replaced black-and-white rendering 
 of RTL images by simple luminance-based grayscaling.
 

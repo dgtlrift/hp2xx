@@ -65,8 +65,8 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
-#define VERS_NO        "3.5.0a23"
-#define VERS_DATE      "05/10/22"
+#define VERS_NO        "3.5.0a24"
+#define VERS_DATE      "06/01/22"
 #define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
 #if defined(AMIGA)
 #define VERS_ADDITIONS "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"
@@ -300,6 +300,7 @@ typedef struct {		/* Corresponding option(s)        */
 	int quiet;		/* -q                           */
 	int nofill;		/* -n                           */
 	int no_ps;		/* -N                           */
+	int truetype;		/* -T				*/
 	int extraclip;		/* -e extraclip                 */
 	PEN_W maxpensize;	/* (internally needed)          */
 	int is_color;		/* (internally needed)          */
@@ -440,8 +441,8 @@ int to_emw(const GEN_PAR * pg, const OUT_PAR * po);
 int to_emp(const GEN_PAR * pg, const OUT_PAR * po);
 #endif
 
-void fill(const GEN_PAR *pg,HPGL_Pt polygon[], int numpoints, HPGL_Pt P1, HPGL_Pt P2,
-	  int scale_flag, int filltype, float spacing, float hatchangle,float penwidth);
+void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt P1, HPGL_Pt P2,
+	  int scale_flag, int filltype, float spacing, float hatchangle,float penwidth, int curdpi);
 
 /*std_main*/
 void action_oldstyle(GEN_PAR *, IN_PAR *, OUT_PAR *);

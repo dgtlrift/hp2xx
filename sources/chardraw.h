@@ -97,6 +97,7 @@ typedef struct {
 	int variable;		/* fixed or variable width, current */
 	int avariable;		/* same setting, alternate font */
 	int svariable;		/* same setting, standard font */
+	int truetype;		
 } TEXTPAR, *TextPar;
 
 

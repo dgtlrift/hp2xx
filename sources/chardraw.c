@@ -90,6 +90,15 @@ static const FT_Outline_Funcs my_tt_functions = {
 	(FT_Outline_CubicTo_Func) tt_bezier2,
 	0, 0
 };
+static unsigned char fontpos7[128]={
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+173,199,203,200,202,205,206,141,67,216,215,142,213,212, 
+/*fixme: needs two bars */133,
+217,234,235,131,100,111,102,120,163,162,189,133,150,134,166,132,
+107,114,123,128,105,112,121,126,106,113,122,127,108,115,124,129,
+99,118,145,144,110,116,161,160,98,117,103,104,101,119,137,209,201,
+174,109,232,233,204,207,208,210,175,125,227,228,211,187,186,
+236,237,172,151,136,245,238,243,244,157,158,169,0,170,147};
 
 #endif
 
@@ -842,7 +851,7 @@ void adjust_text_par(void)
 	tp->chardiff.y = tp->space * (1.0 + tp->espace) * sdir;
 	tp->linediff.x = tp->line * (1.0 + tp->eline) * sdir;
 	tp->linediff.y = -tp->line * (1.0 + tp->eline) * cdir;
-
+	if (tp->truetype == 0) return;
 #ifdef STROKED_FONTS
 	if (init_font(tp->font)) {
 		Eprintf("\007 init_font() failed for font #%d\n",
@@ -1079,7 +1088,7 @@ void plot_string(char *txt, LB_Mode mode, short current_pen)
 			break;
 		default:
 #ifdef STROKED_FONTS
-			if (ttfont)
+			if (tp->truetype && ttfont)
 				ASCII_to_font((int) *txt,current_pen);
 			else
 #endif
@@ -1358,7 +1367,24 @@ void ASCII_to_font(int c, int curpen)
 	Line_Attr_to_tmpfile(LineAttrEnd, LAE_round);
 	if (c < 0)
 		c += 256;
-	if (tp->font == 0 || tp->font == 7)
+	if (c >128 ) {
+		c-=128;
+		tp->font=7;
+	}
+	if (tp->font == 7) {
+	c=fontpos7[c];
+#ifdef STROKED_VARFONTS
+	if (tp->variable)
+	error = FT_Load_Glyph(varface, (FT_ULong) c, FT_LOAD_NO_SCALE);
+	else
+#endif	
+	error = FT_Load_Glyph(face, (FT_ULong) c, FT_LOAD_NO_SCALE);
+	if (error) {
+		fprintf(stderr, " ! FT_Load_Char %c\n", c);
+		return;
+	}
+	} else {
+	if (tp->font == 0 ) 
 		switch (c) {	/* HP Roman8 to iso8859 conversion table */
 		case 179:
 			c = 176;
@@ -1406,6 +1432,7 @@ void ASCII_to_font(int c, int curpen)
 		fprintf(stderr, " ! FT_Load_Char %c\n", c);
 		return;
 	}
+	}
 #if 0
 	fprintf(stderr, "metrics : width %d, height %d advance %d\n",
 		(int) (slot->metrics.width / 64.),
@@ -1429,7 +1456,7 @@ void ASCII_to_font(int c, int curpen)
 	boxmin.y = tp->refpoint.y - 150;
 	boxmax.x = boxmin.x + tp->chardiff.x + 5;
 	boxmax.y = boxmin.y + tp->chardiff.y + 5;
-	fill(polygon, numpoints, boxmin, boxmax, 0, 2, 1, 0,pt.width[curpen]);
+	fill(polygon, numpoints, boxmin, boxmax, 0, 2, 1, 0,pt.width[curpen],0);
 #ifdef STROKED_VARFONTS
 	if (tp->variable)
 	tp->refpoint.x += tp->space/20*slot->advance.x/60;

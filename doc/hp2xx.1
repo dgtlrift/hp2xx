@@ -155,7 +155,7 @@ coordinate exceeds your limits, they will be overwritten.
 Use option
 .I -m mode
 to select the program mode, i.e. the output format. Currently supported:
-mode = "mf" (Metafont), "em" (emTeX \special{} commands), "epic"
+mode = "mf" (Metafont), "em" (emTeX \\special{} commands), "epic"
 (line drawing using TeX macros within epic.sty), "eps" (PostScript),
 "dxf" (Autocad), "emf/emp" (MS Enhanced Metafile / Printing - available
 in Windows-built executables only), "svg" (Scalable Vector Graphics),
@@ -260,8 +260,8 @@ into a TeX document as the character "Z" of a special font that you may
 create. Edit the metafont source, e.g., to change the letter "Z" for
 another, or to change the line thickness, which is set to 0.4pt by default.
 The other TeX-related modes ("cad" for TeXcad compatible code, "em" for
-employing \special{em:line} macros, and "epic" for drawing lines with
-macros from "epic.sty") address different compromises to cope with TeX's
+employing \\special{em:line} macros, and "epic" for drawing lines with
+macros from epic.sty address different compromises to cope with TeX's
 poor line drawing capability and are generally not recommended nor fully
 supported. Feel free to experiment with them -- they generate ASCII output
 that should be "input" into TeX/LaTeX documents.
