@@ -183,28 +183,28 @@ EX_DEFS = #-DDEBUG_ESC
 EX_LIBS =
 #
 # Include PDF support using free (ZLIB/PNG-licensed) libharu
-EX_SRC	+= to_pdf.c
-EX_OBJ += to_pdf.o
-EX_DEFS += -DUSEPDF 
-EX_LIBS += -lharu
+#EX_SRC	+= to_pdf.c
+#EX_OBJ += to_pdf.o
+#EX_DEFS += -DUSEPDF 
+#EX_LIBS += -lharu
 #
 # Include PDF support using commercial PDFLIB
 #EX_SRC	+= to_pdf.c
 #EX_OBJ += to_pdf.o
 #EX_DEFS += -DUSEPDF -DPDFLIB
-#EX_LIBS += -lpdf
+#EX_LIBS += -L. -lpdf
 #
 #
 # Epson Esc/P2 support 
-EX_SRC	+= to_escp2.c
-EX_OBJ	+= to_escp2.o
-EX_DEFS += -DEPSON
+#EX_SRC	+= to_escp2.c
+#EX_OBJ	+= to_escp2.o
+#EX_DEFS += -DEPSON
 #
 # Include PNG support:
-#EX_SRC  += png.c to_png.c
-#EX_OBJ  += png.o to_png.o
-#EX_DEFS += -DPNG
-#EX_LIBS += -lpng -lz
+EX_SRC  += png.c to_png.c
+EX_OBJ  += png.o to_png.o
+EX_DEFS += -DPNG
+EX_LIBS += -lpng -lz
 # Include GIF support:
 EX_SRC  += gif.c to_gif.c
 EX_OBJ  += gif.o to_gif.o

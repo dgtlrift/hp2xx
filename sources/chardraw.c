@@ -1367,10 +1367,11 @@ void ASCII_to_font(int c, int curpen)
 	Line_Attr_to_tmpfile(LineAttrEnd, LAE_round);
 	if (c < 0)
 		c += 256;
-	if (c >128 ) {
+/*	if (c >128 ) {
 		c-=128;
 		tp->font=7;
 	}
+*/
 	if (tp->font == 7) {
 	c=fontpos7[c];
 #ifdef STROKED_VARFONTS

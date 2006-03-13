@@ -372,6 +372,22 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
        Eprintf("      m\t\tuse media selection logic\n");
        Eprintf("      d\t\tdefer media selection\n");
        Eprintf("-R    file\tinclude postscript resource in document setup\n\n");
+/**
+ ** Read PDF permission file      added by Horst Liesinger 2006-02-16
+ **/
+#ifdef USEPDF
+       Eprintf("\nPDF-exclusive options:\n");
+       Eprintf("-R    file\tto read PDF passwords and permissions\n");
+       Eprintf("\t\te.g.:\t[PDF_PERMISSION]\n");
+       Eprintf("\t\t\tuser = User_password\n");
+       Eprintf("\t\t\towner = Owner_password\n");
+       Eprintf("\t\t\tenable = 0 ; read only\n");
+       Eprintf("\t\t\t\tENABLE_READ=0\n");
+       Eprintf("\t\t\t\tENABLE_PRINT=4\n");
+       Eprintf("\t\t\t\tENABLE_EDIT_ALL=8\n");
+       Eprintf("\t\t\t\tENABLE_COPY=16\n");
+       Eprintf("\t\t\t\tENABLE_EDIT=32\n\n");
+#endif
 
 	NormalWait();
 

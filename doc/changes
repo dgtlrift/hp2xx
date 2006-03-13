@@ -1,5 +1,11 @@
 Changes to hp2xx:
 =================
+3.5.0a25:
+Removed one extraneous mapping from the upper half of charset0 to charset7 
+in the new truetype code.
+PDF output now supports optional encryption with passwords read from a configuration
+file. (Horst Liesinger).
+
 3.5.0a24:
 Fixed nroff syntax errors in manpage. Made optional truetype font support
 compile again and added -T/--truetype option to activate it. Added truetype

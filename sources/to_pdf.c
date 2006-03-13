@@ -27,9 +27,12 @@ copies.
  ** 01/06/19  V 1.00 MK   derived from to_eps.c
  **/
 
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <time.h>
 #include <math.h>
 #ifdef PDFLIB
@@ -61,6 +64,7 @@ pdf_page page;
 pdf_contents canvas;
 #endif
 
+
 int to_pdf(const GEN_PAR *, const OUT_PAR *);
 void pdf_init(const GEN_PAR *, const OUT_PAR *, PDF *, PEN_W);
 void pdf_set_linewidth(double, PDF *);
@@ -69,6 +73,8 @@ void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize,
 		      PDF * fd);
 void pdf_set_color(PEN_C pencolor, PDF * fd);
 int pdf_end(PDF *,const OUT_PAR *);
+int pdf_perm_file(int *, char *, char *, const OUT_PAR *);
+int ini_parse(const OUT_PAR *, const char *, const char *, char *);
 
 #ifndef PDFLIB
 #define PAGEMODE if (openpath==1) { pdf_contents_stroke(canvas); openpath=0; }
@@ -81,12 +87,31 @@ int pdf_end(PDF *,const OUT_PAR *);
  **/
 int pdf_end(PDF * fd, const OUT_PAR *po)
 {
+
 #ifdef PDFLIB
-	PDF_end_page(fd);
-	PDF_close(fd);
+        PDF_end_page_ext(fd,"");
+	PDF_end_document(fd,"");
 	PDF_delete(fd);
 	PDF_shutdown();
 #else
+
+int Rc=0;
+int pdf_perm=0;
+char owner_perm[254];
+char user_perm[254];
+
+    /* include user's security (Horst Liesinger 2005-02-15) */
+    if (po->ps_incres) {
+      Rc=pdf_perm_file(&pdf_perm, owner_perm, user_perm, po);
+/*      printf("pdf_perm_file: Rc=%i Ownerpwd:%s Userpwd:%s Enable:%i\n",Rc, owner_perm, user_perm, pdf_perm); */
+      if (Rc==0) {
+/* pdf_doc_set_password(pdf_doc doc, const char* owner_passwd, const char* user_passwd) */
+        pdf_doc_set_password(fd, owner_perm, user_perm);
+/*  int pdf_doc_set_permission(pdf_doc doc, int permission); */
+        pdf_doc_set_permission(fd, pdf_perm);
+      }
+    }
+
 	if (pdf_doc_write_to_file(fd, po->outfile) !=PDF_SUCCESS) {
 		PError("hp2xx (pdf)");
 		pdf_doc_free(fd);
@@ -280,7 +305,7 @@ void pdf_init(const GEN_PAR * pg, const OUT_PAR * po, PDF * fd,
 			MM_TO_PS_POINT);
 
 #ifdef PDFLIB
-	PDF_begin_page(fd, (float) right, (float) high);
+	PDF_begin_page_ext(fd, (double) right, (double) high,"");
 	pdf_set_linewidth(pensize, fd);
 	pdf_set_linecap(CurrentLineAttr.End, pensize, fd);
 	pdf_set_linejoin(CurrentLineAttr.Join, CurrentLineAttr.Limit,
@@ -313,6 +338,11 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 	PEN_W pensize;
 
 #ifdef PDFLIB
+        int Rc=0;
+        int pdf_perm=0;
+        char owner_perm[254];
+        char user_perm[254];
+        char optionstring[1024];
 	PDF_boot();
 #endif	
 
@@ -325,7 +355,20 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 
 #ifdef PDFLIB
 	md = PDF_new();
-	if (PDF_open_file(md, po->outfile) == -1) {
+
+    /* include user's security (Horst Liesinger 2005-02-15) */
+        if (po->ps_incres) {
+           Rc=pdf_perm_file(&pdf_perm, owner_perm, user_perm, po);
+           sprintf(optionstring,"masterpassword=%s userpassword=%s permissions {",owner_perm,user_perm);
+           if ((pdf_perm&32)==0) strcat(optionstring,"noannots ");
+           if ((pdf_perm&16)==0) strcat(optionstring,"nocopy ");
+           if ((pdf_perm&8)==0) strcat(optionstring,"nomodify ");
+           if ((pdf_perm&4)==0) strcat(optionstring,"noprint ");
+           strcat(optionstring,"}");
+           } else {
+           strcpy(optionstring,"");	
+        }
+	if (PDF_begin_document(md, po->outfile,0,optionstring) == -1) {
 		PError("hp2xx (pdf)");
 		return ERROR;
 	}	
@@ -442,11 +485,11 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 
 		case PLOT_AT:
 			pensize = pt.width[pen_no];
+			PAGEMODE;
 
 			pdf_set_color(pt.color[pen_no], md);
 
 			HPGL_Pt_from_tmpfile(&pt1);
-			PAGEMODE;
 #ifdef PDFLIB
 			PDF_save(md);
 			PDF_setlinewidth(md, 0.00001);
@@ -482,3 +525,170 @@ PDF_exit:
 		Eprintf("\n");
 	return err;
 }
+
+/**
+ ** Read Permissions and passwords     added by Horst Liesinger 2006-02-16
+ **/
+int pdf_perm_file(int *pdf_perm, char *owner_perm, char *user_perm, const OUT_PAR *po)
+{
+int Rc=0;
+int RC=0;
+char stmp[100];
+const char * PDF_SEC="PDF_PERMISSION";
+const char * PDF_Us="user";
+const char * PDF_Own="owner";
+const char * PDF_En="enable";
+/*
+ENABLE_READ	=  0
+ENABLE_PRINT	=  4
+ENABLE_EDIT_ALL	=  8
+ENABLE_COPY	= 16
+ENABLE_EDIT	= 32
+*/
+
+/*  printf ("\npdf_perm_file: started\n"); */
+  if (po->ps_incres) {
+    Rc=ini_parse(po, PDF_SEC, PDF_Own, owner_perm);
+      if (Rc!=0) {
+        RC++;
+        if (Rc==-1)
+         Eprintf("Warning: cannot open security file %s: %s\n",po->ps_incres,strerror(errno));
+        if (Rc==1)
+         Eprintf("Warning: cannot read value for %s in security file %s\n",PDF_Own,po->ps_incres);
+        if (Rc==2)
+         Eprintf("Warning: cannot read variable %s in security file %s\n",PDF_Own,po->ps_incres);
+        if (Rc==3)
+         Eprintf("Warning: cannot read section %s in security file %s\n",PDF_SEC,po->ps_incres);
+      } else {
+        Rc=ini_parse(po, PDF_SEC, PDF_Us, user_perm);
+         if (Rc!=0) {
+           RC++;
+           Eprintf("Warning: cannot read value for %s in security file %s\n",PDF_Us,po->ps_incres);
+         } else {
+           Rc=ini_parse(po, PDF_SEC, PDF_En, stmp);
+            if (Rc!=0) {
+              RC++;
+              Eprintf("Warning: cannot read value for %s in security file %s\n",PDF_En,po->ps_incres);
+            } else {
+              Rc=sscanf(stmp,"%i",pdf_perm);
+              if ( Rc != 1 ) {
+                RC++;
+                Eprintf("Warning:  value %s for %s in security file %s is not an integer\n",stmp ,PDF_En,po->ps_incres);
+              }
+            }
+         }
+      }
+    }
+/*  printf ("pdf_perm_file: end\n"); */
+  return RC;
+}
+
+/**
+ ** Read ini file      added by Horst Liesinger 2006-02-16
+ **/
+int ini_parse(const OUT_PAR *po,const char * section,const char * variable, char * value)
+{
+#if 0
+char * line = NULL;
+ssize_t read;
+#else
+char *line=malloc(512*sizeof(char));
+size_t read;
+#endif
+int lineNum=0;
+int i=0;
+int t=0;
+int secOK=1;
+int varOK=1;
+int valOK=1;
+size_t len = 0;
+char tmp[256];
+char Var[256];
+char Val[256];
+FILE *Fi;
+/*
+ printf("File: >%s<\n",po->ps_incres);
+ printf("section: >%s<\n",section);
+ printf("variable: >%s<\n",variable);
+*/
+ Fi = fopen(po->ps_incres,"r");
+ if (NULL==Fi) {
+/*  printf("Warning: cannot open security file %s\n",po->ps_incres); */
+  return -1;
+ } else {
+#if 0
+  while ((read = getline(&line, &len, Fi)) != -1) {
+#else
+  while (fgets(line, 512, Fi) != NULL) {
+    read=strlen(line);
+#endif
+    lineNum++;
+    while (( line[0] == ' ' ) || ( line[0] == 9 )) {
+      line++;
+      read--;
+    }
+    while (( line[read-1] == 10 ) || ( line[read-1] == 13 ) || (line[read-1] == ' ' ) || (line[read-1] == 9))
+      line[read-- -1]=(int)NULL;
+    if ( line[0] == '[' ) {
+      sscanf(line,"[%s]",tmp);
+      while ( strlen(tmp) && ( (tmp[strlen(tmp)-1] == ' ') || (tmp[strlen(tmp)-1] == 9) || (tmp[strlen(tmp)-1] == ']' ) )) {
+      tmp[strlen(tmp)-1] = (int)NULL;
+      }
+    }else{
+      if ( line[0] != (int) NULL ) {
+       if ( strcmp(tmp,section) == 0 ) {
+         secOK=0;
+         i=0;
+         Var[i]=(int)NULL;
+         while (( line[0] != ' ' ) && ( line[0] != '=' ) && ( line[0] != (int)NULL) ){
+           Var[i++]=line[0];
+           Var[i]=(int)NULL;
+           line++;
+           read--;
+         }
+         if ( strcmp(Var,variable)==0 ) {
+           varOK=0;
+           while (( line[0] == ' ' ) || ( line[0] == 9 )) {
+             line++;
+             read--;
+           }
+           if (line[0] == '=') {
+             valOK=0;
+             line++;
+             while (( line[0] == ' ' ) || ( line[0] == 9 )) { line++;}
+             t=0;
+ /*                         = "                  = '                  = `     */
+             if (( line[0] == 34 ) || ( line[0] == 39 ) || ( line[0] == 96 )) {
+               t=line[0];
+               line++;
+             }
+             i=0;
+             Val[i]=(int)NULL;
+             while ((line[0] != ';') && (line[0] != '#') && (line[0] != t) && (line[0] != (int)NULL)) {
+               Val[i++]=line[0];
+               Val[i]=(int)NULL;
+               line++;
+             }
+             while ( strlen(Val) && ( (Val[strlen(Val)-1] == ' ') || (Val[strlen(Val)-1] == 9) ) ) {
+              Val[strlen(Val)-1] = (int)NULL;
+             }
+           }else{
+             Val[0]=(int)NULL;
+           }
+           sprintf(value,"%s", Val);
+         }
+       }
+      }
+    }
+  len=0;
+  }
+#if 0
+  if (line)
+    free(line);
+#endif
+ fclose (Fi);
+
+ return (secOK + valOK + varOK);
+ }
+}
+

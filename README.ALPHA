@@ -1,5 +1,13 @@
 Recent changes in the 3.5.0 development ("alpha") series:
 
+3.5.0a25:
+
+- PDF output now supports password protection (based on a patch
+  by Horst Liesinger, see sample resource file PDF_Per.ini in the
+  doc directory)
+- truetype rendering had one extraneous character set conversion
+  that could lead to wrong characters being displayed
+ 
 3.5.0a24:
 
 - restored and improved truetype font rendering, fixed manpage,
