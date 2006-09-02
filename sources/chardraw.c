@@ -1542,18 +1542,14 @@ int tt_stroke_lineto(FT_Vector * to, void *dummy)
 	return 0;
 }
 
-int tt_bezier1(FT_Vector * p1, FT_Vector * p3, void *dummy)
+int tt_bezier1(FT_Vector * p1, FT_Vector * p2, void *dummy)
 {
 	HPGL_Pt p, pp;
 	int i, outside;
 	float t;
-	FT_Vector p2;
-
-	p2.x = p1->x;
-	p2.y = p1->y;
 
 /*    
-p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
+p(t) = t^2*P2 + 2*t*(1-t)*P1 + (1-t)^2* P0
 */
 #if 0
 	fprintf(stderr, "TT refpoint %ld %ld\n", tt_refpoint.x,
@@ -1564,13 +1560,11 @@ p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
 	for (i = 0; i < 51; i++) {
 		t = (float) i / 50.0;
 		p.x =
-		    t * t * t * p3->x + 3 * t * t * (1. - t) * p2.x
-		    + 3 * t * (1. - t) * (1. - t) * p1->x
-		    + (1. - t) * (1. - t) * (1. - t) * tt_refpoint.x;
+		    t * t  * p2->x + 2 * t * (1. - t) * p1->x
+		    + (1. - t) * (1. - t) * tt_refpoint.x;
 		p.y =
-		    t * t * t * p3->y + 3 * t * t * (1. - t) * p2.y
-		    + 3 * t * (1. - t) * (1. - t) * p1->y
-		    + (1. - t) * (1. - t) * (1. - t) * tt_refpoint.y;
+		    t * t *  p2->y + 2 * t * (1. - t) * p1->y
+		    + (1. - t) * (1. - t) * tt_refpoint.y;
 
 		pp.x = tp->Txx * p.x + tp->Txy * p.y;
 		pp.y = tp->Tyx * p.x + tp->Tyy * p.y;
@@ -1603,8 +1597,8 @@ p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
 	}
 
 	/* Update cursor: to next character origin!   */
-	tt_refpoint.x = p3->x;
-	tt_refpoint.y = p3->y;
+	tt_refpoint.x = p2->x;
+	tt_refpoint.y = p2->y;
 
 	return 0;
 }

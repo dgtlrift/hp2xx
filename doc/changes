@@ -1,5 +1,10 @@
 Changes to hp2xx:
 =================
+3.5.0a26:
+adapted pdf output to new, plain-c libharu2.
+Fixed PCL offset generation in to_pcl.c to properly support negative offsets.
+Fixed cut-and-paste error in the truetype font rendering code.
+
 3.5.0a25:
 Removed one extraneous mapping from the upper half of charset0 to charset7 
 in the new truetype code.

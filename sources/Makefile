@@ -183,10 +183,10 @@ EX_DEFS = #-DDEBUG_ESC
 EX_LIBS =
 #
 # Include PDF support using free (ZLIB/PNG-licensed) libharu
-#EX_SRC	+= to_pdf.c
-#EX_OBJ += to_pdf.o
-#EX_DEFS += -DUSEPDF 
-#EX_LIBS += -lharu
+EX_SRC	+= to_pdf.c
+EX_OBJ += to_pdf.o
+EX_DEFS += -DUSEPDF 
+EX_LIBS += -lhpdf
 #
 # Include PDF support using commercial PDFLIB
 #EX_SRC	+= to_pdf.c

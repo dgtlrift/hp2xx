@@ -38,8 +38,7 @@ copies.
 #ifdef PDFLIB
 #include <pdflib.h>
 #else
-#include <libharu.h>
-#include <libharuc.h>
+#include <hpdf.h>
 #endif
 #include "bresnham.h"
 #include "hp2xx.h"
@@ -59,9 +58,8 @@ static int lastlimit;
 static Byte lastred, lastgreen, lastblue;
 
 #ifndef PDFLIB
-typedef pdf_doc PDF;
-pdf_page page;
-pdf_contents canvas;
+typedef HPDF_Doc PDF;
+HPDF_Page page;
 #endif
 
 
@@ -77,7 +75,7 @@ int pdf_perm_file(int *, char *, char *, const OUT_PAR *);
 int ini_parse(const OUT_PAR *, const char *, const char *, char *);
 
 #ifndef PDFLIB
-#define PAGEMODE if (openpath==1) { pdf_contents_stroke(canvas); openpath=0; }
+#define PAGEMODE if (openpath==1) { HPDF_Page_Stroke(page); openpath=0; }
 #else
 #define PAGEMODE if (openpath==1) { PDF_stroke(md); openpath=0; }
 #endif
@@ -106,18 +104,18 @@ char user_perm[254];
 /*      printf("pdf_perm_file: Rc=%i Ownerpwd:%s Userpwd:%s Enable:%i\n",Rc, owner_perm, user_perm, pdf_perm); */
       if (Rc==0) {
 /* pdf_doc_set_password(pdf_doc doc, const char* owner_passwd, const char* user_passwd) */
-        pdf_doc_set_password(fd, owner_perm, user_perm);
+        HPDF_SetPassword(fd, owner_perm, user_perm);
 /*  int pdf_doc_set_permission(pdf_doc doc, int permission); */
-        pdf_doc_set_permission(fd, pdf_perm);
+        HPDF_SetPermission(fd, pdf_perm);
       }
     }
 
-	if (pdf_doc_write_to_file(fd, po->outfile) !=PDF_SUCCESS) {
+	if (HPDF_SaveToFile(fd, po->outfile) !=0) {
 		PError("hp2xx (pdf)");
-		pdf_doc_free(fd);
+		HPDF_Free(fd);
 		return ERROR;
 	}
-	pdf_doc_free(fd);
+	HPDF_Free(fd);
 #endif
 	linecount = 0;
 	return 0;
@@ -141,7 +139,7 @@ void pdf_set_linewidth(double width, PDF * fd)
 #ifdef PDFLIB
 		PDF_setlinewidth(fd, newwidth * MM_TO_PS_POINT);
 #else
-		pdf_contents_set_line_width(canvas, newwidth * MM_TO_PS_POINT);
+                HPDF_Page_SetLineWidth(page, newwidth * MM_TO_PS_POINT);
 #endif
 		lastwidth = newwidth;
 	}
@@ -181,7 +179,7 @@ void pdf_set_linecap(LineEnds type, double pensize, PDF * fd)
 #ifdef PDFLIB
 		PDF_setlinecap(fd, newcap);
 #else		
-		pdf_contents_set_line_cap(canvas, newcap);
+                HPDF_Page_SetLineCap (page, newcap);
 #endif
 		lastcap = newcap;
 	}
@@ -233,7 +231,7 @@ void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize,
 #ifdef PDFLIB
 		PDF_setlinejoin(fd, newjoin);
 #else
-		pdf_contents_set_line_join(canvas, newjoin);
+		HPDF_Page_SetLineJoin(page, newjoin);
 #endif
 		lastjoin = newjoin;
 	}
@@ -242,7 +240,7 @@ void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize,
 #ifdef PDFLIB
 		PDF_setmiterlimit(fd, newlimit * MM_TO_PS_POINT);
 #else
-		pdf_contents_set_miter_limit(canvas, newlimit * MM_TO_PS_POINT);
+		HPDF_Page_SetMiterLimit(page, newlimit * MM_TO_PS_POINT);
 #endif
 		lastlimit = newlimit;
 	}
@@ -264,10 +262,10 @@ void pdf_set_color(PEN_C pencolor, PDF * fd)
 				(double) pt.clut[pencolor][1] / 255.0,
 				(double) pt.clut[pencolor][2] / 255.0);
 #else				    
-			pdf_contents_set_rgb_stroke(canvas,PdfRGBColor(
+			HPDF_Page_SetRGBStroke(page,
 				(double) pt.clut[pencolor][0] / 255.0,
 				(double) pt.clut[pencolor][1] / 255.0,
-				(double) pt.clut[pencolor][2] / 255.0));
+				(double) pt.clut[pencolor][2] / 255.0);
 #endif
 
 
@@ -311,14 +309,14 @@ void pdf_init(const GEN_PAR * pg, const OUT_PAR * po, PDF * fd,
 	pdf_set_linejoin(CurrentLineAttr.Join, CurrentLineAttr.Limit,
 			 pensize, fd);
 #else	
-	page=pdf_doc_add_page(fd);
-	pdf_page_set_size(page, (float) right, (float) high);
-	canvas=pdf_page_get_canvas(page);
-	pdf_stream_add_filter(canvas,PDF_FILTER_DEFLATE);
-	pdf_set_linewidth(pensize, canvas);
-	pdf_set_linecap(CurrentLineAttr.End, pensize, canvas);
+	page=HPDF_AddPage(fd);
+	HPDF_Page_SetWidth(page, (float) right);
+	HPDF_Page_SetHeight(page, (float) high);
+        HPDF_SetCompressionMode(fd,HPDF_COMP_ALL);
+	pdf_set_linewidth(pensize, fd);
+	pdf_set_linecap(CurrentLineAttr.End, pensize, fd);
 	pdf_set_linejoin(CurrentLineAttr.Join, CurrentLineAttr.Limit,
-			 pensize, canvas);
+			 pensize, fd);
 #endif
 }
 
@@ -373,14 +371,12 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 		return ERROR;
 	}	
 #else	
-	md = pdf_doc_new();
+	md = HPDF_New(NULL,NULL);
 	if (md == NULL) {
 		PError("hp2xx (pdf)");
 		return ERROR;
 	}
 	
-	err=pdf_doc_new_doc(md);
-	if (err != PDF_SUCCESS) fprintf(stderr,"failed to create pdf context\n");
 #endif
 	/* header */
 
@@ -454,7 +450,7 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 #ifdef PDFLIB
 			PDF_moveto(md,
 #else			
-			pdf_contents_move_to(canvas,
+			HPDF_Page_MoveTo(page,
 #endif			
 			   		(pt1.x - xmin) * xcoord2mm,
 			   		(pt1.y - ymin) * ycoord2mm);
@@ -476,7 +472,7 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 #ifdef PDFLIB
 			PDF_lineto(md,
 #else			
-			pdf_contents_line_to(canvas,
+			HPDF_Page_LineTo(page,
 #endif			
 					(pt1.x - xmin) * xcoord2mm,
 				   	(pt1.y - ymin) * ycoord2mm);
@@ -499,13 +495,13 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 			PDF_fill(md);
 			PDF_restore(md);
 #else				   
-			pdf_contents_gsave(canvas);
-			pdf_contents_move_to(canvas,(pt1.x-xmin)*xcoord2mm,
+			HPDF_Page_GSave(page);
+			HPDF_Page_MoveTo(page,(pt1.x-xmin)*xcoord2mm,
 				  (pt1.y-ymin)*ycoord2mm); 
-			pdf_contents_line_to(canvas,(pt1.x-xmin+0.00001)*xcoord2mm,
+			HPDF_Page_LineTo(page,(pt1.x-xmin+0.00001)*xcoord2mm,
 				  (pt1.y-ymin+0.00001)*ycoord2mm); 
-			pdf_contents_stroke(canvas);	  
-			pdf_contents_grestore(canvas);
+			HPDF_Page_Stroke(page);	  
+			HPDF_Page_GRestore(page);
 #endif
 			break;
 

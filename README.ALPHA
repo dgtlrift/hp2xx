@@ -1,5 +1,8 @@
 Recent changes in the 3.5.0 development ("alpha") series:
 
+3.5.0a26:
+- updated libharu-based PDF output for new libharu2.
+
 3.5.0a25:
 
 - PDF output now supports password protection (based on a patch
