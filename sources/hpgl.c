@@ -3291,7 +3291,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		read_string(tmpstr, hd);
 		StrTerm = SafeTerm;
 		if (strlen(tmpstr) > 0)
-			tmpstr[strlen(tmpstr) - 1] = '\0';
+			tmpstr[strlen(tmpstr)] = '\0';
 		if (!silent_mode)
 			printf("\n%s\n", tmpstr);
 		break;

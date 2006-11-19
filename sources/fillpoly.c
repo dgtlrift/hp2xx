@@ -54,7 +54,8 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	return;
 	}
 	CurrentLineEnd = LAE_butt;
-	penwidth = 0.1*10;
+/*	penwidth = 0.1*100; */
+        penwidth =  curdpi / (2.*25.4);
 	PlotCmd_to_tmpfile(DEF_PW);
 	Pen_Width_to_tmpfile(1, penwidth/10.);
 
@@ -79,6 +80,7 @@ if (filltype==10) penwidth= curdpi*curwidth;
 		polyxmax = MAX(polyxmax, polygon[i].x);
 		polyymax = MAX(polyymax, polygon[i].y);
 	}
+	
 	if (hatchangle > 89.9 && hatchangle < 180.) {
 		hatchangle = hatchangle - 90.;
 /*fprintf(stderr,"vertical fill\n");*/
@@ -175,14 +177,16 @@ if (filltype==10) penwidth= curdpi*curwidth;
 			      avy * (bx - ax)) / (bvy * avx - avy * bvx);
 
 
-#if 0
-/* debug code to show outline */
+#if 1
+/* debug code to show outline - always done for solid fills to catch special case of protruding lines*/
+if (filltype <3 ) {
 			p.x = polygon[j].x;
 			p.y = polygon[j].y;
 			Pen_action_to_tmpfile(MOVE_TO, &p, scale_flag);
 			p.x = polygon[j + 1].x;
 			p.y = polygon[j + 1].y;
 			Pen_action_to_tmpfile(DRAW_TO, &p, scale_flag);
+}
 #endif
 			segx=0.;
 			segy=0.;

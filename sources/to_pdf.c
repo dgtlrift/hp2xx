@@ -57,20 +57,22 @@ static int lastjoin;
 static int lastlimit;
 static Byte lastred, lastgreen, lastblue;
 
-#ifndef PDFLIB
-typedef HPDF_Doc PDF;
+#ifdef PDFLIB
+typedef PDF* PDFHANDLE;
+#else
+typedef HPDF_Doc PDFHANDLE;
 HPDF_Page page;
 #endif
 
 
 int to_pdf(const GEN_PAR *, const OUT_PAR *);
-void pdf_init(const GEN_PAR *, const OUT_PAR *, PDF *, PEN_W);
-void pdf_set_linewidth(double, PDF *);
-void pdf_set_linecap(LineEnds type, double pensize, PDF * fd);
+void pdf_init(const GEN_PAR *, const OUT_PAR *, PDFHANDLE , PEN_W);
+void pdf_set_linewidth(double, PDFHANDLE );
+void pdf_set_linecap(LineEnds type, double pensize, PDFHANDLE );
 void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize,
-		      PDF * fd);
-void pdf_set_color(PEN_C pencolor, PDF * fd);
-int pdf_end(PDF *,const OUT_PAR *);
+		      PDFHANDLE fd);
+void pdf_set_color(PEN_C pencolor, PDFHANDLE  fd);
+int pdf_end(PDFHANDLE  ,const OUT_PAR *);
 int pdf_perm_file(int *, char *, char *, const OUT_PAR *);
 int ini_parse(const OUT_PAR *, const char *, const char *, char *);
 
@@ -83,7 +85,7 @@ int ini_parse(const OUT_PAR *, const char *, const char *, char *);
 /**
  ** Close graphics file
  **/
-int pdf_end(PDF * fd, const OUT_PAR *po)
+int pdf_end(PDFHANDLE  fd, const OUT_PAR *po)
 {
 
 #ifdef PDFLIB
@@ -125,7 +127,7 @@ char user_perm[254];
 /**
  ** Set line width
  **/
-void pdf_set_linewidth(double width, PDF * fd)
+void pdf_set_linewidth(double width, PDFHANDLE  fd)
 {
 	double newwidth;
 
@@ -149,7 +151,7 @@ void pdf_set_linewidth(double width, PDF * fd)
 /**
  ** Set line Ends
  **/
-void pdf_set_linecap(LineEnds type, double pensize, PDF * fd)
+void pdf_set_linecap(LineEnds type, double pensize, PDFHANDLE fd)
 {
 	int newcap;
 
@@ -190,7 +192,7 @@ void pdf_set_linecap(LineEnds type, double pensize, PDF * fd)
  ** Set line Joins
  **/
 void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize,
-		      PDF * fd)
+		      PDFHANDLE fd)
 {
 	int newjoin;
 	int newlimit = lastlimit;
@@ -250,7 +252,7 @@ void pdf_set_linejoin(LineJoins type, LineLimit limit, double pensize,
 /**
  ** Set RGB color
  **/
-void pdf_set_color(PEN_C pencolor, PDF * fd)
+void pdf_set_color(PEN_C pencolor, PDFHANDLE fd)
 {
 
 	if ((pt.clut[pencolor][0] != lastred) ||
@@ -282,7 +284,7 @@ void pdf_set_color(PEN_C pencolor, PDF * fd)
  ** basic PDF definitions
  **/
 
-void pdf_init(const GEN_PAR * pg, const OUT_PAR * po, PDF * fd,
+void pdf_init(const GEN_PAR * pg, const OUT_PAR * po, PDFHANDLE fd,
 	      PEN_W pensize)
 {
 	long left, right, low, high;
@@ -309,10 +311,10 @@ void pdf_init(const GEN_PAR * pg, const OUT_PAR * po, PDF * fd,
 	pdf_set_linejoin(CurrentLineAttr.Join, CurrentLineAttr.Limit,
 			 pensize, fd);
 #else	
+        HPDF_SetCompressionMode(fd,HPDF_COMP_ALL);
 	page=HPDF_AddPage(fd);
 	HPDF_Page_SetWidth(page, (float) right);
 	HPDF_Page_SetHeight(page, (float) high);
-        HPDF_SetCompressionMode(fd,HPDF_COMP_ALL);
 	pdf_set_linewidth(pensize, fd);
 	pdf_set_linecap(CurrentLineAttr.End, pensize, fd);
 	pdf_set_linejoin(CurrentLineAttr.Join, CurrentLineAttr.Limit,
@@ -329,7 +331,7 @@ void pdf_init(const GEN_PAR * pg, const OUT_PAR * po, PDF * fd,
 int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 {
 	PlotCmd cmd;
-	PDF *md;
+        PDFHANDLE md;
 	HPGL_Pt pt1 = { 0, 0 };
 	int pen_no = 0, err;
 	int openpath;

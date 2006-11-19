@@ -121,7 +121,7 @@ by the Free Software Foundation instead of in the original English.
 @end titlepage
 @page
 
-@ifinfo
+@ifnottex
 @node Top, Introduction, (dir), (dir)
 @comment  node-name,  next,  previous,  up
 @top HP2XX, a HP-GL Converter
@@ -131,7 +131,7 @@ some vector and raster formats
 
 @c !!set edition, date, version
 This is Edition 1.4, June 2003, for HP2XX Version 3.4.4
-@end ifinfo
+@end ifnottex
 
 
 @menu
@@ -1779,8 +1779,12 @@ OS/2 support, OS/2 full-screen previewer & help
 @item Alois Treindl
 Code for UC support
 
+@end table
 
-@item Versions since 3.3.0 (mid-1999):
+
+Versions since 3.3.0 (mid-1999):
+
+@table @code
 
 @item Emmanuel Bigler
 xfig and gnuplot ascii support
@@ -1796,6 +1800,8 @@ PS/RO fixes
 
 @item Eugene Doudine
 PE command support
+
+Postscript output (alternate module using postscript commands for polygon filling)
 
 @item Georgy Salnikov 
 Improvements for character commands (LB,DI,DR)
@@ -1826,6 +1832,9 @@ CNC G-code generation
 
 @item Georg Viehoever
 DXF enhancements and bugfixes
+
+@item Michael Leun
+HP-RTL examples and testing
 
 @end table
 

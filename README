@@ -24,6 +24,8 @@ New features:
   (currently implemented in a new postscript driver) (Eugene Doudine).
 - Support for filltypes 10 (percentage) and 11 (user-defined pattern) and
   the RF command
+- Limited support for RTL raster graphics embedded in HPGL files
+  (currently greyscale only, and not all image encoding types)
 - PDF output generator can optionally be built using Takeshi Kanno's 
   libharu (sourceforge.net), which has a much less restrictive license 
   than PDFLIB.

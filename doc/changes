@@ -1,5 +1,14 @@
 Changes to hp2xx:
 =================
+3.5.0a27:
+Always draw the outline of solid-filled polygons too, to catch (possibly unintended)
+cases where one of the lines protrudes from the polygon instead of defining a regular
+edge. COmments sometimes had the end of the string cut off. Fixed compiler warnings 
+in the pdf export code. Made compression of PDF files work again with libharu2. Try to
+improve number of lines used for filling polygons based on current DPI. Small formatting
+fixes (but no textual updates yet) in the texinfo documentation. 
+ 
+
 3.5.0a26:
 adapted pdf output to new, plain-c libharu2.
 Fixed PCL offset generation in to_pcl.c to properly support negative offsets.

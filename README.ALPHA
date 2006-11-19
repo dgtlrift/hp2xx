@@ -1,5 +1,12 @@
 Recent changes in the 3.5.0 development ("alpha") series:
 
+3.5.0a27:
+- more PDF updates/fixes related to libharu2.
+- number of fill lines for solid fills now calculated from dpi,
+  should improve performance without changing quality.
+- Solid fills now also draw the outline of the polygon to catch
+  special cases where one of the boundary lines is not an edge.
+ 
 3.5.0a26:
 - updated libharu-based PDF output for new libharu2.
 

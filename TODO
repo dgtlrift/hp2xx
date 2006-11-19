@@ -1,8 +1,9 @@
-- Improve appearance of the builtin fonts
+- Improve appearance of the builtin fonts and/or allow runtime selection
+  of truetype fonts
 - [full] color support may be buggy in some modes, and is not implemented
   in the Sun, OS/2 and MS Windows modules
 - to_vga, to_atari and to_sunvw do not yet support more than eight colors
-  (contributions from MS DOS/Windows, OS/2, Atari and Sun users needed).
+  (probably nobody really uses (hp2xx on) the corresponding platforms anymore).
 - Allow redefinition of PenColor in raster graphics modes
 - Optionally use an output formats' text commands where available, instead 
   of converting LB characters to line drawings
@@ -12,5 +13,5 @@
   single output file if the format allows this (particularly PDF)
 - Add miter support in the raster modes, now that we have true wide line
   support
-- add HP-RTL (raster image) support
+- complete HP-RTL (raster image) support
 - finish Postscript driver (polygon rotation, some line and fill types)
