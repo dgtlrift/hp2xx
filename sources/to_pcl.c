@@ -325,28 +325,28 @@ static void init_printer(const OUT_PAR * po, FILE * fd)
 	size = 26;		/* default to A4 paper */
 
 	if ((po->width >= po->height
-	     && (po->width > 297. || po->height > 210.))
+	     && (po->width > 297.01 || po->height > 210.01))
 	    || (po->width < po->height
-		&& (po->height > 297. || po->width > 210.)))
+		&& (po->height > 297.01 || po->width > 210.01)))
 		size = 27;	/* A3 format */
 
 	if ((po->width >= po->height
-	     && (po->width > 420. || po->height > 297.))
+	     && (po->width > 420.01 || po->height > 297.01))
 	    || (po->width < po->height
-		&& (po->height > 420. || po->width > 297.)))
+		&& (po->height > 420.01 || po->width > 297.01)))
 		size = 28;	/* A2 format */
 
 	if ((po->width >= po->height
-	     && (po->width > 584. || po->height > 420.))
+	     && (po->width > 584.01 || po->height > 420.01))
 	    || (po->width < po->height
-		&& (po->height > 584. || po->width > 420.)))
+		&& (po->height > 584.01 || po->width > 420.01)))
 		size = 29;	/* A1 format */
 
 
 	if ((po->width >= po->height
-	     && (po->width > 820. || po->height > 584.))
+	     && (po->width > 820.01 || po->height > 584.01))
 	    || (po->width < po->height
-		&& (po->height > 820. || po->width > 584.)))
+		&& (po->height > 820.01 || po->width > 584.01)))
 		size = 30;	/* A0 format :-) */
 
 

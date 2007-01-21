@@ -1,5 +1,12 @@
 Changes to hp2xx:
 =================
+3.5.0a28:
+Relax drawing size checking in the pcl driver, as exact matches to a given A size
+could be misinterpreted into chosing the next bigger size due to small numerical
+errors. Fixes for output filename (de)allocation (based on patch by Ville Palo for Ubuntu
+Linux). Unhandled RTL escape sequences could end up in the raster image setup code, fixed
+that. Implemented polygon filling by winding rule.
+
 3.5.0a27:
 Always draw the outline of solid-filled polygons too, to catch (possibly unintended)
 cases where one of the lines protrudes from the polygon instead of defining a regular

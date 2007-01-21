@@ -1457,7 +1457,7 @@ void ASCII_to_font(int c, int curpen)
 	boxmin.y = tp->refpoint.y - 150;
 	boxmax.x = boxmin.x + tp->chardiff.x + 5;
 	boxmax.y = boxmin.y + tp->chardiff.y + 5;
-	fill(polygon, numpoints, boxmin, boxmax, 0, 2, 1, 0,pt.width[curpen],0);
+	fill(polygon, numpoints, boxmin, boxmax, 0, 2, 1, 0,pt.width[curpen],0,0);
 #ifdef STROKED_VARFONTS
 	if (tp->variable)
 	tp->refpoint.x += tp->space/20*slot->advance.x/60;

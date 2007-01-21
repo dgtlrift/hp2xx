@@ -125,10 +125,12 @@ void action_oldstyle(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 		err = HPGL_to_TMP(pg, pi);
 		if (err) {
 /*	po->outfile=realloc(po->outfile,2*sizeof(char));*/
-			if (strcmp(po->outfile,"hp2xx.out"))
+/*			if (strcmp(po->outfile,"hp2xx.out"))*/
 			strcpy(po->outfile, "");
+/*
 			else
 			po->outfile="";
+*/
 			cleanup_i(pi);
 			cleanup_g(pg);
 			cleanup_o(po);
@@ -641,7 +643,7 @@ int main(int argc, char *argv[])
 	if (strlen(Po.outfile) > 0)
 		strcpy(outname, Po.outfile);	/* store fixed outfile name if present */
 	else {
-		Po.outfile = malloc(1 * sizeof(char));
+		Po.outfile = realloc(Po.outfile,2 * sizeof(char));
 		strcpy(Po.outfile, "");
 	}
 /**
@@ -668,8 +670,7 @@ int main(int argc, char *argv[])
 		}
 
 	cleanup(&Pg, &Pi, &Po);
-	if (!strcmp(Pg.mode, "pre"))
-		free(Po.outfile);
+/* if (Po.outfile) free(Po.outfile);*/
 	if (*Pg.logfile)
 		fclose(stderr);
 	return NOERROR;

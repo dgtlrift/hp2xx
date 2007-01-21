@@ -509,7 +509,8 @@ void preset_par(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 	po->dpi_y = 0;
 	po->vga_mode = 18;	/* 0x12: VGA 640x480, 16 colors */
 	po->picbuf = NULL;
-	po->outfile = "";
+	po->outfile = malloc(2*sizeof(char));
+	po->outfile[0]='\0';
 	po->zengage = -1.;
 	po->zretract = 1.;
 
@@ -597,7 +598,8 @@ void autoset_outfile_name(const char *mode, const char *in_name,
 		len = (int) strlen(in_name);
 
 	if (len == 0) {		/* If input from stdin:                           *//*    then supply a default file name           */
-		*outfile = "hp2xx.out";
+	        *outfile=realloc(*outfile,10*sizeof(char));
+		strcpy(*outfile,"hp2xx.out");
 		return;
 	}
 

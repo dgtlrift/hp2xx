@@ -39,12 +39,13 @@ copies.
 #include <pdflib.h>
 #else
 #include <hpdf.h>
+#include <setjmp.h>
+jmp_buf env;
 #endif
 #include "bresnham.h"
 #include "hp2xx.h"
 /*#include "pendef.h"*/
 #include "lindef.h"
-
 
 static int linecount = 0;
 static float xcoord2mm, ycoord2mm;
@@ -62,6 +63,7 @@ typedef PDF* PDFHANDLE;
 #else
 typedef HPDF_Doc PDFHANDLE;
 HPDF_Page page;
+void error_handler (HPDF_STATUS,HPDF_STATUS,void*);
 #endif
 
 
@@ -82,6 +84,17 @@ int ini_parse(const OUT_PAR *, const char *, const char *, char *);
 #define PAGEMODE if (openpath==1) { PDF_stroke(md); openpath=0; }
 #endif
 
+#ifndef PDFLIB
+void
+error_handler (HPDF_STATUS   error_no,
+               HPDF_STATUS   detail_no,
+                              void         *user_data)
+                              {
+                                  printf ("ERROR: error_no=%04X, detail_no=%u\n", (HPDF_UINT)error_no,
+                                                  (HPDF_UINT)detail_no);
+                                                      longjmp(env, 1);
+                                                      }
+#endif                                                      
 /**
  ** Close graphics file
  **/
@@ -113,7 +126,7 @@ char user_perm[254];
     }
 
 	if (HPDF_SaveToFile(fd, po->outfile) !=0) {
-		PError("hp2xx (pdf)");
+		fprintf(stderr,"hp2xx failed (pdf=%s)",po->outfile);
 		HPDF_Free(fd);
 		return ERROR;
 	}
@@ -373,9 +386,9 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 		return ERROR;
 	}	
 #else	
-	md = HPDF_New(NULL,NULL);
+	md = HPDF_New(error_handler,NULL);
 	if (md == NULL) {
-		PError("hp2xx (pdf)");
+		PError("hp2xx (cannot create pdf stream)");
 		return ERROR;
 	}
 	
@@ -461,15 +474,25 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 
 		case DRAW_TO:
 			pensize = pt.width[pen_no];
-			pdf_set_linewidth((double) pensize, md);
-			pdf_set_linecap(CurrentLineAttr.End,
+			if (fabs(pensize-lastwidth)>0.01 ) {
+			  PAGEMODE;
+			  pdf_set_linewidth((double) pensize, md);
+			  pdf_set_linecap(CurrentLineAttr.End,
 					(double) pensize, md);
-			pdf_set_linejoin(CurrentLineAttr.Join,
+			  pdf_set_linejoin(CurrentLineAttr.Join,
 					 CurrentLineAttr.Limit,
 					 (double) pensize, md);
 
-			pdf_set_color(pt.color[pen_no], md);
-
+  			  pdf_set_color(pt.color[pen_no], md);
+#ifdef PDFLIB
+			  PDF_moveto(md,
+#else			
+			  HPDF_Page_MoveTo(page,
+#endif
+			   		(pt1.x - xmin) * xcoord2mm,
+			   		(pt1.y - ymin) * ycoord2mm);
+			  openpath = 1;
+                        }
 			HPGL_Pt_from_tmpfile(&pt1);
 #ifdef PDFLIB
 			PDF_lineto(md,

@@ -1003,7 +1003,7 @@ static void rect(const GEN_PAR * pg, int relative, int filled, float cur_pensize
 			/*      anchor.y=MIN(P1.y,ymin); */
 		}
 		fill(polygons, vertices, anchor, P2, scale_flag,
-		     filltype, hatchspace, hatchangle,pt.width[pen],pg->dpi);
+		     filltype, hatchspace, hatchangle,pt.width[pen],pg->dpi,0);
 	}
 	Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 }
@@ -1254,6 +1254,7 @@ void read_PE(GEN_PAR * pg, FILE * hd)
 	fl.abs = 0;
 	fl.up = 0;
 	fl.pen = 0;
+	fl.rect = 0;
 
 	for (c = getc(hd); (c != EOF) && (c != ';'); c = getc(hd)) {
 		if (!read_PE_flags(pg, c, hd, &fl)) {
@@ -2004,8 +2005,13 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				ungetc(ctmp,hd);
 				read_float(&val,hd);
 				ctmp=getc(hd); 
+				if (ctmp=='N'||ctmp=='n') {
+					if (!silent_mode) Eprintf("ignoring negative motion mode\n");
+					return;
+				}
 				if (ctmp!='W')
-					fprintf(stderr,"unexpected terminator :%c",ctmp);	
+					fprintf(stderr,"unexpected terminator :%c\n",ctmp);	
+					return;
 				if (val==6) {
 					if (!silent_mode) Eprintf("using default 8-bit color ranges\n");
 					ctmp=getc(hd);
@@ -2221,6 +2227,9 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 			if (!silent_mode) {
 				if ( c1 == '&' && c2 == 'l' )
 				Eprintf("ignoring escape ESC&l... (paper size/orientation/...)\n");
+				else 
+				if ( c1 == '&' && c2 == 'a' )
+				Eprintf("ignoring escape ESC&a... (transparency mode)\n");
 				else {
 				Eprintf("invalid escape ESC%c%c (Esc%d%d)\n", c1,
 					c2,c1,c2);
@@ -2871,7 +2880,7 @@ static void fwedges(FILE * hd, float cur_pensize)
 FIXME: add calls for the "haspoly" case
 */
 	fill(polygons, vertices, anchor, P2, scale_flag, filltype,
-	     hatchspace, hatchangle,pt.width[pen],0);
+	     hatchspace, hatchangle,pt.width[pen],0,0);
 
 	CurrentLinePatLen = SafeLinePatLen;	/* Restore */
 
@@ -3357,9 +3366,8 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			if (p_last.x != polystart.x
 			    || p_last.y != polystart.y)
 				vertices -= 2;
-
 		for (i = 0; i < vertices; i = i + 2) {	/*for all polygon edges */
-		if (polygon_penstate[i]==FALSE){
+		if (polygon_penstate[i]!=FALSE){
 			p1.x = polygons[i].x;
 			p1.y = polygons[i].y;
 			Pen_action_to_tmpfile(MOVE_TO, &p1, scale_flag);
@@ -3417,7 +3425,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		if (scale_flag) Plotter_to_User_coord(&anchor,&anchor);	
 		}
 		fill(polygons, vertices, anchor, P2, scale_flag, filltype,
-		     hatchspace, hatchangle,pt.width[pen],pg->dpi);
+		     hatchspace, hatchangle,pt.width[pen],pg->dpi,((ftmp)?1:0) );
 		Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 		break;
 	case FT:		/* Fill Type */
@@ -3536,6 +3544,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			saved_penstate = pen_down;
 			pen_down = TRUE;
 			vertices = -1;
+			pm1_flag = FALSE;
 			break;
 		}
 		if (ftmp == 1) {

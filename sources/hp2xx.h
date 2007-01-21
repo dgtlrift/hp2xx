@@ -65,15 +65,15 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
-#define VERS_NO        "3.5.0a27"
-#define VERS_DATE      "06/11/19"
+#define VERS_NO        "3.5.0a28"
+#define VERS_DATE      "07/01/21"
 #define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
 #if defined(AMIGA)
 #define VERS_ADDITIONS "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"
 #elif defined (ATARI)
 #define VERS_ADDITIONS "\tAtari additions (V 2.10) by N. Meyer / J. Eggers / A. Schwab  (93/01/xx)\n"
 #else
-#define VERS_ADDITIONS "                                 (c) 1999 - 2005 Martin Kroeker\n"
+#define VERS_ADDITIONS "                                 (c) 1999 - 2007 Martin Kroeker\n"
 #endif
 
 /**
@@ -442,7 +442,7 @@ int to_emp(const GEN_PAR * pg, const OUT_PAR * po);
 #endif
 
 void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt P1, HPGL_Pt P2,
-	  int scale_flag, int filltype, float spacing, float hatchangle,float penwidth, int curdpi);
+	  int scale_flag, int filltype, float spacing, float hatchangle,float penwidth, int curdpi, int nzfill);
 
 /*std_main*/
 void action_oldstyle(GEN_PAR *, IN_PAR *, OUT_PAR *);

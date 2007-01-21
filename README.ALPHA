@@ -1,4 +1,7 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a28:
+- Implemented polygon filling by winding rule (FP1).
+- Improved paper size selection in the PCL module
 
 3.5.0a27:
 - more PDF updates/fixes related to libharu2.
