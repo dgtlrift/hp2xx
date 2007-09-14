@@ -1,5 +1,13 @@
 Changes to hp2xx:
 =================
+3.5.0a29:
+Huge penwidths (that only make sense on raster devices) no longer create the initial 
+pen-down dot that is typical for pen plotters. pdf output using libharu could fail for
+some combinations of dot and line drawing, also the error handler missed a target for
+its longjump (both fixes by Andrew Jackson). Support for embedded PCL images with 
+color planes and/or TIFF-style encoding was added based on a sample file provided by
+Prakash Gajera - sadly, his file still does not render as anything recognizable.
+
 3.5.0a28:
 Relax drawing size checking in the pcl driver, as exact matches to a given A size
 could be misinterpreted into chosing the next bigger size due to small numerical

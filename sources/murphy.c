@@ -253,7 +253,7 @@ void murphy_wideline(DevPt p0, DevPt p1, int width, int miter)
 		d0 += murphy.kv;
 	}
 
-	do_miter(miter, ml1b, ml2b, ml1, ml2,width);
+	do_miter(miter, ml1b, ml2b, ml1, ml2, width);
 
 }
 
@@ -293,8 +293,10 @@ DevPt ml1b, ml2b, ml1, ml2;
 				m1 = murphy.last1;
 				m2 = murphy.last2;
 			}
-			if (ftmp1 > (float)width || ftmp2 >(float)width) return;
-			
+#if 0
+			if (ftmp1 > width || ftmp2 > width)
+			return;
+#endif
 			c1=ml1;
 			c2=ml2;
 			cur2.x = (ml1b.x + ml2b.x) / 2.;
@@ -334,27 +336,27 @@ DevPt ml1b, ml2b, ml1, ml2;
 			p_act = bresenham_init(&m2, &m1);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
-					    murphy.color);
+					    murphy.color+1);
 			} while (bresenham_next() != BRESENHAM_ERR);
 
 			p_act = bresenham_init(&m1, &c1);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
-					    murphy.color);
+					    murphy.color+1);
 			} while (bresenham_next() != BRESENHAM_ERR);
 
 			p_act = bresenham_init(&c1, &c2);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
-					    murphy.color);
+					    murphy.color+1);
 			} while (bresenham_next() != BRESENHAM_ERR);
 
 			p_act = bresenham_init(&c2, &m2);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
-					    murphy.color);
+					    murphy.color+1);
 			} while (bresenham_next() != BRESENHAM_ERR);
-			polygon_PicBuf(m1, m2, c1, c2, murphy.color,
+			polygon_PicBuf(m1, m2, c1, c2, murphy.color+1,
 				       murphy.pb);
 		}
 	}

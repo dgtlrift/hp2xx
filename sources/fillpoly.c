@@ -51,7 +51,7 @@ int winding=0,oldwinding=-1;
 	LineEnds SafeLineEnd = CurrentLineEnd;
 
 	if (numpoints <3) {
-/*	fprintf(stderr,"polygon with %d vertices ???\n",numpoints);*/
+	fprintf(stderr,"polygon with %d vertices ???\n",numpoints);
 	return;
 	}
 

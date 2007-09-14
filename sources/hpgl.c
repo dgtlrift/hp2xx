@@ -102,6 +102,8 @@
  ** 02/06/02	      AJB  Moved HYPOT macro to hpgl.h - so we can use it in murphy.c
  **/
 
+#define DEBUG_ESC 1
+#define DEBUG_ESC_2 1
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -1031,22 +1033,23 @@ static void rects(const GEN_PAR * pg, int relative, int filled, float cur_pensiz
    
    
 */
-static int cdot(int relative,HPGL_Pt *pt,int pd) {
+static int cdot(int relative,HPGL_Pt *p,int pd) {
   int outside;
   HPGL_Pt dp,p1;
   float tmp;
   double p1x,p1y;
 
-  if (NULL==pt) {
+  if (NULL==p) {
     dp=p_last;
   } else {
-    dp=*pt;
+    dp=*p;
     if (relative) {
       dp.x += p_last.x;
       dp.y += p_last.y;
     }
   }
 
+if (pt.width[pen] >0.9) return(0);
 
   /*  fprintf(stderr,"pd=%d mv_flag=%d in_place=%d p_last=(%f,%f) dp=(%f,%f): ",
       pd,mv_flag,in_place,p_last.x,p_last.y,dp.x,dp.y);*/
@@ -1750,8 +1753,10 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 	 */
 	int c0, c2, ctmp = 0, nf;
 	unsigned char ptmp;
-	static unsigned char otmp[5000];
+	static unsigned char otmp1[5000],otmp2[5000],otmp3[5000];
+	static int planeno=0;
 	static int haverow=0,compression=0,rtlgraphics=0;
+	static int colormode=0;
         static int sw=1,sh=1,dw=1,dh=1;
         static int wr=1,hr=1;
         static double sdw,sdh;
@@ -1930,42 +1935,49 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				if (ctmp=='s' || ctmp=='S'){
 					sw=(int)val;
 #ifdef DEBUG_ESC
-					fprintf(stderr,"width: %d\n",(int)val);	
+					fprintf(stderr,"width1: %d\n",(int)val);	
 #endif
 				}
 				else if (ctmp=='t'|| ctmp=='T'){
 					sh=(int)val;
 #ifdef DEBUG_ESC					
-					fprintf(stderr,"height: %d\n",(int)val);	
+					fprintf(stderr,"height1: %d\n",(int)val);	
 #endif
 				}
 				
-				if (ctmp!='s' && ctmp!='t') return;
+				if (ctmp!='s' && ctmp!='t') {
+				fprintf(stderr,"strange terminator %c\n",ctmp);
+				return;
+				}
 				read_float(&val,hd);
 				ctmp=getc(hd);
 				if (ctmp=='s' || ctmp=='S'){
 					sw=(int)val;
 #ifdef DEBUG_ESC
-					fprintf(stderr,"width: %d\n",(int)val);	
+					fprintf(stderr,"width2: %d\n",(int)val);	
 #endif
 				}
 				else if (ctmp=='t'|| ctmp=='T'){
 					sh=(int)val;
 #ifdef DEBUG_ESC					
-					fprintf(stderr,"height: %d\n",(int)val);	
+					fprintf(stderr,"height2: %d\n",(int)val);	
 #endif
+				}
+				else if (ctmp=='A') {
+					fprintf(stderr,"start raster graphics in mode %d\n",(int)val);
+				rtlgraphics=1;
 				}
 				return;				 
 			}
 			if (c2 == 't') {
 			float val;
-#ifdef DEBUG_ESC
-				fprintf(stderr,"destination raster dimensions (1/720 in):\n");
-#endif
 				ungetc(ctmp,hd);
 				read_float(&val,hd);
 				ctmp=getc(hd);
 				if (ctmp=='h' || ctmp=='H'){ 
+#ifdef DEBUG_ESC
+				fprintf(stderr,"destination raster dimensions (1/720 in):\n");
+#endif
 					dw=(int)val;
 					sdw=(double)dw/720.*25.4; 
 #ifdef DEBUG_ESC					
@@ -1973,13 +1985,21 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 #endif
 				}
 				else if (ctmp=='v'|| ctmp=='V'){
+#ifdef DEBUG_ESC
+				fprintf(stderr,"destination raster dimensions (1/720 in):\n");
+#endif
 					dh=(int)val;
 					sdh=(double)dh/720.*25.4;
 #ifdef DEBUG_ESC					
 					fprintf(stderr,"height: %d dpt (%f mm, %d pixel)\n",dh,sdh,(int)(sdh*40));	
 #endif
-				}
-				if (ctmp!='h' && ctmp!='v') return;
+				} 
+				else if (ctmp=='r'|| ctmp=='R') {
+#ifdef DEBUG_ESC
+				fprintf(stderr,"set graphics resolution :%4.0f dpi\n",val);
+#endif
+				}				
+				if (ctmp=='H' || ctmp=='V'|| ctmp == 'R') return;
 
 				read_float(&val,hd);
 				ctmp=getc(hd);
@@ -2009,15 +2029,17 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					if (!silent_mode) Eprintf("ignoring negative motion mode\n");
 					return;
 				}
-				if (ctmp!='W')
+				if (ctmp!='W') {
 					fprintf(stderr,"unexpected terminator :%c\n",ctmp);	
 					return;
+					}
 				if (val==6) {
 					if (!silent_mode) Eprintf("using default 8-bit color ranges\n");
 					ctmp=getc(hd);
 					if (!silent_mode) Eprintf("color space: %d\n",(int)ctmp);
 					ctmp=getc(hd);
 					if (!silent_mode) Eprintf("pixel encoding: %d",(int)ctmp);
+					colormode=(int)ctmp;
 					switch((int)ctmp){
 					case 0:
 					if (!silent_mode) Eprintf(" (indexed by plane)\n");
@@ -2115,17 +2137,65 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 #ifdef DEBUG_ESC				
 				fprintf(stderr,"data by plane: %d bytes\n",(int)val);
 #endif
+				if (compression==0){
 				for (k=0;k<(int)val;k++) ctmp=getc(hd);
+				}else if (compression==2) {
+					char ctrl;
+					position=0;
+					kk=0;
+		                        while (kk<(int)val) {
+		                        ctrl=getc(hd);
+		                        kk++;
+					if ( (int)ctrl >= 0) {
+					kk+=ctrl+1;
+//fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);
+					if (planeno==0){
+					for (k=0;k<=ctrl;k++) 
+						otmp1[position++]=getc(hd);
+					}else{
+					for (k=0;k<=ctrl;k++) 
+						otmp2[position++]=getc(hd);
+				        }
+				        } else {
+				          if ((int)ctrl==-128) {
+//fprintf(stderr,"skipped control byte\n");				          
+				          continue;
+				          }
+				          ptmp=getc(hd);
+					  kk++;
+				          ctrl*=-1;
+//fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
+					  if (planeno==0){
+					  for (k=0;k<=ctrl;k++) 
+						otmp1[position++]=ptmp;
+					  }else{
+  					  for (k=0;k<=ctrl;k++)
+						otmp2[position++]=ptmp;	
+					}
+					}
+//haverow=position;
+				 }
+				 	
+				 	if (planeno==0){
+					for (k=position;k<sw;k++)
+						otmp1[k]=0;
+					}else{
+					for (k=position;k<sw;k++)
+						otmp2[k]=0;
+					}
+					planeno++;
+					}
 				return;
 				}
 				if (ctmp=='W') {
 #ifdef DEBUG_ESC_2
 				  fprintf(stderr,"data by row or block: %d bytes\n",(int)val);
 #endif
-				  if (compression == 0 ) {
+planeno=0;
+		if (compression == 0 ) {
 				    haverow = (int)val;
 
-				if (fread(otmp,1,haverow,hd)!= haverow) fprintf(stderr,"short read!\n");
+				if (fread(otmp3,1,haverow,hd)!= haverow) fprintf(stderr,"short read!\n");
 
 /*
 				fprintf(stderr,"first bytes: %c%c%c,last bytes: %c%c%c\n",otmp[0],otmp[1],otmp[2],
@@ -2137,9 +2207,41 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				while ( (ctmp=fgetc(hd)) != 27) {};
 				}
 				ungetc(ctmp,hd);
-				  }  
+//					for (k=haverow;k<sw;k++)
+//						otmp3[k]=0;
+//							haverow=sw;
+		}  
 
-				  if (compression == 3 && (int)val >0 ) {
+		if (compression == 2 && (int)val >0 ) {
+					char ctrl;
+					position=0;
+					kk=0;
+		                        while (kk<(int)val) {
+		                        ctrl=getc(hd);
+		                        kk++;
+					if ( (int)ctrl >= 0) {
+					kk+=ctrl+1;
+//fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);
+					for (k=0;k<=ctrl;k++) 
+						otmp3[position++]=getc(hd);
+				        } else {
+				          if ((int)ctrl==-128) {
+//fprintf(stderr,"skipped control byte\n");				          
+				          continue;
+				          }
+				          ptmp=getc(hd);
+					  kk++;
+				          ctrl*=-1;
+//fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
+					  for (k=0;k<=ctrl;k++) 
+						otmp3[position++]=ptmp;
+					}
+					}
+					for (k=position;k<sw;k++)
+						otmp3[k]=0;
+					haverow=sw;
+		}
+		if (compression == 3 && (int)val >0 ) {
 				        position=0;
 				 	kk=0;
 					while (kk<(int)val) { 
@@ -2159,10 +2261,12 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					}	
 					position += offset;
 					for (k=0;k<numbytes;k++) 
-						otmp[position++]=getc(hd);
+						otmp3[position++]=getc(hd);
 					kk+=numbytes;
 					}
-				  }
+					for (k=position;k<sw;k++)
+						otmp3[k]=0;
+		}
 				  
 			if (rot_tmp==90.||rot_tmp==270.) {
 				px=p_last.x; /* save start of line */
@@ -2171,12 +2275,17 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 			
 			for (k=0;k<haverow;k++){ /* for each input pixel */  
 				int ir,ig,ib, gray;
-				ir=otmp[k];
-				ig=otmp[k+1];
-				ib=otmp[k+2];
-
+			if (colormode==1 || colormode==3) {
+				ir=otmp3[k];
+				ig=otmp3[k+1];
+				ib=otmp3[k+2];
+			}else {
+				ir=otmp1[k];
+				ig=otmp2[k];
+				ib=otmp3[k];
+			}
 			gray=rint(0.3*ir+0.59*ig+0.11*ib);
-
+			if (gray==0) gray=254;
 			fputc(SET_PEN,td);
 			fputc(gray+1,td);
 
@@ -2204,7 +2313,8 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				else				
 					p_last.x-=hr; /* return to baseline of row */
 			} /* for all output pixels */
-			k+=2; /* advance to next input pixel */
+			if (colormode==1||colormode==3) 
+			  k+=2; /* advance to next input pixel */
 		}
 
 		if (rot_tmp==90.||rot_tmp==270.) {

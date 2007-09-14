@@ -90,10 +90,12 @@ error_handler (HPDF_STATUS   error_no,
                HPDF_STATUS   detail_no,
                               void         *user_data)
                               {
-                                  printf ("ERROR: error_no=%04X, detail_no=%u\n", (HPDF_UINT)error_no,
+                                  printf ("\nERROR: error_no=%04X, detail_no=%u\n", (HPDF_UINT)error_no,
                                                   (HPDF_UINT)detail_no);
                                                       longjmp(env, 1);
                                                       }
+
+
 #endif                                                      
 /**
  ** Close graphics file
@@ -393,6 +395,15 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 	}
 	
 #endif
+
+#ifndef PDFLIB
+        if (setjmp(env)) {
+          HPDF_Free(md);
+          printf("hp2xx (pdf Error handler called)");
+          return ERROR;
+        }
+#endif
+
 	/* header */
 
 	pensize = pt.width[DEFAULT_PEN_NO];	/* Default pen    */
@@ -474,7 +485,7 @@ int to_pdf(const GEN_PAR * pg, const OUT_PAR * po)
 
 		case DRAW_TO:
 			pensize = pt.width[pen_no];
-			if (fabs(pensize-lastwidth)>0.01 ) {
+			if (fabs(pensize-lastwidth)>0.01 || openpath == 0 ) {
 			  PAGEMODE;
 			  pdf_set_linewidth((double) pensize, md);
 			  pdf_set_linecap(CurrentLineAttr.End,

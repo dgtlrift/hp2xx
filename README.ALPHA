@@ -1,4 +1,11 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a29:
+- libharu-PDF output lacked an error handler and could
+  fail for certain combinations of dots and lines
+  (fixed by Andrew Jackson)
+- implemented most of the code for handling TIFF-encoded
+  PCL images (based on a test case from Prakash Gajera)
+
 3.5.0a28:
 - Implemented polygon filling by winding rule (FP1).
 - Improved paper size selection in the PCL module
