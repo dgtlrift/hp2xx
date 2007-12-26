@@ -194,6 +194,7 @@ mode_list ModeList[] = {
 	{XX_ILBM, "ilbm"},	/* Special AMIGA format                 */
 #endif
 	{XX_IMG, "img"},	/* Digital Research IMG raster format   */
+        {XX_ISO, "iso"},	/* G code for GERBER cutters */
 #ifdef	JPG
 	{XX_JPG, "jpg"},	/* Joint Photography Expert Group JPEG  */
 #endif
@@ -388,6 +389,10 @@ void usage_msg(const GEN_PAR * pg, const IN_PAR * pi, const OUT_PAR * po)
        Eprintf("\t\t\t\tENABLE_COPY=16\n");
        Eprintf("\t\t\t\tENABLE_EDIT=32\n\n");
 #endif
+	Eprintf("\nIso-exclusive options:\n");
+	Eprintf
+	    ("-S int	%d\t(0/1) Use special conventions for textile cutting\n",
+	     po->specials);
 
 	NormalWait();
 
@@ -650,7 +655,7 @@ void cleanup_g(GEN_PAR * pg)
 		fclose(pg->td);
 		pg->td = NULL;
 	}
-#if defined(DOS) && defined (GNU)
+#if (defined(DOS) && defined (GNU)) || defined(__MINGW32__)
 /**
  ** GNU libc.a (DJ's DOS port) bug fix:
  **/
@@ -736,7 +741,7 @@ int HPGL_to_TMP(GEN_PAR * pg, IN_PAR * pi)
    **	If program terminates abnormally, delete hp2xx.$$$ manually!!
    **/
 
-#if defined(DOS) && defined (GNU)
+#if (defined(DOS)  && defined (GNU)) || defined(__MINGW32__)
 	if ((pg->td = fopen("hp2xx.$$$", "w+b")) == NULL)
 #elif defined(AMIGA)
 	if ((pg->td = fopen("t:hp2xx.tmp", "w+b")) == NULL)
@@ -863,6 +868,10 @@ int TMP_to_VEC(const GEN_PAR * pg, const OUT_PAR * po)
 
 	case XX_NC:
 		to_mftex(pg, po, 9);
+		return 0;
+
+	case XX_ISO:
+		to_mftex(pg, po, 10);
 		return 0;
 
 	default:

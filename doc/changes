@@ -1,5 +1,16 @@
 Changes to hp2xx:
 =================
+3.5.0a30:
+Added more pieces necessary for the decoding of embedded images.
+Added vector mode 10 a.k.a "-m iso" for Gerber cutting plotters (very similar to the
+existing nc mode, but using specific G codes for tool up/down etc). Added a 
+"special" option (-S 1) for this mode that activates features used in the textile
+industry: tiny squares in the input are converted to holes drilled with the M43
+instruction and triangles (fabric direction indicators) are ignored.
+Added workaround for tempfile creation under MINGW (necessary at least when using mingw 
+as a cross-compiler under Linux). Added shellscript for cross-compiling a Windows executable
+on Linux.
+ 
 3.5.0a29:
 Huge penwidths (that only make sense on raster devices) no longer create the initial 
 pen-down dot that is typical for pen plotters. pdf output using libharu could fail for

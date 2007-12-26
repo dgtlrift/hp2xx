@@ -68,7 +68,7 @@ copies.
 #include "hp2xx.h"
 
 
-
+int check_for_marker (HPGL_Pt*);
 
 int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 {
@@ -85,6 +85,8 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 	static char *svgjoin[3] = {"miter","round","bevel"};
 	PEN_W mapped_pen_size;	/* for DXF */
 	int toolz = 0;
+	int piece = 0;
+	HPGL_Pt old,older;
 	int np = 1, err = 0;
 	char *ftype = "", *scale_cmd = "", *pen_cmd = "",
 	    *poly_start = "", *poly_next = "", *poly_last = "", *poly_end =
@@ -222,6 +224,17 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 		draw_dot = "\nG81 X%g Y%G Z%g R%g  ; Drill Hole\nG81\n";
 		exit_cmd = "\nM02\n";
 		break;
+	case 10:		/* G-code for Gerber cutters */
+		ftype = "Gerber cutter G-";
+		scale_cmd = "H1*G71*";
+		pen_cmd = "";	/* pen is tool number ? */
+		poly_start = "M15*X%gY%g*";
+		poly_next = "X%gY%g*";	/* Note tool handling is done in the writer */
+		poly_last = poly_next;
+		poly_end = "";
+		draw_dot = "M15*X%gY%gM43*";
+		exit_cmd = "M15*M00*";
+		break;
 
 	}
 
@@ -347,6 +360,8 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 		if (mode == 8)
 			fprintf(md, scale_cmd, po->width * 2.834646,
 				po->height * 2.834646);
+		if (mode == 10)
+			fprintf(md, scale_cmd);
 #ifdef ATARI
 	}
 #endif
@@ -416,6 +431,8 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 		case 9:
 			Eprintf("\nWARNING: Pensize Ignored!\n");
 			break;
+		case 10:
+			break;
 		default:
 			fprintf(md, pen_cmd, pensize);
 			break;
@@ -435,6 +452,10 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 	if (mode == 8) {
 		xcoord2mm *= 2.834646;
 		ycoord2mm *= 2.834646;
+	}
+	if (mode == 10) {  /* Gerber cutter needs tenths of millimeters ? */
+		xcoord2mm *= 10.;
+		ycoord2mm *= 10.;
 	}
 
 	while ((cmd = PlotCmd_from_tmpfile()) != CMD_EOF)
@@ -473,6 +494,8 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 				case 9:
 					fprintf(md, pen_cmd, pen_no);	/* Tool No */
 					break;
+				case 10:
+					break;
 				default:
 					fprintf(md, pen_cmd, pensize);
 					break;
@@ -500,6 +523,8 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 					break;
 				case 9:
 					break;
+				case 10:
+					break;	
 				default:
 					fprintf(md, pen_cmd, pensize);
 					break;
@@ -526,12 +551,42 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 				toolz = 0;	/* Up */
 				break;
 			}
-
+			
+			if (mode == 10) {
+				int flag;
+				if (po->specials >0) 
+					flag= check_for_marker(&pt1);
+				else 
+					flag = 0;
+				switch (flag) {
+				case -1:
+					break;
+				case 1:	
+					    chars_out = fprintf(md, draw_dot,
+					    (pt1.x - po->xmin) * xcoord2mm,
+					    (pt1.y - po->ymin) * ycoord2mm);
+					    break;	    
+				case 2:
+				default:
+					toolz = 0;
+					if ((fabs(pt1.x-old.x)>1.e-5 || fabs(pt1.y-old.y)>1.e-5)
+					&& (fabs(pt1.x-older.x)>1.e-5 || fabs(pt1.y-older.y)>1.e-5)){ /*move does not continue last draw*/
+						piece ++;                                                    /*probably a new piece */
+						chars_out = fprintf(md,"N%d*",piece);
+					}
+					chars_out = fprintf(md, poly_start,
+					    	(pt1.x - po->xmin) * xcoord2mm,
+					    	(pt1.y - po->ymin) * ycoord2mm);
+				}
+				break;
+			}
+			
 			chars_out = fprintf(md, poly_start,
 					    (pt1.x - po->xmin) * xcoord2mm,
 					    (pt1.y -
 					     po->ymin) * ycoord2mm);
 
+			
 			break;
 
 		case DRAW_TO:
@@ -613,7 +668,29 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 						     ycoord2mm, np++);
 				toolz = 1;	/* Down */
 				break;
-			} else if (mode == 9 && toolz == 1) {	/* Tool already down skip the lower  */
+			} else if (mode == 10 && toolz == 0) {	/* Tool still up!  */
+				chars_out =
+				    fprintf(md,
+					    "M14*X%gY%g*",
+					    (pt1.x - po->xmin) * xcoord2mm,
+					    (pt1.y -
+					     po->ymin) * ycoord2mm);
+				np++;
+				older=old;
+				old=pt1;
+				HPGL_Pt_from_tmpfile(&pt1);
+				chars_out += fprintf(md, poly_next,
+						     (pt1.x -
+						      po->xmin) *
+						     xcoord2mm,
+						     (pt1.y -
+						      po->ymin) *
+						     ycoord2mm, np++);
+				toolz = 1;	/* Down */
+				break;
+			} else if (mode == 10 && toolz == 1) {	/* Tool already down skip the lower  */
+				older=old;
+				old=pt1;
 				HPGL_Pt_from_tmpfile(&pt1);
 				chars_out = fprintf(md, poly_next,
 						    (pt1.x -
@@ -754,3 +831,116 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 		Eprintf("\n");
 	return err;
 }
+
+int check_for_marker (HPGL_Pt *p1)
+{
+        HPGL_Pt start,end,center;
+        PlotCmd nextcmd;
+        long filepos;
+        int i;
+  
+        filepos=position_from_tmpfile();
+	start.x=end.x=p1->x;
+	start.y=end.y=p1->y;
+
+	for (i=0;i<4;i++) {
+		nextcmd = PlotCmd_from_tmpfile();
+                if (nextcmd == CMD_EOF) 
+                	goto no_marker;
+		if (nextcmd != DRAW_TO) { 			  /* a square is composed of draws only */
+	                if (i!=1 || (fabs(start.y-end.y) >1.e-5 && fabs(start.x-end.x)>1.e-5)) { 
+       				goto no_marker;                   
+			} else { 
+			   int flag;
+			        if (fabs(start.x-end.x) >1.e-5) {
+					center.x=(end.x+start.x)/2.;
+					center.y=end.y;
+					flag=0;
+				}else{
+					center.y=(end.y+start.y)/2.;
+					center.x=end.x;
+					flag=1;
+				}
+				HPGL_Pt_from_tmpfile(&end);
+				if ( (fabs(start.x-end.x) >1.e-5 && fabs(start.y-end.y) >1.e-5)  
+				||  (fabs(start.x-end.x) >100. || fabs(start.y-end.y) >100.) 
+				|| (fabs(center.x-end.x)>1.e-5) ) 
+					goto no_marker;
+				nextcmd = PlotCmd_from_tmpfile();
+				if (nextcmd != DRAW_TO) 
+					goto no_marker; 
+				start=end;
+				HPGL_Pt_from_tmpfile(&end);
+/* sanity checks - if first line was horizontal, second must be vertical and vice versa */
+/* also both lines must have same centerpoint and may not be longer than 100 units */
+				if (flag==0) {
+					if ( (fabs(start.x-end.x) >1.e-5) 
+					|| (fabs(start.y-end.y) >100.) 
+					|| (fabs(center.y-(end.y+start.y)/2.) >1.e-5) )
+					goto no_marker;
+				}else{	
+					if ( (fabs(start.y-end.y) >1.e-5) 
+					|| (fabs(start.x-end.x) >100.) 
+					|| (fabs(center.x-(end.x+start.x)/2.) >1.e-5) )
+					goto no_marker;
+				}
+				p1->x=center.x;
+				p1->y=center.y;
+				return 1;
+			}
+		}
+		start=end;
+		HPGL_Pt_from_tmpfile(&end);
+		if (i==0 && fabs(start.x-end.x<1.e-5) && fabs(start.y-end.y) ==50.) 
+			goto triangle;
+		if ( (fabs(start.x-end.x) >1.e-5 && fabs(start.y-end.y) >1.e-5) 
+		|| (fabs(start.x-end.x) >100. || fabs(start.y-end.y) >100.) )
+			goto no_marker;
+		
+		if (i==1) {
+			center.x= p1->x+(end.x-p1->x)/2.;
+			center.y= p1->y+(end.y-p1->y)/2.;
+		}
+
+        } /* for i */
+        
+	if (fabs(p1->x-end.x) >1.e-5 || fabs(p1->y-end.y) >1.e-5) 
+		goto no_marker;
+
+	/* if we get here, we found a small square - return its center */
+	p1->x=center.x;
+	p1->y=center.y;
+	return 1;
+
+triangle:
+	nextcmd = PlotCmd_from_tmpfile();
+	if (nextcmd != DRAW_TO) 
+		goto no_marker; 
+	start=end;
+	HPGL_Pt_from_tmpfile(&end);
+	if (fabs(start.x-end.x) !=200. || fabs(start.y-end.y) !=50.) 
+		goto no_marker; 
+	nextcmd = PlotCmd_from_tmpfile();
+	if (nextcmd != DRAW_TO) 
+		goto no_marker; 
+	start=end;
+	HPGL_Pt_from_tmpfile(&end);
+	if (fabs(start.x-end.x) !=200. || fabs(start.y-end.y) !=50.) 
+		goto no_marker; 
+	nextcmd = PlotCmd_from_tmpfile();
+	if (nextcmd != DRAW_TO) 
+		goto no_marker; 
+	start=end;
+	HPGL_Pt_from_tmpfile(&end);
+	if (fabs(start.x-end.x) >1.e-5 || fabs(start.y-end.y) !=50.) 
+		goto no_marker; 
+	return (-1);
+	
+	
+no_marker:
+	reposition_tmpfile(filepos);
+	return 0;
+
+
+}
+

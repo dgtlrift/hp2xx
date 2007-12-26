@@ -673,6 +673,15 @@ void HPGL_Pt_to_tmpfile(const HPGL_Pt * pf)
 	ymax = MAX(pf->y, ymax);
 }
 
+long position_from_tmpfile(void)
+{
+return ftell(td);
+}
+
+void reposition_tmpfile(long position)
+{
+fseek(td,position,SEEK_SET);
+}
 
 void HPGL_Pt_to_polygon(HPGL_Pt pf)
 {
@@ -1753,12 +1762,12 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 	 */
 	int c0, c2, ctmp = 0, nf;
 	unsigned char ptmp;
-	static unsigned char otmp1[5000],otmp2[5000],otmp3[5000];
+	static unsigned char otmp1[10000],otmp2[10000],otmp3[10000];
 	static int planeno=0;
 	static int haverow=0,compression=0,rtlgraphics=0;
 	static int colormode=0;
         static int sw=1,sh=1,dw=1,dh=1;
-        static int wr=1,hr=1;
+        static int wr=2,hr=1;
         static double sdw,sdh;
 	int position,offset,numbytes;
 	
@@ -1877,7 +1886,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 		return;
 		}
 		
-		if (c1 == '*' ) {
+		if ( ESC== c0 && c1 == '*' ) {
 			if (c2 == 'p') {
 				ctmp=getc(hd);
 #ifdef DEBUG_ESC
@@ -1947,6 +1956,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				
 				if (ctmp!='s' && ctmp!='t') {
 				fprintf(stderr,"strange terminator %c\n",ctmp);
+/*if (ctmp=='B') rtlgraphics=0;*/
 				return;
 				}
 				read_float(&val,hd);
@@ -2130,6 +2140,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					break;
 					}
 				if (ctmp=='M') return;
+
 				read_float(&val,hd);
 				ctmp=getc(hd);
 				}
@@ -2137,114 +2148,194 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 #ifdef DEBUG_ESC				
 				fprintf(stderr,"data by plane: %d bytes\n",(int)val);
 #endif
-				if (compression==0){
-				for (k=0;k<(int)val;k++) ctmp=getc(hd);
-				}else if (compression==2) {
-					char ctrl;
-					position=0;
-					kk=0;
-		                        while (kk<(int)val) {
-		                        ctrl=getc(hd);
-		                        kk++;
-					if ( (int)ctrl >= 0) {
-					kk+=ctrl+1;
-//fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);
-					if (planeno==0){
-					for (k=0;k<=ctrl;k++) 
+                                position=0;
+                                switch (compression) {
+				   char count,value;
+				   char ctrl;
+                                  case 0:
+				    if (planeno==0)
+   				      for (k=0;k<(int)val;k++) otmp1[position++]=getc(hd);
+   				    else 
+   				      for (k=0;k<(int)val;k++) otmp2[position++]=getc(hd);
+                                    break;
+                                 case 1: 
+				   kk=0;
+				   while (kk<(int)val) {
+				     count=getc(hd);
+			             count++;
+			             value=getc(hd);
+				     kk+=2;
+ 			             if (planeno==0){
+				       for (k=0;k<count;k++) 
+					  	otmp1[position++]=value;
+			             }else{
+				       for (k=0;k<count;k++) 
+						otmp2[position++]=value;
+			             }
+				   }
+                                   break;
+                                 case 2:
+				   kk=0;
+				   while (kk<(int)val) {
+				     ctrl=getc(hd);
+				     kk++;
+				     if ( (int)ctrl >= 0) {
+				       kk+=ctrl+1;
+/*fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);*/
+				       if (planeno==0){
+				 	 for (k=0;k<=ctrl;k++) 
 						otmp1[position++]=getc(hd);
-					}else{
-					for (k=0;k<=ctrl;k++) 
+				       }else{
+				 	 for (k=0;k<=ctrl;k++) 
 						otmp2[position++]=getc(hd);
-				        }
-				        } else {
-				          if ((int)ctrl==-128) {
-//fprintf(stderr,"skipped control byte\n");				          
-				          continue;
-				          }
-				          ptmp=getc(hd);
-					  kk++;
-				          ctrl*=-1;
-//fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
-					  if (planeno==0){
-					  for (k=0;k<=ctrl;k++) 
+				       }
+				     } else {
+				       if ((int)ctrl==-128) {
+/*fprintf(stderr,"skipped control byte\n");*/				          
+				         continue;
+				       }
+				       ptmp=getc(hd);
+				       kk++;
+				       ctrl*=-1;
+/*fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);*/
+				       if (planeno==0){
+					 for (k=0;k<=ctrl;k++) 
 						otmp1[position++]=ptmp;
-					  }else{
-  					  for (k=0;k<=ctrl;k++)
+				       }else{
+  					 for (k=0;k<=ctrl;k++)
 						otmp2[position++]=ptmp;	
+				       }
+				     }
+				   }
+			           break;
+                                    case 3:
+				      kk=0;
+				      while (kk<(int)val) { 
+					ptmp=getc(hd);
+					kk++;
+				  	offset = ptmp & 31;
+				  	numbytes=(ptmp >> 5)+1;
+				  	if (offset == 31) {
+				  		ptmp = getc(hd);
+				  		kk++;
+				  		offset += (int)ptmp;
+				  		while (ptmp == 255) {
+				  			ptmp = getc(hd);
+				  			offset += (int)ptmp;
+				  			kk++;
+						}
+					}	
+					position += offset;
+                                        if (planeno==0)
+					for (k=0;k<numbytes;k++) 
+						otmp1[position++]=getc(hd);
+                                        else
+					for (k=0;k<numbytes;k++) 
+						otmp2[position++]=getc(hd);
+					kk+=numbytes;
 					}
-					}
-//haverow=position;
-				 }
-				 	
-				 	if (planeno==0){
-					for (k=position;k<sw;k++)
+                                        break;
+				     default:
+				       Eprintf("Unsupported compression mode %d\n",compression);
+				       break;
+                		}
+				    if (planeno==0){
+				      for (k=position;k<sw;k++)
 						otmp1[k]=0;
-					}else{
-					for (k=position;k<sw;k++)
+				    }else{
+				      for (k=position;k<sw;k++)
 						otmp2[k]=0;
-					}
-					planeno++;
-					}
-				return;
-				}
-				if (ctmp=='W') {
-#ifdef DEBUG_ESC_2
-				  fprintf(stderr,"data by row or block: %d bytes\n",(int)val);
-#endif
-planeno=0;
-		if (compression == 0 ) {
-				    haverow = (int)val;
-
-				if (fread(otmp3,1,haverow,hd)!= haverow) fprintf(stderr,"short read!\n");
-
-/*
-				fprintf(stderr,"first bytes: %c%c%c,last bytes: %c%c%c\n",otmp[0],otmp[1],otmp[2],
-				otmp[haverow-3],otmp[haverow-2],otmp[haverow-1]);
-*/
+				    }
+                                planeno++;
+#if 1
 				ctmp=fgetc(hd);
 				if ((int)ctmp!=27) {
 				if (!silent_mode) Eprintf("error in RTL raster data, skipping to next ESC\n");
 				while ( (ctmp=fgetc(hd)) != 27) {};
 				}
 				ungetc(ctmp,hd);
-//					for (k=haverow;k<sw;k++)
-//						otmp3[k]=0;
-//							haverow=sw;
-		}  
+#endif
+				return;
+				}
+				if (ctmp=='W') {
+#ifdef DEBUG_ESC_2
+				  fprintf(stderr,"data by row or block: %d bytes\n",(int)val);
+#endif
+                                  planeno=0;
+                                  position=0;
+                                  
+                                  switch(compression) {
+			              char count,value;
+				      char ctrl;
+                                    case 0:
+   				      haverow = (int)val;
+				      if (fread(otmp3,1,haverow,hd)!= haverow) fprintf(stderr,"short read!\n");
+/*   				      for (k=0;k<(int)val;k++) otmp3[position++]=getc(hd);*/
 
-		if (compression == 2 && (int)val >0 ) {
-					char ctrl;
-					position=0;
-					kk=0;
-		                        while (kk<(int)val) {
+/*
+				fprintf(stderr,"first bytes: %c%c%c,last bytes: %c%c%c\n",otmp[0],otmp[1],otmp[2],
+				otmp[haverow-3],otmp[haverow-2],otmp[haverow-1]);
+*/
+#if 0
+					for (k=haverow;k<sw;k++)
+						otmp3[k]=0;
+							haverow=sw;
+#endif
+		                      break;
+		                   case 1:
+				      kk=0;
+			              while (kk<(int)val) {
+		                        count=getc(hd);
+		                        count++;
+					value=getc(hd);
+					kk+=2;
+/*fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",count,kk,(int)val);*/
+					for (k=0;k<count;k++) 
+					   otmp3[position++]=value;
+				      }
+					  
+				      for (k=position;k<sw;k++)
+						otmp3[k]=0;
+#if 1
+					haverow=sw;
+#else
+haverow=position;
+#endif
+                                      break;
+                                    case 2:
+				      kk=0;
+				      while (kk<(int)val) {
 		                        ctrl=getc(hd);
 		                        kk++;
 					if ( (int)ctrl >= 0) {
-					kk+=ctrl+1;
-//fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);
-					for (k=0;k<=ctrl;k++) 
+				  	  kk+=ctrl+1;
+/*fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);*/
+					  for (k=0;k<=ctrl;k++) 
 						otmp3[position++]=getc(hd);
 				        } else {
 				          if ((int)ctrl==-128) {
-//fprintf(stderr,"skipped control byte\n");				          
+/*fprintf(stderr,"skipped control byte\n");*/				          
 				          continue;
 				          }
 				          ptmp=getc(hd);
 					  kk++;
 				          ctrl*=-1;
-//fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
+/*fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);*/
 					  for (k=0;k<=ctrl;k++) 
 						otmp3[position++]=ptmp;
 					}
-					}
+				      }
+#if 0
 					for (k=position;k<sw;k++)
 						otmp3[k]=0;
 					haverow=sw;
-		}
-		if (compression == 3 && (int)val >0 ) {
-				        position=0;
-				 	kk=0;
-					while (kk<(int)val) { 
+#else
+haverow=position;
+#endif
+                                      break;
+                                    case 3:
+				      kk=0;
+				      while (kk<(int)val) { 
 					ptmp=getc(hd);
 					kk++;
 				  	offset = ptmp & 31;
@@ -2264,16 +2355,25 @@ planeno=0;
 						otmp3[position++]=getc(hd);
 					kk+=numbytes;
 					}
+#if 1
 					for (k=position;k<sw;k++)
 						otmp3[k]=0;
-		}
+					haverow=sw;
+#else
+haverow=position;	
+#endif
+                                        break;
+				     default:
+				       Eprintf("Unsupported compression mode %d\n",compression);
+				       break;
+                		}
 				  
 			if (rot_tmp==90.||rot_tmp==270.) {
 				px=p_last.x; /* save start of line */
 			} else				 
 				px=p_last.y;
-			
-			for (k=0;k<haverow;k++){ /* for each input pixel */  
+
+			for (k=0;k<haverow;k++){ /* for each input pixel */  /*sw statt haverow ??*/
 				int ir,ig,ib, gray;
 			if (colormode==1 || colormode==3) {
 				ir=otmp3[k];
@@ -2285,7 +2385,8 @@ planeno=0;
 				ib=otmp3[k];
 			}
 			gray=rint(0.3*ir+0.59*ig+0.11*ib);
-			if (gray==0) gray=254;
+/*			if (gray==0) gray=254;*/
+if (gray==0) continue;
 			fputc(SET_PEN,td);
 			fputc(gray+1,td);
 
@@ -2293,6 +2394,7 @@ planeno=0;
 				p_last.x++;
 			else				
 				p_last.y--;
+
 			for (kk=0;kk<=wr;kk++) { /*for all output pixels resulting from scaling */
 
 				if (rot_tmp == 90. || rot_tmp==270.)
@@ -2324,6 +2426,15 @@ planeno=0;
 			p_last.y=px; /* first column of next row */
 			p_last.x+=hr; /* one row below previous one */
 		}
+
+#if 1
+				ctmp=fgetc(hd);
+				if ((int)ctmp!=27) {
+				if (!silent_mode) Eprintf("error in RTL raster data, skipping to next ESC\n");
+				while ( (ctmp=fgetc(hd)) != 27) {};
+				}
+				ungetc(ctmp,hd);
+#endif
 		
 		return; /* completed this command */
 		}
@@ -2341,8 +2452,8 @@ planeno=0;
 				if ( c1 == '&' && c2 == 'a' )
 				Eprintf("ignoring escape ESC&a... (transparency mode)\n");
 				else {
-				Eprintf("invalid escape ESC%c%c (Esc%d%d)\n", c1,
-					c2,c1,c2);
+				Eprintf("invalid escape ESC%c%c (#%d#%d#%d#)\n", c1,
+					c2,c0,c1,c2);
 				if (rtlgraphics==1) {
 				if (!silent_mode) Eprintf("error in RTL data, skipping to next ESC\n");
 				 ctmp=0;

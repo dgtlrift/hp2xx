@@ -65,8 +65,8 @@ copies.
  ** 95/03/23  V 3.01  E.B  gnuplot ascii format added
  **/
 
-#define VERS_NO        "3.5.0a29"
-#define VERS_DATE      "07/09/16"
+#define VERS_NO        "3.5.0a30"
+#define VERS_DATE      "07/12/26"
 #define VERS_COPYRIGHT "(c) 1991 - 1994 (V3.20) Heinz W. Werntges"
 #if defined(AMIGA)
 #define VERS_ADDITIONS "\tAmiga additions (V 2.00) by Claus Langhans (92/12/16)\n"
@@ -186,7 +186,7 @@ copies.
 typedef enum {
 	XX_CAD, XX_CS, XX_DXF, XX_EM, XX_EMF, XX_EMP, XX_EPIC, XX_PS, XX_EPS,
 	    XX_ESC2, XX_FIG, XX_GIF, XX_GPT, XX_HPGL,
-	XX_ILBM, XX_IMG, XX_JPG,
+	XX_ILBM, XX_IMG, XX_ISO, XX_JPG,
 	XX_MF, XX_NC, XX_PBM, XX_PCL, XX_PCX, XX_PAC, XX_PDF, XX_PIC,
 	    XX_PNG, XX_PRE,
 	XX_RGIP, XX_SVG, XX_TIFF, XX_TERM	/* Dummy: terminator    */
@@ -373,6 +373,8 @@ void read_HPGL(GEN_PAR *, const IN_PAR *);
 void adjust_input_transform(const GEN_PAR *, const IN_PAR *, OUT_PAR *);
 PlotCmd PlotCmd_from_tmpfile(void);
 void HPGL_Pt_from_tmpfile(HPGL_Pt *);
+void reposition_tmpfile(long);
+long position_from_tmpfile(void);
 void Pen_action_to_tmpfile(PlotCmd, const HPGL_Pt *, int);
 /*int read_float(float *, FILE *);*/
 double ceil_with_tolerance(double, double);
