@@ -2181,7 +2181,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				     kk++;
 				     if ( (int)ctrl >= 0) {
 				       kk+=ctrl+1;
-/*fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);*/
+fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);
 				       if (planeno==0){
 				 	 for (k=0;k<=ctrl;k++) 
 						otmp1[position++]=getc(hd);
@@ -2191,13 +2191,13 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				       }
 				     } else {
 				       if ((int)ctrl==-128) {
-/*fprintf(stderr,"skipped control byte\n");*/				          
+fprintf(stderr,"skipped control byte\n");				          
 				         continue;
 				       }
 				       ptmp=getc(hd);
 				       kk++;
 				       ctrl*=-1;
-/*fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);*/
+fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
 				       if (planeno==0){
 					 for (k=0;k<=ctrl;k++) 
 						otmp1[position++]=ptmp;
@@ -2250,8 +2250,10 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 #if 1
 				ctmp=fgetc(hd);
 				if ((int)ctmp!=27) {
+				int nskip=0;
 				if (!silent_mode) Eprintf("error in RTL raster data, skipping to next ESC\n");
-				while ( (ctmp=fgetc(hd)) != 27) {};
+				while ( (ctmp=fgetc(hd)) != 27) {nskip++;};
+				if (!silent_mode) Eprintf("      skipped %d bytes\n",nskip);
 				}
 				ungetc(ctmp,hd);
 #endif
@@ -2430,8 +2432,10 @@ if (gray==0) continue;
 #if 1
 				ctmp=fgetc(hd);
 				if ((int)ctmp!=27) {
+				int nskip=0;
 				if (!silent_mode) Eprintf("error in RTL raster data, skipping to next ESC\n");
-				while ( (ctmp=fgetc(hd)) != 27) {};
+				while ( (ctmp=fgetc(hd)) != 27) {nskip++;};
+				if (!silent_mode) Eprintf("     skipped %d bytes\n",nskip);
 				}
 				ungetc(ctmp,hd);
 #endif
@@ -3397,6 +3401,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 	int mypen, myred, mygreen, myblue, i,j;
 	float mywidth, myheight;
 	char tmpstr[1024];
+	char ctmp;
 	char SafeTerm;
 	int statusbyte;
 #if 0
@@ -3475,16 +3480,16 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 #endif
 				break;
 			case 6:	/* stroke weight */
-				if (read_float(&ftmp, hd)){
+				if (read_float(&csfont, hd)){
 					par_err_exit(2, cmd, hd);
 					return;
 					}
-				if (ftmp == 9999)
-					tp->astrokewidth = ftmp;
+				if (csfont == 9999.)
+					tp->astrokewidth = csfont;
 				else {
-					if (ftmp < -7. || ftmp > 7.)
-						ftmp = 0.;
-					tp->astrokewidth = 0.11 + ftmp / 70.;	/* 0.01 ... 0.21 mm */
+					if (csfont < -7. || csfont > 7.)
+						csfont = 0.;
+					tp->astrokewidth = 0.11 + csfont / 70.;	/* 0.01 ... 0.21 mm */
 				}
 				break;
 			case 3:	/* font pitch */
@@ -3503,7 +3508,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				par_err_exit(1, cmd, hd);
 				return;
 			}
-		} while (read_float(&ftmp,hd));	
+		} while (!read_float(&ftmp,hd));	
 		}
 		break;
 	case CA:		/* Alternate character set      */
@@ -4827,16 +4832,17 @@ C2=S2;
 #endif
 				break;
 			case 6:	/* stroke weight */
-				if (read_float(&ftmp, hd)){
+				if (read_float(&csfont, hd)){
 					par_err_exit(2, cmd, hd);
 					return;
 					}
-				if (ftmp == 9999)
-					tp->sstrokewidth = ftmp;
-				else {
-					if (ftmp < -7. || ftmp > 7.)
-						ftmp = 0.;
-					tp->sstrokewidth = 0.11 + ftmp / 70.;	/* 0.01 ... 0.21 mm */
+				if (csfont == 9999.) {
+					tp->sstrokewidth = csfont;
+					tp->strokewidth = csfont; /* update current setting in case we never see SS */
+				} else {
+					if (csfont < -7. || csfont > 7.)
+						csfont = 0.;
+					tp->sstrokewidth = 0.11 + csfont / 70.;	/* 0.01 ... 0.21 mm */
 				}
 				break;
 			case 3:	/* font pitch */
@@ -4855,7 +4861,7 @@ C2=S2;
 				par_err_exit(1, cmd, hd);
 				return;
 			}
-		} while (read_float(&ftmp,hd));	
+		} while (!read_float(&ftmp,hd));	
 		}
 		break;
 	case SS:		/* Select designated standard character set */
@@ -4874,9 +4880,17 @@ C2=S2;
 		break;
 	case MG:
 	case WD:		/* Write string to display      */
-		read_string(strbuf, hd);
-		if (!silent_mode)
-			Eprintf("\nLABEL: %s\n", strbuf);
+		ctmp = fgetc(hd);
+		if (ctmp != '"') {
+			par_err_exit(1, cmd, hd);
+			return;
+		}
+		do {
+			ctmp=fgetc(hd);
+			if (!silent_mode)
+				fputc(ctmp,stderr);
+		}
+		while (ctmp != '"');
 		break;
 	case VS:
 		if (read_float(&ftmp, hd))	/* Just VS */

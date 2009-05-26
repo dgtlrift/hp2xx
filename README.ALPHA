@@ -1,4 +1,7 @@
 Recent changes in the 3.5.0 development ("alpha") series:
+3.5.0a31-33:
+- Fixed parsing of AD,SD,MG. Added sane default for pen number.
+
 3.5.0a30:
 - added new mode "iso", ISO G-code optimized for Gerber cutters,
   with special option for conventions used in the textile business

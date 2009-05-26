@@ -669,6 +669,7 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 				toolz = 1;	/* Down */
 				break;
 			} else if (mode == 10 && toolz == 0) {	/* Tool still up!  */
+			fprintf(stderr,"tooldown first\n"),
 				chars_out =
 				    fprintf(md,
 					    "M14*X%gY%g*",
@@ -679,6 +680,31 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 				older=old;
 				old=pt1;
 				HPGL_Pt_from_tmpfile(&pt1);
+				if (po->specials == 1) { /* check if it is a M19 marker */
+				int mflag=1;
+				        long filepos=position_from_tmpfile();
+				HPGL_Pt pt_next;
+				PlotCmd nextcmd;
+				fprintf(stderr,"checkMarker\n");
+					nextcmd = PlotCmd_from_tmpfile();
+					if (nextcmd!= MOVE_TO) {
+fprintf(stderr,"no move,no marker\n"); 
+						reposition_tmpfile(filepos);
+						mflag=0;
+					}
+					if (mflag==1){
+						HPGL_Pt_from_tmpfile(&pt_next);
+						if (fabs(old.x-pt_next.x) >1.e-5 && fabs(old.y-pt_next.y) >1.e-5) 
+						mflag=0;
+if (mflag==0) fprintf(stderr,"diagonal move,no marker\n"); 
+					} 
+					if (mflag==1) {
+						fprintf(md,"M19*");
+						break;
+					} else {	
+					reposition_tmpfile(filepos);	
+					}
+				}			
 				chars_out += fprintf(md, poly_next,
 						     (pt1.x -
 						      po->xmin) *
@@ -689,9 +715,34 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 				toolz = 1;	/* Down */
 				break;
 			} else if (mode == 10 && toolz == 1) {	/* Tool already down skip the lower  */
+				HPGL_Pt pt_next;
+				PlotCmd nextcmd;
 				older=old;
 				old=pt1;
 				HPGL_Pt_from_tmpfile(&pt1);
+				if (po->specials == 1) { /* check if it is a M19 marker */
+				int mflag=1;
+				fprintf(stderr,"checkMarker\n");
+				        long filepos=position_from_tmpfile();
+					nextcmd = PlotCmd_from_tmpfile();
+					if (nextcmd!= MOVE_TO) {
+fprintf(stderr,"no move,no marker\n"); 
+						reposition_tmpfile(filepos);
+						mflag=0;
+					}
+					if (mflag==1){
+						HPGL_Pt_from_tmpfile(&pt_next);
+						if (fabs(old.x-pt_next.x) >1.e-5 && fabs(old.y-pt_next.y) >1.e-5) 
+						mflag=0;
+if (mflag==0) fprintf(stderr,"diagonal move,no marker\n"); 
+					} 
+					if (mflag==1) {
+						fprintf(md,"M19*");
+						break;
+					} else {	
+					reposition_tmpfile(filepos);	
+					}
+				}			
 				chars_out = fprintf(md, poly_next,
 						    (pt1.x -
 						     po->xmin) * xcoord2mm,
@@ -842,16 +893,22 @@ int check_for_marker (HPGL_Pt *p1)
         filepos=position_from_tmpfile();
 	start.x=end.x=p1->x;
 	start.y=end.y=p1->y;
-
+fprintf(stderr,"check_for_marker called\n");
 	for (i=0;i<4;i++) {
 		nextcmd = PlotCmd_from_tmpfile();
-                if (nextcmd == CMD_EOF) 
+                if (nextcmd == CMD_EOF) {
+                fprintf(stderr,"eof..\n");
                 	goto no_marker;
+                	}
 		if (nextcmd != DRAW_TO) { 			  /* a square is composed of draws only */
+		fprintf(stderr,"no square - has moves\n");
 	                if (i!=1 || (fabs(start.y-end.y) >1.e-5 && fabs(start.x-end.x)>1.e-5)) { 
+	                  if (i==2) fprintf(stderr,"M19?\n");
+	                    else
        				goto no_marker;                   
 			} else { 
 			   int flag;
+fprintf(stderr,"could be square\n");
 			        if (fabs(start.x-end.x) >1.e-5) {
 					center.x=(end.x+start.x)/2.;
 					center.y=end.y;
@@ -862,26 +919,31 @@ int check_for_marker (HPGL_Pt *p1)
 					flag=1;
 				}
 				HPGL_Pt_from_tmpfile(&end);
+fprintf(stderr,"could be square? %f %f\n",fabs(start.y-end.y),fabs(start.x-end.x));
 				if ( (fabs(start.x-end.x) >1.e-5 && fabs(start.y-end.y) >1.e-5)  
 				||  (fabs(start.x-end.x) >100. || fabs(start.y-end.y) >100.) 
-				|| (fabs(center.x-end.x)>1.e-5) ) 
+)
+//				|| (fabs(center.x-end.x)>1.e-5) ) 
 					goto no_marker;
 				nextcmd = PlotCmd_from_tmpfile();
-				if (nextcmd != DRAW_TO) 
-					goto no_marker; 
+//				if (nextcmd != DRAW_TO) 
+//					goto no_marker; 
 				start=end;
 				HPGL_Pt_from_tmpfile(&end);
 /* sanity checks - if first line was horizontal, second must be vertical and vice versa */
 /* also both lines must have same centerpoint and may not be longer than 100 units */
+fprintf(stderr,"could be square: %f %f\n",fabs(start.y-end.y),fabs(start.x-end.x));
 				if (flag==0) {
 					if ( (fabs(start.x-end.x) >1.e-5) 
 					|| (fabs(start.y-end.y) >100.) 
-					|| (fabs(center.y-(end.y+start.y)/2.) >1.e-5) )
+					)
+//					|| (fabs(center.y-(end.y+start.y)/2.) >1.e-5) )
 					goto no_marker;
 				}else{	
 					if ( (fabs(start.y-end.y) >1.e-5) 
 					|| (fabs(start.x-end.x) >100.) 
-					|| (fabs(center.x-(end.x+start.x)/2.) >1.e-5) )
+//					|| (fabs(center.x-(end.x+start.x)/2.) >1.e-5) )
+)
 					goto no_marker;
 				}
 				p1->x=center.x;
@@ -894,9 +956,10 @@ int check_for_marker (HPGL_Pt *p1)
 		if (i==0 && fabs(start.x-end.x<1.e-5) && fabs(start.y-end.y) ==50.) 
 			goto triangle;
 		if ( (fabs(start.x-end.x) >1.e-5 && fabs(start.y-end.y) >1.e-5) 
-		|| (fabs(start.x-end.x) >100. || fabs(start.y-end.y) >100.) )
+		|| (fabs(start.x-end.x) >100. || fabs(start.y-end.y) >100.) ) {
+fprintf(stderr,"exit here: %f %f\n",fabs(start.x-end.x),fabs(start.y-end.y));
 			goto no_marker;
-		
+		}
 		if (i==1) {
 			center.x= p1->x+(end.x-p1->x)/2.;
 			center.y= p1->y+(end.y-p1->y)/2.;

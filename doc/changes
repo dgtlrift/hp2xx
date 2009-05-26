@@ -1,5 +1,16 @@
 Changes to hp2xx:
 =================
+3.5.0a33:
+Fix parsing of MG.
+
+3.5.0a32:
+Fix parsing of AD and SD. Made SD6,9999 change the penwidth of the active font
+immediately as there may be no SS before LB.
+
+3.5.0a31:
+Fix for penwidth definition (Robert Neff). Textile cutting output now converts
+short marker lines into M19 commands.
+
 3.5.0a30:
 Added more pieces necessary for the decoding of embedded images.
 Added vector mode 10 a.k.a "-m iso" for Gerber cutting plotters (very similar to the

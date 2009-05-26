@@ -41,7 +41,7 @@ void Pen_Width_to_tmpfile(int pen, PEN_W width)
 	if (record_off)		/* Wrong page!  */
 		return;
 	if (pen < 0)
-		return;		/* Might happen when "current pen" is still
+		tp = NUMPENS;		/* Might happen when "current pen" is still
 				   undefined */
 	if (tp == 0) {		/* set all pens */
 		for (i = 1; i < NUMPENS; ++i)
