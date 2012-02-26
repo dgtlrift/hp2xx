@@ -95,7 +95,7 @@ void murphy_wideline(DevPt p0, DevPt p1, int width, int miter)
 
 	float offset = width / 2.;
 
-	DevPt pt, ptx, ml1, ml2, ml1b, ml2b;
+	DevPt pt, ml1, ml2, ml1b, ml2b;
 
 	int d0, d1;		/* difference terms d0=perpendicular to line, d1=along line */
 
@@ -172,7 +172,6 @@ void murphy_wideline(DevPt p0, DevPt p1, int width, int miter)
 		murphy.last2.x = -10000000;
 		murphy.last2.y = -10000000;
 	}
-	ptx = pt;
 
 	for (q = 0; dd <= tk; q++) {	/* outer loop, stepping perpendicular to line */
 
@@ -293,8 +292,8 @@ DevPt ml1b, ml2b, ml1, ml2;
 				m1 = murphy.last1;
 				m2 = murphy.last2;
 			}
-#if 0
-			if (ftmp1 > width || ftmp2 > width)
+#if 1
+			if (ftmp1 > 2*width || ftmp2 > 2*width)
 			return;
 #endif
 			c1=ml1;
@@ -336,27 +335,27 @@ DevPt ml1b, ml2b, ml1, ml2;
 			p_act = bresenham_init(&m2, &m1);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
-					    murphy.color+1);
+					    murphy.color);
 			} while (bresenham_next() != BRESENHAM_ERR);
 
 			p_act = bresenham_init(&m1, &c1);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
-					    murphy.color+1);
+					    murphy.color);
 			} while (bresenham_next() != BRESENHAM_ERR);
 
 			p_act = bresenham_init(&c1, &c2);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
-					    murphy.color+1);
+					    murphy.color);
 			} while (bresenham_next() != BRESENHAM_ERR);
 
 			p_act = bresenham_init(&c2, &m2);
 			do {
 				plot_PicBuf(murphy.pb, p_act,
-					    murphy.color+1);
+					    murphy.color);
 			} while (bresenham_next() != BRESENHAM_ERR);
-			polygon_PicBuf(m1, m2, c1, c2, murphy.color+1,
+			polygon_PicBuf(m1, m2, c1, c2, murphy.color,
 				       murphy.pb);
 		}
 	}

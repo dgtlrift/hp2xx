@@ -15,7 +15,7 @@ int PicBuf_to_TIF(const GEN_PAR * pg, const OUT_PAR * po)
 	int tifftmp, tiffstdout = 0;
 #endif
 	RowBuf *row = NULL;
-	int x, y, W, H, D, B, S;
+	int x, y, W, H, D, S;
 	float XDPI, YDPI;
 	Byte *tifbuf;
 	unsigned short r[256], g[256], b[256];
@@ -51,7 +51,6 @@ int PicBuf_to_TIF(const GEN_PAR * pg, const OUT_PAR * po)
 	W = po->picbuf->nr;
 	H = po->picbuf->nc;
 	D = po->picbuf->depth;
-	B = po->picbuf->nb;
 
 	TIFFSetField(w, TIFFTAG_IMAGEWIDTH, H);
 	TIFFSetField(w, TIFFTAG_IMAGELENGTH, W);

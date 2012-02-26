@@ -853,7 +853,7 @@ void adjust_text_par(void)
 	tp->linediff.y = -tp->line * (1.0 + tp->eline) * cdir;
 	if (tp->truetype == 0) return;
 #ifdef STROKED_FONTS
-	if (init_font(tp->font)) {
+	if (init_font()) {
 		Eprintf("\007 init_font() failed for font #%d\n",
 			tp->font);
 		Eprintf("Font 0 used instead!\n");
@@ -1296,7 +1296,7 @@ void plot_user_char(FILE * hd, short current_pen)
 
 #ifdef STROKED_FONTS
 
-int init_font(int thefont)
+int init_font(void)
 {
 	int error;
 
@@ -1477,7 +1477,7 @@ void ASCII_to_font(int c, int curpen)
 int tt_stroke_moveto(FT_Vector * to, void *dummy)
 {
 	HPGL_Pt p;
-
+	(void) dummy;
 	p.x = tp->Txx * to->x + tp->Txy * to->y;
 	p.y = tp->Tyx * to->x + tp->Tyy * to->y;
 	p.x = p.x / 200. + tp->refpoint.x + tp->offset.x;
@@ -1497,6 +1497,7 @@ int tt_stroke_lineto(FT_Vector * to, void *dummy)
 {
 	HPGL_Pt p;
 	int outside = 0;
+	(void)dummy;
 #if 0
 	fprintf(stderr, "TT line to %ld %ld\n", to->x, to->y);
 #endif
@@ -1547,7 +1548,7 @@ int tt_bezier1(FT_Vector * p1, FT_Vector * p2, void *dummy)
 	HPGL_Pt p, pp;
 	int i, outside;
 	float t;
-
+        (void)dummy;
 /*    
 p(t) = t^2*P2 + 2*t*(1-t)*P1 + (1-t)^2* P0
 */
@@ -1608,7 +1609,7 @@ int tt_bezier2(FT_Vector * p1, FT_Vector * p2, FT_Vector * p3, void *dummy)
 	HPGL_Pt p, pp;
 	int i, outside;
 	float t;
-
+	(void)dummy;
 /*    
 p(t) = t^3*P3 + 3*t^2*(1-t)*P2 + 3*t*(1-t)^2* P1 + (1-t)^3 * P0
 */

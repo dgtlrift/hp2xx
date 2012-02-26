@@ -507,6 +507,11 @@ void plot_PicBuf(PicBuf * pb, DevPt * pt, PEN_C color_index)
 			pt->x + X_Offset, pb->nc);
 		return;
 	}
+	if ((pt->y + Y_Offset) < 0 || pt->y > (pb->nr - Y_Offset)) {
+		Eprintf("plot_PicBuf: Illegal y (%d not in [0, %d])\n",
+			pt->y + Y_Offset, pb->nr);
+		return;
+	}
 	plot_RowBuf(get_RowBuf(pb, pt->y + Y_Offset), pt->x + X_Offset,
 		    pb->depth, color_index);
 }

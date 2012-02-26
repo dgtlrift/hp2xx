@@ -289,8 +289,6 @@ int PicBuf_to_X11(const GEN_PAR * pg, OUT_PAR * po)
 	int xref = 0, yref = 0;
 	const RowBuf *row;
 	const PicBuf *pb;
-	struct timeval tv;
-	tv.tv_usec = 10;
 
 	if (pg == NULL || po == NULL)
 		return ERROR;
@@ -411,7 +409,6 @@ int PicBuf_to_X11(const GEN_PAR * pg, OUT_PAR * po)
 				goto REDRAW;	/* yes, goto in C is ugly */
 			}
 			break;
-/*	  select (0, NULL, NULL, NULL, &tv);*/
 		}
 	}
 	while (WaitEvent.type != KeyPress);

@@ -39,7 +39,7 @@ int PicBuf_to_JPG(const GEN_PAR * pg, const OUT_PAR * po)
 {
 	FILE *w = NULL;
 	RowBuf *row = NULL;
-	int i, x, y, W, H, D, B, S;
+	int i, x, y, W, H, D, S;
 	JSAMPROW row_pointer[1];
 	unsigned char *jpgbuf;
 	struct jpeg_compress_struct cinfo;
@@ -51,7 +51,6 @@ int PicBuf_to_JPG(const GEN_PAR * pg, const OUT_PAR * po)
 	W = po->picbuf->nr;
 	H = po->picbuf->nc;
 	D = po->picbuf->depth;
-	B = po->picbuf->nb;
 
 
 	cinfo.err = jpeg_std_error(&jerr);

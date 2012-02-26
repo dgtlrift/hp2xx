@@ -77,7 +77,7 @@ void ps_set_linecap(LineEnds type, PEN_W pensize, HPGL_Pt * ppt, FILE * fd);
 void ps_set_linejoin(LineJoins type, LineLimit limit, PEN_W pensize, HPGL_Pt * ppt,
                      FILE * fd);
 void ps_set_color(PEN_C pencolor, HPGL_Pt * ppt, FILE * fd);
-void ps_init(const GEN_PAR *, const OUT_PAR *, FILE *, PEN_W);
+void ps_init(const GEN_PAR *, const OUT_PAR *, FILE *);
 void ps_end(FILE *);
 void ps_stroke_and_move_to(HPGL_Pt *, FILE *);
 void ps_line_to(HPGL_Pt *, char, FILE *);
@@ -285,7 +285,7 @@ char *Getdate(void)
  ** PostScript definitions
  **/
 
-void ps_init(const GEN_PAR * pg, const OUT_PAR * po, FILE * fd, PEN_W pensize)
+void ps_init(const GEN_PAR * pg, const OUT_PAR * po, FILE * fd)
 {
   long left, right, low, high;
   double hmxpenw;
@@ -644,7 +644,7 @@ int to_ps(const GEN_PAR * pg, const OUT_PAR * po)
   /* PS header */
 
   pensize = pt.width[DEFAULT_PEN_NO];  /* Default pen    */
-  ps_init(pg, po, md, pensize);
+  ps_init(pg, po, md);
   fprintf(md, " %6.3f W\n", pensize);
   fprintf(md," 0 0 moveto\n");      
 

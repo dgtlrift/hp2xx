@@ -79,7 +79,7 @@ void eps_init(const GEN_PAR *, const OUT_PAR *, FILE *, PEN_W);
 void eps_end(FILE *);
 void eps_stroke_and_move_to(HPGL_Pt *, FILE *);
 void eps_line_to(HPGL_Pt *, char, FILE *);
-void eps_draw_dot(HPGL_Pt * ppt, double radius, FILE * fd);
+void eps_draw_dot(double radius, FILE * fd);
 char *eps_Getdate(void);
 
 
@@ -253,7 +253,7 @@ void eps_line_to(HPGL_Pt * ppt, char mode, FILE * fd)
 	linecount++;
 }
 
-void eps_draw_dot(HPGL_Pt * ppt, double radius, FILE * fd)
+void eps_draw_dot(double radius, FILE * fd)
 {
 	fprintf(fd, " currentpoint newpath %0.2f 0 360 arc fill\n",
 		radius);
@@ -551,7 +551,7 @@ int to_eps(const GEN_PAR * pg, const OUT_PAR * po)
 			if (pensize > 0.05) {
 				eps_line_to(&pt1, 'M', md);
 				eps_line_to(&pt1, 'D', md);	/* not sure whether this is needed */
-				eps_draw_dot(&pt1, pensize / 2, md);
+				eps_draw_dot(pensize / 2, md);
 			}
 			break;
 		default:

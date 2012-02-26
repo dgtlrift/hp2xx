@@ -1,5 +1,16 @@
 Changes to hp2xx:
 =================
+3.5.0a35:
+Some code cleanup (removal of unused variables and excessive comments).
+PG should (probably) not reset text parameters. Allow setting width and
+color of all 256 pens, not just the first 8. Changed PNG writing code for
+compatibility with new versions of libpng.
+
+3.5.0a34:
+Fix drawing of the slash character (wrong height in some label orientations) (Dean Provins)
+Add sanity check to wide line miter drawing. Rework parts of the RTL code. Ignore line breaks
+when reading PE code.
+
 3.5.0a33:
 Fix parsing of MG.
 

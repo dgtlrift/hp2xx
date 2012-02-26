@@ -72,6 +72,7 @@ ALL_LIBS  =  -L/usr/lib/X11R6 -lX11 -lm
 # for experimental truetype font support
 #
 DEFINES   = -DUNIX -DHAS_UNIX_X11 \
+ -D_FILE_OFFSET_BITS=64 \
  -DSTROKED_FONTS=\"/usr/X11R6/lib/X11/fonts/truetype/VeraMono.ttf\" \
  -DSTROKED_VARFONTS=\"/usr/X11R6/lib/X11/fonts/truetype/Vera.ttf\" \
  `freetype-config --cflags`
@@ -183,10 +184,10 @@ EX_DEFS = #-DDEBUG_ESC
 EX_LIBS =
 #
 # Include PDF support using free (ZLIB/PNG-licensed) libharu
-EX_SRC	+= to_pdf.c
-EX_OBJ += to_pdf.o
-EX_DEFS += -DUSEPDF 
-EX_LIBS += -lhpdf
+#EX_SRC	+= to_pdf.c
+#EX_OBJ += to_pdf.o
+#EX_DEFS += -DUSEPDF 
+#EX_LIBS += -lhpdf
 #
 # Include PDF support using commercial PDFLIB
 #EX_SRC	+= to_pdf.c

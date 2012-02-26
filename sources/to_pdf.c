@@ -646,6 +646,7 @@ FILE *Fi;
  Fi = fopen(po->ps_incres,"r");
  if (NULL==Fi) {
 /*  printf("Warning: cannot open security file %s\n",po->ps_incres); */
+  free(line);
   return -1;
  } else {
 #if 0

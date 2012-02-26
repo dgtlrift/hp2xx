@@ -1,0 +1,20 @@
+IN; SP1;
+CS1
+PU 10,0
+LO5
+LBSlash /
+PG
+PU 10,500
+LO2
+LBSlash 3/4 / \ END
+PG
+PU 10,1000
+LO3
+LBSlash 3/4 / \ END
+PU 10,1500
+LO4
+LBSlash 3/4 / \ END
+PU 10,2000
+LO5
+LBSlash 3/4 / \ END
+PU 10,0

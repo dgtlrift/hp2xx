@@ -93,6 +93,7 @@ int PicBuf_to_PNG(const GEN_PAR * pg, const OUT_PAR * po)
 			    pdImageColorAllocate(im, pt.clut[colour][0],
 						 pt.clut[colour][1],
 						 pt.clut[colour][2]);
+                if (pdcol<0) Eprintf("Could not allocate full colormap for PNG output\n");
 		for (row_c = 0; row_c < pb->nr; row_c++) {
 			row = get_RowBuf(pb, pb->nr - row_c - 1);
 			if (row == NULL)
@@ -115,7 +116,8 @@ int PicBuf_to_PNG(const GEN_PAR * pg, const OUT_PAR * po)
 			    pdImageColorAllocate(im, ppm[colour][0],
 						 ppm[colour][1],
 						 ppm[colour][2]);
-
+                if (pdcol<0) Eprintf("Could not allocate full colormap for PNG output\n");
+               
 		for (row_c = 0; row_c < pb->nr; row_c++) {
 			row = get_RowBuf(pb, pb->nr - row_c - 1);
 			if (row == NULL)

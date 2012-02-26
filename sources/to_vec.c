@@ -86,7 +86,7 @@ int to_mftex(const GEN_PAR * pg, const OUT_PAR * po, int mode)
 	PEN_W mapped_pen_size;	/* for DXF */
 	int toolz = 0;
 	int piece = 0;
-	HPGL_Pt old,older;
+	HPGL_Pt old={9999999.,9999999.},older={9999999.,9999999.};
 	int np = 1, err = 0;
 	char *ftype = "", *scale_cmd = "", *pen_cmd = "",
 	    *poly_start = "", *poly_next = "", *poly_last = "", *poly_end =
@@ -717,13 +717,14 @@ if (mflag==0) fprintf(stderr,"diagonal move,no marker\n");
 			} else if (mode == 10 && toolz == 1) {	/* Tool already down skip the lower  */
 				HPGL_Pt pt_next;
 				PlotCmd nextcmd;
+				long filepos;
 				older=old;
 				old=pt1;
 				HPGL_Pt_from_tmpfile(&pt1);
 				if (po->specials == 1) { /* check if it is a M19 marker */
 				int mflag=1;
 				fprintf(stderr,"checkMarker\n");
-				        long filepos=position_from_tmpfile();
+				        filepos=position_from_tmpfile();
 					nextcmd = PlotCmd_from_tmpfile();
 					if (nextcmd!= MOVE_TO) {
 fprintf(stderr,"no move,no marker\n"); 
@@ -891,8 +892,8 @@ int check_for_marker (HPGL_Pt *p1)
         int i;
   
         filepos=position_from_tmpfile();
-	start.x=end.x=p1->x;
-	start.y=end.y=p1->y;
+	start.x=end.x=center.x=p1->x;
+	start.y=end.y=center.y=p1->y;
 fprintf(stderr,"check_for_marker called\n");
 	for (i=0;i<4;i++) {
 		nextcmd = PlotCmd_from_tmpfile();
@@ -923,11 +924,11 @@ fprintf(stderr,"could be square? %f %f\n",fabs(start.y-end.y),fabs(start.x-end.x
 				if ( (fabs(start.x-end.x) >1.e-5 && fabs(start.y-end.y) >1.e-5)  
 				||  (fabs(start.x-end.x) >100. || fabs(start.y-end.y) >100.) 
 )
-//				|| (fabs(center.x-end.x)>1.e-5) ) 
+/*				|| (fabs(center.x-end.x)>1.e-5) ) */
 					goto no_marker;
 				nextcmd = PlotCmd_from_tmpfile();
-//				if (nextcmd != DRAW_TO) 
-//					goto no_marker; 
+/*				if (nextcmd != DRAW_TO) 
+					goto no_marker; */
 				start=end;
 				HPGL_Pt_from_tmpfile(&end);
 /* sanity checks - if first line was horizontal, second must be vertical and vice versa */
@@ -937,12 +938,12 @@ fprintf(stderr,"could be square: %f %f\n",fabs(start.y-end.y),fabs(start.x-end.x
 					if ( (fabs(start.x-end.x) >1.e-5) 
 					|| (fabs(start.y-end.y) >100.) 
 					)
-//					|| (fabs(center.y-(end.y+start.y)/2.) >1.e-5) )
+/*					|| (fabs(center.y-(end.y+start.y)/2.) >1.e-5) )*/
 					goto no_marker;
 				}else{	
 					if ( (fabs(start.y-end.y) >1.e-5) 
 					|| (fabs(start.x-end.x) >100.) 
-//					|| (fabs(center.x-(end.x+start.x)/2.) >1.e-5) )
+/*					|| (fabs(center.x-(end.x+start.x)/2.) >1.e-5) )*/
 )
 					goto no_marker;
 				}

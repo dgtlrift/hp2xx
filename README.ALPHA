@@ -1,5 +1,10 @@
 Recent changes in the 3.5.0 development ("alpha") series:
-3.5.0a31-33:
+3.5.0a35:
+- Fixed miter calculation for wide lines. Allowed setting width and
+  color of all 256 pens by the -c and -p options. Partial code cleanup.
+  Some changes to the RTL interpreter. PE decoding now ignores linebreaks.
+
+3.5.0a31-34:
 - Fixed parsing of AD,SD,MG. Added sane default for pen number.
 
 3.5.0a30:

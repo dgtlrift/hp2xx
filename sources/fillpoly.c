@@ -40,7 +40,6 @@ void fill(HPGL_Pt polygon[], int numpoints, HPGL_Pt point1,
 	double avx, avy, bvx, bvy, ax, ay, bx, by, atx, aty, btx, bty, mu;
 				int hit=0;
 				int miss=0;
-	int keepflag=0;			
 int winding=0,oldwinding=-1;
 #if 0
 	double my_eps=1.e-15;
@@ -49,12 +48,12 @@ int winding=0,oldwinding=-1;
 #endif
 	PEN_W SafePenW = curwidth;
 	LineEnds SafeLineEnd = CurrentLineEnd;
-
 	if (numpoints <3) {
 	fprintf(stderr,"polygon with %d vertices ???\n",numpoints);
 	return;
 	}
 
+	(void)point2; /* currently unused, P2 reference may be needed for correct placement of patterns */
 	CurrentLineEnd = LAE_butt;
 /*	penwidth = 0.1*100; */
         penwidth =  curdpi / (2.*25.4);
@@ -168,7 +167,6 @@ if (filltype <3 ) {
 		pydiff = tan(M_PI * hatchangle / 180.) * pxdiff;
 	for (i = 0; i <= numlines; i++) {	/* for all scanlines ... */
 		k = -1;
-		keepflag=0;
                 winding=0;
 		scany1 = pymin + (double) i *penwidth;
 		scany2 = scany1 + pydiff;

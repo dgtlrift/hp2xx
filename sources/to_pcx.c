@@ -138,7 +138,7 @@ typedef struct {
 
 
 
-static int start_PCX(const OUT_PAR * po, const GEN_PAR * pg, FILE * fd)
+static int start_PCX(const OUT_PAR * po, FILE * fd)
 {
 	PCXheader h;
 	int i;
@@ -332,7 +332,7 @@ int PicBuf_to_PCX(const GEN_PAR * pg, const OUT_PAR * po)
 	} else
 		fd = stdout;
 
-	if (start_PCX(po, pg, fd)) {
+	if (start_PCX(po, fd)) {
 		err = ERROR;
 		goto PCX_exit;
 	}

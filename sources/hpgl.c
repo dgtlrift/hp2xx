@@ -103,7 +103,11 @@
  **/
 
 #define DEBUG_ESC 1
-#define DEBUG_ESC_2 1
+#define DEBUG_ESC_2 
+/*
+#undef DEBUG_ESC
+#undef DEBUG_ESC_2
+*/
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -173,7 +177,7 @@ extern TextPar tp;
 /**
  ** "Local" globals (I know this is messy...) :
  **/
-static float xmin, xmax, ymin, ymax, neg_ticklen, pos_ticklen;
+static float lxmin, lxmax, lymin, lymax, neg_ticklen, pos_ticklen;
 static double Diag_P1_P2, pat_pos;
 static HPGL_Pt p_last = { M_PI, M_PI };	/* Init. to "impossible" values */
 
@@ -234,6 +238,7 @@ static unsigned char b_max = 255;
 static int lasterror = 0;
 static int initialized = 0;
 static int initp1p2 = 0;
+	static unsigned char **otmp;
 
 /* Known HPGL commands, ASCII-coded as High-byte/low-byte int's */
 
@@ -488,13 +493,12 @@ static void init_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 /**
  ** Re-init. global var's for multiple-file applications
  **/
-/*fprintf(stderr,"init_HPGL\n");*/
 	td = pg->td;
 	silent_mode = (short) pg->quiet;
-	xmin = pi->x0;
-	ymin = pi->y0;
-	xmax = pi->x1;
-	ymax = pi->y1;
+	lxmin = pi->x0;
+	lymin = pi->y0;
+	lxmax = pi->x1;
+	lymax = pi->y1;
 	fixedcolor = (short) pi->hwcolor;
 	fixedwidth = (short) pi->hwsize;
 	r_base = g_base = b_base = 0;
@@ -667,10 +671,10 @@ void HPGL_Pt_to_tmpfile(const HPGL_Pt * pf)
 		Eprintf("Error @ Cmd %ld\n", vec_cntr_w);
 		exit(ERROR);
 	}
-	xmin = MIN(pf->x, xmin);
-	ymin = MIN(pf->y, ymin);
-	xmax = MAX(pf->x, xmax);
-	ymax = MAX(pf->y, ymax);
+	lxmin = MIN(pf->x, lxmin);
+	lymin = MIN(pf->y, lymin);
+	lxmax = MAX(pf->x, lxmax);
+	lymax = MAX(pf->y, lymax);
 }
 
 long position_from_tmpfile(void)
@@ -697,10 +701,10 @@ void HPGL_Pt_to_polygon(HPGL_Pt pf)
 		pf.y = rot_sin * pf.x + rot_cos * pf.y;
 		pf.x = tmp;
 	}
-	xmin = MIN(pf.x, xmin);
-	ymin = MIN(pf.y, ymin);
-	xmax = MAX(pf.x, xmax);
-	ymax = MAX(pf.y, ymax);
+	lxmin = MIN(pf.x, lxmin);
+	lymin = MIN(pf.y, lymin);
+	lxmax = MAX(pf.x, lxmax);
+	lymax = MAX(pf.y, lymax);
 }
 
 
@@ -916,12 +920,12 @@ LPattern_Generator(HPGL_Pt * pa,
 		}
 }
 
-static void fillpoly(FILE* tf,int fillalg,int filltype,
+static void fillpoly(int fillalg,int filltype,
                        float xscale,float hatchspace,float hatchscale,float hatchangle,
                        int rotate_flag,float rot_ang) 
 {
        float ftmp;
-       PlotCmd_to_tmpfile(NZFILL_POLY);
+       PlotCmd_to_tmpfile(fillalg);
        if ((EOF==fputc(filltype,td))) {
                PError("Writing to temporary file:");
                Eprintf ("Error @ Cmd %ld\n", vec_cntr_w);
@@ -929,7 +933,7 @@ static void fillpoly(FILE* tf,int fillalg,int filltype,
        }
        if (3==filltype || 4==filltype) {
                if (hatchscale) {
-                       ftmp=hatchspace*Q.x;
+                       ftmp=hatchspace*xscale;
                } else {
                        ftmp=hatchspace;
                }
@@ -982,7 +986,7 @@ static void rect(const GEN_PAR * pg, int relative, int filled, float cur_pensize
 		if (HAS_POLY(pg->xx_mode)) {
 			PlotCmd_to_tmpfile(CL_PBUF);			
 			if (filled) {
-			        fillpoly(td,NZFILL_POLY,filltype,Q.x,
+			        fillpoly(NZFILL_POLY,filltype,Q.x,
 					 hatchspace,hatchscale,hatchangle,rotate_flag,rot_ang);
 			} else {
 				PlotCmd_to_tmpfile(EDGE_POLY);			
@@ -1014,7 +1018,7 @@ static void rect(const GEN_PAR * pg, int relative, int filled, float cur_pensize
 			/*      anchor.y=MIN(P1.y,ymin); */
 		}
 		fill(polygons, vertices, anchor, P2, scale_flag,
-		     filltype, hatchspace, hatchangle,pt.width[pen],pg->dpi,0);
+		     filltype, hatchspace, hatchangle,cur_pensize,pg->dpi,0);
 	}
 	Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 }
@@ -1126,6 +1130,7 @@ int read_PE_flags(GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 			par_err_exit(98, PE, hd);
 			return(0);
 		}
+		if (c==10) c=getc(hd);
 		old_pen = pen;
 		read_PE_coord(fl->pen, hd, fl, &ftmp);
 		pen = (short) ftmp;
@@ -1162,6 +1167,7 @@ int read_PE_flags(GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 			par_err_exit(98, PE, hd);
 			return(0);
 		}
+		if (ctmp==10) ctmp=getc(hd);
 		fl->fract = decode_PE_char(ctmp, fl);
 		fl->fract =
 		    ((fl->fract >> 1) * ((fl->fract & 0x01) ? -1 : 1));
@@ -1181,7 +1187,7 @@ int read_PE_flags(GEN_PAR * pg, int c, FILE * hd, PE_flags * fl)
 
 		fl->abs = 1;
 		break;
-
+		
 	default:
 		return (0);
 	}
@@ -1215,9 +1221,15 @@ int read_PE_coord(int c, FILE * hd, PE_flags * fl, float *fv)
 	int shft = (fl->sbmode) ? 5 : 6;
 
 	for (;;) {
+	        if (c==10) c=getc(hd); /* skip linebreaks */
+		if (c==59) {
+		        ungetc(c,hd);
+		        return 0; /* semicolon */
+		}	
 		if (c < 63) {
 			if (!i) {	/* avoid endless getc/ungetc loop with broken files */
-				Eprintf("error in PE data!\n");
+				Eprintf("error in PE data (code=%d) !\n",c);
+				ungetc(c,hd);
 				return 0;
 			}
 			ungetc(c, hd);
@@ -1246,6 +1258,7 @@ int read_PE_pair(int c, FILE * hd, PE_flags * fl, HPGL_Pt * p)
 		par_err_exit(98, PE, hd);
 		return(0);
 	}
+        if (c==10) c=getc(hd); /* skip linebreaks */
 	if (!read_PE_coord(c, hd, fl, &(p->y)))
 		return 0;
 	return (1);
@@ -1269,6 +1282,7 @@ void read_PE(GEN_PAR * pg, FILE * hd)
 	fl.rect = 0;
 
 	for (c = getc(hd); (c != EOF) && (c != ';'); c = getc(hd)) {
+	        if (c=='\n') c=getc(hd);
 		if (!read_PE_flags(pg, c, hd, &fl)) {
 			if (!read_PE_pair(c, hd, &fl, &p))
 				continue;
@@ -1490,8 +1504,8 @@ int read_float(float *pnum, FILE * hd)
 	/* Number found: Get it */
 	ptr = numbuf;
 	for (*ptr++ = c, c = getc(hd);
-	     ((c >= '0') && (c <= '9')) || (c == '.'); c = getc(hd))
-		*ptr++ = c;	/* Read number          */
+	     ((c >= '0') && (c <= '9')) || (c == '.')|| (c=='\n') ; c = getc(hd))
+		if (c!='\n') *ptr++ = c;	/* Read number          */
 	*ptr = '\0';
 	if (c != EOF)
 		ungetc(c, hd);
@@ -1736,7 +1750,7 @@ static int read_PJL(FILE * hd)
 	}
 }
 
-static void read_ESC_RTL(FILE * hd, int c1, int hp)
+static void read_ESC_RTL(FILE * hd, int c1, int hp, GEN_PAR * pg)
 /*
  *read and skip ESC% control commands
  */
@@ -1761,16 +1775,22 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 
 	 */
 	int c0, c2, ctmp = 0, nf;
-	unsigned char ptmp;
-	static unsigned char otmp1[10000],otmp2[10000],otmp3[10000];
+	unsigned char ptmp=0;
+	static int numplanes=1;
+	static int bitsperpixel=8;
 	static int planeno=0;
 	static int haverow=0,compression=0,rtlgraphics=0;
 	static int colormode=0;
-        static int sw=1,sh=1,dw=1,dh=1;
-        static int wr=2,hr=1;
+        static int sw=1,sh=1,dw=1,dh=1,swb=1;
+        static int wr=2,hr=10;
         static double sdw,sdh;
-	int position,offset,numbytes;
-	
+	int position,offset,numbytes,sum;
+	static int penr=0,peng=0,penb=0;
+int kmax,idx;
+static int oidx=0;
+unsigned char bit;	
+ int k,kk,ival,gray;
+float val;
 	for (c0 = ESC, c2 = getc(hd), nf = 0;
 	     EOF != c2; c0 = c1, c1 = c2, c2 = getc(hd)) {
 
@@ -1887,24 +1907,31 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 		}
 		
 		if ( ESC== c0 && c1 == '*' ) {
+		        if (c2 == 'l') {
+				ctmp=getc(hd);
+				fprintf(stderr,"Logical operation mode %d (ignored)\n",ctmp);
+				ctmp=getc(hd);
+				return;
+			}
 			if (c2 == 'p') {
 				ctmp=getc(hd);
 #ifdef DEBUG_ESC
 				fprintf(stderr,"%s palette\n",(ctmp==49) ? "Pop" : "Push");
 #endif
 				ctmp=getc(hd); /* fetch terminator*/
-			if (ctmp!=49){ /* load grayscale palette */ 
-			int k,gray;
+			if (ctmp!=49){ /* load grayscale palette */
+#if 1
+fprintf(stderr,"generating grayscale palette\n"); 
 				for (k=0;k<255;k++){
 				PlotCmd_to_tmpfile(DEF_PC);
 				gray=rint(0.3*(double)k+0.59*(double)k+0.11*(double)k);
 				Pen_Color_to_tmpfile(gray+1, gray, gray, gray);
 				}
+#endif
 			}
 				return;
 				}
 			if (c2 == 'r') {
-			float val;
 				ctmp=getc(hd);
 				if (ctmp=='C'|| ctmp=='c'){
 				if (!silent_mode) Eprintf("end raster graphics, CAP at %f,%f\n",p_last.x,p_last.y);
@@ -1913,36 +1940,156 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				}
 				ungetc(ctmp,hd);
 				read_float(&val,hd);
+				ival=val;
 				ctmp=getc(hd);
 				if (ctmp=='a' || ctmp=='A'){
 					if (!silent_mode) Eprintf("start raster graphics");
-					switch((int)val) {
+					switch(ival) {
 						case 0:
 						default:
 						if (!silent_mode) Eprintf(" at left edge\n");
+						wr=lxmax/sw;
+						if (sh<=1) sh=sw;
+						hr=lymax/sh;
 						break;
 						case 1:
 						if (!silent_mode) Eprintf(" at current position (%f,%f)\n",p_last.x,p_last.y);
+						hr=wr=7;
+						fprintf(stderr,"lxmax=%f, sw=%d, swb=%d, sdw=%f\n",lxmax,sw,swb,sdw);
 						break;
 						case 2:
 						if (!silent_mode) Eprintf(" scaled, at left edge\n");
-						break;
-						case 3:
 						wr=(int)(sdw*40)/sw;
 						hr=(int)(sdh*40)/sh;
+						break;
+						case 3:
+						wr=(int)((float)sdw*40.)/(float)sw;
+						hr=(int)((float)sdh*40.)/(float)sh;
 						if (!silent_mode) Eprintf(" scaled by (%d,%d), at current position (%f,%f)\n",wr,hr,p_last.x,p_last.y);
 			PlotCmd_to_tmpfile(DEF_PW);
 			Pen_Width_to_tmpfile(pen, 0.025);
 						break;
 						}
 					rtlgraphics=1;	
+#if 1
+fprintf(stderr,"generating grayscale palette\n"); 
+				for (k=0;k<255;k++){
+				PlotCmd_to_tmpfile(DEF_PC);
+				gray=rint(0.3*(double)k+0.59*(double)k+0.11*(double)k);
+				Pen_Color_to_tmpfile(gray+1, 0, 0, 0);
+				}
+#endif
 					return;
 				}	
+				if (ctmp=='u' || ctmp=='U'){
+					fprintf(stderr,"simple color mode, palette %d\n",(int)val);
+					bitsperpixel=1;
+					if (val==-4) { 
+						int i;
+						numplanes=4;
+						pg->is_color = TRUE;
+						pg->maxpens=pg->maxcolor=15;
+						for (i = 0; i < 16; i++){
+						pens_in_use[i] = 1;
+			PlotCmd_to_tmpfile(DEF_PW);
+			Pen_Width_to_tmpfile(i, 0.025);
+				}
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(0, 255, 255, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(1, 0, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(2, 0, 255, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(3, 0, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(4, 255, 0, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(5, 0, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(6, 0, 0, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(7, 0, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(8, 255, 255, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(9, 0, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(10, 0, 255, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(11, 0, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(12, 255, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(13, 0, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(14, 0, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(15, 0, 0, 0);
+						return;
+					}
+					if (fabs(val)==3.)numplanes=3;
+					if (val==-3) { 
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(0, 255, 255, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(1, 0, 255, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(2, 255, 0, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(3, 0, 0, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(4, 255, 255, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(5, 0, 255, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(6, 255, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(7, 0, 0, 0);
+						return;
+					}
+					if (val== 3) { 
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(0, 0, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(1, 255, 0, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(2, 0, 255, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(3, 255, 255, 0);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(4, 0, 0, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(5, 255, 0, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(6, 0, 255, 255);
+						PlotCmd_to_tmpfile(DEF_PC);
+						Pen_Color_to_tmpfile(7, 255, 255, 255);
+						return;
+					}
+				        numplanes = 1;	
+					PlotCmd_to_tmpfile(DEF_PC);
+					Pen_Color_to_tmpfile(0, 255, 255, 255);
+					PlotCmd_to_tmpfile(DEF_PC);
+					Pen_Color_to_tmpfile(1, 0, 0, 0);
+					return;
+				}
 #ifdef DEBUG_ESC				
 				fprintf(stderr,"source raster dimensions (pixel):\n");
 #endif
 				if (ctmp=='s' || ctmp=='S'){
 					sw=(int)val;
+					swb=ceil(sw*bitsperpixel/8.);
+					otmp=(unsigned char**)malloc(4*sizeof(unsigned char*));
+					otmp[0]=otmp[1]=otmp[2]=otmp[3]=NULL;
+					otmp[0]=realloc(otmp[0],swb*sizeof(unsigned char));
+					otmp[1]=realloc(otmp[1],swb*sizeof(unsigned char));
+					otmp[2]=realloc(otmp[2],swb*sizeof(unsigned char));
+					otmp[3]=realloc(otmp[3],swb*sizeof(unsigned char));
+					memset(otmp[0],0,swb);
+					memset(otmp[1],0,swb);
+					memset(otmp[2],0,swb);
+					memset(otmp[3],0,swb);
 #ifdef DEBUG_ESC
 					fprintf(stderr,"width1: %d\n",(int)val);	
 #endif
@@ -1954,24 +2101,37 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 #endif
 				}
 				
-				if (ctmp!='s' && ctmp!='t') {
-				fprintf(stderr,"strange terminator %c\n",ctmp);
-/*if (ctmp=='B') rtlgraphics=0;*/
+				if (ctmp=='S' || ctmp=='T') {
 				return;
 				}
 				read_float(&val,hd);
 				ctmp=getc(hd);
-				if (ctmp=='s' || ctmp=='S'){
+fprintf(stderr,"??? read %f #%c#\n",val,ctmp);
+				if (ctmp=='S'){
 					sw=(int)val;
+					swb=ceil(sw*bitsperpixel/8.);
+					fprintf(stderr,"allocating %d bytes for seed row\n",swb);
+					otmp=(unsigned char**)malloc(4*sizeof(unsigned char*));
+					otmp[0]=otmp[1]=otmp[2]=otmp[3]=NULL;
+					otmp[0]=realloc(otmp[0],swb*sizeof(unsigned char));
+					otmp[1]=realloc(otmp[1],swb*sizeof(unsigned char));
+					otmp[2]=realloc(otmp[2],swb*sizeof(unsigned char));
+					otmp[3]=realloc(otmp[3],swb*sizeof(unsigned char));
+					memset(otmp[0],0,swb);
+					memset(otmp[1],0,swb);
+					memset(otmp[2],0,swb);
+					memset(otmp[3],0,swb);
 #ifdef DEBUG_ESC
 					fprintf(stderr,"width2: %d\n",(int)val);	
 #endif
+				return;
 				}
-				else if (ctmp=='t'|| ctmp=='T'){
+				else if (ctmp=='T'){
 					sh=(int)val;
 #ifdef DEBUG_ESC					
 					fprintf(stderr,"height2: %d\n",(int)val);	
 #endif
+				return;
 				}
 				else if (ctmp=='A') {
 					fprintf(stderr,"start raster graphics in mode %d\n",(int)val);
@@ -1980,15 +2140,16 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				return;				 
 			}
 			if (c2 == 't') {
-			float val;
 				ungetc(ctmp,hd);
+				for (;;) {
 				read_float(&val,hd);
+				ival=val;
 				ctmp=getc(hd);
 				if (ctmp=='h' || ctmp=='H'){ 
 #ifdef DEBUG_ESC
 				fprintf(stderr,"destination raster dimensions (1/720 in):\n");
 #endif
-					dw=(int)val;
+					dw=ival;
 					sdw=(double)dw/720.*25.4; 
 #ifdef DEBUG_ESC					
 					fprintf(stderr,"width: %d dpt (%f mm, %d pixel)\n",dw,sdw,(int)(sdw*40));	
@@ -1998,7 +2159,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 #ifdef DEBUG_ESC
 				fprintf(stderr,"destination raster dimensions (1/720 in):\n");
 #endif
-					dh=(int)val;
+					dh=ival;
 					sdh=(double)dh/720.*25.4;
 #ifdef DEBUG_ESC					
 					fprintf(stderr,"height: %d dpt (%f mm, %d pixel)\n",dh,sdh,(int)(sdh*40));	
@@ -2009,40 +2170,53 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				fprintf(stderr,"set graphics resolution :%4.0f dpi\n",val);
 #endif
 				}				
-				if (ctmp=='H' || ctmp=='V'|| ctmp == 'R') return;
-
-				read_float(&val,hd);
-				ctmp=getc(hd);
-				if (ctmp=='h' || ctmp=='H'){
-					dw=(int)val;
-					sdw=(double)dw/720.*25.4; 
-#ifdef DEBUG_ESC					
-					fprintf(stderr,"width: %d dpt (%f mm, %d pixel)\n",dw,sdw,(int)(sdw*40));	
+				else if (ctmp=='j'|| ctmp=='J') {
+#ifdef DEBUG_ESC
+				fprintf(stderr,"dither mode %d (ignored)\n",(int)val);
 #endif
+				}				
+				if (ctmp=='H' || ctmp=='V'|| ctmp == 'R' || ctmp == 'J') return;
 				}
-				else if (ctmp=='v'|| ctmp=='V'){
-					dh=(int)val;
-					sdh=(double)dh/720.*25.4;
-#ifdef DEBUG_ESC					
-					fprintf(stderr,"height: %d dpt (%f mm, %d pixel)\n",dh,sdh,(int)(sdh*40));	
-#endif
-				}
-				return;				 
 			}
 			if (c2 == 'v') {
-			float val;
-				if (!silent_mode) Eprintf("configure image data:\n");
 				ungetc(ctmp,hd);
+				for (;;) {
 				read_float(&val,hd);
+				ival=val;
 				ctmp=getc(hd); 
 				if (ctmp=='N'||ctmp=='n') {
-					if (!silent_mode) Eprintf("ignoring negative motion mode\n");
+					if (!silent_mode) Eprintf("ignoring source transparency mode %d\n",ival);
 					return;
 				}
-				if (ctmp!='W') {
-					fprintf(stderr,"unexpected terminator :%c\n",ctmp);	
+				if (ctmp=='O'||ctmp=='o') {
+					if (!silent_mode) Eprintf("ignoring pattern transparency mode %d\n",ival);
 					return;
-					}
+				}
+				if (ctmp=='A'||ctmp=='a') {
+					penr=ival;
+					if (ctmp=='A') return;
+				}
+				if (ctmp=='b'||ctmp=='B') {
+					peng=ival;
+					if (ctmp=='B') return;
+				}
+				if (ctmp=='c'||ctmp=='C') {
+					penb=ival;
+					if (ctmp=='C') return;
+				}
+				if (ctmp=='i'||ctmp=='I') {
+#if DEBUG_ESC
+					if (!silent_mode) Eprintf("set rgb palette entry %d (%d,%d,%d)\n",ival,penr,peng,penb);
+#endif
+						pg->is_color = TRUE;
+					if (pg->maxpens<(int)val)  pg->maxpens=pg->maxcolor=ival;
+						pens_in_use[ival] = 1;
+					PlotCmd_to_tmpfile(DEF_PC);
+					Pen_Color_to_tmpfile(ival, penr,peng,penb);
+					penr=peng=penb=0;
+					if (ctmp=='I') return;
+				}
+				if (ctmp=='W') {
 				if (val==6) {
 					if (!silent_mode) Eprintf("using default 8-bit color ranges\n");
 					ctmp=getc(hd);
@@ -2050,7 +2224,7 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					ctmp=getc(hd);
 					if (!silent_mode) Eprintf("pixel encoding: %d",(int)ctmp);
 					colormode=(int)ctmp;
-					switch((int)ctmp){
+					switch(colormode){
 					case 0:
 					if (!silent_mode) Eprintf(" (indexed by plane)\n");
 					break;
@@ -2068,6 +2242,9 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					}
 					ctmp=getc(hd);
 					if (!silent_mode) Eprintf("bits per index: %d\n",(int)ctmp);
+					bitsperpixel=(int)ctmp;
+					if (colormode<2) bitsperpixel = 1;
+					numplanes=(int)ctmp;
 					ctmp=getc(hd);
 					if (!silent_mode) Eprintf("red bits: %d\n",(int)ctmp);
 					ctmp=getc(hd);
@@ -2091,18 +2268,19 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 					ctmp=getc(hd);
 					if (!silent_mode) Eprintf("blue bits: %c\n",ctmp);
 				}
-				return;				 
+				return;
+				}
+			     } /*while...*/				 
 			}
 			if (c2 == 'b') {
-			float val;
-			int k,kk;
 			double px;
 				ungetc(ctmp,hd);
 				read_float(&val,hd);
+				ival=val;
 				ctmp=getc(hd); 
 				if (ctmp=='m' || ctmp=='M') {
-				if (!silent_mode) Eprintf("compression: \n");
-				compression=(int)val;
+				if (!silent_mode) Eprintf("compression: ");
+				compression=ival;
 				switch(compression){
 					case 0:
 					default:
@@ -2142,75 +2320,81 @@ static void read_ESC_RTL(FILE * hd, int c1, int hp)
 				if (ctmp=='M') return;
 
 				read_float(&val,hd);
+				ival=val;
 				ctmp=getc(hd);
 				}
+				if (ctmp=='Y') {
+					if (rot_tmp==90.||rot_tmp==270.) {
+						p_last.x+=val; 
+					} else	{			 
+						p_last.y+=val;
+					}
+#ifdef DEBUG_ESC
+				fprintf(stderr,"CAP moved to (%f,%f)\n",p_last.x,p_last.y);
+#endif	
+					return;
+				}	
 				if (ctmp=='V') {
-#ifdef DEBUG_ESC				
-				fprintf(stderr,"data by plane: %d bytes\n",(int)val);
+#ifdef DEBUG_ESC_2				
+				fprintf(stderr,"data by plane: %d bytes in mode %d\n",(int)val,compression);
 #endif
                                 position=0;
                                 switch (compression) {
 				   char count,value;
 				   char ctrl;
                                   case 0:
-				    if (planeno==0)
-   				      for (k=0;k<(int)val;k++) otmp1[position++]=getc(hd);
-   				    else 
-   				      for (k=0;k<(int)val;k++) otmp2[position++]=getc(hd);
+   				      for (k=0;k<ival;k++) otmp[planeno][position++]=getc(hd);
                                     break;
                                  case 1: 
 				   kk=0;
-				   while (kk<(int)val) {
+				   while (kk<ival) {
 				     count=getc(hd);
 			             count++;
 			             value=getc(hd);
 				     kk+=2;
- 			             if (planeno==0){
 				       for (k=0;k<count;k++) 
-					  	otmp1[position++]=value;
-			             }else{
-				       for (k=0;k<count;k++) 
-						otmp2[position++]=value;
-			             }
+					  	otmp[planeno][position++]=value;
 				   }
                                    break;
                                  case 2:
 				   kk=0;
-				   while (kk<(int)val) {
+				   while (kk<ival-1) {
 				     ctrl=getc(hd);
 				     kk++;
 				     if ( (int)ctrl >= 0) {
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"%d literal bytes (%d of %d control bytes)\n",ctrl+1,kk,(int)val);
+#endif
+if (kk+ctrl+1>val) { 
+ctrl=val-kk-1;
+#ifdef DEBUG_ESC_2 
+fprintf(stderr,"truncated to %d literal bytes (%d of %d control bytes)\n",ctrl+1,kk+ctrl+1,(int)val);
+#endif
+}
 				       kk+=ctrl+1;
-fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);
-				       if (planeno==0){
 				 	 for (k=0;k<=ctrl;k++) 
-						otmp1[position++]=getc(hd);
-				       }else{
-				 	 for (k=0;k<=ctrl;k++) 
-						otmp2[position++]=getc(hd);
-				       }
+						otmp[planeno][position++]=getc(hd);
 				     } else {
 				       if ((int)ctrl==-128) {
-fprintf(stderr,"skipped control byte\n");				          
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"skipped control byte\n");				       
+#endif   
 				         continue;
 				       }
 				       ptmp=getc(hd);
 				       kk++;
 				       ctrl*=-1;
-fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
-				       if (planeno==0){
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"%d copies of %x (%d of %d control bytes)\n",ctrl+1,ptmp,kk,(int)val);
+#endif
 					 for (k=0;k<=ctrl;k++) 
-						otmp1[position++]=ptmp;
-				       }else{
-  					 for (k=0;k<=ctrl;k++)
-						otmp2[position++]=ptmp;	
-				       }
+						otmp[planeno][position++]=ptmp;
 				     }
 				   }
 			           break;
                                     case 3:
 				      kk=0;
-				      while (kk<(int)val) { 
+				      while (kk<ival) { 
 					ptmp=getc(hd);
 					kk++;
 				  	offset = ptmp & 31;
@@ -2226,12 +2410,8 @@ fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
 						}
 					}	
 					position += offset;
-                                        if (planeno==0)
 					for (k=0;k<numbytes;k++) 
-						otmp1[position++]=getc(hd);
-                                        else
-					for (k=0;k<numbytes;k++) 
-						otmp2[position++]=getc(hd);
+						otmp[planeno][position++]=getc(hd);
 					kk+=numbytes;
 					}
                                         break;
@@ -2239,13 +2419,8 @@ fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
 				       Eprintf("Unsupported compression mode %d\n",compression);
 				       break;
                 		}
-				    if (planeno==0){
-				      for (k=position;k<sw;k++)
-						otmp1[k]=0;
-				    }else{
-				      for (k=position;k<sw;k++)
-						otmp2[k]=0;
-				    }
+				      for (k=position;k<swb;k++)
+						otmp[planeno][k]=0;
                                 planeno++;
 #if 1
 				ctmp=fgetc(hd);
@@ -2263,81 +2438,82 @@ fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
 #ifdef DEBUG_ESC_2
 				  fprintf(stderr,"data by row or block: %d bytes\n",(int)val);
 #endif
-                                  planeno=0;
                                   position=0;
-                                  
+					otmp[0]=realloc(otmp[0],ival*sizeof(unsigned char));
+					otmp[1]=realloc(otmp[1],ival*sizeof(unsigned char));
+					otmp[2]=realloc(otmp[2],ival*sizeof(unsigned char));
+					otmp[3]=realloc(otmp[3],ival*sizeof(unsigned char));
                                   switch(compression) {
 			              char count,value;
 				      char ctrl;
+				      int num;
                                     case 0:
-   				      haverow = (int)val;
-				      if (fread(otmp3,1,haverow,hd)!= haverow) fprintf(stderr,"short read!\n");
-/*   				      for (k=0;k<(int)val;k++) otmp3[position++]=getc(hd);*/
-
-/*
-				fprintf(stderr,"first bytes: %c%c%c,last bytes: %c%c%c\n",otmp[0],otmp[1],otmp[2],
-				otmp[haverow-3],otmp[haverow-2],otmp[haverow-1]);
-*/
-#if 0
-					for (k=haverow;k<sw;k++)
-						otmp3[k]=0;
-							haverow=sw;
-#endif
+   				      haverow = ival;
+				      if ((int)fread(otmp[planeno],1,haverow,hd)!= haverow) fprintf(stderr,"short read!\n");
+				      for (k=haverow;k<swb;k++)
+					otmp[planeno][k]=0;
+				      if (haverow<swb)haverow=swb;
 		                      break;
 		                   case 1:
 				      kk=0;
-			              while (kk<(int)val) {
+			              while (kk<ival) {
 		                        count=getc(hd);
 		                        count++;
 					value=getc(hd);
 					kk+=2;
-/*fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",count,kk,(int)val);*/
 					for (k=0;k<count;k++) 
-					   otmp3[position++]=value;
-				      }
-					  
-				      for (k=position;k<sw;k++)
-						otmp3[k]=0;
-#if 1
-					haverow=sw;
-#else
-haverow=position;
-#endif
+					   otmp[planeno][position++]=value;
+				      }	
+				      for (k=position;k<swb;k++)
+					   otmp[planeno][k]=0;
+				      haverow=swb;
                                       break;
                                     case 2:
 				      kk=0;
-				      while (kk<(int)val) {
+				      while (kk<ival-1) {
 		                        ctrl=getc(hd);
 		                        kk++;
 					if ( (int)ctrl >= 0) {
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);
+#endif
+if (kk+ctrl+1>val) { 
+ctrl=val-kk-1; 
+#ifdef DEBUG_ESC_2 
+fprintf(stderr,"truncated to %d literal bytes (%d of %d control bytes)\n",ctrl+1,kk+ctrl+1,(int)val);
+#endif
+}
 				  	  kk+=ctrl+1;
-/*fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);*/
 					  for (k=0;k<=ctrl;k++) 
-						otmp3[position++]=getc(hd);
+						otmp[planeno][position++]=getc(hd);
 				        } else {
 				          if ((int)ctrl==-128) {
-/*fprintf(stderr,"skipped control byte\n");*/				          
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"skipped control byte\n");				          
+#endif
 				          continue;
 				          }
 				          ptmp=getc(hd);
 					  kk++;
 				          ctrl*=-1;
-/*fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);*/
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
+#endif
 					  for (k=0;k<=ctrl;k++) 
-						otmp3[position++]=ptmp;
+						otmp[planeno][position++]=ptmp;
 					}
 				      }
-#if 0
-					for (k=position;k<sw;k++)
-						otmp3[k]=0;
-					haverow=sw;
+#if 1
+					for (k=position;k<swb;k++)
+						otmp[planeno][k]=0;
+					haverow=swb;
 #else
 haverow=position;
 #endif
                                       break;
                                     case 3:
 				      kk=0;
-				      while (kk<(int)val) { 
+				      while (kk<ival) { 
 					ptmp=getc(hd);
 					kk++;
 				  	offset = ptmp & 31;
@@ -2354,39 +2530,350 @@ haverow=position;
 					}	
 					position += offset;
 					for (k=0;k<numbytes;k++) 
-						otmp3[position++]=getc(hd);
+						otmp[planeno][position++]=getc(hd);
 					kk+=numbytes;
 					}
 #if 1
-					for (k=position;k<sw;k++)
-						otmp3[k]=0;
-					haverow=sw;
+					for (k=position;k<swb;k++)
+						otmp[planeno][k]=0;
+					haverow=swb;
 #else
 haverow=position;	
 #endif
                                         break;
+
+
+				     case 4:
+				       sum = 0;
+				       kk=16777216*getc(hd)+65536*getc(hd)+256*getc(hd)+getc(hd);
+				       fprintf(stderr,"unencoded block, %d pixels per row\n",kk);
+				       num=(int)ceil((float)kk/(8./bitsperpixel));
+				       	numplanes=1;
+#if 0
+					otmp[0]=realloc(otmp[0],sw*sizeof(unsigned char));
+					otmp[1]=realloc(otmp[1],sw*sizeof(unsigned char));
+					otmp[2]=realloc(otmp[2],sw*sizeof(unsigned char));
+					otmp[3]=realloc(otmp[3],sw*sizeof(unsigned char));
+#endif
+				       while (sum<(int)val)  {
+#ifdef DEBUG_ESC_2
+				       fprintf(stderr,"this row: %d bytes in mode %d\n",num,ptmp);
+#endif    
+				       position=0;
+				       planeno=0;
+				        	for (k=0;k<(int)num;k++) otmp[planeno][position++]=getc(hd);
+						sum+=num;
+						haverow=swb;
+
+			if (rot_tmp==90.||rot_tmp==270.) {
+				px=p_last.x; /* save start of line */
+			} else				 
+				px=p_last.y;
+kmax=haverow;
+{
+int l,ll;			
+			for (l=0;l<kmax;l++){ /* for each input pixel */  /*sw statt haverow ??*/
+				ptmp=otmp[0][l]; /* indexed by pixel */
+				
+				if (ptmp!=oidx && ptmp!=0) {
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"SetPen %d\n",ptmp);
+#endif
+			fputc(SET_PEN,td);
+			fputc(ptmp,td);
+			oidx=ptmp;
+			}
+			if (rot_tmp == 90. || rot_tmp==270.)
+				p_last.x++;
+			else				
+				p_last.y--;
+
+			for (ll=0;ll<=wr;ll++) { /*for all output pixels resulting from scaling */
+
+				if (rot_tmp == 90. || rot_tmp==270.)
+					p_last.x--;
+				else				
+					p_last.y++;
+					if (ptmp>0) {
+			PlotCmd_to_tmpfile(PLOT_AT);
+			HPGL_Pt_to_tmpfile(&p_last);
+				}
+			}
+			
+			}
+		if (rot_tmp==90.||rot_tmp==270.) {
+			p_last.x=px; 
+			p_last.y+=hr;
+		} else	{			 
+			p_last.y=px; /* first column of next row */
+			p_last.x+=hr; /* one row below previous one */
+		}
+}		
+					}
+					haverow=0;
+
+					break;
+
+
+				     case 5:
+				       sum = 0;
+				       	numplanes=1;
+#if 0
+					otmp[0]=realloc(otmp[0],sw*sizeof(unsigned char));
+					otmp[1]=realloc(otmp[1],sw*sizeof(unsigned char));
+					otmp[2]=realloc(otmp[2],sw*sizeof(unsigned char));
+					otmp[3]=realloc(otmp[3],sw*sizeof(unsigned char));
+#endif
+				       while (sum<(int)val)  {
+				       ptmp=getc(hd);
+				       num=256*getc(hd);
+				       num+=getc(hd);
+				       sum+=3;
+#ifdef DEBUG_ESC_2
+				       fprintf(stderr,"this row: %d bytes in mode %d\n",num,ptmp);
+#endif    
+				       position=0;
+				       planeno=0;
+				       switch (ptmp) {
+				        case 0:
+				        	for (k=0;k<(int)num;k++) otmp[planeno][position++]=getc(hd);
+						sum+=num;
+						haverow=swb;
+					break;
+		                   case 1:
+                                      kk=0;
+                                     while (kk<num) {
+#ifdef DEBUG_ESC
+					fprintf(stderr,"rle %d bytes per row (%d of %d compressed bytes)\n",num,kk,(int)val);
+#endif
+		                        count=getc(hd);
+		                        count++;
+					value=getc(hd);
+					kk+=2;
+					for (k=0;k<count;k++) 
+					   otmp[planeno][position++]=value;
+				      }
+				      sum+=num;	
+				      for (k=position;k<swb;k++)
+					   otmp[planeno][k]=0;
+				 haverow=swb;
+                                      break;
+
+                                    case 2:
+                                    planeno=0;
+				      kk=0;
+				      while (kk<num) {
+		                        ctrl=getc(hd);
+		                        kk++;
+					if ( (int)ctrl >= 0) {
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"%d literal bytes (%d of %d bytes)\n",ctrl+1,kk,(int)val);
+#endif
+if (kk+ctrl+1>val) { 
+ctrl=val-kk-1; 
+#ifdef DEBUG_ESC_2 
+fprintf(stderr,"truncated to %d literal bytes (%d of %d control bytes)\n",ctrl+1,kk+ctrl+1,(int)val);
+#endif
+}
+				  	  kk+=ctrl+1;
+					  for (k=0;k<=ctrl;k++) 
+						otmp[planeno][position++]=getc(hd);
+				        } else {
+				          if ((int)ctrl==-128) {
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"skipped control byte\n");				          
+#endif
+				          continue;
+				          }
+				          ptmp=getc(hd);
+					  kk++;
+				          ctrl*=-1;
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"%d copies of %x (%d of %d bytes)\n",ctrl+1,ptmp,kk,(int)val);
+#endif
+					  for (k=0;k<=ctrl;k++) 
+						otmp[planeno][position++]=ptmp;
+					}
+				      }
+				      sum+=num;
+#if 1
+					for (k=position;k<swb;k++)
+						otmp[planeno][k]=0;
+					haverow=swb;
+#else
+haverow=position;
+#endif
+                                      break;
+
+                                    case 3:
+				      kk=0;
+				      while (kk<num) { 
+					ptmp=getc(hd);
+					kk++;
+				  	offset = ptmp & 31;
+				  	numbytes=(ptmp >> 5)+1;
+				  	if (offset == 31) {
+				  		ptmp = getc(hd);
+				  		kk++;
+				  		offset += (int)ptmp;
+				  		while (ptmp == 255) {
+				  			ptmp = getc(hd);
+				  			offset += (int)ptmp;
+				  			kk++;
+						}
+					}	
+					position += offset;
+					for (k=0;k<numbytes;k++) 
+						otmp[planeno][position++]=getc(hd);
+					kk+=numbytes;
+					}
+					haverow=swb;	
+					sum+=num;
+                                        break;
+
+					case 4:
+					for (k=0;k<swb;k++)
+						otmp[planeno][position++]=0;
+						haverow=swb;
+						sum+=num;
+					break;
+					case 5:
+						haverow=swb;
+						sum+=num;
+					break;	
+					default:
+					fprintf(stderr,"skipping %d bytes in unknown/undefined mode %d\n",num,ptmp);
+					for (k=0;k<num;k++) ptmp=getc(hd);
+					sum+=num;
+					break;
+					}
+			if (rot_tmp==90.||rot_tmp==270.) {
+				px=p_last.x; /* save start of line */
+			} else				 
+				px=p_last.y;
+kmax=haverow;
+{
+int l,ll;			
+			for (l=0;l<kmax;l++){ /* for each input pixel */  /*sw statt haverow ??*/
+				ptmp=otmp[0][l]; /* indexed by pixel */
+				
+				if (ptmp!=oidx && ptmp!=0) {
+#ifdef DEBUG_ESC_2
+fprintf(stderr,"SetPen %d\n",ptmp);
+#endif
+			fputc(SET_PEN,td);
+			fputc(ptmp,td);
+			oidx=ptmp;
+			}
+			if (rot_tmp == 90. || rot_tmp==270.)
+				p_last.x++;
+			else				
+				p_last.y--;
+
+			for (ll=0;ll<=wr;ll++) { /*for all output pixels resulting from scaling */
+
+				if (rot_tmp == 90. || rot_tmp==270.)
+					p_last.x--;
+				else				
+					p_last.y++;
+					if (ptmp>0) {
+			PlotCmd_to_tmpfile(PLOT_AT);
+			HPGL_Pt_to_tmpfile(&p_last);
+				}
+			}
+			
+			}
+		if (rot_tmp==90.||rot_tmp==270.) {
+			p_last.x=px; 
+			p_last.y+=hr;
+		} else	{			 
+			p_last.y=px; /* first column of next row */
+			p_last.x+=hr; /* one row below previous one */
+		}
+}		
+					}
+					haverow=0;
+				       break;				
+				       
 				     default:
 				       Eprintf("Unsupported compression mode %d\n",compression);
 				       break;
                 		}
+                		
+                		planeno=0;
 				  
 			if (rot_tmp==90.||rot_tmp==270.) {
 				px=p_last.x; /* save start of line */
 			} else				 
 				px=p_last.y;
-
-			for (k=0;k<haverow;k++){ /* for each input pixel */  /*sw statt haverow ??*/
+kmax=haverow;
+			oidx=0;
+			for (k=0;k<kmax;k++){ /* for each input pixel */  /*sw statt haverow ??*/
 				int ir,ig,ib, gray;
-			if (colormode==1 || colormode==3) {
-				ir=otmp3[k];
-				ig=otmp3[k+1];
-				ib=otmp3[k+2];
-			}else {
-				ir=otmp1[k];
-				ig=otmp2[k];
-				ib=otmp3[k];
-			}
+			if (bitsperpixel==1) {
+			   bit=128;
+                           for (ib=0;ib<8;ib++) {
+                                 idx=0;
+                                 if ( (otmp[0][k]&bit) >0) idx+=1;
+                                 if (numplanes>1)
+                                 if ( (otmp[1][k]&bit) >0) idx+=2;
+				 if (numplanes>2)
+                                 if ( (otmp[2][k]&bit) >0) idx+=4;
+                                 if (numplanes>3)
+                                 if ( (otmp[3][k]&bit) >0) idx+=8;
+
+				 if (idx!=oidx) {
+				 fputc(SET_PEN,td);
+				 fputc(idx,td);
+				 oidx=idx;
+				 }
+                           bit/=2;
+			if (rot_tmp == 90. || rot_tmp==270.)
+				p_last.x++;
+			else				
+				p_last.y--;
+
+			for (kk=0;kk<=wr;kk++) { /*for all output pixels resulting from scaling */
+
+				if (rot_tmp == 90. || rot_tmp==270.)
+					p_last.x--;
+				else				
+					p_last.y++;
+#if 0
+			Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
+			
+				if (rot_tmp == 90. || rot_tmp==270.)
+					p_last.y+=hr;
+				else				
+					p_last.x+=hr; /* draw line accoring to vertical scale factor */
+	
+				Pen_action_to_tmpfile(DRAW_TO, &p_last, scale_flag);
+
+				if (rot_tmp == 90. || rot_tmp==270.)
+					p_last.y-=hr;
+				else				
+					p_last.x-=hr; /* return to baseline of row */
+#else
+			PlotCmd_to_tmpfile(PLOT_AT);
+			HPGL_Pt_to_tmpfile(&p_last);
+#endif			
+			} /* for all output pixels */
+		   }	
+              } else {		
+			if (colormode==1) {
+				gray=otmp[0][k]; /* indexed by pixel */
+					 
+			} else if (colormode==3) { /* direct by-pixel - all bits in one row */
+				ir=otmp[0][k];
+				ig=otmp[0][k+1];
+				ib=otmp[0][k+2];
 			gray=rint(0.3*ir+0.59*ig+0.11*ib);
+			}else { /* indexed or direct, by-plane - values split across color planes */
+				ir=otmp[0][k];
+				ig=otmp[1][k];
+				ib=otmp[2][k];
+			gray=rint(0.3*ir+0.59*ig+0.11*ib);
+			}
 /*			if (gray==0) gray=254;*/
 if (gray==0) continue;
 			fputc(SET_PEN,td);
@@ -2403,6 +2890,7 @@ if (gray==0) continue;
 					p_last.x--;
 				else				
 					p_last.y++;
+					
 			Pen_action_to_tmpfile(MOVE_TO, &p_last, scale_flag);
 			
 				if (rot_tmp == 90. || rot_tmp==270.)
@@ -2417,8 +2905,9 @@ if (gray==0) continue;
 				else				
 					p_last.x-=hr; /* return to baseline of row */
 			} /* for all output pixels */
-			if (colormode==1||colormode==3) 
+			if (colormode==3) 
 			  k+=2; /* advance to next input pixel */
+		    }
 		}
 
 		if (rot_tmp==90.||rot_tmp==270.) {
@@ -2428,7 +2917,6 @@ if (gray==0) continue;
 			p_last.y=px; /* first column of next row */
 			p_last.x+=hr; /* one row below previous one */
 		}
-
 #if 1
 				ctmp=fgetc(hd);
 				if ((int)ctmp!=27) {
@@ -2439,7 +2927,16 @@ if (gray==0) continue;
 				}
 				ungetc(ctmp,hd);
 #endif
-		
+#if 0
+free(otmp[0]);
+free(otmp[1]);
+free(otmp[2]);
+free(otmp[3]);
+otmp[0]=otmp[1]=otmp[2]=otmp[3]=NULL;
+#endif	
+			fputc(SET_PEN,td);
+			fputc(1,td);
+	
 		return; /* completed this command */
 		}
 		
@@ -2471,7 +2968,7 @@ if (gray==0) continue;
 	}
 }
 
-static void read_ESC_cmd(FILE * hd, int hp)
+static void read_ESC_cmd(FILE * hd, int hp, GEN_PAR * pg)
 /*
  * Read & skip device control commands (ESC.-Commands)
 
@@ -2487,7 +2984,7 @@ static void read_ESC_cmd(FILE * hd, int hp)
 		Eprintf("\nUnexpected EOF!\n");
 		return;
 	default:
-		read_ESC_RTL(hd, ctmp, hp);
+		read_ESC_RTL(hd, ctmp, hp, pg);
 		break;
 	}
 }
@@ -3012,7 +3509,6 @@ static void fwedges(FILE * hd, float cur_pensize)
 	double phi;
 	double SafeLinePatLen = CurrentLinePatLen;
 	int outside = 0;
-	int i;
 
 	if (read_float(&r, hd))	/* No radius found      */
 		return;
@@ -3067,7 +3563,6 @@ static void fwedges(FILE * hd, float cur_pensize)
 		/*      Pattern length = chord length           */
 		CurrentLinePatLen = HYPOT(p.x, p.y);
 	}
-	i = 1;
 	for (phi = eps; phi <= sweep; phi += eps) {
 		oldp = p;
 		p.x = center.x + r * cos(start + phi);
@@ -3097,15 +3592,15 @@ static void fwedges(FILE * hd, float cur_pensize)
 	if (filltype < 3 && thickness > 0.)
 		hatchspace = thickness;
 	if (!ac_flag) {		/* not yet initialized */
-		anchor.x = xmin;
-		anchor.y = ymin;
+		anchor.x = lxmin;
+		anchor.y = lymin;
 		if (scale_flag) Plotter_to_User_coord(&anchor,&anchor);	
 	}
 /*	
 FIXME: add calls for the "haspoly" case
 */
 	fill(polygons, vertices, anchor, P2, scale_flag, filltype,
-	     hatchspace, hatchangle,pt.width[pen],0,0);
+	     hatchspace, hatchangle,cur_pensize,0,0);
 
 	CurrentLinePatLen = SafeLinePatLen;	/* Restore */
 
@@ -3620,7 +4115,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 				PlotCmd_to_tmpfile(EDGE_POLY);
 				break;
 			}
-			fillpoly(td,((ftmp)?NZFILL_POLY:EOFILL_POLY),filltype,Q.x,
+			fillpoly(((ftmp)?NZFILL_POLY:EOFILL_POLY),filltype,Q.x,
 				 hatchspace,hatchscale,hatchangle,rotate_flag,rot_ang);
 			break;
 		}
@@ -3641,13 +4136,14 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 					      scale_flag);
 			break;
 		}
+		if (pen == -1) pen=1; /* no preceding SP command */
 		if (hatchspace == 0.)
 			hatchspace = pt.width[pen];
 		if (filltype < 3 && thickness > 0.)
 			hatchspace = thickness;
 		if (!ac_flag) {	/* not yet initialized */
-		anchor.x = xmin;
-		anchor.y = ymin;
+		anchor.x = lxmin;
+		anchor.y = lymin;
 		if (scale_flag) Plotter_to_User_coord(&anchor,&anchor);	
 		}
 		fill(polygons, vertices, anchor, P2, scale_flag, filltype,
@@ -3902,7 +4398,6 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			break;
 		}
 		ps_flag = 1;
-/*      fprintf(stderr,"min,max vor PS: %f %f %f %f\n",xmin,ymin,xmax,ymax);*/
 		M.x = myheight;
 		M.y = mywidth;
 		p1.x = 0;
@@ -3917,10 +4412,10 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			p2.y = rot_sin * p2.x + rot_cos * p2.y;
 			p2.x = ftmp;
 		}
-		xmin = MIN(p2.x, xmin);
-		ymin = MIN(p2.y, ymin);
-		xmax = MAX(p2.x, xmax);
-		ymax = MAX(p2.y, ymax);
+		lxmin = MIN(p2.x, lxmin);
+		lymin = MIN(p2.y, lymin);
+		lxmax = MAX(p2.x, lxmax);
+		lymax = MAX(p2.y, lymax);
 
 		p1.x = myheight;
 		p1.y = mywidth;
@@ -3933,11 +4428,10 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			p2.y = rot_sin * p2.x + rot_cos * p2.y;
 			p2.x = ftmp;
 		}
-		xmin = MIN(p2.x, xmin);
-		ymin = MIN(p2.y, ymin);
-		xmax = MAX(p2.x, xmax);
-		ymax = MAX(p2.y, ymax);
-/*      fprintf(stderr,"min,max vor PS: %f %f %f %f\n",xmin,ymin,xmax,ymax);*/
+		lxmin = MIN(p2.x, lxmin);
+		lymin = MIN(p2.y, lymin);
+		lxmax = MAX(p2.x, lxmax);
+		lymax = MAX(p2.y, lymax);
 
 /* add the following - to get the correct linetype scale etc */
 		P1.x = 0.;
@@ -4039,7 +4533,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 		  	PlotCmd_to_tmpfile(OP_PBUF);
 		    	wedges(hd);
 	    		PlotCmd_to_tmpfile(CL_PBUF);
-			fillpoly(td,NZFILL_POLY,filltype,Q.x,
+			fillpoly(NZFILL_POLY,filltype,Q.x,
 				 hatchspace,hatchscale,hatchangle,rotate_flag,rot_ang);
 	  	} else {
 		if (pg->nofill)
@@ -4081,7 +4575,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 			P2.x += p1.x - P1.x;
 			P2.y += p1.y - P1.y;
 			P1 = p1;
-			goto IP_Exit;
+			goto IP_Exit_1;
 		}
 		if (read_float(&p2.y, hd)){	/* x without y! */
 			par_err_exit(4, cmd, hd);
@@ -4093,6 +4587,7 @@ static void read_HPGL_cmd(GEN_PAR * pg, int cmd, FILE * hd)
 	      IP_Exit:
 		S1 = P1;
 		S2 = P2;
+	      IP_Exit_1:
 		Q.x = (P2.x - P1.x) / (S2.x - S1.x);
 		Q.y = (P2.y - P1.y) / (S2.y - S1.y);
 		Diag_P1_P2 = HYPOT(P2.x - P1.x, P2.y - P1.y);
@@ -4602,11 +5097,11 @@ C2=S2;
 			rot_sin = sin(M_PI * rot_ang / 180.0);
 
 			if (ps_flag) {	/* transform extents from previous PS statement */
-
-				xmin = 1e10;
-				ymin = 1e10;
-				xmax = 1e-10;
-				ymax = 1e-10;
+fprintf(stderr,"PS/RO\n");
+				lxmin = 1e10;
+				lymin = 1e10;
+				lxmax = 1e-10;
+				lymax = 1e-10;
 
 				p1.x = 0;
 				p1.y = 0;
@@ -4618,10 +5113,10 @@ C2=S2;
 				ftmp = rot_cos * p2.x - rot_sin * p2.y;
 				p2.y = rot_sin * p2.x + rot_cos * p2.y;
 				p2.x = ftmp;
-				xmin = MIN(p2.x, xmin);
-				ymin = MIN(p2.y, ymin);
-				xmax = MAX(p2.x, xmax);
-				ymax = MAX(p2.y, ymax);
+				lxmin = MIN(p2.x, lxmin);
+				lymin = MIN(p2.y, lymin);
+				lxmax = MAX(p2.x, lxmax);
+				lymax = MAX(p2.y, lymax);
 				p1.x = M.x;
 				p1.y = M.y;
 				if (scale_flag)	/* Rescaling    */
@@ -4632,10 +5127,10 @@ C2=S2;
 				ftmp = rot_cos * p2.x - rot_sin * p2.y;
 				p2.y = rot_sin * p2.x + rot_cos * p2.y;
 				p2.x = ftmp;
-				xmin = MIN(p2.x, xmin);
-				ymin = MIN(p2.y, ymin);
-				xmax = MAX(p2.x, xmax);
-				ymax = MAX(p2.y, ymax);
+				lxmin = MIN(p2.x, lxmin);
+				lymin = MIN(p2.y, lymin);
+				lxmax = MAX(p2.x, lxmax);
+				lymax = MAX(p2.y, lymax);
 			}
 		}
 		break;
@@ -4939,9 +5434,10 @@ void read_HPGL(GEN_PAR * pg, const IN_PAR * pi)
 
 	if (!pg_flag)
 		init_HPGL(pg, pi);
-else
-	init_text_par();
-	
+/*
+        else
+		init_text_par();
+*/	
 	if (!pg->quiet)
 		Eprintf("\nReading HPGL file\n");
 
@@ -4953,11 +5449,11 @@ else
 #ifdef MUTOH_KLUGE
 		case '\a':
 			Eprintf("Mutoh header found\n");
-			read_ESC_cmd(pi->hd, FALSE);	/* ESC sequence */
+			read_ESC_cmd(pi->hd, FALSE, pg);	/* ESC sequence */
 			break;
 #endif
 		case ESC:
-			read_ESC_cmd(pi->hd, TRUE);	/* ESC sequence */
+			read_ESC_cmd(pi->hd, TRUE, pg);	/* ESC sequence */
 			if (pg_flag==TRUE) {	/*kludge for Esc%0A as pagebreak */
 			pg_flag=FALSE;
 			goto END;
@@ -5020,6 +5516,7 @@ else
 			cmd = c << 8;
 			if ((c = getc(pi->hd)) == EOF)
 				return;
+			if (c=='\n') c=getc(pi->hd);	
 			if ((c < 'A') || (c > 'z')
 			    || ((c > 'Z') && (c < 'a'))) {
 				ungetc(c, pi->hd);
@@ -5085,9 +5582,8 @@ adjust_input_transform(const GEN_PAR * pg, const IN_PAR * pi, OUT_PAR * po)
 
 	double dot_ratio, Dx, Dy, tmp_w, tmp_h;
 	char *dir_str;
-
-	Dx = xmax - xmin;
-	Dy = ymax - ymin;
+	Dx = lxmax - lxmin;
+	Dy = lymax - lymin;
 	dot_ratio = (double) po->dpi_y / (double) po->dpi_x;
 	po->width = pi->width;
 	po->height = pi->height;
@@ -5155,13 +5651,15 @@ adjust_input_transform(const GEN_PAR * pg, const IN_PAR * pi, OUT_PAR * po)
 		Eprintf("\nWidth  x  height: %5.2f x %5.2f mm, %s\n",
 			po->width, po->height, dir_str);
 		Eprintf("Coordinate range: (%g, %g) ... (%g, %g)\n",
-			xmin, ymin, xmax, ymax);
+			lxmin, lymin, lxmax, lymax);
+		Eprintf("Offsets: (%g, %g)\n",
+			po->xoff, po->yoff);
 	}
 
-	po->xmin = xmin;
-	po->xmax = xmax;
-	po->ymin = ymin;
-	po->ymax = ymax;
+	po->xmin = lxmin;
+	po->xmax = lxmax;
+	po->ymin = lymin;
+	po->ymax = lymax;
 }
 
 #ifdef EMF
@@ -5258,7 +5756,7 @@ PlotCmd PlotCmd_from_tmpfile(void)
 	case NOCLIP:
 	case FILL_TYPE:
 		return cmd;
-	case (unsigned int) EOF:
+/*	case (unsigned int) EOF:*/
 	default:
 		return CMD_EOF;
 	}
@@ -5273,12 +5771,22 @@ void HPGL_Pt_from_tmpfile(HPGL_Pt * pf)
 		Eprintf("Error @ Cmd %ld\n", vec_cntr_r);
 		exit(ERROR);
 	}
-	if (pf->x < xmin || pf->x > xmax)
+	if (pf->x < lxmin || pf->x > lxmax) {
 		Eprintf
 		    ("HPGL_Pt_from_tmpfile: x out of range (%g not in [%g, %g])\n",
-		     pf->x, xmin, xmax);
-	if (pf->y < ymin || pf->y > ymax)
+		     pf->x, lxmin, lxmax);
+	if (pf->x <lxmin)  
+			pf->x=lxmin; 
+		else	
+			pf->x=lxmax;
+	}	     
+	if (pf->y < lymin || pf->y > lymax) {
 		Eprintf
 		    ("HPGL_Pt_from_tmpfile: y out of range (%g not in [%g, %g])\n",
-		     pf->y, ymin, ymax);
+		     pf->y, lymin, lymax);
+	if (pf->y <lymin)  
+			pf->y=lymin; 
+		else	
+			pf->y=lymax; 
+	}    
 }

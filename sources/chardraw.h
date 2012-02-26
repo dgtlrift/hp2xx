@@ -135,7 +135,7 @@ extern "C" {
 
 /* void	code_to_ucoord	(char, HPGL_Pt *); */
 
-	int init_font(int);
+	int init_font(void);
 	void init_text_par(void);
 	void adjust_text_par(void);
 /* void	ASCII_to_char	(int);*/

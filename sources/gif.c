@@ -126,7 +126,7 @@ static void flush_char(void);
 static void cl_hash(count_int);
 
 
-static int __inline__ sqr(const int x) {
+static __inline__ int sqr(const int x) {
     return x*x;
 }
 
@@ -158,6 +158,7 @@ GetPixel(unsigned char ** const pixels, int const input_maxval,
     if (alpha && alpha[y][x] < alpha_threshold)
         colorindex = cmapP->transparent;
     else {
+    (void)input_maxval; /* suppress gcc warning */
 #if 0
         int presort_colorindex;
         presort_colorindex = ppm_lookupcolor(cmapP->cht, &pixels[y][x]);
@@ -855,8 +856,7 @@ write_raster_uncompressed(unsigned char ** const pixels, int const input_maxval,
 
 static void
 writeGifHeader(FILE * const fp,
-               int const Width, int const Height, 
-               int const GInterlace, int const Background, 
+               int const Width, int const Height, int const Background, 
                int const BitsPerPixel, struct cmap * const cmapP,
                const char comment[]) {
 
@@ -933,7 +933,7 @@ GIFEncode(FILE * const fp,
     int const TopOfs = 0;
     int InitCodeSize;
     
-    writeGifHeader(fp, GWidth, GHeight, GInterlace, Background,
+    writeGifHeader(fp, GWidth, GHeight, Background,
                    BitsPerPixel, cmapP, comment);
 
     /* Write an Image separator */

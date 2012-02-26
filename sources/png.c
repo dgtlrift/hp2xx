@@ -21,6 +21,7 @@ FILE *fd;
 	struct png_color_struct *palette;
 	int ci;
 	png_bytep *row_pointers;
+	jmp_buf* jmp_context;
 
 	/* allocate and init png_struct */
 	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
@@ -36,7 +37,8 @@ FILE *fd;
 	}
 
 	/* set up error handlimg for libpng */
-	if (setjmp(png_ptr->jmpbuf)) {
+	jmp_context = (jmp_buf*) png_get_error_ptr(png_ptr); 
+	if (jmp_context) {
 		png_destroy_write_struct(&png_ptr, &info_ptr);
 		return;
 	}

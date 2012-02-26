@@ -138,7 +138,7 @@ void action_oldstyle(GEN_PAR * pg, IN_PAR * pi, OUT_PAR * po)
 		}
 		if (strcmp(pg->mode, "pre")) {
 			po->pagecount++;
-			if (po->outfile != "-" && po->pagecount > 0) {
+			if (strcmp(po->outfile , "-") && po->pagecount > 0) {
 				sprintf(thepage, "%d", po->pagecount);
 				strcpy(po->outfile, savedname);
 				if (strstr(po->outfile, pg->mode))
@@ -218,7 +218,7 @@ process_opts(int argc, char *argv[],
 
 		case 'c':
 			i = (int) strlen(optarg);
-			if ((i < 1) || (i > 8)) {
+			if ((i < 1) || (i > NUMPENS)) {
 				Eprintf("Invalid pencolor string: %s\n",
 					optarg);
 				exit(ERROR);
@@ -397,14 +397,14 @@ process_opts(int argc, char *argv[],
 
 		case 'p':
 			i = (int) strlen(optarg);
-			if ((i < 1) || (i > 8)) {
+			if ((i < 1) || (i > NUMPENS)) {
 				Eprintf("Invalid pensize string: %s\n",
 					optarg);
 				exit(ERROR);
 			}
 			for (j = 1, p = optarg; j <= i; j++, p++) {
 				if ((*p < '0') || (*p > '9')) {
-					if ((*p < 'A') || (*p > 'Z')) {
+					if ((*p < 'A') || (*p > 'z')) {
 						Eprintf
 						    ("Invalid size of pen %d: %c\n",
 						     j, *p);
