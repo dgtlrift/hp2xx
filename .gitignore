@@ -1,0 +1,6 @@
+configure
+*.in
+autom4te.cache
+autoscan.log
+depcomp
+missing
