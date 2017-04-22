@@ -2,5 +2,7 @@ configure
 *.in
 autom4te.cache
 autoscan.log
+compile
 depcomp
+install-sh
 missing
