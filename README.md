@@ -12,6 +12,7 @@ sudo make install
 ## Changelog
 
 Recent changes in the 3.5.0 development ("alpha") series:
+
 3.5.0a35:
 - Fixed miter calculation for wide lines. Allowed setting width and
   color of all 256 pens by the -c and -p options. Partial code cleanup.
