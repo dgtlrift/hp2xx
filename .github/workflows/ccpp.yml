@@ -9,8 +9,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v2
-    - name: autoconf
-      run: autoconf
+    - name: autoreconf
+      run: autoreconf
     - name: autoheader
       run: autoheader
     - name: automake
