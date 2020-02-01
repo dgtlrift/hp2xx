@@ -10,7 +10,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: autoreconf
-      run: autoreconf
+      run: autoreconf --add-missing
     - name: autoheader
       run: autoheader
     - name: automake
